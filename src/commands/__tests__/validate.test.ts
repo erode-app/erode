@@ -105,7 +105,7 @@ describe('createValidateCommand', () => {
   // 4. beforeEach - clear mocks and set up defaults
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
     process.exitCode = undefined;
     command = createValidateCommand();
     command.exitOverride();

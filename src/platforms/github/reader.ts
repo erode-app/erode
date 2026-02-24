@@ -79,11 +79,11 @@ export class GitHubReader implements SourcePlatformReader {
 
       if (totalFiles > CONFIG.constraints.maxFilesPerDiff) {
         wasTruncated = true;
-        truncationReason = `Diff exceeded maximum of ${CONFIG.constraints.maxFilesPerDiff} files (found ${totalFiles} files). Analysis performed on first ${CONFIG.constraints.maxFilesPerDiff} files only.`;
+        truncationReason = `Diff exceeded maximum of ${String(CONFIG.constraints.maxFilesPerDiff)} files (found ${String(totalFiles)} files). Analysis performed on first ${String(CONFIG.constraints.maxFilesPerDiff)} files only.`;
         filesToInclude = files.slice(0, CONFIG.constraints.maxFilesPerDiff);
       } else if (totalLines > CONFIG.constraints.maxLinesPerDiff) {
         wasTruncated = true;
-        truncationReason = `Diff exceeded maximum of ${CONFIG.constraints.maxLinesPerDiff} changed lines (found ${totalLines} lines). Analysis may be incomplete.`;
+        truncationReason = `Diff exceeded maximum of ${String(CONFIG.constraints.maxLinesPerDiff)} changed lines (found ${String(totalLines)} lines). Analysis may be incomplete.`;
       }
 
       const { data: comparison } = await this.octokit.rest.repos.compareCommits({

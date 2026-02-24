@@ -60,11 +60,11 @@ export function createAnalyzeCommand(): Command {
         displaySection('Fetching Change Request Data');
         const reader = createPlatformReader(validatedOptions.url);
         const ref = reader.parseChangeRequestUrl(validatedOptions.url);
-        progress.start(`Fetching PR #${ref.number}`);
+        progress.start(`Fetching PR #${String(ref.number)}`);
         const prData = await reader.fetchChangeRequest(ref);
         const commits = await reader.fetchChangeRequestCommits(ref);
         progress.succeed(
-          `Fetched PR #${prData.number}: ${prData.title} (${commits.length} commits)`
+          `Fetched PR #${String(prData.number)}: ${prData.title} (${String(commits.length)} commits)`
         );
 
         if (!validatedOptions.skipFileFiltering) {
@@ -81,7 +81,7 @@ export function createAnalyzeCommand(): Command {
             prData.changed_files = included.length;
             prData.additions = included.reduce((sum, f) => sum + f.additions, 0);
             prData.deletions = included.reduce((sum, f) => sum + f.deletions, 0);
-            progress.info(`Filtered out ${excluded} file(s) matching skip patterns`);
+            progress.info(`Filtered out ${String(excluded)} file(s) matching skip patterns`);
           }
         }
 
@@ -96,7 +96,7 @@ export function createAnalyzeCommand(): Command {
           }
           return;
         }
-        progress.succeed(`Found ${components.length} component(s) for repository`);
+        progress.succeed(`Found ${String(components.length)} component(s) for repository`);
 
         // Guaranteed non-empty since we checked components.length === 0 above
         const defaultComponent = components[0];
@@ -158,7 +158,7 @@ export function createAnalyzeCommand(): Command {
           components: [selectedComponent],
         });
         progress.succeed(
-          `Extracted ${aggregatedDeps.dependencies.length} dependency change(s)`
+          `Extracted ${String(aggregatedDeps.dependencies.length)} dependency change(s)`
         );
 
         const dependencies = adapter.getComponentDependencies(selectedComponent.id);
@@ -222,8 +222,8 @@ export function createAnalyzeCommand(): Command {
         displaySection('Results');
         const needsStructured =
           validatedOptions.format === 'json' ||
-          validatedOptions.outputFile ||
-          validatedOptions.githubActions;
+          !!validatedOptions.outputFile ||
+          !!validatedOptions.githubActions;
         const structured = needsStructured
           ? buildStructuredOutput(analysisResult, {
               selectedComponentId,
@@ -257,7 +257,7 @@ export function createAnalyzeCommand(): Command {
               ref.platformId.owner,
               ref.platformId.repo
             );
-            const branchName = `erode/pr-${prData.number}`;
+            const branchName = `erode/pr-${String(prData.number)}`;
             const prTitle = adapter.metadata.prTitleTemplate.replace(
               '{{prNumber}}',
               String(prData.number)
@@ -268,14 +268,14 @@ export function createAnalyzeCommand(): Command {
               body: [
                 `## Architecture Model Update`,
                 '',
-                `Automated update from erode analysis of PR #${prData.number}: ${prData.title}`,
+                `Automated update from erode analysis of PR #${String(prData.number)}: ${prData.title}`,
                 '',
                 `### Summary`,
                 analysisResult.summary,
               ].join('\n'),
               fileChanges: [
                 {
-                  path: `model-updates/pr-${prData.number}${adapter.metadata.generatedFileExtension}`,
+                  path: `model-updates/pr-${String(prData.number)}${adapter.metadata.generatedFileExtension}`,
                   content: generatedCode,
                 },
               ],

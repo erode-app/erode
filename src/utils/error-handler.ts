@@ -13,8 +13,71 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   maxDelay: 10000,
   exponentialBackoff: true,
 };
-export class ErrorHandler {
-  static formatError(error: unknown): void {
+
+function provideSuggestions(error: ErodeError): void {
+  const suggestions: Partial<Record<ErrorCode, string[]>> = {
+    [ErrorCode.MISSING_API_KEY]: [
+      'Set at least one AI provider API key: ANTHROPIC_API_KEY or GEMINI_API_KEY',
+      'Create a .env file with your API key',
+      'Get an Anthropic key from https://console.anthropic.com/',
+      'Get a Gemini key from https://aistudio.google.com/apikey',
+    ],
+    [ErrorCode.SAFETY_FILTERED]: [
+      "The AI provider's safety filters blocked this content",
+      'Try rephrasing or simplifying the input',
+      'Review the content for potentially sensitive material',
+    ],
+    [ErrorCode.PLATFORM_AUTH_ERROR]: [
+      'Check your GITHUB_TOKEN or GITLAB_TOKEN is valid',
+      'Ensure the token has appropriate repository permissions',
+      'Try regenerating your access token',
+    ],
+    [ErrorCode.FILE_NOT_FOUND]: [
+      'Verify the file path is correct',
+      'Check file permissions',
+      "Ensure you're in the correct directory",
+    ],
+    [ErrorCode.DIRECTORY_NOT_FOUND]: [
+      'Verify the directory path exists',
+      'Check if the model workspace is correctly set up',
+    ],
+    [ErrorCode.NETWORK_ERROR]: [
+      'Check your internet connection',
+      'Verify firewall settings',
+      'Try again in a few moments',
+    ],
+    [ErrorCode.RATE_LIMITED]: [
+      'Wait a few minutes before trying again',
+      'Consider upgrading your API plan',
+    ],
+    [ErrorCode.INVALID_URL]: [
+      'Check the GitHub URL format: https://github.com/owner/repo/commit/sha',
+      'Ensure the repository and commit exist',
+    ],
+    [ErrorCode.MODEL_NOT_LOADED]: [
+      'Ensure loadFromPath() is called before querying the model',
+      'This is a programming error — the adapter was used before initialization',
+    ],
+    [ErrorCode.CONTEXT_TOO_LARGE]: [
+      'The commit changes are too large to analyze',
+      'Try analyzing smaller commits',
+      'Consider breaking down large changes',
+    ],
+  };
+  let errorSuggestions = suggestions[error.code];
+  if (error instanceof AdapterError && error.suggestions && error.suggestions.length > 0) {
+    errorSuggestions = error.suggestions;
+  }
+  if (errorSuggestions && errorSuggestions.length > 0) {
+    console.error('\n💡 Suggestions:');
+    errorSuggestions.forEach((suggestion) => {
+      Logger.info(`• ${suggestion}`);
+    });
+  }
+}
+
+export const ErrorHandler = {
+  formatError(error: unknown): void {
     if (error instanceof ErodeError) {
       Logger.fail(error.userMessage);
       if (Object.keys(error.context).length > 0) {
@@ -26,75 +89,14 @@ export class ErrorHandler {
         }
       }
       console.error(`   Error Code: ${error.code}`);
-      ErrorHandler.provideSuggestions(error);
+      provideSuggestions(error);
     } else if (error instanceof Error) {
       Logger.fail(error.message);
     } else {
       Logger.fail(`An unexpected error occurred: ${String(error)}`);
     }
-  }
-  private static provideSuggestions(error: ErodeError): void {
-    const suggestions: Partial<Record<ErrorCode, string[]>> = {
-      [ErrorCode.MISSING_API_KEY]: [
-        'Set at least one AI provider API key: ANTHROPIC_API_KEY or GEMINI_API_KEY',
-        'Create a .env file with your API key',
-        'Get an Anthropic key from https://console.anthropic.com/',
-        'Get a Gemini key from https://aistudio.google.com/apikey',
-      ],
-      [ErrorCode.SAFETY_FILTERED]: [
-        "The AI provider's safety filters blocked this content",
-        'Try rephrasing or simplifying the input',
-        'Review the content for potentially sensitive material',
-      ],
-      [ErrorCode.PLATFORM_AUTH_ERROR]: [
-        'Check your GITHUB_TOKEN or GITLAB_TOKEN is valid',
-        'Ensure the token has appropriate repository permissions',
-        'Try regenerating your access token',
-      ],
-      [ErrorCode.FILE_NOT_FOUND]: [
-        'Verify the file path is correct',
-        'Check file permissions',
-        "Ensure you're in the correct directory",
-      ],
-      [ErrorCode.DIRECTORY_NOT_FOUND]: [
-        'Verify the directory path exists',
-        'Check if the model workspace is correctly set up',
-      ],
-      [ErrorCode.NETWORK_ERROR]: [
-        'Check your internet connection',
-        'Verify firewall settings',
-        'Try again in a few moments',
-      ],
-      [ErrorCode.RATE_LIMITED]: [
-        'Wait a few minutes before trying again',
-        'Consider upgrading your API plan',
-      ],
-      [ErrorCode.INVALID_URL]: [
-        'Check the GitHub URL format: https://github.com/owner/repo/commit/sha',
-        'Ensure the repository and commit exist',
-      ],
-      [ErrorCode.MODEL_NOT_LOADED]: [
-        'Ensure loadFromPath() is called before querying the model',
-        'This is a programming error — the adapter was used before initialization',
-      ],
-      [ErrorCode.CONTEXT_TOO_LARGE]: [
-        'The commit changes are too large to analyze',
-        'Try analyzing smaller commits',
-        'Consider breaking down large changes',
-      ],
-    };
-    let errorSuggestions = suggestions[error.code];
-    if (error instanceof AdapterError && error.suggestions && error.suggestions.length > 0) {
-      errorSuggestions = error.suggestions;
-    }
-    if (errorSuggestions && errorSuggestions.length > 0) {
-      console.error('\n💡 Suggestions:');
-      errorSuggestions.forEach((suggestion) => {
-        Logger.info(`• ${suggestion}`);
-      });
-    }
-  }
-  static async withRetry<T>(
+  },
+  async withRetry<T>(
     operation: () => Promise<T>,
     options: Partial<RetryOptions> = {}
   ): Promise<T> {
@@ -105,11 +107,9 @@ export class ErrorHandler {
         return await operation();
       } catch (error) {
         lastError = error;
-        // Check if custom shouldRetry function says we shouldn't retry
         if (config.shouldRetry && !config.shouldRetry(error)) {
           throw error;
         }
-        // Default retry logic: don't retry non-recoverable errors
         if (!config.shouldRetry && error instanceof ErodeError && !error.recoverable) {
           throw error;
         }
@@ -119,17 +119,17 @@ export class ErrorHandler {
         const delay = config.exponentialBackoff
           ? Math.min(config.baseDelay * Math.pow(2, attempt - 1), config.maxDelay)
           : config.baseDelay;
-        Logger.warn(`Attempt ${attempt} failed, retrying in ${delay}ms...`);
+        Logger.warn(`Attempt ${String(attempt)} failed, retrying in ${String(delay)}ms...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
     throw lastError;
-  }
-  static getExitCode(error: unknown): number {
+  },
+  getExitCode(error: unknown): number {
     if (error instanceof ErodeError) {
       switch (error.code) {
         case ErrorCode.CHANGE_SIZE_EXCEEDED:
-          return 0; // Change size exceeded is treated as a skip, not an error
+          return 0;
         case ErrorCode.MISSING_CONFIG:
         case ErrorCode.INVALID_CONFIG:
         case ErrorCode.MISSING_API_KEY:
@@ -152,10 +152,10 @@ export class ErrorHandler {
       }
     }
     return 1;
-  }
-  static handleCliError(error: unknown): never {
+  },
+  handleCliError(error: unknown): never {
     ErrorHandler.formatError(error);
     const exitCode = ErrorHandler.getExitCode(error);
     process.exit(exitCode);
-  }
-}
+  },
+} as const;

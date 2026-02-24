@@ -23,16 +23,6 @@ export default tseslint.config(
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
-      '@typescript-eslint/restrict-template-expressions': [
-        'error',
-        { allowNumber: true },
-      ],
-      '@typescript-eslint/no-empty-function': 'off',
-      '@typescript-eslint/no-extraneous-class': 'off',
-      '@typescript-eslint/prefer-nullish-coalescing': [
-        'error',
-        { ignorePrimitives: { string: true } },
-      ],
       eqeqeq: ['error', 'smart'],
       'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
       'check-file/filename-naming-convention': [

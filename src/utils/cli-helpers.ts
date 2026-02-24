@@ -29,40 +29,110 @@ class ConsoleProgress implements ProgressIndicator {
   }
 }
 class SilentProgress implements ProgressIndicator {
-  start(_message: string): void {}
-  update(_message: string): void {}
-  succeed(_message: string): void {}
-  fail(_message: string): void {}
-  warn(_message: string): void {}
-  info(_message: string): void {}
+  start(_message: string): void { /* noop */ }
+  update(_message: string): void { /* noop */ }
+  succeed(_message: string): void { /* noop */ }
+  fail(_message: string): void { /* noop */ }
+  warn(_message: string): void { /* noop */ }
+  info(_message: string): void { /* noop */ }
 }
-export class Logger {
-  static fail(message: string): void {
+export const Logger = {
+  fail(message: string): void {
     console.error(chalk.red(`❌ ${message}`));
-  }
-  static warn(message: string): void {
+  },
+  warn(message: string): void {
     console.warn(chalk.yellow(`⚠️  ${message}`));
-  }
-  static info(message: string): void {
+  },
+  info(message: string): void {
     console.log(chalk.blue(`ℹ️  ${message}`));
-  }
-  static success(message: string): void {
+  },
+  success(message: string): void {
     console.log(chalk.green(`✓ ${message}`));
-  }
-}
+  },
+} as const;
 interface TableColumn {
   key: string;
   header: string;
   width?: number;
   align?: 'left' | 'right' | 'center';
 }
-export class OutputFormatter {
-  static format(data: unknown, format: OutputFormat): string {
+
+function isPlainObject(value: unknown): value is object {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.getPrototypeOf(value) === Object.prototype
+  );
+}
+
+function isNonArrayObject(value: unknown): value is object {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function formatValue(value: unknown, indent = 0): string {
+  if (value === null) return chalk.gray('null');
+  if (value === undefined) return chalk.gray('undefined');
+  if (typeof value === 'boolean') return chalk.blue(String(value));
+  if (typeof value === 'number') return chalk.magenta(String(value));
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '[]';
+    const spaces = '  '.repeat(indent + 1);
+    const items = value
+      .map((item) => {
+        if (isNonArrayObject(item)) {
+          const formatted = OutputFormatter.formatObject(item, indent + 1);
+          return `${spaces}- ${formatted.replace(/^\s+/, '')}`;
+        }
+        return `${spaces}- ${formatValue(item, indent + 1)}`;
+      })
+      .join('\n');
+    return `\n${items}`;
+  }
+  if (isNonArrayObject(value)) {
+    return `\n${OutputFormatter.formatObject(value, indent + 1)}`;
+  }
+  return '[unknown value]';
+}
+
+function toYaml(data: unknown, indent = 0): string {
+  const spaces = '  '.repeat(indent);
+  if (Array.isArray(data)) {
+    if (data.length === 0) return '[]';
+    return data
+      .map((item) => `${spaces}- ${toYaml(item, indent + 1).trim()}`)
+      .join('\n');
+  }
+  if (typeof data === 'object' && data !== null) {
+    const entries = Object.entries(data);
+    if (entries.length === 0) return '{}';
+    return entries
+      .map(([key, value]) => {
+        const yamlValue = toYaml(value, indent + 1);
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          return `${spaces}${key}:\n${yamlValue}`;
+        }
+        return `${spaces}${key}: ${yamlValue.trim()}`;
+      })
+      .join('\n');
+  }
+  if (typeof data === 'string') {
+    if (data.includes('\n') || data.includes(':') || data.includes('-')) {
+      return JSON.stringify(data);
+    }
+    return data;
+  }
+  return String(data);
+}
+
+export const OutputFormatter = {
+  format(data: unknown, format: OutputFormat): string {
     switch (format) {
       case 'json':
         return JSON.stringify(data, null, 2);
       case 'yaml':
-        return OutputFormatter.toYaml(data);
+        return toYaml(data);
       case 'table':
         if (Array.isArray(data)) {
           return OutputFormatter.formatTable(
@@ -77,8 +147,8 @@ export class OutputFormatter {
       default:
         return OutputFormatter.formatConsole(data);
     }
-  }
-  static formatTable(data: object[], columns?: TableColumn[]): string {
+  },
+  formatTable(data: object[], columns?: TableColumn[]): string {
     const firstRow = data[0];
     if (!firstRow) {
       return chalk.gray('No data to display');
@@ -145,33 +215,25 @@ export class OutputFormatter {
         .join(' | ')
     );
     return [chalk.bold(header), chalk.gray(separator), ...rows].join('\n');
-  }
-  static formatObject(data: object, indent = 0): string {
+  },
+  formatObject(data: object, indent = 0): string {
     const entries = Object.entries(data);
     const maxKeyLength = Math.max(...entries.map(([key]) => key.length));
     const spaces = '  '.repeat(indent);
     return entries
       .map(([key, value]) => {
         const formattedKey = chalk.bold(key.padEnd(maxKeyLength));
-        const formattedValue = OutputFormatter.formatValue(value, indent);
+        const formattedValue = formatValue(value, indent);
         return `${spaces}${formattedKey}: ${formattedValue}`;
       })
       .join('\n');
-  }
-  private static isPlainObject(value: unknown): value is object {
-    return (
-      typeof value === 'object' &&
-      value !== null &&
-      !Array.isArray(value) &&
-      Object.getPrototypeOf(value) === Object.prototype
-    );
-  }
-  static formatConsole(data: unknown): string {
+  },
+  formatConsole(data: unknown): string {
     if (Array.isArray(data)) {
       return data
         .map((item, index) => {
           let formatted: string;
-          if (OutputFormatter.isPlainObject(item)) {
+          if (isPlainObject(item)) {
             formatted = OutputFormatter.formatObject(item);
           } else if (
             typeof item === 'string' ||
@@ -182,7 +244,7 @@ export class OutputFormatter {
           } else {
             formatted = '[unknown value]';
           }
-          return `${chalk.cyan(`[${index + 1}]`)} ${formatted}`;
+          return `${chalk.cyan(`[${String(index + 1)}]`)} ${formatted}`;
         })
         .join('\n\n');
     }
@@ -190,66 +252,8 @@ export class OutputFormatter {
       return OutputFormatter.formatObject(data);
     }
     return String(data);
-  }
-  private static toYaml(data: unknown, indent = 0): string {
-    const spaces = '  '.repeat(indent);
-    if (Array.isArray(data)) {
-      if (data.length === 0) return '[]';
-      return data
-        .map((item) => `${spaces}- ${OutputFormatter.toYaml(item, indent + 1).trim()}`)
-        .join('\n');
-    }
-    if (typeof data === 'object' && data !== null) {
-      const entries = Object.entries(data);
-      if (entries.length === 0) return '{}';
-      return entries
-        .map(([key, value]) => {
-          const yamlValue = OutputFormatter.toYaml(value, indent + 1);
-          if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-            return `${spaces}${key}:\n${yamlValue}`;
-          }
-          return `${spaces}${key}: ${yamlValue.trim()}`;
-        })
-        .join('\n');
-    }
-    if (typeof data === 'string') {
-      if (data.includes('\n') || data.includes(':') || data.includes('-')) {
-        return JSON.stringify(data);
-      }
-      return data;
-    }
-    return String(data);
-  }
-  private static isNonArrayObject(value: unknown): value is object {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-  }
-
-  private static formatValue(value: unknown, indent = 0): string {
-    if (value === null) return chalk.gray('null');
-    if (value === undefined) return chalk.gray('undefined');
-    if (typeof value === 'boolean') return chalk.blue(String(value));
-    if (typeof value === 'number') return chalk.magenta(String(value));
-    if (typeof value === 'string') return value;
-    if (Array.isArray(value)) {
-      if (value.length === 0) return '[]';
-      const spaces = '  '.repeat(indent + 1);
-      const items = value
-        .map((item) => {
-          if (OutputFormatter.isNonArrayObject(item)) {
-            const formatted = OutputFormatter.formatObject(item, indent + 1);
-            return `${spaces}- ${formatted.replace(/^\s+/, '')}`;
-          }
-          return `${spaces}- ${OutputFormatter.formatValue(item, indent + 1)}`;
-        })
-        .join('\n');
-      return `\n${items}`;
-    }
-    if (OutputFormatter.isNonArrayObject(value)) {
-      return `\n${OutputFormatter.formatObject(value, indent + 1)}`;
-    }
-    return '[unknown value]';
-  }
-}
+  },
+} as const;
 export function createProgress(silent = false): ProgressIndicator {
   return silent ? new SilentProgress() : new ConsoleProgress();
 }

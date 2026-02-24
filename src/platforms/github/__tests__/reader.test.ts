@@ -167,7 +167,7 @@ describe('GitHubReader', () => {
 
     it('should truncate when file count exceeds max', async () => {
       const manyFiles = Array.from({ length: 60 }, (_, i) => ({
-        filename: `file${i}.ts`,
+        filename: `file${String(i)}.ts`,
         changes: 1,
       }));
       mockPullsGet.mockResolvedValueOnce(makePrResponse());

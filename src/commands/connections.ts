@@ -32,7 +32,7 @@ export function createConnectionsCommand(): Command {
           progress.info('Run "erode validate <model-path>" to check which components have repository links.');
           return;
         }
-        progress.succeed(`Found ${components.length} component(s)`);
+        progress.succeed(`Found ${String(components.length)} component(s)`);
 
         if (validatedOptions.output === 'json') {
           const jsonData = components.map((component) => {

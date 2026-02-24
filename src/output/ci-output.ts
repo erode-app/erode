@@ -10,8 +10,8 @@ export function writeGitHubActionsOutputs(output: StructuredAnalysisOutput): voi
   if (!outputFile) return;
 
   const lines = [
-    `has-violations=${output.analysis.hasViolations}`,
-    `violations-count=${output.analysis.violations.length}`,
+    `has-violations=${String(output.analysis.hasViolations)}`,
+    `violations-count=${String(output.analysis.violations.length)}`,
     `analysis-summary<<SUMMARY_EOF`,
     output.analysis.summary,
     `SUMMARY_EOF`,
@@ -46,8 +46,8 @@ export function buildStepSummary(output: StructuredAnalysisOutput): string {
   const componentName = output.metadata.component?.name ?? 'N/A';
   lines.push(`**Component Analyzed:** \`${componentId}\` (${componentName})`);
   lines.push(`**Status:** ${output.status}`);
-  lines.push(`**Violations:** ${output.analysis.violations.length}`);
-  lines.push(`**Warnings:** ${output.analysis.warnings?.length ?? 0}`);
+  lines.push(`**Violations:** ${String(output.analysis.violations.length)}`);
+  lines.push(`**Warnings:** ${String(output.analysis.warnings?.length ?? 0)}`);
   lines.push('');
 
   if (output.analysis.summary) {
@@ -82,14 +82,14 @@ export function buildStepSummary(output: StructuredAnalysisOutput): string {
     lines.push('### Recommended Model Updates');
     lines.push('');
     if (hasAdd && output.analysis.modelUpdates?.add) {
-      lines.push(`**Add (${output.analysis.modelUpdates.add.length}):**`);
+      lines.push(`**Add (${String(output.analysis.modelUpdates.add.length)}):**`);
       for (const a of output.analysis.modelUpdates.add) {
         lines.push(`- ${a}`);
       }
       lines.push('');
     }
     if (hasRemove && output.analysis.modelUpdates?.remove) {
-      lines.push(`**Remove (${output.analysis.modelUpdates.remove.length}):**`);
+      lines.push(`**Remove (${String(output.analysis.modelUpdates.remove.length)}):**`);
       for (const r of output.analysis.modelUpdates.remove) {
         lines.push(`- ${r}`);
       }

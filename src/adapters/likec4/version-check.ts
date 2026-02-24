@@ -50,7 +50,7 @@ export function isVersionBelow(version: SemVer, minimum: SemVer): boolean {
 }
 
 function formatVersion(v: SemVer): string {
-  return `${v.major}.${v.minor}.${v.patch}`;
+  return `${String(v.major)}.${String(v.minor)}.${String(v.patch)}`;
 }
 
 export function checkLikeC4Version(likec4Path: string): VersionCheckResult {

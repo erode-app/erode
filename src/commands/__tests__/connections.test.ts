@@ -116,9 +116,9 @@ describe('createConnectionsCommand', () => {
   // 4. beforeEach - clear mocks and set up defaults
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     command = createConnectionsCommand();
     command.exitOverride();
     mockCreateAdapter.mockReturnValue(makeMockAdapter());

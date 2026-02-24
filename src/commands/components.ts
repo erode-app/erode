@@ -19,7 +19,7 @@ export function createComponentsCommand(): Command {
         validatePath(modelPath, 'directory');
         progress.start('Loading architecture model');
         const components = await adapter.loadAndListComponents(modelPath);
-        progress.succeed(`Loaded ${components.length} components`);
+        progress.succeed(`Loaded ${String(components.length)} components`);
 
         const displayData =
           validatedOptions.format === 'table'

@@ -26,11 +26,11 @@ export function createValidateCommand(): Command {
           versionResult = adapter.checkVersion(modelPath);
           if (versionResult.found && versionResult.compatible) {
             progress.succeed(
-              `${adapter.metadata.displayName} version ${versionResult.version} is compatible (minimum: ${versionResult.minimum})`
+              `${adapter.metadata.displayName} version ${versionResult.version ?? 'unknown'} is compatible (minimum: ${versionResult.minimum})`
             );
           } else if (versionResult.found && !versionResult.compatible) {
             progress.warn(
-              `${adapter.metadata.displayName} version ${versionResult.version} is below minimum ${versionResult.minimum}. Update the ${adapter.metadata.id} dependency in the source repo.`
+              `${adapter.metadata.displayName} version ${versionResult.version ?? 'unknown'} is below minimum ${versionResult.minimum}. Update the ${adapter.metadata.id} dependency in the source repo.`
             );
             process.exitCode = 1;
           } else {
@@ -42,7 +42,7 @@ export function createValidateCommand(): Command {
 
         progress.start('Loading architecture model');
         const components = await adapter.loadAndListComponents(modelPath);
-        progress.succeed(`Loaded ${components.length} components`);
+        progress.succeed(`Loaded ${String(components.length)} components`);
 
         const mapped = components.map((c) => ({
           id: c.id,
@@ -79,7 +79,7 @@ export function createValidateCommand(): Command {
 
         if (unlinked.length > 0) {
           progress.warn(
-            `${unlinked.length} of ${mapped.length} component(s) are missing repository links`
+            `${String(unlinked.length)} of ${String(mapped.length)} component(s) are missing repository links`
           );
           for (const line of adapter.metadata.missingLinksHelpLines) {
             progress.info(line);

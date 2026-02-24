@@ -39,7 +39,7 @@ export class ErodeError extends Error {
     super(message);
     this.name = 'ErodeError';
     this.code = code;
-    this.userMessage = userMessage || message;
+    this.userMessage = userMessage ?? message;
     this.context = context;
     this.recoverable = recoverable;
     Error.captureStackTrace(this, ErodeError);

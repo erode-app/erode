@@ -64,10 +64,10 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     const result = checkLikeC4Version(likec4Path);
     if (result.found && !result.compatible) {
       throw new AdapterError(
-        `Source repo LikeC4 version ${result.version} is below minimum ${result.minimum}`,
+        `Source repo LikeC4 version ${result.version ?? 'unknown'} is below minimum ${result.minimum}`,
         ErrorCode.MODEL_LOAD_ERROR,
         'likec4',
-        `Incompatible LikeC4 version: source repo uses ${result.version}, but erode requires >=${result.minimum}. Update the likec4 dependency in the source repo.`,
+        `Incompatible LikeC4 version: source repo uses ${result.version ?? 'unknown'}, but erode requires >=${result.minimum}. Update the likec4 dependency in the source repo.`,
         { detectedVersion: result.version, minimumVersion: result.minimum }
       );
     }
@@ -145,7 +145,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
       }
       const component: ArchitecturalComponent = {
         id: element.id,
-        name: element.title || element.id,
+        name: element.title ?? element.id,
         description: typeof element.description === 'string' ? element.description : undefined,
         repository: this.extractRepositoryUrl(element),
         tags: element.tags ?? [],
@@ -325,7 +325,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
         if (typeof link === 'string') {
           return link;
         }
-        return link.url || link.toString();
+        return link.url ?? link.toString();
       })
       .filter(Boolean);
   }

@@ -162,8 +162,8 @@ describe('GitLabReader', () => {
 
     it('should truncate when file count exceeds max', async () => {
       const manyDiffs = Array.from({ length: 60 }, (_, i) => ({
-        old_path: `file${i}.ts`,
-        new_path: `file${i}.ts`,
+        old_path: `file${String(i)}.ts`,
+        new_path: `file${String(i)}.ts`,
       }));
       mockMrShow.mockResolvedValueOnce(makeMrResponse());
       mockMrAllDiffs.mockResolvedValueOnce(makeDiffsResponse(manyDiffs));
@@ -176,7 +176,7 @@ describe('GitLabReader', () => {
     });
 
     it('should truncate when line count exceeds max', async () => {
-      const longDiff = Array.from({ length: 6000 }, (_, i) => `+line${i}`).join('\n');
+      const longDiff = Array.from({ length: 6000 }, (_, i) => `+line${String(i)}`).join('\n');
       mockMrShow.mockResolvedValueOnce(makeMrResponse());
       mockMrAllDiffs.mockResolvedValueOnce(
         makeDiffsResponse([{ old_path: 'big.ts', new_path: 'big.ts', diff: longDiff }])

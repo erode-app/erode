@@ -21,7 +21,7 @@ export function buildStructuredOutput(
       changeRequest: {
         number: result.metadata.number,
         title: result.metadata.title,
-        author: result.metadata.author.name || result.metadata.author.login,
+        author: result.metadata.author.name ?? result.metadata.author.login,
         base: result.metadata.base.ref,
         head: result.metadata.head.ref,
         commits: result.metadata.stats.commits,
@@ -68,7 +68,7 @@ export function formatAnalysisForConsole(
 ): string {
   const lines: string[] = [];
 
-  lines.push(chalk.bold.cyan(`\n── Analysis Results: #${result.metadata.number} ──`));
+  lines.push(chalk.bold.cyan(`\n── Analysis Results: #${String(result.metadata.number)} ──`));
   lines.push(chalk.gray(`  ${result.metadata.title}`));
   lines.push(chalk.gray(`  Component: ${result.component.name} (${result.component.id})`));
 
@@ -78,7 +78,7 @@ export function formatAnalysisForConsole(
 
   if (result.violations.length > 0) {
     lines.push('');
-    lines.push(chalk.bold.red(`Violations (${result.violations.length}):`));
+    lines.push(chalk.bold.red(`Violations (${String(result.violations.length)}):`));
     for (const v of result.violations) {
       const severityColor =
         v.severity === 'high' ? chalk.red : v.severity === 'medium' ? chalk.yellow : chalk.blue;
@@ -148,7 +148,7 @@ export function formatAnalysisAsComment(
 
   if (extras?.selectedComponentId && extras.candidateComponents && extras.candidateComponents.length > 1) {
     lines.push('');
-    lines.push(`_Selected from ${extras.candidateComponents.length} candidates:_`);
+    lines.push(`_Selected from ${String(extras.candidateComponents.length)} candidates:_`);
     for (const c of extras.candidateComponents) {
       const checked = c.id === extras.selectedComponentId ? 'x' : ' ';
       lines.push(`- [${checked}] \`${c.id}\` (${c.name})`);
@@ -161,7 +161,7 @@ export function formatAnalysisAsComment(
 
   if (result.hasViolations) {
     lines.push('');
-    lines.push(`### Architectural Violations (${result.violations.length})`);
+    lines.push(`### Architectural Violations (${String(result.violations.length)})`);
     lines.push('');
     for (const v of result.violations) {
       lines.push(`- **[${v.severity.toUpperCase()}]** ${v.description}`);
