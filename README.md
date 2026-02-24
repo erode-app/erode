@@ -40,55 +40,58 @@ node dist/cli.js --help
 
 ## CLI commands
 
-### `list <likec4-path>`
+### `components <model-path>`
 
-List components from a LikeC4 model.
+List components from an architecture model.
 
 ```bash
-erode list ./model --format table
+erode components ./model --format table
 ```
 
 Options:
+- `--model-format <format>` — Architecture model format (default: `likec4`)
 - `--format <format>` — Output format: `table`, `json`, `yaml` (default: `table`)
 
-### `relations <likec4-path> --repo <url>`
+### `connections <model-path> --repo <url>`
 
-Show component relationships for a repository.
+Show component connections from an architecture model.
 
 ```bash
-erode relations ./model --repo https://github.com/org/repo
-erode relations ./model --repo https://gitlab.com/group/project
+erode connections ./model --repo https://github.com/org/repo
+erode connections ./model --repo https://gitlab.com/group/project
 ```
 
 Options:
-- `--repo <url>` — Repository URL (GitHub or GitLab) (required)
+- `--model-format <format>` — Architecture model format (default: `likec4`)
+- `--repo <url>` — Repository URL (GitHub or GitLab)
 - `--output <format>` — Output format: `console`, `json` (default: `console`)
 
-### `analyze <likec4-path> --pr <url>`
+### `analyze <model-path> --url <url>`
 
-Analyze a pull request for architecture drift.
+Analyze a change request for architecture drift.
 
 ```bash
-erode analyze ./model --pr https://github.com/org/repo/pull/42
-erode analyze ./model --pr https://gitlab.com/group/project/-/merge_requests/42
+erode analyze ./model --url https://github.com/org/repo/pull/42
+erode analyze ./model --url https://gitlab.com/group/project/-/merge_requests/42
 ```
 
 Options:
-- `--pr <url>` — Pull request or merge request URL (required)
-- `--generate-likec4` — Generate LikeC4 model code from the analysis
+- `--url <url>` — Change request URL (GitHub PR or GitLab MR)
+- `--model-format <format>` — Architecture model format (default: `likec4`)
+- `--generate-model` — Generate architecture model code from the analysis
 - `--output-file <path>` — Write structured JSON output to a file
 - `--format <format>` — Output format: `console`, `json` (default: `console`)
-- `--create-pr` — Create a PR with suggested model updates (requires `--generate-likec4`)
+- `--open-pr` — Create a PR with suggested model updates (requires `--generate-model`)
 - `--dry-run` — Preview without creating a PR
-- `--pr-draft` — Create PR as draft (default: `true`)
+- `--draft` — Create change request as draft (default: `true`)
 - `--skip-file-filtering` — Analyze all changed files (skip pattern-based filtering)
 - `--comment` — Post analysis results as a PR/MR comment (upserts by marker)
 - `--github-actions` — Write GitHub Actions outputs and step summary
 - `--fail-on-violations` — Exit with code 1 when violations are found
 
-### `validate <likec4-path>`
+### `validate <model-path>`
 
-Check that all components in a LikeC4 model have repository links.
+Check that all components in an architecture model have repository links.
 
 ```bash
 erode validate ./model
@@ -96,6 +99,7 @@ erode validate ./model --format json
 ```
 
 Options:
+- `--model-format <format>` — Architecture model format (default: `likec4`)
 - `--format <format>` — Output format: `table`, `json` (default: `table`)
 
 Exits with code 1 if any components are missing repository links.
@@ -249,7 +253,7 @@ erode:
   script:
     - >
       node /app/dist/cli.js analyze ./model
-      --pr "$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_IID"
+      --url "$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_IID"
       --format json --comment --fail-on-violations
   rules:
     - if: $CI_MERGE_REQUEST_IID
@@ -268,7 +272,7 @@ erode:
     - git clone --depth 1 "https://gitlab-ci-token:${GITLAB_TOKEN}@gitlab.com/group/architecture-model.git" /tmp/model
     - >
       node /app/dist/cli.js analyze /tmp/model
-      --pr "$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_IID"
+      --url "$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_IID"
       --format json --comment
   rules:
     - if: $CI_MERGE_REQUEST_IID
@@ -277,7 +281,7 @@ erode:
     ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
 ```
 
-> **Note:** Platform detection currently identifies `github.com` and `gitlab.com` from PR/MR URLs. Self-hosted GitLab instances require setting `GITLAB_BASE_URL`, but URL-based platform detection may not work — pass the full MR URL explicitly via `--pr`.
+> **Note:** Platform detection currently identifies `github.com` and `gitlab.com` from PR/MR URLs. Self-hosted GitLab instances require setting `GITLAB_BASE_URL`, but URL-based platform detection may not work — pass the full MR URL explicitly via `--url`.
 
 ## CLI usage in other CI systems
 
@@ -288,7 +292,7 @@ export GITHUB_TOKEN="..."        # or GITLAB_TOKEN for GitLab
 export ANTHROPIC_API_KEY="..."   # or GEMINI_API_KEY
 
 erode analyze ./path/to/model \
-  --pr "https://github.com/org/repo/pull/42" \
+  --url "https://github.com/org/repo/pull/42" \
   --comment \
   --fail-on-violations \
   --format json
