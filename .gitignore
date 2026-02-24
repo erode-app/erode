@@ -1,0 +1,15 @@
+dist/
+node_modules/
+.env
+.env.*
+!.env.example
+
+*.tsbuildinfo
+*.js.map
+*.d.ts.map
+.claude/settings.local.json
+.claude/plans/
+
+.DS_Store
+.linear_api_token
+oldversion

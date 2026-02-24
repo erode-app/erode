@@ -1,0 +1,44 @@
+model {
+  frontend = webapp 'Web Frontend' {
+    #ui
+    description 'Customer-facing web application'
+    technology 'React'
+    link https://github.com/example/frontend
+    -> api_gateway
+  }
+
+  api_gateway = service 'API Gateway' {
+    #backend
+    description 'Central entry point for all API requests'
+    technology 'Node.js'
+    link https://github.com/example/api-gateway
+
+    -[https]-> user_service 'calls REST API'
+    -[grpc]-> user_service 'calls gRPC'
+    -> product_service
+  }
+
+  user_service = service 'User Service' {
+    #backend #microservice
+    description 'Manages user accounts and authentication'
+    technology 'Java'
+    link https://github.com/example/user-service
+
+    -> database
+  }
+
+  product_service = service 'Product Service' {
+    #backend #microservice
+    description 'Manages product catalog and inventory'
+    technology 'Python'
+    link https://github.com/example/product-service
+
+    -> database
+  }
+
+  database = database 'PostgreSQL Database' {
+    #storage
+    description 'Primary data store'
+    technology 'PostgreSQL'
+  }
+}

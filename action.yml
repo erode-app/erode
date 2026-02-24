@@ -1,0 +1,63 @@
+name: 'Erode'
+description: 'Detect architecture erosion by comparing GitHub pull requests against an architecture model'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  model-format:
+    description: 'Architecture model format'
+    required: false
+    default: 'likec4'
+  model-repo:
+    description: 'Repository containing the architecture model (owner/repo)'
+    required: true
+  model-path:
+    description: 'Path to the model within the model repository'
+    required: false
+    default: '.'
+  model-ref:
+    description: 'Git ref (branch/tag) of the model repository to use'
+    required: false
+    default: 'main'
+  ai-provider:
+    description: 'AI provider to use (anthropic or gemini)'
+    required: false
+    default: 'anthropic'
+  anthropic-api-key:
+    description: 'Anthropic API key (required when ai-provider is anthropic)'
+    required: false
+  gemini-api-key:
+    description: 'Gemini API key (required when ai-provider is gemini)'
+    required: false
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  model-repo-token:
+    description: 'GitHub token for accessing the model repository (if different from github-token)'
+    required: false
+  open-pr:
+    description: 'Open a PR with suggested model updates'
+    required: false
+    default: 'false'
+  fail-on-violations:
+    description: 'Fail the action if architectural violations are detected'
+    required: false
+    default: 'false'
+  skip-file-filtering:
+    description: 'Skip file filtering and analyze all changed files'
+    required: false
+    default: 'false'
+
+outputs:
+  has-violations:
+    description: 'Whether architectural violations were detected'
+  violations-count:
+    description: 'Number of violations detected'
+  analysis-summary:
+    description: 'Summary of the analysis results'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

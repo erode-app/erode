@@ -1,0 +1,111 @@
+import { appendFileSync } from 'fs';
+import type { StructuredAnalysisOutput } from './structured-output.js';
+
+/**
+ * Append GitHub Actions outputs (has-violations, violations-count, analysis-summary)
+ * to the file pointed to by GITHUB_OUTPUT.
+ */
+export function writeGitHubActionsOutputs(output: StructuredAnalysisOutput): void {
+  const outputFile = process.env['GITHUB_OUTPUT'];
+  if (!outputFile) return;
+
+  const lines = [
+    `has-violations=${output.analysis.hasViolations}`,
+    `violations-count=${output.analysis.violations.length}`,
+    `analysis-summary<<SUMMARY_EOF`,
+    output.analysis.summary,
+    `SUMMARY_EOF`,
+  ];
+
+  appendFileSync(outputFile, lines.join('\n') + '\n', 'utf-8');
+}
+
+/** Build a GitHub Actions step summary as a markdown string (pure function). */
+export function buildStepSummary(output: StructuredAnalysisOutput): string {
+  const lines: string[] = [];
+
+  lines.push('## Drift Detection Results');
+  lines.push('');
+
+  if (output.status === 'success' && !output.analysis.hasViolations) {
+    lines.push('### Analysis Completed Successfully');
+    lines.push('');
+    lines.push('No architectural drift detected in this change request.');
+  } else if (output.status === 'violations' || output.analysis.hasViolations) {
+    lines.push('### Violations Detected');
+  } else if (output.status === 'error') {
+    lines.push('### Analysis Failed');
+  } else if (output.status === 'skipped') {
+    lines.push('### Analysis Skipped');
+  } else {
+    lines.push('### Analysis Complete');
+  }
+
+  lines.push('');
+  const componentId = output.metadata.component?.id ?? 'unknown';
+  const componentName = output.metadata.component?.name ?? 'N/A';
+  lines.push(`**Component Analyzed:** \`${componentId}\` (${componentName})`);
+  lines.push(`**Status:** ${output.status}`);
+  lines.push(`**Violations:** ${output.analysis.violations.length}`);
+  lines.push(`**Warnings:** ${output.analysis.warnings?.length ?? 0}`);
+  lines.push('');
+
+  if (output.analysis.summary) {
+    lines.push('### Summary');
+    lines.push('');
+    lines.push(output.analysis.summary);
+    lines.push('');
+  }
+
+  if (output.analysis.hasViolations && output.analysis.violations.length > 0) {
+    lines.push('### Architectural Violations');
+    lines.push('');
+    for (const v of output.analysis.violations) {
+      lines.push(`- **[${v.severity.toUpperCase()}]** ${v.description}`);
+    }
+    lines.push('');
+  }
+
+  if (output.analysis.warnings && output.analysis.warnings.length > 0) {
+    lines.push('### Warnings');
+    lines.push('');
+    for (const w of output.analysis.warnings) {
+      lines.push(`- ${w}`);
+    }
+    lines.push('');
+  }
+
+  const hasAdd = output.analysis.modelUpdates?.add && output.analysis.modelUpdates.add.length > 0;
+  const hasRemove =
+    output.analysis.modelUpdates?.remove && output.analysis.modelUpdates.remove.length > 0;
+  if (hasAdd || hasRemove) {
+    lines.push('### Recommended Model Updates');
+    lines.push('');
+    if (hasAdd && output.analysis.modelUpdates?.add) {
+      lines.push(`**Add (${output.analysis.modelUpdates.add.length}):**`);
+      for (const a of output.analysis.modelUpdates.add) {
+        lines.push(`- ${a}`);
+      }
+      lines.push('');
+    }
+    if (hasRemove && output.analysis.modelUpdates?.remove) {
+      lines.push(`**Remove (${output.analysis.modelUpdates.remove.length}):**`);
+      for (const r of output.analysis.modelUpdates.remove) {
+        lines.push(`- ${r}`);
+      }
+      lines.push('');
+    }
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Write the step summary markdown to the file pointed to by GITHUB_STEP_SUMMARY.
+ */
+export function writeGitHubStepSummary(output: StructuredAnalysisOutput): void {
+  const summaryFile = process.env['GITHUB_STEP_SUMMARY'];
+  if (!summaryFile) return;
+
+  appendFileSync(summaryFile, buildStepSummary(output), 'utf-8');
+}

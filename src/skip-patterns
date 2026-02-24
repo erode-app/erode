@@ -1,0 +1,62 @@
+# Drift Detection Skip Patterns
+# Files matching these patterns will skip architecture drift analysis to conserve API usage
+# Syntax: glob patterns (supports *, **, ?, [abc], {a,b,c})
+
+# Tests
+**/*.test.{ts,tsx,js,jsx,py,java,cs,go,rs}
+**/*.spec.{ts,tsx,js,jsx,py,java,cs,go,rs}
+**/__tests__/**
+**/__mocks__/**
+**/test/**
+**/tests/**
+
+# Documentation
+**/*.md
+**/README*
+**/CHANGELOG*
+**/LICENSE*
+**/docs/**
+
+# Editor & IDE Configuration
+**/.vscode/**
+**/.idea/**
+**/.editorconfig
+
+# Linting & Formatting Configuration
+**/.prettierrc*
+**/.eslintrc*
+**/.stylelintrc*
+
+# Git Configuration
+**/.gitignore
+**/.gitattributes
+
+# CI/CD Configuration
+**/.github/**
+**/.gitlab-ci.yml
+**/azure-pipelines.yml
+**/.circleci/**
+
+# Dependency Lock Files
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
+**/Gemfile.lock
+**/composer.lock
+**/poetry.lock
+
+# Build Configuration
+**/tsconfig*.json
+**/webpack.config.*
+**/vite.config.*
+**/rollup.config.*
+**/jest.config.*
+**/vitest.config.*
+
+# Build Artifacts & Output Directories
+**/dist/**
+**/build/**
+**/.next/**
+**/out/**
+**/.cache/**
+**/coverage/**

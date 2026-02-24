@@ -1,0 +1,25 @@
+specification {
+  element system
+  element service
+  element webapp
+  element database
+  element library
+
+  relationship https {
+    line dotted
+  }
+
+  relationship grpc {
+    line dotted
+  }
+
+  relationship database {
+    line solid
+  }
+
+  tag ui
+  tag backend
+  tag microservice
+  tag storage
+  tag external
+}

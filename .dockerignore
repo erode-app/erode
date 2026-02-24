@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.claude
+.env
+.env.*
+*.md
+.DS_Store
+coverage
+.vscode
+.idea
+oldversion

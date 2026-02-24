@@ -1,0 +1,17 @@
+{
+  "enabledPlugins": {
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if jq -re '.tool_input.file_path // .tool_input.filePath // empty' | grep -q '\\.ts$'; then npm run typecheck 2>&1 | tail -30; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
