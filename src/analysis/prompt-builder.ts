@@ -1,81 +1,23 @@
-import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
 import type {
   DependencyExtractionPromptData,
   ComponentSelectionPromptData,
   DriftAnalysisPromptData,
   DriftAnalysisResult,
 } from './analysis-types.js';
-import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import { TemplateEngine } from './template-engine.js';
 import { ErodeError, ErrorCode } from '../errors.js';
-
-function buildAllowedDependenciesSection(architectural: {
-  relationships?: { target: { id: string; name: string }; kind?: string; title?: string }[];
-  dependencies: { id: string; name: string; type: string; repository?: string }[];
-}): string {
-  if (architectural.relationships && architectural.relationships.length > 0) {
-    const byTarget = new Map<string, { kind?: string; title?: string }[]>();
-    for (const rel of architectural.relationships) {
-      const existing = byTarget.get(rel.target.id) ?? [];
-      existing.push({ kind: rel.kind, title: rel.title });
-      byTarget.set(rel.target.id, existing);
-    }
-    const depLines: string[] = [];
-    for (const [targetId, rels] of byTarget.entries()) {
-      const target = architectural.relationships.find((r) => r.target.id === targetId)?.target;
-      if (target) {
-        const kinds = rels.map((r) => r.kind ?? 'unknown').join(', ');
-        depLines.push(`  - ${target.name} [via: ${kinds}]`);
-      }
-    }
-    return depLines.join('\n');
-  } else if (architectural.dependencies.length > 0) {
-    return architectural.dependencies.map((d) => `  - ${d.name} (${d.type})`).join('\n');
-  }
-  return '  - None defined in LikeC4 model';
-}
-
-function buildDependentsSection(dependents: { name: string; type: string }[]): string {
-  return dependents.length > 0
-    ? dependents.map((d) => `  - ${d.name} (${d.type})`).join('\n')
-    : '  - None';
-}
-
-function buildDependencyChangesSection(dependencies: DependencyExtractionResult): string {
-  if (dependencies.dependencies.length === 0) {
-    return 'No architectural dependency changes detected across all commits in this PR.';
-  }
-  const added = dependencies.dependencies.filter((d) => d.type === 'added');
-  const modified = dependencies.dependencies.filter((d) => d.type === 'modified');
-  const removed = dependencies.dependencies.filter((d) => d.type === 'removed');
-  const prefix = 'Aggregated dependency changes across all commits:\n\n';
-  let section = prefix;
-  if (added.length > 0) {
-    section += '**ADDED Dependencies:**\n';
-    for (const dep of added) {
-      section += `- ${dep.dependency} (${dep.file})\n`;
-      section += `  ${dep.description}\n`;
-    }
-    section += '\n';
-  }
-  if (modified.length > 0) {
-    section += '**MODIFIED Dependencies:**\n';
-    for (const dep of modified) {
-      section += `- ${dep.dependency} (${dep.file})\n`;
-      section += `  ${dep.description}\n`;
-    }
-    section += '\n';
-  }
-  if (removed.length > 0) {
-    section += '**REMOVED Dependencies:**\n';
-    for (const dep of removed) {
-      section += `- ${dep.dependency} (${dep.file})\n`;
-      section += `  ${dep.description}\n`;
-    }
-    section += '\n';
-  }
-  return section;
-}
+import {
+  formatAllowedDependencies,
+  formatDependents,
+  formatDependencyChanges,
+  formatComponentContext,
+  formatComponentList,
+  formatCommits,
+  formatViolations,
+  formatDependencyChangesSummary,
+  formatModelUpdates,
+  formatExistingComponents,
+} from './section-formatters.js';
 
 export const PromptBuilder = {
   /** Extract the first JSON object from an AI response text, or null if none found. */
@@ -99,7 +41,7 @@ export const PromptBuilder = {
         `buildDependencyExtractionPrompt expects exactly 1 component, got ${String(components.length)}`,
         ErrorCode.COMPONENT_NOT_FOUND,
         `Component selection error: Expected 1 component but got ${String(components.length)}. Component selection should happen in Stage 0.`,
-        { componentCount: components.length }
+        { componentCount: components.length },
       );
     } else {
       const [comp] = components;
@@ -107,13 +49,10 @@ export const PromptBuilder = {
         throw new ErodeError(
           'First component is undefined',
           ErrorCode.COMPONENT_NOT_FOUND,
-          'Unexpected error: First component is undefined. This appears to be a programming error.'
+          'Unexpected error: First component is undefined. This appears to be a programming error.',
         );
       }
-      componentsContext = `
-Component: ${comp.name} (${comp.id})
-Type: ${comp.type}
-${comp.technology ? `Technology: ${comp.technology}` : ''}`;
+      componentsContext = formatComponentContext(comp);
     }
 
     return TemplateEngine.loadDependencyExtractionPrompt({
@@ -128,18 +67,7 @@ ${comp.technology ? `Technology: ${comp.technology}` : ''}`;
    */
   buildComponentSelectionPrompt(data: ComponentSelectionPromptData): string {
     const { components, files } = data;
-
-    const componentsText = components
-      .map(
-        (c, idx) => `
-${String(idx + 1)}. **${c.id}**
-   - Name: ${c.name}
-   - Type: ${c.type}
-   ${c.technology ? `- Technology: ${c.technology}` : ''}
-   ${c.description ? `- Description: ${c.description}` : ''}`
-      )
-      .join('\n');
-
+    const componentsText = formatComponentList(components);
     const filesText = files.map((f) => `- ${f.filename}`).join('\n');
 
     return TemplateEngine.loadComponentSelectionPrompt({
@@ -152,15 +80,11 @@ ${String(idx + 1)}. **${c.id}**
    */
   buildDriftAnalysisPrompt(data: DriftAnalysisPromptData): string {
     const { changeRequest, component, dependencies, architectural } = data;
-    const allowedDeps = buildAllowedDependenciesSection(architectural);
-    const dependents = buildDependentsSection(architectural.dependents);
-    const dependencyChangesSection = buildDependencyChangesSection(dependencies);
-    const commitsSection = changeRequest.commits
-      .slice(0, 10)
-      .map((c) => `  - ${c.sha.substring(0, 7)}: ${c.message.split('\n')[0] ?? ''} (${c.author})`)
-      .join('\n');
-    const commitsNote =
-      changeRequest.commits.length > 10 ? `\n  ... and ${String(changeRequest.commits.length - 10)} more commits` : '';
+    const allowedDeps = formatAllowedDependencies(architectural);
+    const dependents = formatDependents(architectural.dependents);
+    const dependencyChangesSection = formatDependencyChanges(dependencies);
+    const { section: commitsSection, note: commitsNote } = formatCommits(changeRequest.commits);
+
     return TemplateEngine.loadDriftAnalysisPrompt({
       changeRequest: {
         number: changeRequest.number,
@@ -169,7 +93,9 @@ ${String(idx + 1)}. **${c.id}**
         base: { ref: changeRequest.base.ref },
         head: { ref: changeRequest.head.ref },
         stats: changeRequest.stats,
-        descriptionSection: changeRequest.description ? `Description:\n${changeRequest.description}\n` : '',
+        descriptionSection: changeRequest.description
+          ? `Description:\n${changeRequest.description}\n`
+          : '',
       },
       component: {
         name: component.name,
@@ -191,47 +117,12 @@ ${String(idx + 1)}. **${c.id}**
   buildModelGenerationPrompt(analysisResult: DriftAnalysisResult): string {
     const { component, modelUpdates, metadata, violations, dependencyChanges, allComponents } =
       analysisResult;
-    const violationsSection =
-      violations.length > 0
-        ? violations.map((v) => `- [${v.severity.toUpperCase()}] ${v.description}`).join('\n')
-        : 'No violations detected';
-    const dependencyChangesSection =
-      dependencyChanges.dependencies.length > 0
-        ? dependencyChanges.dependencies
-            .map(
-              (d) =>
-                `- ${d.type === 'added' ? '+' : d.type === 'removed' ? '-' : '~'} ${d.dependency}: ${d.description}`
-            )
-            .join('\n')
-        : 'No dependency changes detected';
-    const modelUpdatesSection = modelUpdates
-      ? `
-ADD TO MODEL:
-${modelUpdates.add ? modelUpdates.add.map((dep) => `- ${dep}`).join('\n') : 'None'}
-REMOVE FROM MODEL:
-${modelUpdates.remove ? modelUpdates.remove.map((dep) => `- ${dep}`).join('\n') : 'None'}
-NOTES:
-${modelUpdates.notes ?? 'None'}
-`
-      : 'No model updates recommended';
-    const existingComponentsSection =
-      allComponents && allComponents.length > 0
-        ? `
-EXISTING COMPONENTS IN THE MODEL:
-${allComponents
-  .map(
-    (c: ArchitecturalComponent) =>
-      `- ${c.id}: "${c.name}" (${c.type}${c.repository ? `, repo: ${c.repository}` : ''})`
-  )
-  .join('\n')}
-⚠️ CRITICAL: Before creating a NEW component, search this list for existing components that match.
-- Look for components with similar names (e.g., "userservice", "user-api", "user_api")
-- Check repository URLs to match services
-- Prefer using existing component IDs over creating new ones
-- If you find a match, use the existing component ID exactly as shown above
-`
-        : '';
+    const violationsSection = formatViolations(violations);
+    const dependencyChangesSection = formatDependencyChangesSummary(dependencyChanges);
+    const modelUpdatesSection = formatModelUpdates(modelUpdates);
+    const existingComponentsSection = formatExistingComponents(allComponents);
     const modelFormat = analysisResult.modelFormat ?? 'likec4';
+
     return TemplateEngine.loadModelGenerationPrompt(
       {
         metadata: {
@@ -250,7 +141,7 @@ ${allComponents
         modelUpdatesSection,
         date: new Date().toISOString().split('T')[0] ?? '',
       },
-      modelFormat
+      modelFormat,
     );
   },
 } as const;
