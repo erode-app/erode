@@ -5,11 +5,13 @@
     "packages/core": {
       "project": ["src/**/*.ts"]
     },
+    "packages/cli": {
+      "project": ["src/**/*.ts", "src/**/*.tsx"]
+    },
     "packages/eslint-config": {
       "project": ["*.js"]
     },
     "packages/web": {
-      "ignore": [".astro/**"]
     }
   }
 }

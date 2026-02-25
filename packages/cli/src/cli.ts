@@ -8,8 +8,7 @@ import { createComponentsCommand } from './commands/components.js';
 import { createConnectionsCommand } from './commands/connections.js';
 import { createAnalyzeCommand } from './commands/analyze.js';
 import { createValidateCommand } from './commands/validate.js';
-import { PackageJsonSchema } from './schemas/package.schema.js';
-import { validate } from './utils/validation.js';
+import { PackageJsonSchema, validate } from '@erode/core';
 
 function setupSignalHandlers(): void {
   const handleShutdown = (signal: string) => {
@@ -33,6 +32,8 @@ function setupSignalHandlers(): void {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Read the CLI package's own version
 const packageJson = validate(
   PackageJsonSchema,
   JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8')),
@@ -57,8 +58,21 @@ program.configureHelp({
   subcommandTerm: (cmd) => cmd.name() + (cmd.alias() ? `|${cmd.alias()}` : ''),
 });
 
-program.action(() => {
-  program.help();
+program.action(async () => {
+  if (process.stdout.isTTY) {
+    const { runInteractiveWizard } = await import('./commands/interactive-app.js');
+    const { promptContinue } = await import('./ui/components/wizard-continue.js');
+    for (;;) {
+      process.exitCode = 0;
+      const args = await runInteractiveWizard();
+      if (!args) break;
+      await program.parseAsync(['node', 'erode', ...args]);
+      const shouldContinue = await promptContinue();
+      if (!shouldContinue) break;
+    }
+  } else {
+    program.help();
+  }
 });
 
 program.parse();

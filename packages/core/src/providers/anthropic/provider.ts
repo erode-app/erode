@@ -12,7 +12,7 @@ import { DriftAnalysisResponseSchema } from '../../schemas/drift-analysis.schema
 import { PromptBuilder } from '../../analysis/prompt-builder.js';
 import { validate } from '../../utils/validation.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
-import { ErrorHandler } from '../../utils/error-handler.js';
+import { withRetry } from '../../utils/retry.js';
 import { AnalysisPhase } from '../analysis-phase.js';
 import { ANTHROPIC_MODELS } from './models.js';
 
@@ -38,7 +38,7 @@ export class AnthropicProvider implements AIProvider {
     const prompt = PromptBuilder.buildComponentSelectionPrompt(data);
     const model = this.fastModel;
 
-    const responseText = await ErrorHandler.withRetry(
+    const responseText = await withRetry(
       () => this.callAnthropic(model, prompt, AnalysisPhase.COMPONENT_RESOLUTION, 256),
       {
         maxAttempts: 3,
@@ -66,7 +66,7 @@ export class AnthropicProvider implements AIProvider {
     const prompt = PromptBuilder.buildDependencyExtractionPrompt(data);
     const model = this.fastModel;
 
-    const responseText = await ErrorHandler.withRetry(
+    const responseText = await withRetry(
       () => this.callAnthropic(model, prompt, AnalysisPhase.DEPENDENCY_SCAN, 4096),
       {
         maxAttempts: 3,
@@ -92,7 +92,7 @@ export class AnthropicProvider implements AIProvider {
     const prompt = PromptBuilder.buildDriftAnalysisPrompt(data);
     const model = this.advancedModel;
 
-    const responseText = await ErrorHandler.withRetry(
+    const responseText = await withRetry(
       () => this.callAnthropic(model, prompt, AnalysisPhase.CHANGE_ANALYSIS, 8192),
       {
         maxAttempts: 3,
@@ -125,7 +125,7 @@ export class AnthropicProvider implements AIProvider {
     const prompt = PromptBuilder.buildModelGenerationPrompt(analysisResult);
     const model = this.advancedModel;
 
-    return ErrorHandler.withRetry(
+    return withRetry(
       () => this.callAnthropic(model, prompt, AnalysisPhase.MODEL_GENERATION, 8192),
       {
         maxAttempts: 3,

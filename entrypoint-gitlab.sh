@@ -41,15 +41,15 @@ fi
 
 # ── 4. Build CLI args and exec ──
 
-CLI_ARGS=(
+CORE_ARGS=(
   analyze "$MODEL_DIR"
   --url "$MR_URL"
   --format json
   --comment
 )
 
-[ "${LIKEC4_OPEN_PR:-false}" = "true" ] && CLI_ARGS+=(--generate-model --open-pr)
-[ "${LIKEC4_SKIP_FILE_FILTERING:-false}" = "true" ] && CLI_ARGS+=(--skip-file-filtering)
-[ "${LIKEC4_FAIL_ON_VIOLATIONS:-false}" = "true" ] && CLI_ARGS+=(--fail-on-violations)
+[ "${LIKEC4_OPEN_PR:-false}" = "true" ] && CORE_ARGS+=(--generate-model --open-pr)
+[ "${LIKEC4_SKIP_FILE_FILTERING:-false}" = "true" ] && CORE_ARGS+=(--skip-file-filtering)
+[ "${LIKEC4_FAIL_ON_VIOLATIONS:-false}" = "true" ] && CORE_ARGS+=(--fail-on-violations)
 
-exec node /app/packages/core/dist/cli.js "${CLI_ARGS[@]}"
+exec node /app/packages/core/dist/ci-entry.js "${CORE_ARGS[@]}"

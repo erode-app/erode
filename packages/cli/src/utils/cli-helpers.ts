@@ -1,53 +1,6 @@
 import chalk from 'chalk';
-import { OutputFormat } from './validation.js';
-interface ProgressIndicator {
-  start(message: string): void;
-  update(message: string): void;
-  succeed(message: string): void;
-  fail(message: string): void;
-  warn(message: string): void;
-  info(message: string): void;
-}
-class ConsoleProgress implements ProgressIndicator {
-  start(message: string): void {
-    console.log(chalk.cyan(`🔄 ${message}...`));
-  }
-  update(message: string): void {
-    console.log(chalk.blue(`   ${message}...`));
-  }
-  succeed(message: string): void {
-    console.log(chalk.green(`✓ ${message}`));
-  }
-  fail(message: string): void {
-    console.error(chalk.red(`❌ ${message}`));
-  }
-  warn(message: string): void {
-    console.warn(chalk.yellow(`⚠️  ${message}`));
-  }
-  info(message: string): void {
-    console.log(chalk.blue(`ℹ️  ${message}`));
-  }
-}
-class SilentProgress implements ProgressIndicator {
-  start(_message: string): void {
-    /* noop */
-  }
-  update(_message: string): void {
-    /* noop */
-  }
-  succeed(_message: string): void {
-    /* noop */
-  }
-  fail(_message: string): void {
-    /* noop */
-  }
-  warn(_message: string): void {
-    /* noop */
-  }
-  info(_message: string): void {
-    /* noop */
-  }
-}
+import type { OutputFormat } from './command-schemas.js';
+
 export const Logger = {
   fail(message: string): void {
     console.error(chalk.red(`❌ ${message}`));
@@ -264,9 +217,3 @@ export const OutputFormatter = {
     return String(data);
   },
 } as const;
-export function createProgress(silent = false): ProgressIndicator {
-  return silent ? new SilentProgress() : new ConsoleProgress();
-}
-export function displaySection(title: string): void {
-  console.log('\n' + chalk.bold.cyan(`── ${title} ──`));
-}

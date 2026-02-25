@@ -1,5 +1,6 @@
-import { ErodeError, AdapterError, ErrorCode } from '../errors.js';
+import { ErodeError, AdapterError, ErrorCode } from '@erode/core';
 import { Logger } from './cli-helpers.js';
+
 interface RetryOptions {
   maxAttempts: number;
   baseDelay: number;

@@ -1,5 +1,4 @@
 import { writeFileSync } from 'fs';
-import chalk from 'chalk';
 import type { DriftAnalysisResult } from './analysis/analysis-types.js';
 import type { StructuredAnalysisOutput } from './output/structured-output.js';
 
@@ -65,69 +64,6 @@ export function buildStructuredOutput(
     candidateComponents: extras?.candidateComponents,
     generatedChangeRequest: extras?.generatedChangeRequest,
   };
-}
-
-/** Format analysis results as a human-readable console string with color highlighting. */
-export function formatAnalysisForConsole(result: DriftAnalysisResult): string {
-  const lines: string[] = [];
-
-  lines.push(chalk.bold.cyan(`\n── Analysis Results: #${String(result.metadata.number)} ──`));
-  lines.push(chalk.gray(`  ${result.metadata.title}`));
-  lines.push(chalk.gray(`  Component: ${result.component.name} (${result.component.id})`));
-
-  lines.push('');
-  lines.push(chalk.bold('Summary:'));
-  lines.push(`  ${result.summary}`);
-
-  if (result.violations.length > 0) {
-    lines.push('');
-    lines.push(chalk.bold.red(`Violations (${String(result.violations.length)}):`));
-    for (const v of result.violations) {
-      const severityColor =
-        v.severity === 'high' ? chalk.red : v.severity === 'medium' ? chalk.yellow : chalk.blue;
-      const location = [v.file, v.commit?.substring(0, 7)].filter(Boolean).join(' @ ');
-      lines.push(`  ${severityColor(`[${v.severity.toUpperCase()}]`)} ${v.description}`);
-      if (location) lines.push(chalk.gray(`    ${location}`));
-      if (v.suggestion) lines.push(chalk.green(`    Suggestion: ${v.suggestion}`));
-    }
-  } else {
-    lines.push('');
-    lines.push(chalk.green('No violations found.'));
-  }
-
-  if (result.improvements && result.improvements.length > 0) {
-    lines.push('');
-    lines.push(chalk.bold.green('Improvements:'));
-    for (const imp of result.improvements) {
-      lines.push(chalk.green(`  + ${imp}`));
-    }
-  }
-
-  if (result.warnings && result.warnings.length > 0) {
-    lines.push('');
-    lines.push(chalk.bold.yellow('Warnings:'));
-    for (const w of result.warnings) {
-      lines.push(chalk.yellow(`  ! ${w}`));
-    }
-  }
-
-  if (result.modelUpdates) {
-    lines.push('');
-    lines.push(chalk.bold('Model Updates:'));
-    if (result.modelUpdates.add && result.modelUpdates.add.length > 0) {
-      lines.push(chalk.green('  Add:'));
-      for (const a of result.modelUpdates.add) lines.push(chalk.green(`    + ${a}`));
-    }
-    if (result.modelUpdates.remove && result.modelUpdates.remove.length > 0) {
-      lines.push(chalk.red('  Remove:'));
-      for (const r of result.modelUpdates.remove) lines.push(chalk.red(`    - ${r}`));
-    }
-    if (result.modelUpdates.notes) {
-      lines.push(chalk.gray(`  Notes: ${result.modelUpdates.notes}`));
-    }
-  }
-
-  return lines.join('\n');
 }
 
 const COMMENT_MARKER = '<!-- erode -->';

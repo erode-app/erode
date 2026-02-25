@@ -12,7 +12,7 @@ import { DriftAnalysisResponseSchema } from '../../schemas/drift-analysis.schema
 import { PromptBuilder } from '../../analysis/prompt-builder.js';
 import { validate } from '../../utils/validation.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
-import { ErrorHandler } from '../../utils/error-handler.js';
+import { withRetry } from '../../utils/retry.js';
 import { AnalysisPhase } from '../analysis-phase.js';
 import { GEMINI_MODELS } from './models.js';
 
@@ -38,7 +38,7 @@ export class GeminiProvider implements AIProvider {
     const prompt = PromptBuilder.buildComponentSelectionPrompt(data);
     const model = this.fastModel;
 
-    const responseText = await ErrorHandler.withRetry(
+    const responseText = await withRetry(
       () => this.callGemini(model, prompt, AnalysisPhase.COMPONENT_RESOLUTION),
       {
         maxAttempts: 3,
@@ -67,7 +67,7 @@ export class GeminiProvider implements AIProvider {
     const prompt = PromptBuilder.buildDependencyExtractionPrompt(data);
     const model = this.fastModel;
 
-    const responseText = await ErrorHandler.withRetry(
+    const responseText = await withRetry(
       () => this.callGemini(model, prompt, AnalysisPhase.DEPENDENCY_SCAN),
       {
         maxAttempts: 3,
@@ -93,7 +93,7 @@ export class GeminiProvider implements AIProvider {
     const prompt = PromptBuilder.buildDriftAnalysisPrompt(data);
     const model = this.advancedModel;
 
-    const responseText = await ErrorHandler.withRetry(
+    const responseText = await withRetry(
       () => this.callGemini(model, prompt, AnalysisPhase.CHANGE_ANALYSIS),
       {
         maxAttempts: 3,
@@ -126,13 +126,10 @@ export class GeminiProvider implements AIProvider {
     const prompt = PromptBuilder.buildModelGenerationPrompt(analysisResult);
     const model = this.advancedModel;
 
-    return ErrorHandler.withRetry(
-      () => this.callGemini(model, prompt, AnalysisPhase.MODEL_GENERATION),
-      {
-        maxAttempts: 3,
-        shouldRetry: (error) => this.shouldRetry(error),
-      }
-    );
+    return withRetry(() => this.callGemini(model, prompt, AnalysisPhase.MODEL_GENERATION), {
+      maxAttempts: 3,
+      shouldRetry: (error) => this.shouldRetry(error),
+    });
   }
 
   private async callGemini(model: string, prompt: string, phase: AnalysisPhase): Promise<string> {

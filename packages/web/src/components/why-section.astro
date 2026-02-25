@@ -1,0 +1,100 @@
+<section class="container">
+  <h2>Why erode?</h2>
+  <div class="grid">
+    <div class="card">
+      <span class="card-icon">🤖</span>
+      <h3>AI is writing more code than ever</h3>
+      <p>
+        Agents and LLMs ship features fast — often faster than architecture
+        docs can keep up with.
+      </p>
+    </div>
+    <div class="card">
+      <span class="card-icon">🕸️</span>
+      <h3>Dependencies grow silently</h3>
+      <p>
+        Every new integration is a line in the codebase that nobody drew on the
+        whiteboard. Over time, the real architecture diverges from the intended
+        one.
+      </p>
+    </div>
+    <div class="card">
+      <span class="card-icon">👁️</span>
+      <h3>Manual reviews can't keep up</h3>
+      <p>
+        Reviewers catch bugs, but rarely notice when a service quietly starts
+        calling another. Architecture drift compounds until it's too late.
+      </p>
+    </div>
+    <div class="card">
+      <span class="card-icon">🏢</span>
+      <h3>Mature systems have more at stake</h3>
+      <p>
+        The larger and more established the system, the harder it is to
+        untangle an undeclared dependency after it ships. Prevention beats
+        archaeology.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  section {
+    padding-block: var(--space-2xl);
+    border-top: 1px solid var(--border);
+  }
+
+  h2 {
+    text-align: center;
+    color: var(--text-primary);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+    margin-top: var(--space-xl);
+  }
+
+  .card {
+    padding: var(--space-lg);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .card-icon {
+    font-size: 1.75rem;
+    display: block;
+    margin-bottom: var(--space-md);
+  }
+
+  .card h3 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+  }
+
+  .card p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 768px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

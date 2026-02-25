@@ -13,7 +13,7 @@ COPY packages/eslint-config/package.json packages/eslint-config/
 RUN rm package-lock.json && npm install
 
 COPY packages/web/ packages/web/
-RUN npm run build -w @erode/web
+RUN npm run build --workspace=packages/web
 
 # Stage 2: Serve static files
 FROM nginx:alpine

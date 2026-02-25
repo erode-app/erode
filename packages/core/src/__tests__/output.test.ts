@@ -6,27 +6,12 @@ const { mockWriteFileSync } = vi.hoisted(() => ({
   mockWriteFileSync: vi.fn(),
 }));
 
-// Mock chalk to return plain strings for testability
-vi.mock('chalk', () => {
-  const passthrough = (s: string) => s;
-  const handler: ProxyHandler<object> = {
-    get: () => new Proxy(passthrough, handler),
-    apply: (_target, _thisArg, args: string[]) => args[0],
-  };
-  return { default: new Proxy(passthrough, handler) };
-});
-
 // Mock fs.writeFileSync
 vi.mock('fs', () => ({
   writeFileSync: mockWriteFileSync,
 }));
 
-import {
-  buildStructuredOutput,
-  formatAnalysisForConsole,
-  formatAnalysisAsComment,
-  writeOutputToFile,
-} from '../output.js';
+import { buildStructuredOutput, formatAnalysisAsComment, writeOutputToFile } from '../output.js';
 
 function makeAnalysisResult(overrides: Partial<DriftAnalysisResult> = {}): DriftAnalysisResult {
   return {
@@ -135,87 +120,6 @@ describe('buildStructuredOutput', () => {
 
     expect(result.dependencyChanges).toHaveLength(1);
     expect(result.dependencyChanges?.[0]?.dependency).toBe('redis');
-  });
-});
-
-describe('formatAnalysisForConsole', () => {
-  it('should include PR number and title', () => {
-    const output = formatAnalysisForConsole(makeAnalysisResult());
-
-    expect(output).toContain('#42');
-    expect(output).toContain('Test PR');
-  });
-
-  it('should include component info', () => {
-    const output = formatAnalysisForConsole(makeAnalysisResult());
-
-    expect(output).toContain('API Service');
-    expect(output).toContain('comp.api');
-  });
-
-  it('should show "No violations found" when none exist', () => {
-    const output = formatAnalysisForConsole(makeAnalysisResult());
-
-    expect(output).toContain('No violations found');
-  });
-
-  it('should display violations with severity', () => {
-    const output = formatAnalysisForConsole(
-      makeAnalysisResult({
-        hasViolations: true,
-        violations: [
-          {
-            severity: 'high',
-            description: 'Undeclared dependency on Redis',
-            file: 'src/cache.ts',
-            line: 5,
-            commit: 'abc1234',
-            suggestion: 'Add redis to model',
-          },
-        ],
-      })
-    );
-
-    expect(output).toContain('Violations (1)');
-    expect(output).toContain('[HIGH]');
-    expect(output).toContain('Undeclared dependency on Redis');
-    expect(output).toContain('src/cache.ts');
-    expect(output).toContain('Suggestion: Add redis to model');
-  });
-
-  it('should display improvements when present', () => {
-    const output = formatAnalysisForConsole(
-      makeAnalysisResult({ improvements: ['Good use of caching'] })
-    );
-
-    expect(output).toContain('Improvements');
-    expect(output).toContain('Good use of caching');
-  });
-
-  it('should display warnings when present', () => {
-    const output = formatAnalysisForConsole(
-      makeAnalysisResult({ warnings: ['Consider adding tests'] })
-    );
-
-    expect(output).toContain('Warnings');
-    expect(output).toContain('Consider adding tests');
-  });
-
-  it('should display model updates when present', () => {
-    const output = formatAnalysisForConsole(
-      makeAnalysisResult({
-        modelUpdates: {
-          add: ['redis -> comp.api'],
-          remove: ['memcached -> comp.api'],
-          notes: 'Cache migration',
-        },
-      })
-    );
-
-    expect(output).toContain('Model Updates');
-    expect(output).toContain('redis -> comp.api');
-    expect(output).toContain('memcached -> comp.api');
-    expect(output).toContain('Cache migration');
   });
 });
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # erode GitHub Action entrypoint
-# All analysis, commenting, step summaries, and output handling is done by the CLI.
+# All analysis, commenting, step summaries, and output handling is done by core.
 # This script only handles GitHub Actions-specific bootstrapping that requires bash.
 set -euo pipefail
 
@@ -47,7 +47,7 @@ rm -f "$GIT_ASKPASS_SCRIPT"
 
 # ── 4. Build CLI args and exec ──
 
-CLI_ARGS=(
+CORE_ARGS=(
   analyze "${MODEL_CLONE_DIR}/${INPUT_MODEL_PATH:-.}"
   --url "$PR_URL"
   --model-format "$MODEL_FORMAT"
@@ -56,8 +56,8 @@ CLI_ARGS=(
   --github-actions
 )
 
-[ "${INPUT_OPEN_PR:-false}" = "true" ] && CLI_ARGS+=(--generate-model --open-pr)
-[ "${INPUT_SKIP_FILE_FILTERING:-false}" = "true" ] && CLI_ARGS+=(--skip-file-filtering)
-[ "${INPUT_FAIL_ON_VIOLATIONS:-false}" = "true" ] && CLI_ARGS+=(--fail-on-violations)
+[ "${INPUT_OPEN_PR:-false}" = "true" ] && CORE_ARGS+=(--generate-model --open-pr)
+[ "${INPUT_SKIP_FILE_FILTERING:-false}" = "true" ] && CORE_ARGS+=(--skip-file-filtering)
+[ "${INPUT_FAIL_ON_VIOLATIONS:-false}" = "true" ] && CORE_ARGS+=(--fail-on-violations)
 
-exec node /app/packages/core/dist/cli.js "${CLI_ARGS[@]}"
+exec node /app/packages/core/dist/ci-entry.js "${CORE_ARGS[@]}"

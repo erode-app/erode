@@ -11,6 +11,7 @@
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@astrojs/starlight": "^0.37.6",
     "astro": "^5.17.3"
   },
   "devDependencies": {

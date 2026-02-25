@@ -19,7 +19,7 @@
     </div>
     <div class="feature">
       <span class="feature-icon">🔀</span>
-      <h3>Auto-Fix PRs</h3>
+      <h3>Auto-Fix PRs <span class="badge">Coming soon</span></h3>
       <p>
         Optionally generates a change request with LikeC4 DSL updates to
         fix detected drift.
@@ -50,6 +50,7 @@
       </p>
     </div>
   </div>
+  <a href="/docs/getting-started/" class="docs-link">Explore the docs &rarr;</a>
 </section>
 
 <style>
@@ -94,10 +95,36 @@
     margin-bottom: var(--space-xs);
   }
 
+  .badge {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.15em 0.5em;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-lg);
+    color: var(--accent);
+    vertical-align: middle;
+  }
+
   .feature p {
     font-size: 0.875rem;
     color: var(--text-muted);
     line-height: 1.5;
+  }
+
+  .docs-link {
+    display: block;
+    text-align: center;
+    margin-top: var(--space-xl);
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+  }
+
+  .docs-link:hover {
+    color: var(--text-primary);
   }
 
   @media (max-width: 768px) {

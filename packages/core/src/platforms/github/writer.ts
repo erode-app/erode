@@ -1,7 +1,7 @@
 import { Octokit } from '@octokit/rest';
 import { CONFIG } from '../../utils/config.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
-import { ErrorHandler } from '../../utils/error-handler.js';
+import { withRetry } from '../../utils/retry.js';
 import type {
   SourcePlatformWriter,
   ChangeRequestRef,
@@ -189,7 +189,7 @@ export class GitHubWriter implements SourcePlatformWriter {
     const repo = ref.platformId.repo;
 
     try {
-      await ErrorHandler.withRetry(
+      await withRetry(
         async () => {
           if (options?.upsertMarker) {
             const existingId = await this.findCommentByMarker(
@@ -235,7 +235,7 @@ export class GitHubWriter implements SourcePlatformWriter {
     const repo = ref.platformId.repo;
 
     try {
-      await ErrorHandler.withRetry(
+      await withRetry(
         async () => {
           const existingId = await this.findCommentByMarker(owner, repo, ref.number, marker);
           if (existingId) {

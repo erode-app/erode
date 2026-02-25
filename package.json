@@ -8,15 +8,16 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "build": "npm run build --workspace=packages/core",
-    "test": "npm run test --workspace=packages/core",
+    "build": "npm run build --workspace=packages/core && npm run build --workspace=packages/cli",
+    "build:ci": "npm run build --workspace=packages/core",
+    "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "knip": "knip",
-    "check:ci": "npm run check:ci --workspace=packages/core && npm run knip",
-    "cli": "tsx packages/core/src/cli.ts",
+    "check:ci": "npm run check:ci --workspaces --if-present && npm run knip",
+    "cli": "tsx packages/cli/src/cli.ts",
     "dev:web": "npm run dev --workspace=packages/web"
   },
   "devDependencies": {
