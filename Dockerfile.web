@@ -2,28 +2,20 @@
 FROM node:24-slim AS builder
 WORKDIR /app
 
-# Copy workspace config files for dependency resolution
 COPY package.json package-lock.json ./
 COPY packages/web/package.json packages/web/
 COPY packages/core/package.json packages/core/
+COPY packages/eslint-config/package.json packages/eslint-config/
 
-# Install only web workspace deps
-RUN npm ci -w @erode/web
+# Lockfile records macOS-specific rollup binaries; npm ci/install
+# won't resolve the correct linux native binary (npm#4828).
+# Deleting the lockfile lets npm resolve platform deps fresh.
+RUN rm package-lock.json && npm install
 
-# Copy web source and build
 COPY packages/web/ packages/web/
 RUN npm run build -w @erode/web
 
-# Stage 2: Runtime
-FROM node:24-slim
-WORKDIR /app
-
-COPY --from=builder /app/packages/web/dist/ ./dist/
-ENV HOST=0.0.0.0
-ENV PORT=4321
-EXPOSE 4321
-
-RUN useradd -r -s /bin/false erode && chown -R erode:erode /app
-USER erode
-
-CMD ["node", "dist/server/entry.mjs"]
+# Stage 2: Serve static files
+FROM nginx:alpine
+COPY --from=builder /app/packages/web/dist/ /usr/share/nginx/html/
+EXPOSE 80

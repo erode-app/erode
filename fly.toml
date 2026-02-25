@@ -1,11 +1,11 @@
-app = 'erode'
-primary_region = 'arn'
+app = 'core-yyvpwa'
+primary_region = 'ams'
 
 [build]
 dockerfile = 'Dockerfile.web'
 
 [http_service]
-internal_port = 4321
+internal_port = 80
 force_https = true
 auto_stop_machines = 'stop'
 auto_start_machines = true

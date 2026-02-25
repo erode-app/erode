@@ -9,4 +9,3 @@ dist
 coverage
 .vscode
 .idea
-packages/eslint-config
