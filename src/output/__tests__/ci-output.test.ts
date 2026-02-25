@@ -156,9 +156,9 @@ describe('writeGitHubActionsOutputs', () => {
     expect(path).toBe('/tmp/github-output');
     expect(content).toContain('has-violations=false');
     expect(content).toContain('violations-count=0');
-    expect(content).toContain('analysis-summary<<SUMMARY_EOF');
+    expect(content).toMatch(/analysis-summary<<SUMMARY_EOF_[a-f0-9]{32}/);
     expect(content).toContain('No issues found');
-    expect(content).toContain('SUMMARY_EOF');
+    expect(content).toMatch(/\nSUMMARY_EOF_[a-f0-9]{32}\n/);
 
     if (original === undefined) {
       delete process.env['GITHUB_OUTPUT'];

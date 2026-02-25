@@ -16,14 +16,35 @@ npm install
 
 Set via `.env` or export directly:
 
-| Variable            | Required    | Description                                         |
-| ------------------- | ----------- | --------------------------------------------------- |
-| `GITHUB_TOKEN`      | Conditional | Required for GitHub PRs                             |
-| `GITLAB_TOKEN`      | Conditional | Required for GitLab MRs                             |
-| `GITLAB_BASE_URL`   | No          | GitLab instance URL (default: `https://gitlab.com`) |
-| `AI_PROVIDER`       | No          | `gemini` (default) or `anthropic`                   |
-| `GEMINI_API_KEY`    | Conditional | Required when using Gemini                          |
-| `ANTHROPIC_API_KEY` | Conditional | Required when using Anthropic                       |
+| Variable               | Required    | Description                                                         |
+| ---------------------- | ----------- | ------------------------------------------------------------------- |
+| `GITHUB_TOKEN`         | Conditional | Required for GitHub PRs                                             |
+| `GITLAB_TOKEN`         | Conditional | Required for GitLab MRs                                             |
+| `GITLAB_BASE_URL`      | No          | GitLab instance URL (default: `https://gitlab.com`)                 |
+| `AI_PROVIDER`          | No          | `gemini` (default) or `anthropic`                                   |
+| `GEMINI_API_KEY`       | Conditional | Required when using Gemini                                          |
+| `ANTHROPIC_API_KEY`    | Conditional | Required when using Anthropic                                       |
+| `MODEL_FORMAT`         | No          | Architecture model format (default: `likec4`)                       |
+| `MODEL_REPO_PR_TOKEN`  | No          | Separate GitHub token for model repo PR creation                    |
+| `LIKEC4_EXCLUDE_PATHS` | No          | Comma-separated list of model paths to exclude                      |
+| `LIKEC4_EXCLUDE_TAGS`  | No          | Comma-separated list of model tags to exclude (default: `adr,rfc`)  |
+| `MAX_FILES_PER_DIFF`   | No          | Max files per diff (default: `50`, range: 1–1000)                   |
+| `MAX_LINES_PER_DIFF`   | No          | Max lines per diff (default: `5000`, range: 100–50000)              |
+| `MAX_CONTEXT_CHARS`    | No          | Max context chars sent to AI (default: `10000`, range: 1000–100000) |
+
+### Advanced configuration
+
+| Variable                   | Default                      | Description                                  |
+| -------------------------- | ---------------------------- | -------------------------------------------- |
+| `GITHUB_TIMEOUT`           | `30000`                      | GitHub API timeout (ms)                      |
+| `ANTHROPIC_TIMEOUT`        | `60000`                      | Anthropic API timeout (ms)                   |
+| `GEMINI_TIMEOUT`           | `60000`                      | Gemini API timeout (ms)                      |
+| `ANTHROPIC_FAST_MODEL`     | `claude-haiku-4-5-20251001`  | Anthropic model for stages 0–1               |
+| `ANTHROPIC_ADVANCED_MODEL` | `claude-sonnet-4-5-20250929` | Anthropic model for stage 2                  |
+| `GEMINI_FAST_MODEL`        | `gemini-2.5-flash`           | Gemini model for stages 0–1                  |
+| `GEMINI_ADVANCED_MODEL`    | `gemini-2.5-flash`           | Gemini model for stage 2                     |
+| `DEBUG_MODE`               | `false`                      | Enable debug mode (skips API key validation) |
+| `VERBOSE`                  | `false`                      | Enable verbose logging                       |
 
 ### Run directly (no build)
 
@@ -159,7 +180,7 @@ jobs:
 
 ### Advanced example
 
-Use `fail-on-violations` to block PRs, `create-pr` to auto-generate model updates, and read outputs in subsequent steps:
+Use `fail-on-violations` to block PRs, `open-pr` to auto-generate model updates, and read outputs in subsequent steps:
 
 ```yaml
 name: Architecture Drift Detection
@@ -178,7 +199,7 @@ jobs:
           ai-provider: 'anthropic'
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          create-pr: 'true'
+          open-pr: 'true'
           fail-on-violations: 'true'
 
       - name: Check results
@@ -200,7 +221,8 @@ jobs:
 | `gemini-api-key`      | No       |             | Gemini API key                                              |
 | `github-token`        | Yes      |             | GitHub token for API access                                 |
 | `model-repo-token`    | No       |             | Separate token for the model repository                     |
-| `create-pr`           | No       | `false`     | Create a PR with suggested model updates                    |
+| `model-format`        | No       | `likec4`    | Architecture model format                                   |
+| `open-pr`             | No       | `false`     | Create a PR with suggested model updates                    |
 | `fail-on-violations`  | No       | `false`     | Fail the action if violations are detected                  |
 | `skip-file-filtering` | No       | `false`     | Analyze all changed files                                   |
 
@@ -241,7 +263,7 @@ The entrypoint supports these variables:
 | `LIKEC4_MODEL_PATH`                     | No       | `.`                  | Path to model within the repository                                                            |
 | `LIKEC4_MODEL_REF`                      | No       | `main`               | Git ref for the model repository                                                               |
 | `LIKEC4_MODEL_REPO_TOKEN`               | No       | `$GITLAB_TOKEN`      | Separate token for model repository access                                                     |
-| `LIKEC4_CREATE_PR`                      | No       | `false`              | Create MR with suggested model updates                                                         |
+| `LIKEC4_OPEN_PR`                        | No       | `false`              | Create MR with suggested model updates                                                         |
 | `LIKEC4_FAIL_ON_VIOLATIONS`             | No       | `false`              | Exit with code 1 when violations are found                                                     |
 | `LIKEC4_SKIP_FILE_FILTERING`            | No       | `false`              | Analyze all changed files                                                                      |
 | `GITLAB_BASE_URL`                       | No       | `https://gitlab.com` | For self-hosted GitLab instances                                                               |

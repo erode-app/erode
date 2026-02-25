@@ -35,9 +35,15 @@ export MODEL_REPO_PR_TOKEN="${INPUT_MODEL_REPO_TOKEN:-$GITHUB_TOKEN}"
 MODEL_CLONE_DIR="/tmp/model-repo"
 CLONE_TOKEN="${INPUT_MODEL_REPO_TOKEN:-$GITHUB_TOKEN}"
 
-git clone --depth 1 --branch "${INPUT_MODEL_REF:-main}" \
-  "https://x-access-token:${CLONE_TOKEN}@github.com/${INPUT_MODEL_REPO:?model-repo input is required}.git" \
-  "$MODEL_CLONE_DIR" 2>&1 | sed "s/${CLONE_TOKEN}/***REDACTED***/g"
+GIT_ASKPASS_SCRIPT="/tmp/git-askpass-$$"
+printf '#!/bin/sh\necho "%s"' "$CLONE_TOKEN" > "$GIT_ASKPASS_SCRIPT"
+chmod +x "$GIT_ASKPASS_SCRIPT"
+
+GIT_ASKPASS="$GIT_ASKPASS_SCRIPT" git clone --depth 1 --branch "${INPUT_MODEL_REF:-main}" \
+  "https://x-access-token@github.com/${INPUT_MODEL_REPO:?model-repo input is required}.git" \
+  "$MODEL_CLONE_DIR"
+
+rm -f "$GIT_ASKPASS_SCRIPT"
 
 # ── 4. Build CLI args and exec ──
 

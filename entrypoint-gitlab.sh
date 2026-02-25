@@ -26,9 +26,15 @@ if [ -n "${LIKEC4_MODEL_REPO:-}" ]; then
   MODEL_CLONE_DIR="/tmp/model-repo"
   CLONE_TOKEN="${LIKEC4_MODEL_REPO_TOKEN:-$GITLAB_TOKEN}"
 
-  git clone --depth 1 --branch "${LIKEC4_MODEL_REF:-main}" \
-    "https://gitlab-ci-token:${CLONE_TOKEN}@${CI_SERVER_HOST:-gitlab.com}/${LIKEC4_MODEL_REPO}.git" \
-    "$MODEL_CLONE_DIR" 2>&1 | sed "s/${CLONE_TOKEN}/***REDACTED***/g"
+  GIT_ASKPASS_SCRIPT="/tmp/git-askpass-$$"
+  printf '#!/bin/sh\necho "%s"' "$CLONE_TOKEN" > "$GIT_ASKPASS_SCRIPT"
+  chmod +x "$GIT_ASKPASS_SCRIPT"
+
+  GIT_ASKPASS="$GIT_ASKPASS_SCRIPT" git clone --depth 1 --branch "${LIKEC4_MODEL_REF:-main}" \
+    "https://gitlab-ci-token@${CI_SERVER_HOST:-gitlab.com}/${LIKEC4_MODEL_REPO}.git" \
+    "$MODEL_CLONE_DIR"
+
+  rm -f "$GIT_ASKPASS_SCRIPT"
 
   MODEL_DIR="${MODEL_CLONE_DIR}/${LIKEC4_MODEL_PATH:-.}"
 fi

@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { appendFileSync } from 'fs';
 import type { StructuredAnalysisOutput } from './structured-output.js';
 
@@ -9,12 +10,13 @@ export function writeGitHubActionsOutputs(output: StructuredAnalysisOutput): voi
   const outputFile = process.env['GITHUB_OUTPUT'];
   if (!outputFile) return;
 
+  const delimiter = `SUMMARY_EOF_${randomUUID().replace(/-/g, '')}`;
   const lines = [
     `has-violations=${String(output.analysis.hasViolations)}`,
     `violations-count=${String(output.analysis.violations.length)}`,
-    `analysis-summary<<SUMMARY_EOF`,
+    `analysis-summary<<${delimiter}`,
     output.analysis.summary,
-    `SUMMARY_EOF`,
+    delimiter,
   ];
 
   appendFileSync(outputFile, lines.join('\n') + '\n', 'utf-8');

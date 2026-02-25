@@ -76,6 +76,20 @@ function provideSuggestions(error: ErodeError): void {
   }
 }
 
+const SENSITIVE_KEYS = new Set([
+  'token',
+  'apikey',
+  'api_key',
+  'secret',
+  'password',
+  'authorization',
+  'credential',
+]);
+
+function isSensitiveKey(key: string): boolean {
+  return SENSITIVE_KEYS.has(key.toLowerCase());
+}
+
 export const ErrorHandler = {
   formatError(error: unknown): void {
     if (error instanceof ErodeError) {
@@ -84,7 +98,7 @@ export const ErrorHandler = {
         console.error('   Additional context:');
         for (const [key, value] of Object.entries(error.context)) {
           if (value !== undefined && value !== null) {
-            console.error(`   ${key}: ${String(value)}`);
+            console.error(`   ${key}: ${isSensitiveKey(key) ? '***REDACTED***' : String(value)}`);
           }
         }
       }
