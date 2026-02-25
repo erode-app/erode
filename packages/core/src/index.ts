@@ -42,6 +42,7 @@ export type { DependencyExtractionResult } from './schemas/dependency-extraction
 export {
   buildStructuredOutput,
   formatAnalysisAsComment,
+  formatErrorAsComment,
   analysisHasFindings,
   COMMENT_MARKER,
   writeOutputToFile,

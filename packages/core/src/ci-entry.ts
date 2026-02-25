@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { runAnalyze } from './pipelines/analyze.js';
 import type { AnalyzeOptions } from './pipelines/analyze.js';
+import { createPlatformReader, createPlatformWriter } from './platforms/platform-factory.js';
+import { formatErrorAsComment, COMMENT_MARKER } from './output.js';
 
 function parseArgs(argv: string[]): AnalyzeOptions {
   const args = argv.slice(2);
@@ -39,12 +41,40 @@ function parseArgs(argv: string[]): AnalyzeOptions {
 }
 
 const options = parseArgs(process.argv);
-const result = await runAnalyze(options);
 
-if (result.structured) {
-  console.log(JSON.stringify(result.structured, null, 2));
-}
+try {
+  const result = await runAnalyze(options);
 
-if (options.failOnViolations && result.hasViolations) {
+  if (result.structured) {
+    console.log(JSON.stringify(result.structured, null, 2));
+  }
+
+  if (options.failOnViolations && result.hasViolations) {
+    process.exitCode = 1;
+  }
+} catch (error) {
+  console.error(
+    `erode: fatal error: ${error instanceof Error ? error.message : String(error)}`
+  );
+
+  if (options.comment) {
+    try {
+      const reader = createPlatformReader(options.url);
+      const ref = reader.parseChangeRequestUrl(options.url);
+      const writer = createPlatformWriter(
+        ref.repositoryUrl,
+        ref.platformId.owner,
+        ref.platformId.repo
+      );
+      await writer.commentOnChangeRequest(ref, formatErrorAsComment(error), {
+        upsertMarker: COMMENT_MARKER,
+      });
+    } catch (commentError) {
+      console.error(
+        `erode: failed to post error comment: ${commentError instanceof Error ? commentError.message : String(commentError)}`
+      );
+    }
+  }
+
   process.exitCode = 1;
 }

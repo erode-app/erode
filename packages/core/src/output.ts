@@ -1,6 +1,7 @@
 import { writeFileSync } from 'fs';
 import type { DriftAnalysisResult } from './analysis/analysis-types.js';
 import type { StructuredAnalysisOutput } from './output/structured-output.js';
+import { ApiError, ConfigurationError, ErrorCode } from './errors.js';
 
 /** Build a structured JSON output object from analysis results for CI/CD consumption. */
 export function buildStructuredOutput(
@@ -200,6 +201,43 @@ export function analysisHasFindings(result: DriftAnalysisResult): boolean {
   const hasAdd = result.modelUpdates?.add && result.modelUpdates.add.length > 0;
   const hasRemove = result.modelUpdates?.remove && result.modelUpdates.remove.length > 0;
   return !!(hasAdd ?? hasRemove);
+}
+
+/** Format an error as a markdown PR comment so CI failures are visible on the PR. */
+export function formatErrorAsComment(error: unknown): string {
+  const lines: string[] = [];
+
+  lines.push(COMMENT_MARKER);
+  lines.push('## Architecture Drift Detection');
+  lines.push('');
+  lines.push(':x: **Analysis failed**');
+  lines.push('');
+
+  if (error instanceof ApiError) {
+    if (error.code === ErrorCode.RATE_LIMITED) {
+      lines.push(
+        'The AI provider rate limit was exceeded. This is usually temporary — re-run the check in a few minutes, or check your API plan\u2019s quota.'
+      );
+    } else if (error.code === ErrorCode.TIMEOUT) {
+      lines.push(
+        'The AI provider request timed out. This may happen with large PRs — try re-running.'
+      );
+    } else {
+      lines.push('An unexpected error occurred during analysis. Check the workflow logs for details.');
+    }
+  } else if (error instanceof ConfigurationError) {
+    lines.push(
+      'A configuration error occurred. Check that API keys and tokens are set correctly.'
+    );
+  } else {
+    lines.push('An unexpected error occurred during analysis. Check the workflow logs for details.');
+  }
+
+  lines.push('');
+  lines.push('---');
+  lines.push('*Automated by [erode](https://github.com/erode-app/core)*');
+
+  return lines.join('\n');
 }
 
 /** The HTML comment marker used for upsert/delete of erode PR comments. */

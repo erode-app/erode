@@ -11,7 +11,14 @@ vi.mock('fs', () => ({
   writeFileSync: mockWriteFileSync,
 }));
 
-import { buildStructuredOutput, formatAnalysisAsComment, writeOutputToFile } from '../output.js';
+import {
+  buildStructuredOutput,
+  formatAnalysisAsComment,
+  formatErrorAsComment,
+  COMMENT_MARKER,
+  writeOutputToFile,
+} from '../output.js';
+import { ApiError, ConfigurationError } from '../errors.js';
 
 function makeAnalysisResult(overrides: Partial<DriftAnalysisResult> = {}): DriftAnalysisResult {
   return {
@@ -216,5 +223,57 @@ describe('writeOutputToFile', () => {
     const writtenJson = call[1];
     expect(writtenJson).toContain('\n');
     expect(writtenJson).toContain('  ');
+  });
+});
+
+describe('formatErrorAsComment', () => {
+  it('should show rate limit message for ApiError with 429 status', () => {
+    const error = new ApiError('Resource exhausted', 429);
+    const output = formatErrorAsComment(error);
+
+    expect(output).toContain(':x: **Analysis failed**');
+    expect(output).toContain('rate limit was exceeded');
+    expect(output).toContain('re-run the check');
+  });
+
+  it('should show timeout message for ApiError with timeout', () => {
+    const error = new ApiError('Request timeout', 408);
+    const output = formatErrorAsComment(error);
+
+    expect(output).toContain(':x: **Analysis failed**');
+    expect(output).toContain('timed out');
+    expect(output).toContain('try re-running');
+  });
+
+  it('should show config message for ConfigurationError', () => {
+    const error = new ConfigurationError('Missing GEMINI_API_KEY');
+    const output = formatErrorAsComment(error);
+
+    expect(output).toContain(':x: **Analysis failed**');
+    expect(output).toContain('configuration error');
+    expect(output).toContain('API keys and tokens');
+  });
+
+  it('should show generic message for unknown errors', () => {
+    const error = new Error('Something broke');
+    const output = formatErrorAsComment(error);
+
+    expect(output).toContain(':x: **Analysis failed**');
+    expect(output).toContain('unexpected error');
+    expect(output).toContain('workflow logs');
+  });
+
+  it('should contain COMMENT_MARKER for upsert', () => {
+    const error = new Error('test');
+    const output = formatErrorAsComment(error);
+
+    expect(output).toContain(COMMENT_MARKER);
+  });
+
+  it('should contain the erode footer', () => {
+    const error = new Error('test');
+    const output = formatErrorAsComment(error);
+
+    expect(output).toContain('*Automated by [erode]');
   });
 });
