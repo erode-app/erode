@@ -4,6 +4,15 @@
 # This script only handles GitHub Actions-specific bootstrapping that requires bash.
 set -euo pipefail
 
+# GitHub Actions sets INPUT_<name> env vars preserving hyphens from input names.
+# Bash can't reference vars with hyphens, so normalize to underscores.
+while IFS='=' read -r name value; do
+  norm="${name//-/_}"
+  if [[ "$name" != "$norm" ]]; then
+    export "$norm=$value"
+  fi
+done < <(env | grep '^INPUT_')
+
 # ── 1. Extract PR URL from event payload ──
 
 PR_URL=$(jq -r '.pull_request.html_url // empty' "$GITHUB_EVENT_PATH")
