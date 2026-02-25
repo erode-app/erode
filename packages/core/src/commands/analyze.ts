@@ -323,8 +323,14 @@ export function createAnalyzeCommand(): Command {
         }
 
         if (validatedOptions.githubActions && structured) {
-          writeGitHubActionsOutputs(structured);
-          writeGitHubStepSummary(structured);
+          try {
+            writeGitHubActionsOutputs(structured);
+            writeGitHubStepSummary(structured);
+          } catch (error) {
+            progress.warn(
+              `Failed to write GitHub Actions outputs: ${error instanceof Error ? error.message : String(error)}`
+            );
+          }
         }
 
         if (validatedOptions.failOnViolations && analysisResult.hasViolations) {

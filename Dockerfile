@@ -32,6 +32,4 @@ COPY --from=builder /app/packages/core/dist/ packages/core/dist/
 COPY entrypoint.sh /entrypoint.sh
 COPY entrypoint-gitlab.sh /entrypoint-gitlab.sh
 RUN chmod +x /entrypoint.sh /entrypoint-gitlab.sh
-RUN useradd -r -s /bin/false erode && chown -R erode:erode /app
-USER erode
 ENTRYPOINT ["/entrypoint.sh"]
