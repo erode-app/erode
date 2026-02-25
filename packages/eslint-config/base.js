@@ -23,7 +23,7 @@ export function createBaseConfig(tsconfigRootDir) {
         'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
         'check-file/filename-naming-convention': [
           'error',
-          { '**/*.{ts,tsx}': 'KEBAB_CASE' },
+          { '**/*.{ts,tsx,astro}': 'KEBAB_CASE' },
           { ignoreMiddleExtensions: true },
         ],
         'check-file/folder-naming-convention': ['error', { '**/src/**/': 'KEBAB_CASE' }],

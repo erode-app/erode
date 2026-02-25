@@ -1,0 +1,114 @@
+<section class="container">
+  <h2>Features</h2>
+  <div class="grid">
+    <div class="feature">
+      <span class="feature-icon">🤖</span>
+      <h3>Multi-Provider AI</h3>
+      <p>
+        Choose between Gemini and Anthropic. Cheaper models for extraction,
+        stronger models for analysis.
+      </p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">⚡</span>
+      <h3>CI/CD Native</h3>
+      <p>
+        Runs as a GitHub Action with automatic PR commenting and configurable
+        failure thresholds. GitLab and Bitbucket coming soon.
+      </p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">🔀</span>
+      <h3>Auto-Fix PRs</h3>
+      <p>
+        Optionally generates a change request with LikeC4 DSL updates to
+        fix detected drift.
+      </p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">🚨</span>
+      <h3>Violation Severity</h3>
+      <p>
+        Categorizes findings as high, medium, or low severity with actionable
+        suggestions.
+      </p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">📦</span>
+      <h3>Monorepo Aware</h3>
+      <p>
+        Resolves the correct architecture component when a single repo maps to
+        multiple components.
+      </p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">🏗️</span>
+      <h3>Architecture-as-Code</h3>
+      <p>
+        First-class LikeC4 support today, with more architecture model formats
+        on the roadmap.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  section {
+    padding-block: var(--space-2xl);
+    border-top: 1px solid var(--border);
+  }
+
+  h2 {
+    text-align: center;
+    color: var(--text-primary);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
+    margin-top: var(--space-xl);
+  }
+
+  .feature {
+    padding: var(--space-lg);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .feature:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .feature-icon {
+    font-size: 1.75rem;
+    display: block;
+    margin-bottom: var(--space-md);
+  }
+
+  .feature h3 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+  }
+
+  .feature p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 768px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

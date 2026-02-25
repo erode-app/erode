@@ -1,0 +1,143 @@
+<section class="container">
+  <div class="header">
+    <h2>How It Works</h2>
+    <p class="subtitle">
+      A multi-stage AI pipeline analyzes every code change against your
+      architecture model.
+    </p>
+  </div>
+  <div class="pipeline">
+    <div class="stage">
+      <span class="stage-label">Stage 0</span>
+      <span class="stage-icon">🎯</span>
+      <h3>Resolve</h3>
+      <p>
+        Identifies which architecture component maps to the repository being
+        changed.
+      </p>
+    </div>
+    <div class="stage">
+      <span class="stage-label">Stage 1</span>
+      <span class="stage-icon">🔍</span>
+      <h3>Scan</h3>
+      <p>
+        Extracts dependency changes and new integrations from the PR diff.
+      </p>
+    </div>
+    <div class="stage">
+      <span class="stage-label">Stage 2</span>
+      <span class="stage-icon">⚖️</span>
+      <h3>Analyze</h3>
+      <p>
+        Compares changes against the declared architecture model to detect
+        drift.
+      </p>
+    </div>
+    <div class="stage">
+      <span class="stage-label">Stage 3</span>
+      <span class="stage-icon">🔧</span>
+      <h3>Generate</h3>
+      <p>
+        Produces LikeC4 DSL updates to bring the model back in sync.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  section {
+    padding-block: var(--space-2xl);
+    border-top: 1px solid var(--border);
+  }
+
+  .header {
+    text-align: center;
+  }
+
+  h2 {
+    color: var(--text-primary);
+  }
+
+  .subtitle {
+    max-width: 36rem;
+    margin: var(--space-md) auto 0;
+    color: var(--text-muted);
+  }
+
+  .pipeline {
+    display: flex;
+    gap: var(--space-lg);
+    margin-top: var(--space-xl);
+    position: relative;
+    justify-content: center;
+  }
+
+  .stage {
+    flex: 1;
+    max-width: 15rem;
+    text-align: center;
+    padding: var(--space-lg);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    position: relative;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .stage:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .stage:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: calc(-1 * var(--space-lg));
+    width: var(--space-lg);
+    height: 2px;
+    background: var(--border);
+  }
+
+  .stage-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-sm);
+  }
+
+  .stage-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: var(--space-sm);
+  }
+
+  .stage h3 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+  }
+
+  .stage p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 768px) {
+    .pipeline {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stage {
+      max-width: 100%;
+    }
+
+    .stage:not(:last-child)::after {
+      display: none;
+    }
+  }
+</style>

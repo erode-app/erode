@@ -1,10 +1,20 @@
 ---
 import BaseLayout from '../layouts/base-layout.astro';
+import NavBar from '../components/nav-bar.astro';
+import HeroSection from '../components/hero-section.astro';
+import PipelineSection from '../components/pipeline-section.astro';
+import FeaturesSection from '../components/features-section.astro';
+import IntegrationSection from '../components/integration-section.astro';
+import FooterSection from '../components/footer-section.astro';
 ---
 
-<BaseLayout title="erode">
+<BaseLayout title="erode — Architecture Drift Detection for Code Changes">
+  <NavBar />
   <main>
-    <h1>erode</h1>
-    <p>Architecture erosion detection for pull requests.</p>
+    <HeroSection />
+    <PipelineSection />
+    <FeaturesSection />
+    <IntegrationSection />
   </main>
+  <FooterSection />
 </BaseLayout>

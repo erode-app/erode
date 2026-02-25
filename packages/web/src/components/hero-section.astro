@@ -1,0 +1,140 @@
+<section>
+  <div class="container">
+    <h1>Your software architecture is eroding.<br />Now you'll know where.</h1>
+    <p class="subtitle">
+      erode analyzes code changes against your architecture model using AI
+      — surfacing undeclared dependencies and violations before they ship.
+    </p>
+    <a href="https://github.com/erode-app/core" class="cta">View on GitHub &rarr;</a>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <span class="terminal-dot"></span>
+        <span class="terminal-dot"></span>
+        <span class="terminal-dot"></span>
+        <span class="terminal-title">erode analyze --pr 42</span>
+      </div>
+      <div class="terminal-body">
+        <pre><code>&mdash;&mdash; Analysis Results: #1 &mdash;&mdash;
+  Add admin user management
+  Component: Web Frontend (frontend)
+
+Summary:
+  Frontend bypasses API Gateway with direct User Service call.
+
+Violations (1):
+  <span class="severity-high">[HIGH]</span> Direct dependency on User Service bypasses API Gateway
+    packages/frontend/src/index.ts
+    <span class="suggestion">Suggestion: Route through API Gateway — extend it to
+    expose the admin/users endpoint instead</span>
+
+Model Updates:
+  <span class="severity-high">Remove:</span>
+    <span class="severity-high">- frontend -&gt; user_service (undeclared)</span>
+  <span class="improvement">Add:</span>
+    <span class="improvement">+ api_gateway -&gt; user_service.admin_users</span></code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(1rem); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  section {
+    padding-block: var(--space-3xl) var(--space-2xl);
+    text-align: center;
+    animation: fade-in 0.6s ease-out;
+  }
+
+  h1 {
+    color: var(--text-primary);
+  }
+
+  .subtitle {
+    max-width: 40rem;
+    margin-inline: auto;
+    margin-top: var(--space-lg);
+    font-size: 1.125rem;
+    color: var(--text-muted);
+  }
+
+  .cta {
+    display: inline-flex;
+    margin-top: var(--space-xl);
+    padding: 0.75rem 2rem;
+    background: var(--accent);
+    color: var(--bg-primary);
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .cta:hover {
+    opacity: 0.9;
+  }
+
+  .terminal {
+    max-width: 42rem;
+    margin: var(--space-xl) auto 0;
+    text-align: left;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg-secondary);
+  }
+
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .terminal-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .terminal-title {
+    margin-left: var(--space-sm);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+  }
+
+  .terminal-body {
+    padding: var(--space-md) var(--space-lg);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    overflow-x: auto;
+  }
+
+  .terminal-body pre {
+    margin: 0;
+  }
+
+  .terminal-body code {
+    font-family: inherit;
+  }
+
+  .severity-high {
+    color: var(--severity-high);
+    font-weight: 500;
+  }
+
+  .suggestion,
+  .improvement {
+    color: var(--success);
+  }
+</style>
