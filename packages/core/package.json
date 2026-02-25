@@ -7,6 +7,7 @@
   "bin": {
     "erode": "./dist/cli.js"
   },
+  "exports": {},
   "scripts": {
     "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\" \"npm:build\"",
     "build": "tsc && npm run copy-assets",
