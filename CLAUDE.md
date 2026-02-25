@@ -59,3 +59,4 @@ Custom error hierarchy in `src/errors.ts`: `ErodeError` (base) → `Configuratio
 - **Unused vars**: Prefix with `_` (e.g., `_unused`)
 - **Prompt templates**: Markdown files in `src/analysis/prompts/` and `src/adapters/likec4/prompts/` — these are copied to `dist/` during build, not compiled by TypeScript
 - **Tests**: Colocated in `__tests__/` directories next to the code they test. `oldversion/` directory is excluded from compilation, tests, and linting.
+- **Git**: Never use `git -C` — always run git commands from the working directory.
