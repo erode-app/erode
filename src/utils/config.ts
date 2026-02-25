@@ -31,10 +31,14 @@ const ConfigSchema = z.object({
   anthropic: z.object({
     apiKey: z.string().optional(),
     timeout: z.number().int().min(1000).max(300000).default(60000),
+    fastModel: z.string().default('claude-haiku-4-5-20251001'),
+    advancedModel: z.string().default('claude-sonnet-4-5-20250929'),
   }),
   gemini: z.object({
     apiKey: z.string().optional(),
     timeout: z.number().int().min(1000).max(300000).default(60000),
+    fastModel: z.string().default('gemini-2.5-flash'),
+    advancedModel: z.string().default('gemini-2.5-flash'),
   }),
   debug: z.object({
     enabled: z.boolean().default(false),
@@ -66,6 +70,10 @@ const ENV_MAPPINGS: Record<string, string[]> = {
   GITLAB_TOKEN: ['gitlab', 'token'],
   GITLAB_BASE_URL: ['gitlab', 'baseUrl'],
   ANTHROPIC_TIMEOUT: ['anthropic', 'timeout'],
+  ANTHROPIC_FAST_MODEL: ['anthropic', 'fastModel'],
+  ANTHROPIC_ADVANCED_MODEL: ['anthropic', 'advancedModel'],
+  GEMINI_FAST_MODEL: ['gemini', 'fastModel'],
+  GEMINI_ADVANCED_MODEL: ['gemini', 'advancedModel'],
 };
 function loadConfigFromEnv(): Record<string, Record<string, unknown>> {
   const config = {

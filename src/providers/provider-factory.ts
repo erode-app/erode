@@ -15,7 +15,11 @@ export function createAIProvider(): AIProvider {
         'Missing Gemini API key. Set GEMINI_API_KEY in your environment or .env file.'
       );
     }
-    return new GeminiProvider({ apiKey: CONFIG.gemini.apiKey });
+    return new GeminiProvider({
+      apiKey: CONFIG.gemini.apiKey,
+      fastModel: CONFIG.gemini.fastModel,
+      advancedModel: CONFIG.gemini.advancedModel,
+    });
   }
 
   if (!CONFIG.anthropic.apiKey) {
@@ -25,5 +29,9 @@ export function createAIProvider(): AIProvider {
       'Missing Anthropic API key. Set ANTHROPIC_API_KEY in your environment or .env file.'
     );
   }
-  return new AnthropicProvider({ apiKey: CONFIG.anthropic.apiKey });
+  return new AnthropicProvider({
+    apiKey: CONFIG.anthropic.apiKey,
+    fastModel: CONFIG.anthropic.fastModel,
+    advancedModel: CONFIG.anthropic.advancedModel,
+  });
 }

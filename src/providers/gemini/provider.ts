@@ -14,13 +14,14 @@ import { validate } from '../../utils/validation.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
 import { ErrorHandler } from '../../utils/error-handler.js';
 import { AnalysisPhase } from '../analysis-phase.js';
-import type { GeminiModelId } from './models.js';
 import { GEMINI_MODELS } from './models.js';
 
 export class GeminiProvider implements AIProvider {
   private readonly client: GoogleGenAI;
+  private readonly fastModel: string;
+  private readonly advancedModel: string;
 
-  constructor(config: { apiKey: string }) {
+  constructor(config: { apiKey: string; fastModel?: string; advancedModel?: string }) {
     if (!config.apiKey) {
       throw new ErodeError(
         'Gemini API key is required',
@@ -29,11 +30,13 @@ export class GeminiProvider implements AIProvider {
       );
     }
     this.client = new GoogleGenAI({ apiKey: config.apiKey });
+    this.fastModel = config.fastModel ?? GEMINI_MODELS.FAST;
+    this.advancedModel = config.advancedModel ?? GEMINI_MODELS.ADVANCED;
   }
 
   async selectComponent(data: ComponentSelectionPromptData): Promise<string | null> {
     const prompt = PromptBuilder.buildComponentSelectionPrompt(data);
-    const model = GEMINI_MODELS.FLASH;
+    const model = this.fastModel;
 
     const responseText = await ErrorHandler.withRetry(
       () => this.callGemini(model, prompt, AnalysisPhase.COMPONENT_RESOLUTION),
@@ -60,7 +63,7 @@ export class GeminiProvider implements AIProvider {
 
   async extractDependencies(data: DependencyExtractionPromptData): Promise<DependencyExtractionResult> {
     const prompt = PromptBuilder.buildDependencyExtractionPrompt(data);
-    const model = GEMINI_MODELS.FLASH;
+    const model = this.fastModel;
 
     const responseText = await ErrorHandler.withRetry(
       () => this.callGemini(model, prompt, AnalysisPhase.DEPENDENCY_SCAN),
@@ -88,7 +91,7 @@ export class GeminiProvider implements AIProvider {
     data: DriftAnalysisPromptData
   ): Promise<DriftAnalysisResult> {
     const prompt = PromptBuilder.buildDriftAnalysisPrompt(data);
-    const model = GEMINI_MODELS.PRO;
+    const model = this.advancedModel;
 
     const responseText = await ErrorHandler.withRetry(
       () => this.callGemini(model, prompt, AnalysisPhase.CHANGE_ANALYSIS),
@@ -125,7 +128,7 @@ export class GeminiProvider implements AIProvider {
 
   async generateArchitectureCode(analysisResult: DriftAnalysisResult): Promise<string> {
     const prompt = PromptBuilder.buildModelGenerationPrompt(analysisResult);
-    const model = GEMINI_MODELS.PRO;
+    const model = this.advancedModel;
 
     return ErrorHandler.withRetry(
       () => this.callGemini(model, prompt, AnalysisPhase.MODEL_GENERATION),
@@ -136,7 +139,7 @@ export class GeminiProvider implements AIProvider {
     );
   }
 
-  private async callGemini(model: GeminiModelId, prompt: string, phase: AnalysisPhase): Promise<string> {
+  private async callGemini(model: string, prompt: string, phase: AnalysisPhase): Promise<string> {
     try {
       const response = await this.client.models.generateContent({
         model,

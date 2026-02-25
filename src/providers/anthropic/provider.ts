@@ -14,13 +14,14 @@ import { validate } from '../../utils/validation.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
 import { ErrorHandler } from '../../utils/error-handler.js';
 import { AnalysisPhase } from '../analysis-phase.js';
-import type { AnthropicModelId } from './models.js';
 import { ANTHROPIC_MODELS } from './models.js';
 
 export class AnthropicProvider implements AIProvider {
   private readonly client: Anthropic;
+  private readonly fastModel: string;
+  private readonly advancedModel: string;
 
-  constructor(config: { apiKey: string }) {
+  constructor(config: { apiKey: string; fastModel?: string; advancedModel?: string }) {
     if (!config.apiKey) {
       throw new ErodeError(
         'Anthropic API key is required',
@@ -29,11 +30,13 @@ export class AnthropicProvider implements AIProvider {
       );
     }
     this.client = new Anthropic({ apiKey: config.apiKey });
+    this.fastModel = config.fastModel ?? ANTHROPIC_MODELS.FAST;
+    this.advancedModel = config.advancedModel ?? ANTHROPIC_MODELS.ADVANCED;
   }
 
   async selectComponent(data: ComponentSelectionPromptData): Promise<string | null> {
     const prompt = PromptBuilder.buildComponentSelectionPrompt(data);
-    const model = ANTHROPIC_MODELS.HAIKU;
+    const model = this.fastModel;
 
     const responseText = await ErrorHandler.withRetry(
       () => this.callAnthropic(model, prompt, AnalysisPhase.COMPONENT_RESOLUTION, 256),
@@ -59,7 +62,7 @@ export class AnthropicProvider implements AIProvider {
 
   async extractDependencies(data: DependencyExtractionPromptData): Promise<DependencyExtractionResult> {
     const prompt = PromptBuilder.buildDependencyExtractionPrompt(data);
-    const model = ANTHROPIC_MODELS.HAIKU;
+    const model = this.fastModel;
 
     const responseText = await ErrorHandler.withRetry(
       () => this.callAnthropic(model, prompt, AnalysisPhase.DEPENDENCY_SCAN, 4096),
@@ -87,7 +90,7 @@ export class AnthropicProvider implements AIProvider {
     data: DriftAnalysisPromptData
   ): Promise<DriftAnalysisResult> {
     const prompt = PromptBuilder.buildDriftAnalysisPrompt(data);
-    const model = ANTHROPIC_MODELS.SONNET;
+    const model = this.advancedModel;
 
     const responseText = await ErrorHandler.withRetry(
       () => this.callAnthropic(model, prompt, AnalysisPhase.CHANGE_ANALYSIS, 8192),
@@ -124,7 +127,7 @@ export class AnthropicProvider implements AIProvider {
 
   async generateArchitectureCode(analysisResult: DriftAnalysisResult): Promise<string> {
     const prompt = PromptBuilder.buildModelGenerationPrompt(analysisResult);
-    const model = ANTHROPIC_MODELS.SONNET;
+    const model = this.advancedModel;
 
     return ErrorHandler.withRetry(
       () => this.callAnthropic(model, prompt, AnalysisPhase.MODEL_GENERATION, 8192),
@@ -136,7 +139,7 @@ export class AnthropicProvider implements AIProvider {
   }
 
   private async callAnthropic(
-    model: AnthropicModelId,
+    model: string,
     prompt: string,
     phase: AnalysisPhase,
     maxTokens: number
