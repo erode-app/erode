@@ -6,8 +6,8 @@ import { z } from 'zod';
 export const DriftViolationBaseSchema = z.object({
   severity: z.enum(['high', 'medium', 'low']),
   description: z.string(),
-  file: z.string().nullable(),
-  line: z.number().nullable(),
+  file: z.string().nullable().optional(),
+  line: z.number().nullable().optional(),
   suggestion: z.string().optional(),
 });
 

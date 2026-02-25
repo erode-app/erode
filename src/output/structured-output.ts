@@ -43,9 +43,9 @@ export interface StructuredAnalysisOutput {
     violations: {
       severity: 'high' | 'medium' | 'low';
       description: string;
-      file: string | null;
-      line: number | null;
-      commit: string | null;
+      file?: string | null;
+      line?: number | null;
+      commit?: string | null;
       suggestion?: string;
     }[];
     summary: string;

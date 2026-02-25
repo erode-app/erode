@@ -40,11 +40,11 @@ export interface DriftViolation {
   /** Description of the violation */
   description: string;
   /** File where the violation occurred */
-  file: string | null;
+  file?: string | null;
   /** Line number if applicable */
-  line: number | null;
+  line?: number | null;
   /** Commit SHA where this violation was introduced */
-  commit: string | null;
+  commit?: string | null;
   /** Suggested fix */
   suggestion?: string;
 }

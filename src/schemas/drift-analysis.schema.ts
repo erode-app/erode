@@ -6,8 +6,8 @@ import { DriftViolationBaseSchema, ModelPatchSchema } from './common.schema.js';
  * Includes file/line invariant enforcement
  */
 const DriftViolationSchema = DriftViolationBaseSchema.extend({
-  commit: z.string().nullable(),
-}).refine((data) => data.line === null || data.file !== null, {
+  commit: z.string().nullable().optional(),
+}).refine((data) => data.line == null || data.file != null, {
   message: 'line cannot be set without file',
   path: ['line'],
 });
