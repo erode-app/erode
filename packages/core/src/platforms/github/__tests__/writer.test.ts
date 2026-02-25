@@ -14,6 +14,9 @@ const mockPullsList = vi.fn();
 const mockPullsUpdate = vi.fn();
 const mockPullsCreate = vi.fn();
 const mockIssuesCreateComment = vi.fn();
+const mockIssuesListComments = vi.fn();
+const mockIssuesUpdateComment = vi.fn();
+const mockIssuesDeleteComment = vi.fn();
 
 vi.mock('@octokit/rest', () => ({
   Octokit: class MockOctokit {
@@ -34,6 +37,9 @@ vi.mock('@octokit/rest', () => ({
       },
       issues: {
         createComment: mockIssuesCreateComment,
+        listComments: mockIssuesListComments,
+        updateComment: mockIssuesUpdateComment,
+        deleteComment: mockIssuesDeleteComment,
       },
     };
   },
@@ -184,6 +190,63 @@ describe('GitHubWriter', () => {
       const ref = makeRef();
 
       await expect(writer.commentOnChangeRequest(ref, 'test')).rejects.toBe(erodeError);
+    });
+
+    it('should retry on transient 502 error and succeed', async () => {
+      const error502 = Object.assign(new Error('<html>Bad Gateway</html>'), { status: 502 });
+      mockIssuesListComments
+        .mockRejectedValueOnce(error502)
+        .mockResolvedValueOnce({ data: [{ id: 1, body: '<!-- marker -->' }] });
+      mockIssuesUpdateComment.mockResolvedValue({});
+      const ref = makeRef();
+
+      await writer.commentOnChangeRequest(ref, 'body', { upsertMarker: '<!-- marker -->' });
+
+      expect(mockIssuesListComments).toHaveBeenCalledTimes(2);
+      expect(mockIssuesUpdateComment).toHaveBeenCalled();
+    });
+
+    it('should sanitize HTML from error message', async () => {
+      const htmlError = Object.assign(
+        new Error('<!DOCTYPE html><html><body>Unicorn!</body></html>'),
+        { status: 503 }
+      );
+      mockIssuesCreateComment.mockRejectedValue(htmlError);
+      const ref = makeRef();
+
+      const err = await writer.commentOnChangeRequest(ref, 'test').catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ApiError);
+      expect((err as ApiError).message).not.toMatch(/<[^>]*>/);
+    });
+
+    it('should extract status code into ApiError', async () => {
+      const error502 = Object.assign(new Error('Bad Gateway'), { status: 502 });
+      mockIssuesCreateComment.mockRejectedValue(error502);
+      const ref = makeRef();
+
+      const err = await writer.commentOnChangeRequest(ref, 'test').catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ApiError);
+      expect((err as ApiError).statusCode).toBe(502);
+    });
+  });
+
+  describe('deleteComment', () => {
+    it('should retry on transient 502 error and succeed', async () => {
+      const error502 = Object.assign(new Error('Server Error'), { status: 502 });
+      mockIssuesListComments
+        .mockRejectedValueOnce(error502)
+        .mockResolvedValueOnce({ data: [{ id: 5, body: '<!-- marker -->' }] });
+      mockIssuesDeleteComment.mockResolvedValue({});
+      const ref = makeRef();
+
+      await writer.deleteComment(ref, '<!-- marker -->');
+
+      expect(mockIssuesListComments).toHaveBeenCalledTimes(2);
+      expect(mockIssuesDeleteComment).toHaveBeenCalledWith({
+        owner: 'org',
+        repo: 'repo',
+        comment_id: 5,
+      });
     });
   });
 });

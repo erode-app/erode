@@ -285,34 +285,40 @@ export function createAnalyzeCommand(): Command {
         }
 
         if (validatedOptions.comment) {
-          displaySection('Posting PR Comment');
-          const commentWriter = createPlatformWriter(
-            ref.repositoryUrl,
-            ref.platformId.owner,
-            ref.platformId.repo
-          );
-          if (analysisHasFindings(analysisResult)) {
-            progress.start('Posting analysis comment on PR');
-            const providerName = CONFIG.ai.provider;
-            const providerConfig = CONFIG[providerName];
-            const commentBody = formatAnalysisAsComment(analysisResult, {
-              selectedComponentId,
-              candidateComponents,
-              generatedChangeRequest,
-              modelInfo: {
-                provider: providerName,
-                fastModel: providerConfig.fastModel,
-                advancedModel: providerConfig.advancedModel,
-              },
-            });
-            await commentWriter.commentOnChangeRequest(ref, commentBody, {
-              upsertMarker: COMMENT_MARKER,
-            });
-            progress.succeed('Analysis comment posted on PR');
-          } else {
-            progress.start('Cleaning up previous comment (no findings)');
-            await commentWriter.deleteComment(ref, COMMENT_MARKER);
-            progress.succeed('No findings — previous comment removed (if any)');
+          try {
+            displaySection('Posting PR Comment');
+            const commentWriter = createPlatformWriter(
+              ref.repositoryUrl,
+              ref.platformId.owner,
+              ref.platformId.repo
+            );
+            if (analysisHasFindings(analysisResult)) {
+              progress.start('Posting analysis comment on PR');
+              const providerName = CONFIG.ai.provider;
+              const providerConfig = CONFIG[providerName];
+              const commentBody = formatAnalysisAsComment(analysisResult, {
+                selectedComponentId,
+                candidateComponents,
+                generatedChangeRequest,
+                modelInfo: {
+                  provider: providerName,
+                  fastModel: providerConfig.fastModel,
+                  advancedModel: providerConfig.advancedModel,
+                },
+              });
+              await commentWriter.commentOnChangeRequest(ref, commentBody, {
+                upsertMarker: COMMENT_MARKER,
+              });
+              progress.succeed('Analysis comment posted on PR');
+            } else {
+              progress.start('Cleaning up previous comment (no findings)');
+              await commentWriter.deleteComment(ref, COMMENT_MARKER);
+              progress.succeed('No findings — previous comment removed (if any)');
+            }
+          } catch (error) {
+            progress.warn(
+              `Failed to post PR comment: ${error instanceof Error ? error.message : String(error)}`
+            );
           }
         }
 

@@ -1,12 +1,36 @@
 import { Octokit } from '@octokit/rest';
 import { CONFIG } from '../../utils/config.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
+import { ErrorHandler } from '../../utils/error-handler.js';
 import type {
   SourcePlatformWriter,
   ChangeRequestRef,
   ChangeRequestResult,
   CreateOrUpdateChangeRequestOptions,
 } from '../source-platform.js';
+
+function isTransientError(error: unknown): boolean {
+  const status =
+    error instanceof Error && 'status' in error ? (error as { status: unknown }).status : undefined;
+  return typeof status === 'number' && status >= 500;
+}
+
+function sanitizeErrorMessage(message: string): string {
+  if (message.includes('<!DOCTYPE') || message.includes('<html')) {
+    return message
+      .replace(/<[^>]*>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 200);
+  }
+  return message;
+}
+
+function extractStatusCode(error: Error): number | undefined {
+  return 'status' in error && typeof (error as { status: unknown }).status === 'number'
+    ? (error as { status: number }).status
+    : undefined;
+}
 
 export class GitHubWriter implements SourcePlatformWriter {
   private readonly octokit: Octokit;
@@ -165,35 +189,42 @@ export class GitHubWriter implements SourcePlatformWriter {
     const repo = ref.platformId.repo;
 
     try {
-      if (options?.upsertMarker) {
-        const existingId = await this.findCommentByMarker(
-          owner,
-          repo,
-          ref.number,
-          options.upsertMarker
-        );
-        if (existingId) {
-          await this.octokit.rest.issues.updateComment({
+      await ErrorHandler.withRetry(
+        async () => {
+          if (options?.upsertMarker) {
+            const existingId = await this.findCommentByMarker(
+              owner,
+              repo,
+              ref.number,
+              options.upsertMarker
+            );
+            if (existingId) {
+              await this.octokit.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existingId,
+                body,
+              });
+              return;
+            }
+          }
+          await this.octokit.rest.issues.createComment({
             owner,
             repo,
-            comment_id: existingId,
+            issue_number: ref.number,
             body,
           });
-          return;
-        }
-      }
-      await this.octokit.rest.issues.createComment({
-        owner,
-        repo,
-        issue_number: ref.number,
-        body,
-      });
+        },
+        { maxAttempts: 2, baseDelay: 2000, shouldRetry: isTransientError }
+      );
     } catch (error) {
       if (error instanceof ErodeError) throw error;
       if (error instanceof Error) {
-        throw new ApiError(`Failed to comment on pull request: ${error.message}`, undefined, {
-          provider: 'github',
-        });
+        throw new ApiError(
+          `Failed to comment on pull request: ${sanitizeErrorMessage(error.message)}`,
+          extractStatusCode(error),
+          { provider: 'github' }
+        );
       }
       throw error;
     }
@@ -204,19 +235,22 @@ export class GitHubWriter implements SourcePlatformWriter {
     const repo = ref.platformId.repo;
 
     try {
-      const existingId = await this.findCommentByMarker(owner, repo, ref.number, marker);
-      if (existingId) {
-        await this.octokit.rest.issues.deleteComment({ owner, repo, comment_id: existingId });
-      }
+      await ErrorHandler.withRetry(
+        async () => {
+          const existingId = await this.findCommentByMarker(owner, repo, ref.number, marker);
+          if (existingId) {
+            await this.octokit.rest.issues.deleteComment({ owner, repo, comment_id: existingId });
+          }
+        },
+        { maxAttempts: 2, baseDelay: 2000, shouldRetry: isTransientError }
+      );
     } catch (error) {
       if (error instanceof ErodeError) throw error;
       if (error instanceof Error) {
         throw new ApiError(
-          `Failed to delete comment on pull request: ${error.message}`,
-          undefined,
-          {
-            provider: 'github',
-          }
+          `Failed to delete comment on pull request: ${sanitizeErrorMessage(error.message)}`,
+          extractStatusCode(error),
+          { provider: 'github' }
         );
       }
       throw error;
