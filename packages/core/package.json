@@ -45,7 +45,7 @@
     "@octokit/rest": "^22.0.1",
     "dotenv": "^17.2.3",
     "likec4": "^1.45.0",
-    "minimatch": "^10.2.3",
+    "minimatch": "^10.2.4",
     "zod": "^4.1.13"
   },
   "devDependencies": {
