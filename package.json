@@ -34,7 +34,7 @@
     "node": ">=24.0.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.71.0",
+    "@anthropic-ai/sdk": "^0.78.0",
     "@gitbeaker/rest": "^43.8.0",
     "@google/genai": "^1.42.0",
     "@octokit/rest": "^22.0.1",
@@ -42,7 +42,7 @@
     "commander": "^14.0.2",
     "dotenv": "^17.2.3",
     "likec4": "^1.45.0",
-    "minimatch": "^10.2.2",
+    "minimatch": "^10.2.3",
     "zod": "^4.1.13"
   },
   "devDependencies": {
