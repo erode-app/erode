@@ -5,6 +5,6 @@ export default defineConfig({
     env: {
       DEBUG_MODE: 'true',
     },
-    exclude: ['oldversion/**', 'dist/**', 'node_modules/**'],
+    exclude: ['dist/**', 'node_modules/**'],
   },
 });

@@ -24,6 +24,7 @@ jobs:
         with:
           path: |
             node_modules
+            packages/*/node_modules
           key: nm-${{ hashFiles('package-lock.json') }}
 
       - run: npm ci

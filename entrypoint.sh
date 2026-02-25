@@ -60,4 +60,4 @@ CLI_ARGS=(
 [ "${INPUT_SKIP_FILE_FILTERING:-false}" = "true" ] && CLI_ARGS+=(--skip-file-filtering)
 [ "${INPUT_FAIL_ON_VIOLATIONS:-false}" = "true" ] && CLI_ARGS+=(--fail-on-violations)
 
-exec node /app/dist/cli.js "${CLI_ARGS[@]}"
+exec node /app/packages/core/dist/cli.js "${CLI_ARGS[@]}"

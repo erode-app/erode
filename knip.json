@@ -1,4 +1,15 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "project": ["src/**/*.ts"]
+  "ignoreBinaries": ["tsx"],
+  "workspaces": {
+    "packages/core": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/eslint-config": {
+      "project": ["*.js"]
+    },
+    "packages/web": {
+      "ignore": [".astro/**"]
+    }
+  }
 }

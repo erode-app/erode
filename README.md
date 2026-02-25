@@ -49,14 +49,16 @@ Set via `.env` or export directly:
 ### Run directly (no build)
 
 ```bash
-npx tsx src/cli.ts --help
+npm run cli -- --help
+npm run cli -- connections ../playground/likec4 --repo https://github.com/erode-app/playground/
+npm run cli -- analyze --help
 ```
 
 ### Build and run
 
 ```bash
 npm run build
-node dist/cli.js --help
+node packages/core/dist/cli.js --help
 ```
 
 ## CLI commands
@@ -278,7 +280,7 @@ erode:
   entrypoint: ['']
   script:
     - >
-      node /app/dist/cli.js analyze ./model
+      node /app/packages/core/dist/cli.js analyze ./model
       --url "$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_IID"
       --format json --comment --fail-on-violations
   rules:
@@ -297,7 +299,7 @@ erode:
   script:
     - git clone --depth 1 "https://gitlab-ci-token:${GITLAB_TOKEN}@gitlab.com/group/architecture-model.git" /tmp/model
     - >
-      node /app/dist/cli.js analyze /tmp/model
+      node /app/packages/core/dist/cli.js analyze /tmp/model
       --url "$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_IID"
       --format json --comment
   rules:
@@ -331,10 +333,11 @@ The `--comment` flag posts results back to the PR/MR. The `--fail-on-violations`
 Requires Node.js >= 24.0.0.
 
 ```bash
-npm run build          # Compile TypeScript and copy prompt templates
+npm run build          # Build core package (TypeScript + prompt templates)
 npm run test           # Run all tests (vitest)
 npm run lint           # ESLint (zero warnings allowed)
-npm run dev            # tsx watch mode
+npm run format         # Prettier format (all packages)
+npm run dev:web        # Start Astro dev server
 ```
 
 ## License

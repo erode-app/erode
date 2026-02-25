@@ -22,11 +22,11 @@ run_check() {
   fi
 }
 
-run_check "TypeScript" "npm run typecheck"
+run_check "TypeScript" "npm run typecheck --workspace=packages/core"
 run_check "ESLint" "npm run lint"
 run_check "Prettier" "npm run format:check"
 run_check "Knip" "npm run knip"
-run_check "Tests" "npm run test"
+run_check "Tests" "npm run test --workspace=packages/core"
 
 if [ -n "$FAILED" ]; then
   echo ""

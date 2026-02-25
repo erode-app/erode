@@ -13,3 +13,6 @@ node_modules/
 .DS_Store
 .linear_api_token
 oldversion
+
+# Astro generated
+.astro/
