@@ -9,7 +9,7 @@ function parseArgs(argv: string[]): AnalyzeOptions {
   // args[0] = 'analyze', args[1] = modelPath
   const modelPath = args[1];
   if (!modelPath) {
-    console.error('Usage: erode-ci analyze <model-path> --url <url> [options]');
+    console.error('Usage: erode-ci analyze <model-path> --url <url> [flags]');
     process.exit(2);
   }
 
@@ -21,7 +21,7 @@ function parseArgs(argv: string[]): AnalyzeOptions {
 
   const url = getFlag('--url');
   if (!url) {
-    console.error('--url is required');
+    console.error('--url must be provided');
     process.exit(2);
   }
 
@@ -54,7 +54,7 @@ try {
   }
 } catch (error) {
   console.error(
-    `erode: fatal error: ${error instanceof Error ? error.message : String(error)}`
+    `erode: fatal: ${error instanceof Error ? error.message : String(error)}`
   );
 
   if (options.comment) {
@@ -71,7 +71,7 @@ try {
       });
     } catch (commentError) {
       console.error(
-        `erode: failed to post error comment: ${commentError instanceof Error ? commentError.message : String(commentError)}`
+        `erode: could not post error comment: ${commentError instanceof Error ? commentError.message : String(commentError)}`
       );
     }
   }

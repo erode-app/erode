@@ -129,14 +129,14 @@ function validateRequiredConfig(config: Config): void {
   if (!config.debug.enabled) {
     const provider = config.ai.provider;
     if (provider === 'gemini' && !config.gemini.apiKey) {
-      errors.push('GEMINI_API_KEY is required when AI_PROVIDER is gemini');
+      errors.push('GEMINI_API_KEY must be set when AI_PROVIDER is gemini');
     } else if (provider === 'anthropic' && !config.anthropic.apiKey) {
-      errors.push('ANTHROPIC_API_KEY is required when AI_PROVIDER is anthropic');
+      errors.push('ANTHROPIC_API_KEY must be set when AI_PROVIDER is anthropic');
     }
   }
   if (errors.length > 0) {
     throw new ConfigurationError(
-      `Configuration validation failed: ${errors.join(', ')}`,
+      `Configuration check failed: ${errors.join(', ')}`,
       'environment'
     );
   }
@@ -152,7 +152,7 @@ function createConfig(): Config {
       const issues = error.issues
         .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
         .join(', ');
-      throw new ConfigurationError(`Invalid configuration: ${issues}`, 'validation');
+      throw new ConfigurationError(`Invalid configuration detected: ${issues}`, 'validation');
     }
     throw error;
   }

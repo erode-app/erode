@@ -132,9 +132,9 @@ export function WizardPathInput({ label, placeholder, onSubmit }: Props): React.
       {suggestions.length > 0 && (
         <Box flexDirection="column" marginLeft={2} marginTop={1}>
           <Text dimColor>
-            {suggestions.length} matches
+            {suggestions.length} results
             {suggestions.length > MAX_SUGGESTIONS
-              ? ` (showing first ${String(MAX_SUGGESTIONS)})`
+              ? ` (displaying first ${String(MAX_SUGGESTIONS)})`
               : ''}
             :
           </Text>

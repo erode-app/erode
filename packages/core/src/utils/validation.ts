@@ -5,18 +5,18 @@ import { ErodeError, ErrorCode } from '../errors.js';
 export function validatePath(path: string, type: 'file' | 'directory' = 'directory'): void {
   if (!path) {
     throw new ErodeError(
-      'Path is required',
+      'A path must be specified',
       ErrorCode.INVALID_INPUT,
-      'Invalid input: Path is required'
+      'Invalid input: a path must be specified'
     );
   }
   if (!existsSync(path)) {
     const errorCode = type === 'file' ? ErrorCode.FILE_NOT_FOUND : ErrorCode.DIRECTORY_NOT_FOUND;
     const resourceType = type === 'file' ? 'File' : 'Directory';
     throw new ErodeError(
-      `${resourceType} does not exist: ${path}`,
+      `${resourceType} not found at: ${path}`,
       errorCode,
-      `${resourceType} not found: ${path}`,
+      `${resourceType} could not be located: ${path}`,
       { path, type }
     );
   }
@@ -32,9 +32,9 @@ export function validate<T>(schema: z.ZodType<T>, data: unknown, fieldName?: str
         )
         .join(', ');
       throw new ErodeError(
-        `Validation failed${fieldName ? ` for ${fieldName}` : ''}: ${issues}`,
+        `Validation error${fieldName ? ` for ${fieldName}` : ''}: ${issues}`,
         ErrorCode.INVALID_INPUT,
-        `Invalid input: Validation failed${fieldName ? ` for ${fieldName}` : ''}: ${issues}`,
+        `Invalid input: validation error${fieldName ? ` for ${fieldName}` : ''}: ${issues}`,
         { field: fieldName }
       );
     }

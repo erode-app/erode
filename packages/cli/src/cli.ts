@@ -12,18 +12,18 @@ import { PackageJsonSchema, validate } from '@erode/core';
 
 function setupSignalHandlers(): void {
   const handleShutdown = (signal: string) => {
-    Logger.warn(`Received ${signal}, shutting down gracefully...`);
+    Logger.warn(`${signal} received, stopping cleanly...`);
     process.exit(0);
   };
   process.on('SIGINT', () => handleShutdown('SIGINT'));
   process.on('SIGTERM', () => handleShutdown('SIGTERM'));
   process.on('uncaughtException', (error) => {
-    Logger.fail('Uncaught Exception:');
+    Logger.fail('Unhandled exception caught:');
     console.error(error);
     process.exit(1);
   });
   process.on('unhandledRejection', (reason, promise) => {
-    Logger.fail('Unhandled Promise Rejection:');
+    Logger.fail('Rejected promise detected:');
     console.error('Promise:', promise);
     console.error('Reason:', reason);
     process.exit(1);
@@ -46,7 +46,7 @@ setupSignalHandlers();
 const program = new Command();
 program
   .name('Erode')
-  .description('Architecture drift detection tool for software systems')
+  .description('Detect architectural drift in software projects')
   .version(version);
 
 program.addCommand(createComponentsCommand());

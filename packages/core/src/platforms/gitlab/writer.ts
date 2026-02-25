@@ -22,9 +22,9 @@ export class GitLabWriter implements SourcePlatformWriter {
     const token = CONFIG.gitlab.token;
     if (!token) {
       throw new ErodeError(
-        'GitLab token is required for MR creation',
+        'A GitLab token is needed to create merge requests',
         ErrorCode.MISSING_API_KEY,
-        'Set GITLAB_TOKEN to create merge requests.'
+        'Provide GITLAB_TOKEN to create merge requests.'
       );
     }
     this.api = new Gitlab({ token, host: CONFIG.gitlab.baseUrl });
@@ -102,7 +102,7 @@ export class GitLabWriter implements SourcePlatformWriter {
     } catch (error) {
       if (error instanceof ErodeError) throw error;
       if (error instanceof Error) {
-        throw new ApiError(`Failed to create/update merge request: ${error.message}`, undefined, {
+        throw new ApiError(`Could not create or update merge request: ${error.message}`, undefined, {
           provider: 'gitlab',
         });
       }
@@ -135,7 +135,7 @@ export class GitLabWriter implements SourcePlatformWriter {
     } catch (error) {
       if (error instanceof ErodeError) throw error;
       if (error instanceof Error) {
-        throw new ApiError(`Failed to comment on merge request: ${error.message}`, undefined, {
+        throw new ApiError(`Could not comment on merge request: ${error.message}`, undefined, {
           provider: 'gitlab',
         });
       }
@@ -157,7 +157,7 @@ export class GitLabWriter implements SourcePlatformWriter {
       if (error instanceof ErodeError) throw error;
       if (error instanceof Error) {
         throw new ApiError(
-          `Failed to delete comment on merge request: ${error.message}`,
+          `Could not remove comment from merge request: ${error.message}`,
           undefined,
           { provider: 'gitlab' }
         );

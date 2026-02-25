@@ -38,18 +38,18 @@ export const PromptBuilder = {
       componentsContext = 'Component: Unknown (repository not mapped in LikeC4)';
     } else if (components.length > 1) {
       throw new ErodeError(
-        `buildDependencyExtractionPrompt expects exactly 1 component, got ${String(components.length)}`,
+        `buildDependencyExtractionPrompt requires exactly 1 component, received ${String(components.length)}`,
         ErrorCode.COMPONENT_NOT_FOUND,
-        `Component selection error: Expected 1 component but got ${String(components.length)}. Component selection should happen in Stage 0.`,
+        `Component selection error: expected 1 component but received ${String(components.length)}. Component selection must occur in Stage 0.`,
         { componentCount: components.length }
       );
     } else {
       const [comp] = components;
       if (!comp) {
         throw new ErodeError(
-          'First component is undefined',
+          'First component is unexpectedly undefined',
           ErrorCode.COMPONENT_NOT_FOUND,
-          'Unexpected error: First component is undefined. This appears to be a programming error.'
+          'Unexpected error: first component is undefined. This looks like a programming bug.'
         );
       }
       componentsContext = formatComponentContext(comp);

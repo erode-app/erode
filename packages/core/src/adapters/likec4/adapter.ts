@@ -64,10 +64,10 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     const result = checkLikeC4Version(likec4Path);
     if (result.found && !result.compatible) {
       throw new AdapterError(
-        `Source repo LikeC4 version ${result.version ?? 'unknown'} is below minimum ${result.minimum}`,
+        `Source repo LikeC4 version ${result.version ?? 'unknown'} does not meet minimum ${result.minimum}`,
         ErrorCode.MODEL_LOAD_ERROR,
         'likec4',
-        `Incompatible LikeC4 version: source repo uses ${result.version ?? 'unknown'}, but erode requires >=${result.minimum}. Update the likec4 dependency in the source repo.`,
+        `Incompatible LikeC4 version: source repo has ${result.version ?? 'unknown'}, but erode needs >=${result.minimum}. Upgrade the likec4 dependency in the source repo.`,
         { detectedVersion: result.version, minimumVersion: result.minimum }
       );
     }
@@ -88,9 +88,9 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     const resolvedPath = resolve(likec4Path);
     if (!existsSync(resolvedPath)) {
       throw new ErodeError(
-        `LikeC4 model path does not exist: ${resolvedPath}`,
+        `LikeC4 model path not found: ${resolvedPath}`,
         ErrorCode.DIRECTORY_NOT_FOUND,
-        `LikeC4 model directory not found: ${resolvedPath}`,
+        `LikeC4 model directory could not be located: ${resolvedPath}`,
         { path: resolvedPath }
       );
     }
@@ -101,19 +101,19 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
         const errors = likec4.getErrors();
         const messages = errors.map((e: { message?: string }) => e.message ?? JSON.stringify(e));
         throw new AdapterError(
-          `LikeC4 model has validation errors: ${messages.join('; ')}`,
+          `LikeC4 model contains validation errors: ${messages.join('; ')}`,
           ErrorCode.MODEL_LOAD_ERROR,
           'likec4',
-          `LikeC4 model contains errors:\n${messages.map((m: string) => `  - ${m}`).join('\n')}`
+          `LikeC4 model has errors:\n${messages.map((m: string) => `  - ${m}`).join('\n')}`
         );
       }
       const computedModel = await likec4.computedModel();
       if (!this.isValidLikeC4Model(computedModel)) {
         throw new AdapterError(
-          'Invalid LikeC4 model structure: missing required methods',
+          'Malformed LikeC4 model structure: required methods are absent',
           ErrorCode.MODEL_LOAD_ERROR,
           'likec4',
-          'Failed to load LikeC4 model: Invalid model structure. The model may be corrupted or incompatible.'
+          'Could not load LikeC4 model: the model structure is invalid. It may be corrupted or incompatible.'
         );
       }
       this.model = computedModel;
@@ -264,9 +264,9 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     const resolvedPath = resolve(likec4Path);
     if (!existsSync(resolvedPath)) {
       throw new ErodeError(
-        `LikeC4 model path does not exist: ${resolvedPath}`,
+        `LikeC4 model path not found: ${resolvedPath}`,
         ErrorCode.DIRECTORY_NOT_FOUND,
-        `LikeC4 model directory not found: ${resolvedPath}`,
+        `LikeC4 model directory could not be located: ${resolvedPath}`,
         { path: resolvedPath }
       );
     }
@@ -277,19 +277,19 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
         const errors = likec4.getErrors();
         const messages = errors.map((e: { message?: string }) => e.message ?? JSON.stringify(e));
         throw new AdapterError(
-          `LikeC4 model has validation errors: ${messages.join('; ')}`,
+          `LikeC4 model contains validation errors: ${messages.join('; ')}`,
           ErrorCode.MODEL_LOAD_ERROR,
           'likec4',
-          `LikeC4 model contains errors:\n${messages.map((m: string) => `  - ${m}`).join('\n')}`
+          `LikeC4 model has errors:\n${messages.map((m: string) => `  - ${m}`).join('\n')}`
         );
       }
       const computedModel = await likec4.computedModel();
       if (!this.isValidLikeC4Model(computedModel)) {
         throw new AdapterError(
-          'Invalid LikeC4 model structure: missing required methods',
+          'Malformed LikeC4 model structure: required methods are absent',
           ErrorCode.MODEL_LOAD_ERROR,
           'likec4',
-          'Failed to load LikeC4 model: Invalid model structure.'
+          'Could not load LikeC4 model: the model structure is invalid. It may be corrupted or incompatible.'
         );
       }
       const components: SimpleComponent[] = [];

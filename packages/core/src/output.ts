@@ -87,7 +87,7 @@ export function formatAnalysisAsComment(
   const lines: string[] = [];
 
   lines.push(COMMENT_MARKER);
-  lines.push('## Architecture Drift Detection');
+  lines.push('## Architectural Drift Analysis');
   lines.push('');
 
   lines.push(`**Component**: \`${result.component.id}\` (${result.component.name})`);
@@ -113,38 +113,38 @@ export function formatAnalysisAsComment(
   lines.push('');
 
   const status = result.hasViolations
-    ? ':warning: Violations detected'
-    : ':white_check_mark: No drift detected';
+    ? ':warning: Issues detected'
+    : ':white_check_mark: No drift found';
   lines.push(`**Status**: ${status}`);
 
   if (result.hasViolations) {
     lines.push('');
-    lines.push(`### Architectural Violations (${String(result.violations.length)})`);
+    lines.push(`### Detected Issues (${String(result.violations.length)})`);
     lines.push('');
     for (const v of result.violations) {
       lines.push(`- **[${v.severity.toUpperCase()}]** ${v.description}`);
-      if (v.file) lines.push(`  - File: \`${v.file}\``);
-      if (v.suggestion) lines.push(`  - Suggestion: ${v.suggestion}`);
+      if (v.file) lines.push(`  - Source: \`${v.file}\``);
+      if (v.suggestion) lines.push(`  - Recommendation: ${v.suggestion}`);
     }
     lines.push('');
-    lines.push('**How to Fix:**');
-    lines.push('Update the architecture model to:');
-    lines.push('- Add missing relationships between components');
-    lines.push('- Update component boundaries if code has moved');
-    lines.push('- Document intentional architectural changes');
+    lines.push('**How to Resolve:**');
+    lines.push('Adjust the architecture model to:');
+    lines.push('- Include missing relationships between components');
+    lines.push('- Revise component boundaries if code has been relocated');
+    lines.push('- Record intentional architectural changes');
     lines.push('');
   } else {
     lines.push('');
-    lines.push('### No Violations Detected');
+    lines.push('### No Issues Found');
     lines.push('');
-    lines.push('No architectural drift detected in this change request.');
+    lines.push('No architectural drift found in this change request.');
     lines.push('');
   }
 
   const hasAdd = result.modelUpdates?.add && result.modelUpdates.add.length > 0;
   const hasRemove = result.modelUpdates?.remove && result.modelUpdates.remove.length > 0;
   if (hasAdd || hasRemove) {
-    lines.push('### Recommended LikeC4 Updates');
+    lines.push('### Suggested LikeC4 Changes');
     lines.push('');
     if (hasAdd && result.modelUpdates?.add) {
       lines.push('**Add:**');
@@ -161,15 +161,15 @@ export function formatAnalysisAsComment(
   if (extras?.generatedChangeRequest) {
     const cr = extras.generatedChangeRequest;
     const actionCapitalized = cr.action.charAt(0).toUpperCase() + cr.action.slice(1);
-    lines.push(`### Architecture Model Update ${actionCapitalized}`);
+    lines.push(`### Model Update ${actionCapitalized}`);
     lines.push('');
-    lines.push(`Change request ${cr.action} to update the architecture model:`);
+    lines.push(`A change request was ${cr.action} to update the architecture model:`);
     lines.push(cr.url);
     lines.push('');
   }
 
   if (result.summary) {
-    lines.push('### Summary');
+    lines.push('### Overview');
     lines.push('');
     lines.push(result.summary);
     lines.push('');
@@ -177,13 +177,13 @@ export function formatAnalysisAsComment(
 
   if (extras?.modelInfo) {
     lines.push('<details>');
-    lines.push('<summary>Analysis metadata</summary>');
+    lines.push('<summary>Analysis details</summary>');
     lines.push('');
     lines.push('| | |');
     lines.push('|---|---|');
-    lines.push(`| **Provider** | ${extras.modelInfo.provider} |`);
-    lines.push(`| **Fast model** (Stage 0, 1) | \`${extras.modelInfo.fastModel}\` |`);
-    lines.push(`| **Advanced model** (Stage 2, 3) | \`${extras.modelInfo.advancedModel}\` |`);
+    lines.push(`| **AI Provider** | ${extras.modelInfo.provider} |`);
+    lines.push(`| **Quick model** (Stages 0, 1) | \`${extras.modelInfo.fastModel}\` |`);
+    lines.push(`| **Deep model** (Stages 2, 3) | \`${extras.modelInfo.advancedModel}\` |`);
     lines.push('');
     lines.push('</details>');
     lines.push('');
@@ -208,29 +208,29 @@ export function formatErrorAsComment(error: unknown): string {
   const lines: string[] = [];
 
   lines.push(COMMENT_MARKER);
-  lines.push('## Architecture Drift Detection');
+  lines.push('## Architectural Drift Analysis');
   lines.push('');
-  lines.push(':x: **Analysis failed**');
+  lines.push(':x: **Analysis unsuccessful**');
   lines.push('');
 
   if (error instanceof ApiError) {
     if (error.code === ErrorCode.RATE_LIMITED) {
       lines.push(
-        'The AI provider rate limit was exceeded. This is usually temporary — re-run the check in a few minutes, or check your API plan\u2019s quota.'
+        'The AI provider rate limit was hit. This is typically temporary — re-run the check in a few minutes, or review your API plan quota.'
       );
     } else if (error.code === ErrorCode.TIMEOUT) {
       lines.push(
-        'The AI provider request timed out. This may happen with large PRs — try re-running.'
+        'The AI provider request timed out. This can occur with large PRs — try re-running.'
       );
     } else {
-      lines.push('An unexpected error occurred during analysis. Check the workflow logs for details.');
+      lines.push('An unexpected error happened during analysis. Review the workflow logs for more details.');
     }
   } else if (error instanceof ConfigurationError) {
     lines.push(
-      'A configuration error occurred. Check that API keys and tokens are set correctly.'
+      'A configuration issue was detected. Verify that API keys and tokens are correctly set.'
     );
   } else {
-    lines.push('An unexpected error occurred during analysis. Check the workflow logs for details.');
+    lines.push('An unexpected error happened during analysis. Review the workflow logs for more details.');
   }
 
   lines.push('');

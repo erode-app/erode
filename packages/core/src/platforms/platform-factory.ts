@@ -15,13 +15,13 @@ export function detectPlatform(url: string): Platform {
       return 'gitlab';
     }
   } catch {
-    throw new ErodeError(`Invalid URL: ${url}`, ErrorCode.INVALID_URL, `Invalid URL: ${url}`);
+    throw new ErodeError(`Unrecognized URL: ${url}`, ErrorCode.INVALID_URL, `Unrecognized URL: ${url}`);
   }
 
   throw new ErodeError(
-    `Unsupported source platform for URL: ${url}. Currently only GitHub and GitLab are supported.`,
+    `Unsupported platform for URL: ${url}. Only GitHub and GitLab are supported.`,
     ErrorCode.INVALID_URL,
-    `Unsupported source platform for URL: ${url}. Currently only GitHub and GitLab are supported.`
+    `Unsupported platform for URL: ${url}. Only GitHub and GitLab are supported.`
   );
 }
 

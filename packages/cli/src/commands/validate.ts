@@ -6,10 +6,10 @@ import { OutputFormatter } from '../utils/cli-helpers.js';
 
 export function createValidateCommand(): Command {
   return new Command('validate')
-    .description('Check that all components in an architecture model have repository links')
-    .argument('<model-path>', 'Path to architecture models directory')
-    .option('--model-format <format>', 'Architecture model format', 'likec4')
-    .option('--format <format>', 'Output format (table, json)', 'table')
+    .description('Verify every component in the model is linked to a repository')
+    .argument('<model-path>', 'Directory containing architecture model files')
+    .option('--model-format <format>', 'Format of the architecture model', 'likec4')
+    .option('--format <format>', 'Result format (table, json)', 'table')
     .action(async (modelPath: string, options: unknown) => {
       const validated = validate(ValidateOptionsSchema, options, 'command options');
 

@@ -6,10 +6,10 @@ import { OutputFormatter } from '../utils/cli-helpers.js';
 
 export function createComponentsCommand(): Command {
   return new Command('components')
-    .description('List components from architecture model')
-    .argument('<model-path>', 'Path to architecture models directory')
-    .option('--model-format <format>', 'Architecture model format', 'likec4')
-    .option('--format <format>', 'Output format (table, json, yaml)', 'table')
+    .description('Display all components in the architecture model')
+    .argument('<model-path>', 'Directory containing architecture model files')
+    .option('--model-format <format>', 'Format of the architecture model', 'likec4')
+    .option('--format <format>', 'Result format (table, json, yaml)', 'table')
     .action(async (modelPath: string, options: unknown) => {
       const validated = validate(ComponentsOptionsSchema, options, 'command options');
 

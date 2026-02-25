@@ -6,11 +6,11 @@ import { OutputFormatter } from '../utils/cli-helpers.js';
 
 export function createConnectionsCommand(): Command {
   return new Command('connections')
-    .description('Show component connections from architecture model')
-    .argument('<model-path>', 'Path to architecture models directory')
-    .option('--model-format <format>', 'Architecture model format', 'likec4')
-    .requiredOption('--repo <url>', 'Repository URL (GitHub or GitLab)')
-    .option('--output <format>', 'Output format (console, json)', 'console')
+    .description('Display component relationships from the architecture model')
+    .argument('<model-path>', 'Directory containing architecture model files')
+    .option('--model-format <format>', 'Format of the architecture model', 'likec4')
+    .requiredOption('--repo <url>', 'GitHub or GitLab repository URL')
+    .option('--output <format>', 'Result format (console, json)', 'console')
     .action(async (modelPath: string, options: unknown) => {
       const validated = validate(ConnectionsOptionsSchema, options, 'command options');
 

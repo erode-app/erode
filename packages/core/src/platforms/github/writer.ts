@@ -41,9 +41,9 @@ export class GitHubWriter implements SourcePlatformWriter {
     const token = CONFIG.github.modelRepoPrToken ?? CONFIG.github.token;
     if (!token) {
       throw new ErodeError(
-        'GitHub token is required for PR creation',
+        'A GitHub token is needed to create PRs',
         ErrorCode.MISSING_API_KEY,
-        'Set MODEL_REPO_PR_TOKEN or GITHUB_TOKEN to create PRs.'
+        'Provide MODEL_REPO_PR_TOKEN or GITHUB_TOKEN to create PRs.'
       );
     }
     this.octokit = new Octokit({ auth: token });
@@ -172,7 +172,7 @@ export class GitHubWriter implements SourcePlatformWriter {
     } catch (error) {
       if (error instanceof ErodeError) throw error;
       if (error instanceof Error) {
-        throw new ApiError(`Failed to create/update pull request: ${error.message}`, undefined, {
+        throw new ApiError(`Could not create or update pull request: ${error.message}`, undefined, {
           provider: 'github',
         });
       }
@@ -221,7 +221,7 @@ export class GitHubWriter implements SourcePlatformWriter {
       if (error instanceof ErodeError) throw error;
       if (error instanceof Error) {
         throw new ApiError(
-          `Failed to comment on pull request: ${sanitizeErrorMessage(error.message)}`,
+          `Could not comment on pull request: ${sanitizeErrorMessage(error.message)}`,
           extractStatusCode(error),
           { provider: 'github' }
         );
@@ -248,7 +248,7 @@ export class GitHubWriter implements SourcePlatformWriter {
       if (error instanceof ErodeError) throw error;
       if (error instanceof Error) {
         throw new ApiError(
-          `Failed to delete comment on pull request: ${sanitizeErrorMessage(error.message)}`,
+          `Could not remove comment from pull request: ${sanitizeErrorMessage(error.message)}`,
           extractStatusCode(error),
           { provider: 'github' }
         );

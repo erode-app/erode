@@ -139,14 +139,14 @@ describe('formatAnalysisAsComment', () => {
       })
     );
 
-    expect(output).toContain('**Status**: :warning: Violations detected');
+    expect(output).toContain('**Status**: :warning: Issues detected');
     expect(output).not.toContain('**Status**: violations');
   });
 
   it('should show checkmark emoji when no violations', () => {
     const output = formatAnalysisAsComment(makeAnalysisResult());
 
-    expect(output).toContain('**Status**: :white_check_mark: No drift detected');
+    expect(output).toContain('**Status**: :white_check_mark: No drift found');
     expect(output).not.toContain('**Status**: success');
   });
 
@@ -185,16 +185,16 @@ describe('formatAnalysisAsComment', () => {
       },
     });
 
-    expect(output).toContain('<summary>Analysis metadata</summary>');
-    expect(output).toContain('| **Provider** | gemini |');
-    expect(output).toContain('| **Fast model** (Stage 0, 1) | `gemini-2.5-flash` |');
-    expect(output).toContain('| **Advanced model** (Stage 2, 3) | `gemini-2.5-pro` |');
+    expect(output).toContain('<summary>Analysis details</summary>');
+    expect(output).toContain('| **AI Provider** | gemini |');
+    expect(output).toContain('| **Quick model** (Stages 0, 1) | `gemini-2.5-flash` |');
+    expect(output).toContain('| **Deep model** (Stages 2, 3) | `gemini-2.5-pro` |');
   });
 
   it('should not render model metadata when modelInfo is omitted', () => {
     const output = formatAnalysisAsComment(makeAnalysisResult());
 
-    expect(output).not.toContain('Analysis metadata');
+    expect(output).not.toContain('Analysis details');
   });
 });
 
@@ -231,8 +231,8 @@ describe('formatErrorAsComment', () => {
     const error = new ApiError('Resource exhausted', 429);
     const output = formatErrorAsComment(error);
 
-    expect(output).toContain(':x: **Analysis failed**');
-    expect(output).toContain('rate limit was exceeded');
+    expect(output).toContain(':x: **Analysis unsuccessful**');
+    expect(output).toContain('rate limit was hit');
     expect(output).toContain('re-run the check');
   });
 
@@ -240,7 +240,7 @@ describe('formatErrorAsComment', () => {
     const error = new ApiError('Request timeout', 408);
     const output = formatErrorAsComment(error);
 
-    expect(output).toContain(':x: **Analysis failed**');
+    expect(output).toContain(':x: **Analysis unsuccessful**');
     expect(output).toContain('timed out');
     expect(output).toContain('try re-running');
   });
@@ -249,8 +249,8 @@ describe('formatErrorAsComment', () => {
     const error = new ConfigurationError('Missing GEMINI_API_KEY');
     const output = formatErrorAsComment(error);
 
-    expect(output).toContain(':x: **Analysis failed**');
-    expect(output).toContain('configuration error');
+    expect(output).toContain(':x: **Analysis unsuccessful**');
+    expect(output).toContain('configuration issue');
     expect(output).toContain('API keys and tokens');
   });
 
@@ -258,8 +258,8 @@ describe('formatErrorAsComment', () => {
     const error = new Error('Something broke');
     const output = formatErrorAsComment(error);
 
-    expect(output).toContain(':x: **Analysis failed**');
-    expect(output).toContain('unexpected error');
+    expect(output).toContain(':x: **Analysis unsuccessful**');
+    expect(output).toContain('unexpected error happened');
     expect(output).toContain('workflow logs');
   });
 

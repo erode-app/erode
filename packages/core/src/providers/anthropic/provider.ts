@@ -24,9 +24,9 @@ export class AnthropicProvider implements AIProvider {
   constructor(config: { apiKey: string; fastModel?: string; advancedModel?: string }) {
     if (!config.apiKey) {
       throw new ErodeError(
-        'Anthropic API key is required',
+        'An Anthropic API key is needed',
         ErrorCode.MISSING_API_KEY,
-        'Missing Anthropic API key. Set ANTHROPIC_API_KEY in your environment.'
+        'No Anthropic API key found. Set ANTHROPIC_API_KEY in your environment.'
       );
     }
     this.client = new Anthropic({ apiKey: config.apiKey });
@@ -77,9 +77,9 @@ export class AnthropicProvider implements AIProvider {
     const jsonStr = PromptBuilder.extractJson(responseText);
     if (!jsonStr) {
       throw new ErodeError(
-        'No JSON found in Anthropic response for dependency extraction',
+        'Anthropic response for dependency extraction contained no JSON',
         ErrorCode.INVALID_RESPONSE,
-        'Failed to extract JSON from Anthropic response',
+        'Could not extract JSON from Anthropic response',
         { responseText }
       );
     }
@@ -103,9 +103,9 @@ export class AnthropicProvider implements AIProvider {
     const jsonStr = PromptBuilder.extractJson(responseText);
     if (!jsonStr) {
       throw new ErodeError(
-        'No JSON found in Anthropic response for PR analysis',
+        'Anthropic response for PR analysis contained no JSON',
         ErrorCode.INVALID_RESPONSE,
-        'Failed to extract JSON from Anthropic response',
+        'Could not extract JSON from Anthropic response',
         { responseText }
       );
     }
@@ -149,9 +149,9 @@ export class AnthropicProvider implements AIProvider {
 
       if (response.stop_reason === 'refusal') {
         throw new ErodeError(
-          'Response was blocked by Anthropic safety filters',
+          'Anthropic safety filters blocked the response',
           ErrorCode.SAFETY_FILTERED,
-          "The AI provider's safety filters blocked this content. Try simplifying the input.",
+          'Content was blocked by the AI provider safety filters. Try simplifying the input.',
           { model, phase }
         );
       }
@@ -161,9 +161,9 @@ export class AnthropicProvider implements AIProvider {
 
       if (!text) {
         throw new ErodeError(
-          'Empty response from Anthropic',
+          'Anthropic returned an empty response',
           ErrorCode.INVALID_RESPONSE,
-          'Received empty response from Anthropic API',
+          'The Anthropic API returned no content',
           { model, phase }
         );
       }
@@ -171,9 +171,9 @@ export class AnthropicProvider implements AIProvider {
       // Check for truncation
       if (response.stop_reason === 'max_tokens') {
         throw new ErodeError(
-          'Anthropic response was truncated (max_tokens reached)',
+          'Anthropic response was cut short (max_tokens reached)',
           ErrorCode.INVALID_RESPONSE,
-          'The AI response was cut short. The output may be incomplete.',
+          'The AI response was truncated. The output may be partial.',
           { model, phase, maxTokens }
         );
       }

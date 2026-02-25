@@ -30,17 +30,17 @@ export class GitHubReader implements SourcePlatformReader {
     const match = GITHUB_PR_URL_PATTERN.exec(url);
     if (!match) {
       throw new ErodeError(
-        'Invalid GitHub pull request URL. Expected format: https://github.com/{owner}/{repo}/pull/{number}',
+        'Unrecognized GitHub pull request URL. Expected: https://github.com/{owner}/{repo}/pull/{number}',
         ErrorCode.INVALID_URL,
-        'Invalid GitHub pull request URL. Expected format: https://github.com/{owner}/{repo}/pull/{number}'
+        'Unrecognized GitHub pull request URL. Expected: https://github.com/{owner}/{repo}/pull/{number}'
       );
     }
     const [, owner, repo, prNumber] = match;
     if (!owner || !repo || !prNumber) {
       throw new ErodeError(
-        'Invalid GitHub PR URL: missing owner, repo, or pull request number',
+        'Incomplete GitHub PR URL: owner, repo, or pull request number is missing',
         ErrorCode.INVALID_URL,
-        'Invalid GitHub PR URL: missing owner, repo, or pull request number'
+        'Incomplete GitHub PR URL: owner, repo, or pull request number is missing'
       );
     }
     return {
@@ -79,11 +79,11 @@ export class GitHubReader implements SourcePlatformReader {
 
       if (totalFiles > CONFIG.constraints.maxFilesPerDiff) {
         wasTruncated = true;
-        truncationReason = `Diff exceeded maximum of ${String(CONFIG.constraints.maxFilesPerDiff)} files (found ${String(totalFiles)} files). Analysis performed on first ${String(CONFIG.constraints.maxFilesPerDiff)} files only.`;
+        truncationReason = `Diff surpassed the ${String(CONFIG.constraints.maxFilesPerDiff)}-file limit (${String(totalFiles)} files found). Only the first ${String(CONFIG.constraints.maxFilesPerDiff)} files were analyzed.`;
         filesToInclude = files.slice(0, CONFIG.constraints.maxFilesPerDiff);
       } else if (totalLines > CONFIG.constraints.maxLinesPerDiff) {
         wasTruncated = true;
-        truncationReason = `Diff exceeded maximum of ${String(CONFIG.constraints.maxLinesPerDiff)} changed lines (found ${String(totalLines)} lines). Analysis may be incomplete.`;
+        truncationReason = `Diff surpassed the ${String(CONFIG.constraints.maxLinesPerDiff)}-line limit (${String(totalLines)} lines found). Analysis may be partial.`;
       }
 
       const { data: comparison } = await this.octokit.rest.repos.compareCommits({
@@ -146,7 +146,7 @@ export class GitHubReader implements SourcePlatformReader {
         throw error;
       }
       if (error instanceof Error) {
-        throw new ApiError(`Failed to fetch pull request: ${error.message}`, undefined, {
+        throw new ApiError(`Could not retrieve pull request: ${error.message}`, undefined, {
           provider: 'github',
         });
       }
@@ -180,7 +180,7 @@ export class GitHubReader implements SourcePlatformReader {
         throw error;
       }
       if (error instanceof Error) {
-        throw new ApiError(`Failed to fetch pull request commits: ${error.message}`, undefined, {
+        throw new ApiError(`Could not retrieve pull request commits: ${error.message}`, undefined, {
           provider: 'github',
         });
       }

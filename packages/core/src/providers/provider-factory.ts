@@ -10,9 +10,9 @@ export function createAIProvider(): AIProvider {
   if (provider === 'gemini') {
     if (!CONFIG.gemini.apiKey) {
       throw new ErodeError(
-        'Gemini API key is required',
+        'A Gemini API key is needed',
         ErrorCode.MISSING_API_KEY,
-        'Missing Gemini API key. Set GEMINI_API_KEY in your environment or .env file.'
+        'No Gemini API key found. Set GEMINI_API_KEY in your environment or .env file.'
       );
     }
     return new GeminiProvider({
@@ -24,9 +24,9 @@ export function createAIProvider(): AIProvider {
 
   if (!CONFIG.anthropic.apiKey) {
     throw new ErodeError(
-      'Anthropic API key is required',
+      'An Anthropic API key is needed',
       ErrorCode.MISSING_API_KEY,
-      'Missing Anthropic API key. Set ANTHROPIC_API_KEY in your environment or .env file.'
+      'No Anthropic API key found. Set ANTHROPIC_API_KEY in your environment or .env file.'
     );
   }
   return new AnthropicProvider({

@@ -4,7 +4,7 @@ const RepositoryUrlSchema = z
   .string()
   .regex(
     /^https?:\/\/(github\.com\/[^/]+\/[^/]+|gitlab\.com\/.+\/[^/]+)\/?$/,
-    'Must be a valid GitHub or GitLab repository URL'
+    'Provide a valid GitHub or GitLab repository URL'
   );
 
 const OutputFormatSchema = z.enum(['table', 'json', 'yaml', 'console']);

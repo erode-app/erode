@@ -62,7 +62,7 @@ export class ConfigurationError extends ErodeError {
     super(
       message,
       ErrorCode.INVALID_CONFIG,
-      `Configuration error: ${message}`,
+      `Configuration issue: ${message}`,
       { configKey },
       false
     );
@@ -87,10 +87,10 @@ export class ApiError extends ErodeError {
         : ErrorCode.API_ERROR;
 
     // Enhance user message for acceleration limits
-    let userMessage = `API error: ${message}`;
+    let userMessage = `API failure: ${message}`;
     if (isAccelerationLimit) {
       userMessage =
-        'Rate limit: Your API usage is increasing too quickly. Wait 5-10 minutes before retrying, or split large changes into smaller pieces. See: https://docs.claude.com/en/api/rate-limits';
+        'Rate limit: Your API usage is accelerating too fast. Wait 5-10 minutes before retrying, or split large changes into smaller batches. See: https://docs.claude.com/en/api/rate-limits';
     }
 
     super(
@@ -155,7 +155,7 @@ export class AdapterError extends ErodeError {
       'Model not loaded',
       ErrorCode.MODEL_NOT_LOADED,
       adapterType,
-      'Model must be loaded before querying. Call loadFromPath() first.'
+      'The model must be loaded before it can be queried. Call loadFromPath() first.'
     );
   }
   static fromAdapterError(
@@ -171,7 +171,7 @@ export class AdapterError extends ErodeError {
         error.message,
         ErrorCode.MODEL_LOAD_ERROR,
         adapterType,
-        `Failed to load ${displayName} model: ${error.message}`,
+        `Could not load ${displayName} model: ${error.message}`,
         { originalError: error.name }
       );
     }
@@ -179,7 +179,7 @@ export class AdapterError extends ErodeError {
       String(error),
       ErrorCode.MODEL_LOAD_ERROR,
       adapterType,
-      `Failed to load ${displayName} model: ${String(error)}`
+      `Could not load ${displayName} model: ${String(error)}`
     );
   }
   static fromLikeC4Error(error: unknown): AdapterError {

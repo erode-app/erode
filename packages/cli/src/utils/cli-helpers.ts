@@ -114,7 +114,7 @@ export const OutputFormatter = {
   formatTable(data: object[], columns?: TableColumn[]): string {
     const firstRow = data[0];
     if (!firstRow) {
-      return chalk.gray('No data to display');
+      return chalk.gray('Nothing to show');
     }
     const MAX_COLUMN_WIDTH = 50;
     const autoColumns: TableColumn[] =

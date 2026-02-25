@@ -49,26 +49,26 @@ export async function runAnalyze(
   const adapter = createAdapter(options.modelFormat);
 
   // ── Load architecture model ──────────────────────────────────────────
-  p.section(`Loading ${adapter.metadata.displayName} Architecture Model`);
+  p.section(`Preparing ${adapter.metadata.displayName} Architecture Model`);
   validatePath(options.modelPath, 'directory');
-  p.start('Loading architecture model');
+  p.start('Reading architecture model');
   await adapter.loadFromPath(options.modelPath);
-  p.succeed('Architecture model loaded');
+  p.succeed('Architecture model ready');
 
   // ── Initialise AI provider ───────────────────────────────────────────
-  p.start('Initializing AI provider');
+  p.start('Setting up AI provider');
   const provider = createAIProvider();
-  p.succeed('AI provider ready');
+  p.succeed('AI provider initialized');
 
   // ── Fetch change request data ────────────────────────────────────────
-  p.section('Fetching Change Request Data');
+  p.section('Retrieving Change Request Data');
   const reader = createPlatformReader(options.url);
   const ref = reader.parseChangeRequestUrl(options.url);
-  p.start(`Fetching PR #${String(ref.number)}`);
+  p.start(`Downloading PR #${String(ref.number)}`);
   const prData = await reader.fetchChangeRequest(ref);
   const commits = await reader.fetchChangeRequestCommits(ref);
   p.succeed(
-    `Fetched PR #${String(prData.number)}: ${prData.title} (${String(commits.length)} commits)`
+    `Retrieved PR #${String(prData.number)}: ${prData.title} (${String(commits.length)} commits)`
   );
 
   // ── File filtering ───────────────────────────────────────────────────
@@ -84,17 +84,17 @@ export async function runAnalyze(
       prData.changed_files = included.length;
       prData.additions = included.reduce((sum, f) => sum + f.additions, 0);
       prData.deletions = included.reduce((sum, f) => sum + f.deletions, 0);
-      p.info(`Filtered out ${String(excluded)} file(s) matching skip patterns`);
+      p.info(`Excluded ${String(excluded)} file(s) matching skip patterns`);
     }
   }
 
   // ── Find components for this repository ──────────────────────────────
   const repoUrl = ref.repositoryUrl;
-  p.start('Finding components for repository');
+  p.start('Locating components for repository');
   const components = adapter.findAllComponentsByRepository(repoUrl);
 
   if (components.length === 0) {
-    p.warn(`No components found matching repository: ${repoUrl}`);
+    p.warn(`No components matched repository: ${repoUrl}`);
     for (const line of adapter.metadata.noComponentHelpLines) {
       p.info(line.replace('{{repoUrl}}', repoUrl));
     }
@@ -127,7 +127,7 @@ export async function runAnalyze(
       hasViolations: false,
     };
   }
-  p.succeed(`Found ${String(components.length)} component(s) for repository`);
+  p.succeed(`Located ${String(components.length)} component(s) for repository`);
 
   // Guaranteed non-empty since we checked components.length === 0 above
   const defaultComponent = components[0];
@@ -147,11 +147,11 @@ export async function runAnalyze(
   if (components.length === 1) {
     selectedComponentId = selectedComponent.id;
   } else {
-    p.section('Stage 0: Select component(s)');
-    p.start('Using LLM to select the most relevant component');
+    p.section('Stage 0: Component Selection');
+    p.start('Asking the model to pick the best-matching component');
     if (!provider.selectComponent) {
       p.warn(
-        `Provider does not support component selection, using first: ${selectedComponent.name}`
+        `Provider lacks component selection, defaulting to: ${selectedComponent.name}`
       );
     } else {
       const componentId = await provider.selectComponent({
@@ -161,21 +161,21 @@ export async function runAnalyze(
       if (componentId) {
         selectedComponent = components.find((c) => c.id === componentId) ?? defaultComponent;
         selectedComponentId = componentId;
-        p.succeed(`Selected component: ${selectedComponent.name} (${componentId})`);
+        p.succeed(`Chosen component: ${selectedComponent.name} (${componentId})`);
       } else {
-        p.warn(`AI could not determine component, using first: ${selectedComponent.name}`);
+        p.warn(`AI was unable to pick a component, defaulting to: ${selectedComponent.name}`);
       }
     }
   }
 
   // ── Stage 1: Dependency extraction ───────────────────────────────────
-  p.section('Stage 1: Dependency Extraction');
+  p.section('Stage 1: Extract Dependencies');
   const fullDiff = prData.files
     .map((f) => (f.patch ? `diff --git a/${f.filename} b/${f.filename}\n${f.patch}` : ''))
     .filter(Boolean)
     .join('\n\n');
 
-  p.start('Extracting dependencies from PR diff');
+  p.start('Scanning PR diff for dependencies');
   const aggregatedDeps = await provider.extractDependencies({
     diff: fullDiff,
     commit: {
@@ -190,7 +190,7 @@ export async function runAnalyze(
     },
     components: [selectedComponent],
   });
-  p.succeed(`Extracted ${String(aggregatedDeps.dependencies.length)} dependency change(s)`);
+  p.succeed(`Found ${String(aggregatedDeps.dependencies.length)} dependency change(s)`);
 
   // ── Build prompt data for drift analysis ─────────────────────────────
   const dependencies = adapter.getComponentDependencies(selectedComponent.id);
@@ -232,29 +232,29 @@ export async function runAnalyze(
   };
 
   // ── Stage 2: Drift analysis ──────────────────────────────────────────
-  p.section('Stage 2: Architecture Drift Analysis');
-  p.start('Analyzing change request for architectural drift');
+  p.section('Stage 2: Drift Analysis');
+  p.start('Evaluating the change request for architectural drift');
   const analysisResult = await provider.analyzeDrift(promptData);
-  p.succeed('Analysis complete');
+  p.succeed('Drift analysis finished');
 
   // ── Stage 3 (optional): Model generation ─────────────────────────────
   let generatedCode: string | undefined;
   if (options.generateModel) {
-    p.section(`Stage 3: ${adapter.metadata.displayName} Model Generation`);
+    p.section(`Stage 3: Generate ${adapter.metadata.displayName} Model`);
     if (!provider.generateArchitectureCode) {
-      p.warn(`Provider does not support ${adapter.metadata.displayName} model generation`);
+      p.warn(`Provider lacks ${adapter.metadata.displayName} model generation support`);
     } else {
-      p.start(`Generating ${adapter.metadata.displayName} model code`);
+      p.start(`Producing ${adapter.metadata.displayName} model code`);
       // Pass all components for context
       analysisResult.allComponents = adapter.getAllComponents();
       analysisResult.modelFormat = adapter.metadata.id;
       generatedCode = await provider.generateArchitectureCode(analysisResult);
-      p.succeed(`${adapter.metadata.displayName} model code generated`);
+      p.succeed(`${adapter.metadata.displayName} model code produced`);
     }
   }
 
   // ── Build structured output ──────────────────────────────────────────
-  p.section('Results');
+  p.section('Output');
   const needsStructured =
     options.format === 'json' || !!options.outputFile || !!options.githubActions;
   const structured = needsStructured
@@ -267,7 +267,7 @@ export async function runAnalyze(
   // ── Write output file ────────────────────────────────────────────────
   if (options.outputFile && structured) {
     writeOutputToFile(structured, options.outputFile);
-    p.succeed(`Structured output written to ${options.outputFile}`);
+    p.succeed(`Structured output saved to ${options.outputFile}`);
   }
 
   // ── PR creation ──────────────────────────────────────────────────────
@@ -276,10 +276,10 @@ export async function runAnalyze(
     | undefined;
   if (options.openPr && !options.dryRun) {
     if (!generatedCode) {
-      p.warn('--open-pr requires --generate-model to produce model code. PR creation skipped.');
+      p.warn('--open-pr needs --generate-model to generate code. Skipping PR creation.');
     } else {
-      p.section('Creating Pull Request');
-      p.start('Creating PR with model updates');
+      p.section('Opening Pull Request');
+      p.start('Opening PR with model changes');
       const writer = createPlatformWriter(
         ref.repositoryUrl,
         ref.platformId.owner,
@@ -294,9 +294,9 @@ export async function runAnalyze(
         branchName,
         title: prTitle,
         body: [
-          `## Architecture Model Update`,
+          `## Model Update`,
           '',
-          `Automated update from erode analysis of PR #${String(prData.number)}: ${prData.title}`,
+          `Auto-generated from erode analysis of PR #${String(prData.number)}: ${prData.title}`,
           '',
           `### Summary`,
           analysisResult.summary,
@@ -311,23 +311,23 @@ export async function runAnalyze(
       });
       generatedChangeRequest = { ...prResult, branch: branchName };
       if (structured) structured.generatedChangeRequest = generatedChangeRequest;
-      p.succeed(`PR ${prResult.action}: ${prResult.url}`);
+      p.succeed(`PR ${prResult.action} successfully: ${prResult.url}`);
     }
   } else if (options.openPr && options.dryRun) {
-    p.info('Dry run: PR creation skipped');
+    p.info('Dry run: skipped PR creation');
   }
 
   // ── PR commenting ────────────────────────────────────────────────────
   if (options.comment) {
     try {
-      p.section('Posting PR Comment');
+      p.section('Publishing PR Comment');
       const commentWriter = createPlatformWriter(
         ref.repositoryUrl,
         ref.platformId.owner,
         ref.platformId.repo
       );
       if (analysisHasFindings(analysisResult)) {
-        p.start('Posting analysis comment on PR');
+        p.start('Publishing analysis comment on PR');
         const providerName = CONFIG.ai.provider;
         const providerConfig = CONFIG[providerName];
         const commentBody = formatAnalysisAsComment(analysisResult, {
@@ -343,15 +343,15 @@ export async function runAnalyze(
         await commentWriter.commentOnChangeRequest(ref, commentBody, {
           upsertMarker: COMMENT_MARKER,
         });
-        p.succeed('Analysis comment posted on PR');
+        p.succeed('Analysis comment published on PR');
       } else {
-        p.start('Cleaning up previous comment (no findings)');
+        p.start('Removing stale comment (no findings)');
         await commentWriter.deleteComment(ref, COMMENT_MARKER);
-        p.succeed('No findings — previous comment removed (if any)');
+        p.succeed('No findings — old comment cleared (if any)');
       }
     } catch (error) {
       p.warn(
-        `Failed to post PR comment: ${error instanceof Error ? error.message : String(error)}`
+        `Could not publish PR comment: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }
@@ -363,7 +363,7 @@ export async function runAnalyze(
       writeGitHubStepSummary(structured);
     } catch (error) {
       p.warn(
-        `Failed to write GitHub Actions outputs: ${error instanceof Error ? error.message : String(error)}`
+        `Could not write GitHub Actions outputs: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }

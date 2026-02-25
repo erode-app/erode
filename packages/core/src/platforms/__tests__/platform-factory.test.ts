@@ -55,13 +55,13 @@ describe('detectPlatform', () => {
       ErodeError
     );
     expect(() => detectPlatform('https://bitbucket.org/org/repo/pull-requests/1')).toThrow(
-      'Unsupported source platform'
+      'Unsupported platform'
     );
   });
 
   it('should throw for invalid URLs', () => {
     expect(() => detectPlatform('not-a-url')).toThrow(ErodeError);
-    expect(() => detectPlatform('not-a-url')).toThrow('Invalid URL');
+    expect(() => detectPlatform('not-a-url')).toThrow('Unrecognized URL');
   });
 });
 

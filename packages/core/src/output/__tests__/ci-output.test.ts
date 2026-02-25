@@ -51,9 +51,9 @@ describe('buildStepSummary', () => {
   it('renders success summary with no violations', () => {
     const md = buildStepSummary(makeOutput());
 
-    expect(md).toContain('## Drift Detection Results');
-    expect(md).toContain('### Analysis Completed Successfully');
-    expect(md).toContain('No architectural drift detected');
+    expect(md).toContain('## Drift Analysis Results');
+    expect(md).toContain('### Analysis Passed');
+    expect(md).toContain('No architectural drift found');
     expect(md).toContain('`comp.api`');
     expect(md).toContain('API Service');
     expect(md).toContain('**Status:** success');
@@ -81,8 +81,8 @@ describe('buildStepSummary', () => {
       })
     );
 
-    expect(md).toContain('### Violations Detected');
-    expect(md).toContain('### Architectural Violations');
+    expect(md).toContain('### Issues Detected');
+    expect(md).toContain('### Detected Issues');
     expect(md).toContain('**[HIGH]** Undeclared dependency on Redis');
     expect(md).toContain('**Violations:** 1');
   });
@@ -99,7 +99,7 @@ describe('buildStepSummary', () => {
       })
     );
 
-    expect(md).toContain('### Warnings');
+    expect(md).toContain('### Advisories');
     expect(md).toContain('- Consider adding tests');
     expect(md).toContain('- Missing docs');
     expect(md).toContain('**Warnings:** 2');
@@ -120,7 +120,7 @@ describe('buildStepSummary', () => {
       })
     );
 
-    expect(md).toContain('### Recommended Model Updates');
+    expect(md).toContain('### Suggested Model Changes');
     expect(md).toContain('**Add (2):**');
     expect(md).toContain('- redis -> comp.api');
     expect(md).toContain('**Remove (1):**');
@@ -130,13 +130,13 @@ describe('buildStepSummary', () => {
   it('renders error status', () => {
     const md = buildStepSummary(makeOutput({ status: 'error', exitCode: 2 }));
 
-    expect(md).toContain('### Analysis Failed');
+    expect(md).toContain('### Analysis Unsuccessful');
   });
 
   it('renders skipped status', () => {
     const md = buildStepSummary(makeOutput({ status: 'skipped' }));
 
-    expect(md).toContain('### Analysis Skipped');
+    expect(md).toContain('### Analysis Omitted');
   });
 });
 
@@ -223,7 +223,7 @@ describe('writeGitHubStepSummary', () => {
     expect(mockAppendFileSync).toHaveBeenCalledOnce();
     const [path, content] = mockAppendFileSync.mock.calls[0] as [string, string, string];
     expect(path).toBe('/tmp/step-summary');
-    expect(content).toContain('## Drift Detection Results');
+    expect(content).toContain('## Drift Analysis Results');
 
     if (original === undefined) {
       delete process.env['GITHUB_STEP_SUMMARY'];

@@ -15,11 +15,11 @@ interface WizardState {
 }
 
 const COMMANDS = [
-  { label: 'analyze    — Analyze a PR for architecture drift', value: 'analyze' },
-  { label: 'validate   — Check components have repository links', value: 'validate' },
-  { label: 'components — List architecture model components', value: 'components' },
-  { label: 'connections — Show component connections', value: 'connections' },
-  { label: 'quit       — Exit erode', value: 'quit' },
+  { label: 'analyze    — Inspect a PR for architectural deviations', value: 'analyze' },
+  { label: 'validate   — Verify components are linked to repositories', value: 'validate' },
+  { label: 'components — Display all model components', value: 'components' },
+  { label: 'connections — Display component relationships', value: 'connections' },
+  { label: 'quit       — Close erode', value: 'quit' },
 ];
 
 function needsExtraArgs(command: string): boolean {
@@ -56,8 +56,8 @@ export async function runInteractiveWizard(): Promise<string[] | undefined> {
     if (step === 'select-command') {
       return (
         <Box flexDirection="column">
-          <Text bold>Erode — Architecture Drift Detection</Text>
-          <Text dimColor>Select a command to run:{'\n'}</Text>
+          <Text bold>Erode — Architectural Drift Detector</Text>
+          <Text dimColor>Choose a command:{'\n'}</Text>
           <WizardSelect
             label=""
             items={COMMANDS}
@@ -79,7 +79,7 @@ export async function runInteractiveWizard(): Promise<string[] | undefined> {
       return (
         <WizardPathInput
           key="model-path"
-          label="Path to architecture models directory:"
+          label="Directory containing architecture model files:"
           placeholder="./models"
           onSubmit={(value) => {
             const modelPath = value || './models';
@@ -100,7 +100,7 @@ export async function runInteractiveWizard(): Promise<string[] | undefined> {
         return (
           <WizardInput
             key="extra-args-analyze"
-            label="Change request URL (GitHub PR or GitLab MR):"
+            label="Pull request or merge request URL:"
             placeholder="https://github.com/owner/repo/pull/123"
             onSubmit={(value) => {
               finish({ ...state, url: value });
@@ -113,7 +113,7 @@ export async function runInteractiveWizard(): Promise<string[] | undefined> {
         return (
           <WizardInput
             key="extra-args-connections"
-            label="Repository URL:"
+            label="Repository address:"
             placeholder="https://github.com/owner/repo"
             onSubmit={(value) => {
               finish({ ...state, repo: value });
@@ -125,7 +125,7 @@ export async function runInteractiveWizard(): Promise<string[] | undefined> {
 
     // Fallback — shouldn't reach here
     exit();
-    return <Text dimColor>Starting...</Text>;
+    return <Text dimColor>Initializing...</Text>;
   }
 
   await renderApp(<Wizard />);

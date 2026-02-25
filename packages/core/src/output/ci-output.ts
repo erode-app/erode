@@ -26,41 +26,41 @@ export function writeGitHubActionsOutputs(output: StructuredAnalysisOutput): voi
 export function buildStepSummary(output: StructuredAnalysisOutput): string {
   const lines: string[] = [];
 
-  lines.push('## Drift Detection Results');
+  lines.push('## Drift Analysis Results');
   lines.push('');
 
   if (output.status === 'success' && !output.analysis.hasViolations) {
-    lines.push('### Analysis Completed Successfully');
+    lines.push('### Analysis Passed');
     lines.push('');
-    lines.push('No architectural drift detected in this change request.');
+    lines.push('No architectural drift found in this change request.');
   } else if (output.status === 'violations' || output.analysis.hasViolations) {
-    lines.push('### Violations Detected');
+    lines.push('### Issues Detected');
   } else if (output.status === 'error') {
-    lines.push('### Analysis Failed');
+    lines.push('### Analysis Unsuccessful');
   } else if (output.status === 'skipped') {
-    lines.push('### Analysis Skipped');
+    lines.push('### Analysis Omitted');
   } else {
-    lines.push('### Analysis Complete');
+    lines.push('### Analysis Done');
   }
 
   lines.push('');
   const componentId = output.metadata.component?.id ?? 'unknown';
   const componentName = output.metadata.component?.name ?? 'N/A';
-  lines.push(`**Component Analyzed:** \`${componentId}\` (${componentName})`);
+  lines.push(`**Inspected Component:** \`${componentId}\` (${componentName})`);
   lines.push(`**Status:** ${output.status}`);
   lines.push(`**Violations:** ${String(output.analysis.violations.length)}`);
   lines.push(`**Warnings:** ${String(output.analysis.warnings?.length ?? 0)}`);
   lines.push('');
 
   if (output.analysis.summary) {
-    lines.push('### Summary');
+    lines.push('### Overview');
     lines.push('');
     lines.push(output.analysis.summary);
     lines.push('');
   }
 
   if (output.analysis.hasViolations && output.analysis.violations.length > 0) {
-    lines.push('### Architectural Violations');
+    lines.push('### Detected Issues');
     lines.push('');
     for (const v of output.analysis.violations) {
       lines.push(`- **[${v.severity.toUpperCase()}]** ${v.description}`);
@@ -69,7 +69,7 @@ export function buildStepSummary(output: StructuredAnalysisOutput): string {
   }
 
   if (output.analysis.warnings && output.analysis.warnings.length > 0) {
-    lines.push('### Warnings');
+    lines.push('### Advisories');
     lines.push('');
     for (const w of output.analysis.warnings) {
       lines.push(`- ${w}`);
@@ -81,7 +81,7 @@ export function buildStepSummary(output: StructuredAnalysisOutput): string {
   const hasRemove =
     output.analysis.modelUpdates?.remove && output.analysis.modelUpdates.remove.length > 0;
   if (hasAdd || hasRemove) {
-    lines.push('### Recommended Model Updates');
+    lines.push('### Suggested Model Changes');
     lines.push('');
     if (hasAdd && output.analysis.modelUpdates?.add) {
       lines.push(`**Add (${String(output.analysis.modelUpdates.add.length)}):**`);

@@ -28,12 +28,12 @@ function pad(str: string, width: number): string {
 
 export function DataTable({ data, columns: customColumns }: Props): React.ReactElement {
   if (data.length === 0) {
-    return <Text dimColor>No data to display</Text>;
+    return <Text dimColor>Nothing to show</Text>;
   }
 
   const firstRow = data[0];
   if (!firstRow) {
-    return <Text dimColor>No data to display</Text>;
+    return <Text dimColor>Nothing to show</Text>;
   }
 
   const columns =

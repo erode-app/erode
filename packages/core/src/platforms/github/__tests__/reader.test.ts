@@ -197,7 +197,7 @@ describe('GitHubReader', () => {
         expect.fail('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).message).toContain('Failed to fetch pull request');
+        expect((error as ApiError).message).toContain('Could not retrieve pull request');
         expect((error as ApiError).context).toHaveProperty('provider', 'github');
       }
     });

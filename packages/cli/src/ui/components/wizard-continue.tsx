@@ -4,8 +4,8 @@ import { WizardSelect } from './wizard-select.js';
 import { renderApp } from '../app.js';
 
 const CHOICES = [
-  { label: 'Run another command', value: 'continue' },
-  { label: 'Quit', value: 'quit' },
+  { label: 'Execute another command', value: 'continue' },
+  { label: 'Exit', value: 'quit' },
 ];
 
 function ContinuePrompt({
@@ -19,7 +19,7 @@ function ContinuePrompt({
     <Box flexDirection="column">
       <Text dimColor>{'─'.repeat(40)}</Text>
       <WizardSelect
-        label="What next?"
+        label="What would you like to do?"
         items={CHOICES}
         onSelect={(value) => {
           onSelect(value === 'continue');

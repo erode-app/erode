@@ -52,13 +52,13 @@ function ValidateInkApp({
           <DataTable data={result.components} />
           <Box marginTop={1}>
             <Text>
-              Total: {String(result.total)} | Linked: {String(result.linked)} | Unlinked:{' '}
+              Total: {String(result.total)} | Connected: {String(result.linked)} | Unconnected:{' '}
               {String(result.unlinked)}
             </Text>
           </Box>
           {result.versionCheck && (
             <Text dimColor>
-              Model version: {result.versionCheck.detected ?? 'unknown'} (minimum:{' '}
+              Detected version: {result.versionCheck.detected ?? 'unknown'} (required:{' '}
               {result.versionCheck.minimum})
             </Text>
           )}

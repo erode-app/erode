@@ -12,13 +12,13 @@ function ConnectionSection({ conn }: { conn: ComponentConnections }): React.Reac
       <Text bold color="cyan">
         ── {conn.component.name} ({conn.component.id}) ──
       </Text>
-      <Text dimColor> Type: {conn.component.type}</Text>
-      {conn.component.repository && <Text dimColor> Repository: {conn.component.repository}</Text>}
+      <Text dimColor> Kind: {conn.component.type}</Text>
+      {conn.component.repository && <Text dimColor> Repo: {conn.component.repository}</Text>}
 
       <Box flexDirection="column" marginTop={1}>
         {conn.dependencies.length > 0 ? (
           <Box flexDirection="column">
-            <Text bold> Dependencies:</Text>
+            <Text bold> Depends on:</Text>
             {conn.dependencies.map((dep) => (
               <Text key={dep.id} color="blue">
                 {'    → '}
@@ -27,14 +27,14 @@ function ConnectionSection({ conn }: { conn: ComponentConnections }): React.Reac
             ))}
           </Box>
         ) : (
-          <Text dimColor> Dependencies: none</Text>
+          <Text dimColor> Depends on: none</Text>
         )}
       </Box>
 
       <Box flexDirection="column" marginTop={1}>
         {conn.dependents.length > 0 ? (
           <Box flexDirection="column">
-            <Text bold> Dependents:</Text>
+            <Text bold> Depended on by:</Text>
             {conn.dependents.map((dep) => (
               <Text key={dep.id} color="magenta">
                 {'    ← '}
@@ -43,13 +43,13 @@ function ConnectionSection({ conn }: { conn: ComponentConnections }): React.Reac
             ))}
           </Box>
         ) : (
-          <Text dimColor> Dependents: none</Text>
+          <Text dimColor> Depended on by: none</Text>
         )}
       </Box>
 
       {conn.relationships.length > 0 && (
         <Box flexDirection="column" marginTop={1}>
-          <Text bold> Relationships:</Text>
+          <Text bold> Relations:</Text>
           {conn.relationships.map((rel, i) => (
             <Text key={i}>
               {'    → '}

@@ -18,51 +18,51 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
 function provideSuggestions(error: ErodeError): void {
   const suggestions: Partial<Record<ErrorCode, string[]>> = {
     [ErrorCode.MISSING_API_KEY]: [
-      'Set at least one AI provider API key: ANTHROPIC_API_KEY or GEMINI_API_KEY',
-      'Create a .env file with your API key',
-      'Get an Anthropic key from https://console.anthropic.com/',
-      'Get a Gemini key from https://aistudio.google.com/apikey',
+      'Provide an AI provider key: ANTHROPIC_API_KEY or GEMINI_API_KEY',
+      'Store the key in a .env file',
+      'Obtain an Anthropic key at https://console.anthropic.com/',
+      'Obtain a Gemini key at https://aistudio.google.com/apikey',
     ],
     [ErrorCode.SAFETY_FILTERED]: [
-      "The AI provider's safety filters blocked this content",
-      'Try rephrasing or simplifying the input',
-      'Review the content for potentially sensitive material',
+      'Content was rejected by the AI provider safety filters',
+      'Try simplifying or rewording the input',
+      'Check the content for sensitive material',
     ],
     [ErrorCode.PLATFORM_AUTH_ERROR]: [
-      'Check your GITHUB_TOKEN or GITLAB_TOKEN is valid',
-      'Ensure the token has appropriate repository permissions',
-      'Try regenerating your access token',
+      'Confirm your GITHUB_TOKEN or GITLAB_TOKEN is still valid',
+      'Verify the token has the required repository permissions',
+      'Consider generating a new access token',
     ],
     [ErrorCode.FILE_NOT_FOUND]: [
-      'Verify the file path is correct',
-      'Check file permissions',
-      "Ensure you're in the correct directory",
+      'Double-check the file path',
+      'Confirm file permissions allow reading',
+      'Make sure you are in the right directory',
     ],
     [ErrorCode.DIRECTORY_NOT_FOUND]: [
-      'Verify the directory path exists',
-      'Check if the model workspace is correctly set up',
+      'Confirm the directory path is valid',
+      'Ensure the model workspace is properly configured',
     ],
     [ErrorCode.NETWORK_ERROR]: [
-      'Check your internet connection',
-      'Verify firewall settings',
-      'Try again in a few moments',
+      'Verify your network connection',
+      'Review firewall rules',
+      'Retry after a short wait',
     ],
     [ErrorCode.RATE_LIMITED]: [
-      'Wait a few minutes before trying again',
-      'Consider upgrading your API plan',
+      'Pause for a few minutes, then retry',
+      'Upgrading your API tier may help',
     ],
     [ErrorCode.INVALID_URL]: [
-      'Check the GitHub URL format: https://github.com/owner/repo/commit/sha',
-      'Ensure the repository and commit exist',
+      'Verify the URL matches: https://github.com/owner/repo/commit/sha',
+      'Confirm the repository and commit are accessible',
     ],
     [ErrorCode.MODEL_NOT_LOADED]: [
-      'Ensure loadFromPath() is called before querying the model',
-      'This is a programming error — the adapter was used before initialization',
+      'Call loadFromPath() before querying the model',
+      'This is a bug — the adapter was accessed prior to initialization',
     ],
     [ErrorCode.CONTEXT_TOO_LARGE]: [
-      'The commit changes are too large to analyze',
-      'Try analyzing smaller commits',
-      'Consider breaking down large changes',
+      'The changeset is too large for analysis',
+      'Try with a smaller set of changes',
+      'Consider splitting the changes into smaller PRs',
     ],
   };
   let errorSuggestions = suggestions[error.code];
@@ -70,7 +70,7 @@ function provideSuggestions(error: ErodeError): void {
     errorSuggestions = error.suggestions;
   }
   if (errorSuggestions && errorSuggestions.length > 0) {
-    console.error('\n💡 Suggestions:');
+    console.error('\n💡 Hints:');
     errorSuggestions.forEach((suggestion) => {
       Logger.info(`• ${suggestion}`);
     });
@@ -96,19 +96,19 @@ export const ErrorHandler = {
     if (error instanceof ErodeError) {
       Logger.fail(error.userMessage);
       if (Object.keys(error.context).length > 0) {
-        console.error('   Additional context:');
+        console.error('   Extra details:');
         for (const [key, value] of Object.entries(error.context)) {
           if (value !== undefined && value !== null) {
             console.error(`   ${key}: ${isSensitiveKey(key) ? '***REDACTED***' : String(value)}`);
           }
         }
       }
-      console.error(`   Error Code: ${error.code}`);
+      console.error(`   Code: ${error.code}`);
       provideSuggestions(error);
     } else if (error instanceof Error) {
       Logger.fail(error.message);
     } else {
-      Logger.fail(`An unexpected error occurred: ${String(error)}`);
+      Logger.fail(`Something went wrong unexpectedly: ${String(error)}`);
     }
   },
   async withRetry<T>(operation: () => Promise<T>, options: Partial<RetryOptions> = {}): Promise<T> {
@@ -131,7 +131,7 @@ export const ErrorHandler = {
         const delay = config.exponentialBackoff
           ? Math.min(config.baseDelay * Math.pow(2, attempt - 1), config.maxDelay)
           : config.baseDelay;
-        Logger.warn(`Attempt ${String(attempt)} failed, retrying in ${String(delay)}ms...`);
+        Logger.warn(`Try ${String(attempt)} failed, retrying in ${String(delay)}ms...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }

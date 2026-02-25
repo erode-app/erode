@@ -66,7 +66,7 @@ describe('GitLabWriter', () => {
 
       try {
         expect(() => new GitLabWriter('org', 'repo')).toThrow(ErodeError);
-        expect(() => new GitLabWriter('org', 'repo')).toThrow('GitLab token is required');
+        expect(() => new GitLabWriter('org', 'repo')).toThrow('A GitLab token is needed');
       } finally {
         CONFIG.gitlab.token = originalToken;
       }

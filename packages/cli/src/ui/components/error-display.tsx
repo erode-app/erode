@@ -18,21 +18,21 @@ const SENSITIVE_KEYS = new Set([
 
 const SUGGESTIONS: Partial<Record<ErrorCode, string[]>> = {
   [ErrorCode.MISSING_API_KEY]: [
-    'Set at least one AI provider API key: ANTHROPIC_API_KEY or GEMINI_API_KEY',
-    'Create a .env file with your API key',
+    'Provide an AI provider key: ANTHROPIC_API_KEY or GEMINI_API_KEY',
+    'Store the key in a .env file',
   ],
   [ErrorCode.SAFETY_FILTERED]: [
     "The AI provider's safety filters blocked this content",
     'Try rephrasing or simplifying the input',
   ],
   [ErrorCode.PLATFORM_AUTH_ERROR]: [
-    'Check your GITHUB_TOKEN or GITLAB_TOKEN is valid',
-    'Ensure the token has appropriate repository permissions',
+    'Confirm your GITHUB_TOKEN or GITLAB_TOKEN is still valid',
+    'Verify the token has the required repository permissions',
   ],
-  [ErrorCode.FILE_NOT_FOUND]: ['Verify the file path is correct', 'Check file permissions'],
-  [ErrorCode.DIRECTORY_NOT_FOUND]: ['Verify the directory path exists'],
-  [ErrorCode.NETWORK_ERROR]: ['Check your internet connection', 'Try again in a few moments'],
-  [ErrorCode.RATE_LIMITED]: ['Wait a few minutes before trying again'],
+  [ErrorCode.FILE_NOT_FOUND]: ['Double-check the file path', 'Confirm file permissions allow reading'],
+  [ErrorCode.DIRECTORY_NOT_FOUND]: ['Confirm the directory path is valid'],
+  [ErrorCode.NETWORK_ERROR]: ['Verify your network connection', 'Retry after a short wait'],
+  [ErrorCode.RATE_LIMITED]: ['Pause for a few minutes, then retry'],
   [ErrorCode.CONTEXT_TOO_LARGE]: [
     'Try analyzing smaller commits',
     'Consider breaking down large changes',
@@ -59,10 +59,10 @@ export function ErrorDisplay({ error }: Props): React.ReactElement {
             ))}
           </Box>
         )}
-        <Text dimColor> Error Code: {error.code}</Text>
+        <Text dimColor> Code: {error.code}</Text>
         {suggestions && suggestions.length > 0 && (
           <Box flexDirection="column" marginTop={1}>
-            <Text>Suggestions:</Text>
+            <Text>Hints:</Text>
             {suggestions.map((s, i) => (
               <Text key={i} color="blue">
                 {'  • '}
@@ -79,5 +79,5 @@ export function ErrorDisplay({ error }: Props): React.ReactElement {
     return <Text color="red">✗ {error.message}</Text>;
   }
 
-  return <Text color="red">✗ An unexpected error occurred: {String(error)}</Text>;
+  return <Text color="red">✗ Something went wrong unexpectedly: {String(error)}</Text>;
 }

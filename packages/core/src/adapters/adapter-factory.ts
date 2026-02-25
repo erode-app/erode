@@ -13,7 +13,7 @@ function isModelFormat(format: string): format is ModelFormat {
 export function createAdapter(format = 'likec4'): ArchitectureModelAdapter {
   if (!isModelFormat(format)) {
     throw new ConfigurationError(
-      `Unsupported model format: "${format}". Supported formats: ${SUPPORTED_FORMATS.join(', ')}`,
+      `Unknown model format: "${format}". Supported formats: ${SUPPORTED_FORMATS.join(', ')}`,
       'MODEL_FORMAT'
     );
   }

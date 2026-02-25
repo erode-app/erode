@@ -24,9 +24,9 @@ export class GeminiProvider implements AIProvider {
   constructor(config: { apiKey: string; fastModel?: string; advancedModel?: string }) {
     if (!config.apiKey) {
       throw new ErodeError(
-        'Gemini API key is required',
+        'A Gemini API key is needed',
         ErrorCode.MISSING_API_KEY,
-        'Missing Gemini API key. Set GEMINI_API_KEY in your environment.'
+        'No Gemini API key found. Set GEMINI_API_KEY in your environment.'
       );
     }
     this.client = new GoogleGenAI({ apiKey: config.apiKey });
@@ -78,9 +78,9 @@ export class GeminiProvider implements AIProvider {
     const jsonStr = PromptBuilder.extractJson(responseText);
     if (!jsonStr) {
       throw new ErodeError(
-        'No JSON found in Gemini response for dependency extraction',
+        'Gemini response for dependency extraction contained no JSON',
         ErrorCode.INVALID_RESPONSE,
-        'Failed to extract JSON from Gemini response',
+        'Could not extract JSON from Gemini response',
         { responseText }
       );
     }
@@ -104,9 +104,9 @@ export class GeminiProvider implements AIProvider {
     const jsonStr = PromptBuilder.extractJson(responseText);
     if (!jsonStr) {
       throw new ErodeError(
-        'No JSON found in Gemini response for PR analysis',
+        'Gemini response for PR analysis contained no JSON',
         ErrorCode.INVALID_RESPONSE,
-        'Failed to extract JSON from Gemini response',
+        'Could not extract JSON from Gemini response',
         { responseText }
       );
     }
@@ -142,9 +142,9 @@ export class GeminiProvider implements AIProvider {
       const candidate = response.candidates?.[0];
       if (candidate?.finishReason === FinishReason.SAFETY) {
         throw new ErodeError(
-          'Response was blocked by Gemini safety filters',
+          'Gemini safety filters blocked the response',
           ErrorCode.SAFETY_FILTERED,
-          "The AI provider's safety filters blocked this content. Try simplifying the input.",
+          'Content was blocked by the AI provider safety filters. Try simplifying the input.',
           { model, phase }
         );
       }
@@ -152,9 +152,9 @@ export class GeminiProvider implements AIProvider {
       const text = response.text;
       if (!text) {
         throw new ErodeError(
-          'Empty response from Gemini',
+          'Gemini returned an empty response',
           ErrorCode.INVALID_RESPONSE,
-          'Received empty response from Gemini API',
+          'The Gemini API returned no content',
           { model, phase }
         );
       }

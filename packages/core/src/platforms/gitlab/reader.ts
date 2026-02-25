@@ -36,17 +36,17 @@ export class GitLabReader implements SourcePlatformReader {
     const match = GITLAB_MR_URL_PATTERN.exec(url);
     if (!match) {
       throw new ErodeError(
-        'Invalid GitLab merge request URL. Expected format: https://gitlab.com/{namespace}/{project}/-/merge_requests/{number}',
+        'Unrecognized GitLab merge request URL. Expected: https://gitlab.com/{namespace}/{project}/-/merge_requests/{number}',
         ErrorCode.INVALID_URL,
-        'Invalid GitLab merge request URL. Expected format: https://gitlab.com/{namespace}/{project}/-/merge_requests/{number}'
+        'Unrecognized GitLab merge request URL. Expected: https://gitlab.com/{namespace}/{project}/-/merge_requests/{number}'
       );
     }
     const [, fullProjectPath, mrNumber] = match;
     if (!fullProjectPath || !mrNumber) {
       throw new ErodeError(
-        'Invalid GitLab MR URL: missing project path or merge request number',
+        'Incomplete GitLab MR URL: project path or merge request number is missing',
         ErrorCode.INVALID_URL,
-        'Invalid GitLab MR URL: missing project path or merge request number'
+        'Incomplete GitLab MR URL: project path or merge request number is missing'
       );
     }
 
@@ -110,11 +110,11 @@ export class GitLabReader implements SourcePlatformReader {
 
       if (totalFiles > CONFIG.constraints.maxFilesPerDiff) {
         wasTruncated = true;
-        truncationReason = `Diff exceeded maximum of ${String(CONFIG.constraints.maxFilesPerDiff)} files (found ${String(totalFiles)} files). Analysis performed on first ${String(CONFIG.constraints.maxFilesPerDiff)} files only.`;
+        truncationReason = `Diff surpassed the ${String(CONFIG.constraints.maxFilesPerDiff)}-file limit (${String(totalFiles)} files found). Only the first ${String(CONFIG.constraints.maxFilesPerDiff)} files were analyzed.`;
         filesToInclude = files.slice(0, CONFIG.constraints.maxFilesPerDiff);
       } else if (totalLines > CONFIG.constraints.maxLinesPerDiff) {
         wasTruncated = true;
-        truncationReason = `Diff exceeded maximum of ${String(CONFIG.constraints.maxLinesPerDiff)} changed lines (found ${String(totalLines)} lines). Analysis may be incomplete.`;
+        truncationReason = `Diff surpassed the ${String(CONFIG.constraints.maxLinesPerDiff)}-line limit (${String(totalLines)} lines found). Analysis may be partial.`;
       }
 
       const diff = diffs
@@ -168,7 +168,7 @@ export class GitLabReader implements SourcePlatformReader {
         throw error;
       }
       if (error instanceof Error) {
-        throw new ApiError(`Failed to fetch merge request: ${error.message}`, undefined, {
+        throw new ApiError(`Could not retrieve merge request: ${error.message}`, undefined, {
           provider: 'gitlab',
         });
       }
@@ -202,7 +202,7 @@ export class GitLabReader implements SourcePlatformReader {
         throw error;
       }
       if (error instanceof Error) {
-        throw new ApiError(`Failed to fetch merge request commits: ${error.message}`, undefined, {
+        throw new ApiError(`Could not retrieve merge request commits: ${error.message}`, undefined, {
           provider: 'gitlab',
         });
       }
