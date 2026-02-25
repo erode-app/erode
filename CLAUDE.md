@@ -21,6 +21,8 @@ npm run test           # Run all tests (vitest)
 npm run lint           # ESLint (zero warnings allowed)
 npm run format         # Prettier format (all packages)
 npm run format:check   # Check formatting
+npm run lint:md        # Lint markdown files (markdownlint)
+npm run lint:md:fix    # Auto-fix markdown lint issues
 npm run check:ci       # Run all CI checks for core
 npm run dev:web        # Start Astro dev server
 ```
@@ -73,4 +75,5 @@ Custom error hierarchy in `packages/core/src/errors.ts`: `ErodeError` (base) →
 - **Unused vars**: Prefix with `_` (e.g., `_unused`)
 - **Prompt templates**: Markdown files in `packages/core/src/analysis/prompts/` and `packages/core/src/adapters/likec4/prompts/` — these are copied to `dist/` during build, not compiled by TypeScript
 - **Tests**: Colocated in `__tests__/` directories next to the code they test.
+- **Markdown**: All `.md` files are linted by markdownlint-cli2 (config in `.markdownlint.json`). Prompt template directories are excluded via `.markdownlintignore`.
 - **Git**: Never use `git -C` — always run git commands from the working directory.

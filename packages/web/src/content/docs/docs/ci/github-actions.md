@@ -15,6 +15,7 @@ on: [pull_request]
 
 jobs:
   erode:
+    if: github.actor != 'dependabot[bot]' && !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: erode-app/core@main
@@ -23,6 +24,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
+
+The `if` guard skips dependabot PRs and draft PRs. Since erode uses AI tokens on every run, this avoids spending them on automated dependency bumps and work-in-progress PRs that rarely introduce architectural drift. Remove the guard if you want erode to run on all PRs.
 
 The action runs in a Docker container that clones the model repository directly — you do not need an `actions/checkout` step.
 
@@ -33,9 +36,9 @@ erode expects the architecture model to live in its own repository (or a subdire
 ```yaml
 - uses: erode-app/core@main
   with:
-    model-repo: your-org/architecture   # required
-    model-path: models/backend           # subdirectory within the repo
-    model-ref: v2                        # branch or tag (default: main)
+    model-repo: your-org/architecture # required
+    model-path: models/backend # subdirectory within the repo
+    model-ref: v2 # branch or tag (default: main)
     github-token: ${{ secrets.GITHUB_TOKEN }}
     gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
@@ -57,28 +60,28 @@ If the model repo requires different credentials than the repository running the
 
 ## Action inputs
 
-| Input | Description | Required | Default |
-|-------|-------------|----------|---------|
-| `model-repo` | Repository containing the architecture model (`owner/repo`) | Yes | — |
-| `model-path` | Path to the model within the model repository | No | `.` |
-| `model-ref` | Git ref (branch/tag) of the model repository | No | `main` |
-| `model-format` | Architecture model format | No | `likec4` |
-| `ai-provider` | AI provider (`gemini` or `anthropic`) | No | `anthropic` |
-| `gemini-api-key` | Gemini API key | When using Gemini | — |
-| `anthropic-api-key` | Anthropic API key | When using Anthropic | — |
-| `github-token` | GitHub token for reading PRs and posting comments | Yes | — |
-| `model-repo-token` | Separate GitHub token for cloning the model repository | No | Uses `github-token` |
-| `open-pr` | Open a PR with suggested model updates | No | `false` |
-| `fail-on-violations` | Fail the workflow if violations are detected | No | `false` |
-| `skip-file-filtering` | Analyze all changed files instead of filtering by relevance | No | `false` |
+| Input                 | Description                                                 | Required             | Default             |
+| --------------------- | ----------------------------------------------------------- | -------------------- | ------------------- |
+| `model-repo`          | Repository containing the architecture model (`owner/repo`) | Yes                  | —                   |
+| `model-path`          | Path to the model within the model repository               | No                   | `.`                 |
+| `model-ref`           | Git ref (branch/tag) of the model repository                | No                   | `main`              |
+| `model-format`        | Architecture model format                                   | No                   | `likec4`            |
+| `ai-provider`         | AI provider (`gemini` or `anthropic`)                       | No                   | `anthropic`         |
+| `gemini-api-key`      | Gemini API key                                              | When using Gemini    | —                   |
+| `anthropic-api-key`   | Anthropic API key                                           | When using Anthropic | —                   |
+| `github-token`        | GitHub token for reading PRs and posting comments           | Yes                  | —                   |
+| `model-repo-token`    | Separate GitHub token for cloning the model repository      | No                   | Uses `github-token` |
+| `open-pr`             | Open a PR with suggested model updates                      | No                   | `false`             |
+| `fail-on-violations`  | Fail the workflow if violations are detected                | No                   | `false`             |
+| `skip-file-filtering` | Analyze all changed files instead of filtering by relevance | No                   | `false`             |
 
 ## Action outputs
 
-| Output | Description |
-|--------|-------------|
-| `has-violations` | Whether architectural violations were detected |
-| `violations-count` | Number of violations detected |
-| `analysis-summary` | Summary of the analysis results |
+| Output             | Description                                    |
+| ------------------ | ---------------------------------------------- |
+| `has-violations`   | Whether architectural violations were detected |
+| `violations-count` | Number of violations detected                  |
+| `analysis-summary` | Summary of the analysis results                |
 
 Use outputs in subsequent workflow steps:
 
@@ -108,6 +111,7 @@ If no violations are found, the comment confirms that the PR aligns with the dec
 
 ## Tips
 
+- The basic workflow above skips dependabot PRs and draft PRs with an `if` guard. This avoids burning AI tokens on automated dependency bumps and work-in-progress PRs that rarely introduce architectural drift.
 - Start with the Gemini provider during evaluation — it is generally cheaper than Anthropic.
 - Keep your LikeC4 model up to date. erode can only detect drift against what is declared in the model.
 - Set `fail-on-violations: 'true'` to block PRs that introduce undeclared dependencies.

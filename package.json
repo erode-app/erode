@@ -16,12 +16,15 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "knip": "knip",
-    "check:ci": "npm run check:ci --workspaces --if-present && npm run knip",
+    "lint:md": "markdownlint-cli2 \"**/*.md\"",
+    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\"",
+    "check:ci": "npm run check:ci --workspaces --if-present && npm run lint:md && npm run knip",
     "cli": "tsx packages/cli/src/cli.ts",
     "dev:web": "npm run dev --workspace=packages/web"
   },
   "devDependencies": {
     "knip": "^5.85.0",
+    "markdownlint-cli2": "^0.21.0",
     "prettier": "^3.7.3"
   }
 }

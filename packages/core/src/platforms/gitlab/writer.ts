@@ -102,9 +102,13 @@ export class GitLabWriter implements SourcePlatformWriter {
     } catch (error) {
       if (error instanceof ErodeError) throw error;
       if (error instanceof Error) {
-        throw new ApiError(`Could not create or update merge request: ${error.message}`, undefined, {
-          provider: 'gitlab',
-        });
+        throw new ApiError(
+          `Could not create or update merge request: ${error.message}`,
+          undefined,
+          {
+            provider: 'gitlab',
+          }
+        );
       }
       throw error;
     }

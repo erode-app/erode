@@ -53,9 +53,7 @@ try {
     process.exitCode = 1;
   }
 } catch (error) {
-  console.error(
-    `erode: fatal: ${error instanceof Error ? error.message : String(error)}`
-  );
+  console.error(`erode: fatal: ${error instanceof Error ? error.message : String(error)}`);
 
   if (options.comment) {
     try {

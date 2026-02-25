@@ -202,9 +202,13 @@ export class GitLabReader implements SourcePlatformReader {
         throw error;
       }
       if (error instanceof Error) {
-        throw new ApiError(`Could not retrieve merge request commits: ${error.message}`, undefined, {
-          provider: 'gitlab',
-        });
+        throw new ApiError(
+          `Could not retrieve merge request commits: ${error.message}`,
+          undefined,
+          {
+            provider: 'gitlab',
+          }
+        );
       }
       throw error;
     }

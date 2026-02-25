@@ -89,7 +89,7 @@ The goal is to detect when this component begins or ceases to depend on EXTERNAL
 
 ## EXAMPLES
 
-### ✅ EXTRACT THIS (Cross-System Dependencies):
+### ✅ EXTRACT THIS (Cross-System Dependencies)
 
 - "Access Management API" - NEW external service dependency via HTTP
 - "IdentityModel.Client" - NEW NuGet package for OAuth2
@@ -98,7 +98,7 @@ The goal is to detect when this component begins or ceases to depend on EXTERNAL
 - "KafkaConsumer.subscribe('order-events')" - NEW Kafka topic subscription
 - "@JmsListener(destination = 'invoice-queue')" - NEW message queue listener
 
-### ❌ DON'T EXTRACT THIS (Internal Changes):
+### ❌ DON'T EXTRACT THIS (Internal Changes)
 
 - "New UserController endpoint" - Internal API endpoint
 - "Added status column to table" - Internal database schema change

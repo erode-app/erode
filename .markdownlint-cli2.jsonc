@@ -1,0 +1,3 @@
+{
+  "ignores": ["**/node_modules", "**/dist", "packages/core/src/**/prompts/", ".claude/"],
+}

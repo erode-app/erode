@@ -15,7 +15,11 @@ export function detectPlatform(url: string): Platform {
       return 'gitlab';
     }
   } catch {
-    throw new ErodeError(`Unrecognized URL: ${url}`, ErrorCode.INVALID_URL, `Unrecognized URL: ${url}`);
+    throw new ErodeError(
+      `Unrecognized URL: ${url}`,
+      ErrorCode.INVALID_URL,
+      `Unrecognized URL: ${url}`
+    );
   }
 
   throw new ErodeError(

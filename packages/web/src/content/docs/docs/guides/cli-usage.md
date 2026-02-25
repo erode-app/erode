@@ -21,25 +21,25 @@ erode analyze --pr <number> --repo <owner/repo>
 
 ### Required flags
 
-| Flag | Description |
-|------|-------------|
-| `--pr` | The pull request number to analyze |
+| Flag     | Description                           |
+| -------- | ------------------------------------- |
+| `--pr`   | The pull request number to analyze    |
 | `--repo` | The repository in `owner/repo` format |
 
 ### Optional flags
 
-| Flag | Description | Default |
-|------|-------------|---------|
+| Flag           | Description                        | Default           |
+| -------------- | ---------------------------------- | ----------------- |
 | `--model-path` | Path to the LikeC4 model directory | Current directory |
 
 ## Environment variables
 
 The following environment variables must be set before running erode:
 
-| Variable | Description |
-|----------|-------------|
-| `GITHUB_TOKEN` | A GitHub personal access token with read access to the repository and pull requests |
-| `GEMINI_API_KEY` or `ANTHROPIC_API_KEY` | API key for your chosen AI provider |
+| Variable                                | Description                                                                         |
+| --------------------------------------- | ----------------------------------------------------------------------------------- |
+| `GITHUB_TOKEN`                          | A GitHub personal access token with read access to the repository and pull requests |
+| `GEMINI_API_KEY` or `ANTHROPIC_API_KEY` | API key for your chosen AI provider                                                 |
 
 Optionally set `AI_PROVIDER` to `gemini` (default) or `anthropic` to select the AI provider.
 

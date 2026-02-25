@@ -19,9 +19,7 @@ export default defineConfig({
     starlight({
       title: 'erode',
       disable404Route: true,
-      social: [
-        { icon: 'github', label: 'GitHub', href: 'https://github.com/erode-app/core' },
-      ],
+      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/erode-app/core' }],
       head: [
         {
           tag: 'link',
@@ -43,10 +41,7 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Start Here',
-          items: [
-            { slug: 'docs/getting-started' },
-            { slug: 'docs/how-it-works' },
-          ],
+          items: [{ slug: 'docs/getting-started' }, { slug: 'docs/how-it-works' }],
         },
         { label: 'CI Integration', autogenerate: { directory: 'docs/ci' } },
         { label: 'Model Formats', autogenerate: { directory: 'docs/models' } },

@@ -135,7 +135,7 @@ Exits with code 1 if any components are missing repository links.
 
 erode maps repositories to LikeC4 components using `link` directives. Each component that represents a deployable service should have a link to its repository:
 
-```
+```likec4
 my_service = service 'My Service' {
   link https://github.com/org/my-service
 }
@@ -143,7 +143,7 @@ my_service = service 'My Service' {
 
 For monorepos, multiple components can share the same repository URL. When analyzing a PR, Stage 0 uses AI to select the most relevant component:
 
-```
+```likec4
 frontend = webapp 'Frontend' {
   link https://github.com/org/monorepo
 }

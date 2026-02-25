@@ -29,7 +29,10 @@ const SUGGESTIONS: Partial<Record<ErrorCode, string[]>> = {
     'Confirm your GITHUB_TOKEN or GITLAB_TOKEN is still valid',
     'Verify the token has the required repository permissions',
   ],
-  [ErrorCode.FILE_NOT_FOUND]: ['Double-check the file path', 'Confirm file permissions allow reading'],
+  [ErrorCode.FILE_NOT_FOUND]: [
+    'Double-check the file path',
+    'Confirm file permissions allow reading',
+  ],
   [ErrorCode.DIRECTORY_NOT_FOUND]: ['Confirm the directory path is valid'],
   [ErrorCode.NETWORK_ERROR]: ['Verify your network connection', 'Retry after a short wait'],
   [ErrorCode.RATE_LIMITED]: ['Pause for a few minutes, then retry'],

@@ -150,9 +150,7 @@ export async function runAnalyze(
     p.section('Stage 0: Component Selection');
     p.start('Asking the model to pick the best-matching component');
     if (!provider.selectComponent) {
-      p.warn(
-        `Provider lacks component selection, defaulting to: ${selectedComponent.name}`
-      );
+      p.warn(`Provider lacks component selection, defaulting to: ${selectedComponent.name}`);
     } else {
       const componentId = await provider.selectComponent({
         components,

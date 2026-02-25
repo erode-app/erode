@@ -16,34 +16,34 @@ Each provider uses two model tiers to balance cost and quality:
 
 ### Gemini
 
-| Tier | Default model |
-|------|---------------|
-| Fast | `gemini-2.5-flash` |
+| Tier     | Default model      |
+| -------- | ------------------ |
+| Fast     | `gemini-2.5-flash` |
 | Advanced | `gemini-2.5-flash` |
 
 ### Anthropic
 
-| Tier | Default model |
-|------|---------------|
-| Fast | `claude-haiku-4-5-20251001` |
+| Tier     | Default model                |
+| -------- | ---------------------------- |
+| Fast     | `claude-haiku-4-5-20251001`  |
 | Advanced | `claude-sonnet-4-5-20250929` |
 
 ## Overriding models
 
 You can override the default models with environment variables:
 
-| Variable | Description |
-|----------|-------------|
-| `GEMINI_FAST_MODEL` | Gemini model for fast tier (Stages 0-1) |
-| `GEMINI_ADVANCED_MODEL` | Gemini model for advanced tier (Stage 2) |
-| `ANTHROPIC_FAST_MODEL` | Anthropic model for fast tier (Stages 0-1) |
+| Variable                   | Description                                 |
+| -------------------------- | ------------------------------------------- |
+| `GEMINI_FAST_MODEL`        | Gemini model for fast tier (Stages 0-1)     |
+| `GEMINI_ADVANCED_MODEL`    | Gemini model for advanced tier (Stage 2)    |
+| `ANTHROPIC_FAST_MODEL`     | Anthropic model for fast tier (Stages 0-1)  |
 | `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for advanced tier (Stage 2) |
 
 ## Timeout configuration
 
-| Variable | Default |
-|----------|---------|
-| `GEMINI_TIMEOUT` | `60000` ms |
+| Variable            | Default    |
+| ------------------- | ---------- |
+| `GEMINI_TIMEOUT`    | `60000` ms |
 | `ANTHROPIC_TIMEOUT` | `60000` ms |
 
 These control the maximum wait time for each API request. Increase them if you experience timeouts with large diffs.

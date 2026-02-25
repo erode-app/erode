@@ -43,7 +43,7 @@ erode loads all `.c4` files from the directory you point it at. There are two op
 
 Place model files in a dedicated directory:
 
-```
+```text
 my-repo/
   architecture/
     model.c4
@@ -58,7 +58,7 @@ Then set `model-path` to `./architecture` when using the CLI, or `model-path: ar
 
 Keep the architecture model in its own repository so it can be shared across services:
 
-```
+```text
 your-org/architecture/
   model.c4
   views.c4

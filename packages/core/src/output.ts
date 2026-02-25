@@ -223,14 +223,18 @@ export function formatErrorAsComment(error: unknown): string {
         'The AI provider request timed out. This can occur with large PRs — try re-running.'
       );
     } else {
-      lines.push('An unexpected error happened during analysis. Review the workflow logs for more details.');
+      lines.push(
+        'An unexpected error happened during analysis. Review the workflow logs for more details.'
+      );
     }
   } else if (error instanceof ConfigurationError) {
     lines.push(
       'A configuration issue was detected. Verify that API keys and tokens are correctly set.'
     );
   } else {
-    lines.push('An unexpected error happened during analysis. Review the workflow logs for more details.');
+    lines.push(
+      'An unexpected error happened during analysis. Review the workflow logs for more details.'
+    );
   }
 
   lines.push('');

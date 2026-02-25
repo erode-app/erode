@@ -135,10 +135,7 @@ function validateRequiredConfig(config: Config): void {
     }
   }
   if (errors.length > 0) {
-    throw new ConfigurationError(
-      `Configuration check failed: ${errors.join(', ')}`,
-      'environment'
-    );
+    throw new ConfigurationError(`Configuration check failed: ${errors.join(', ')}`, 'environment');
   }
 }
 function createConfig(): Config {

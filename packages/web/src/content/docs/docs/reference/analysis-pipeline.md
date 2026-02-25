@@ -7,11 +7,11 @@ This page provides a detailed reference for each stage of erode's analysis pipel
 
 ## Stage 0 -- Component Resolution
 
-| | |
-|---|---|
-| **Model tier** | Fast |
-| **Input** | Repository metadata, LikeC4 model with multiple matching components |
-| **Output** | Selected component ID |
+|                |                                                                     |
+| -------------- | ------------------------------------------------------------------- |
+| **Model tier** | Fast                                                                |
+| **Input**      | Repository metadata, LikeC4 model with multiple matching components |
+| **Output**     | Selected component ID                                               |
 
 When a repository maps to multiple components in the LikeC4 model, this stage uses AI to determine which component is most relevant to the current pull request. The fast model evaluates the repo context against each candidate component and selects the best match.
 
@@ -19,11 +19,11 @@ This stage is **skipped entirely** when only one component matches the repositor
 
 ## Stage 1 -- Dependency Scan
 
-| | |
-|---|---|
-| **Model tier** | Fast |
-| **Input** | PR diff, selected component context |
-| **Output** | Structured list of added, removed, and modified dependencies |
+|                |                                                              |
+| -------------- | ------------------------------------------------------------ |
+| **Model tier** | Fast                                                         |
+| **Input**      | PR diff, selected component context                          |
+| **Output**     | Structured list of added, removed, and modified dependencies |
 
 The PR diff is analyzed to extract dependency changes. The fast model identifies new integrations, removed connections, and modified interactions between components. The output is a structured dependency list that serves as input to the analysis stage.
 
@@ -31,11 +31,11 @@ This extraction step isolates dependency signals from the full diff, reducing no
 
 ## Stage 2 -- PR Analysis
 
-| | |
-|---|---|
-| **Model tier** | Advanced |
-| **Input** | Dependency list from Stage 1, full architecture model, component context |
-| **Output** | Violation findings with severity, suggestions, and summary |
+|                |                                                                          |
+| -------------- | ------------------------------------------------------------------------ |
+| **Model tier** | Advanced                                                                 |
+| **Input**      | Dependency list from Stage 1, full architecture model, component context |
+| **Output**     | Violation findings with severity, suggestions, and summary               |
 
 This is the core analysis stage. The advanced model compares the extracted dependency changes against the full declared architecture. For each undeclared or violating dependency, it produces a finding with:
 
@@ -46,11 +46,11 @@ This is the core analysis stage. The advanced model compares the extracted depen
 
 ## Stage 3 -- LikeC4 Generation (optional)
 
-| | |
-|---|---|
-| **Model tier** | Advanced |
-| **Input** | Violation findings from Stage 2, current LikeC4 model |
-| **Output** | LikeC4 DSL code patches |
+|                |                                                       |
+| -------------- | ----------------------------------------------------- |
+| **Model tier** | Advanced                                              |
+| **Input**      | Violation findings from Stage 2, current LikeC4 model |
+| **Output**     | LikeC4 DSL code patches                               |
 
 When enabled, this stage generates LikeC4 DSL updates that would bring the architecture model in sync with the changes found in the PR. The output can be used to open a follow-up pull request that updates the model.
 
