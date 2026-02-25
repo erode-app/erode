@@ -136,6 +136,7 @@ export function formatAnalysisAsComment(
     selectedComponentId?: string;
     candidateComponents?: { id: string; name: string; type: string }[];
     generatedChangeRequest?: { url: string; number: number; action: 'created' | 'updated'; branch: string };
+    modelInfo?: { provider: string; fastModel: string; advancedModel: string };
   }
 ): string {
   const lines: string[] = [];
@@ -148,15 +149,21 @@ export function formatAnalysisAsComment(
 
   if (extras?.selectedComponentId && extras.candidateComponents && extras.candidateComponents.length > 1) {
     lines.push('');
-    lines.push(`_Selected from ${String(extras.candidateComponents.length)} candidates:_`);
+    lines.push('<details>');
+    lines.push(`<summary>Selected from ${String(extras.candidateComponents.length)} candidates</summary>`);
+    lines.push('');
     for (const c of extras.candidateComponents) {
       const checked = c.id === extras.selectedComponentId ? 'x' : ' ';
       lines.push(`- [${checked}] \`${c.id}\` (${c.name})`);
     }
+    lines.push('');
+    lines.push('</details>');
   }
   lines.push('');
 
-  const status = result.hasViolations ? 'violations' : 'success';
+  const status = result.hasViolations
+    ? ':warning: Violations detected'
+    : ':white_check_mark: No drift detected';
   lines.push(`**Status**: ${status}`);
 
   if (result.hasViolations) {
@@ -214,6 +221,20 @@ export function formatAnalysisAsComment(
     lines.push('### Summary');
     lines.push('');
     lines.push(result.summary);
+    lines.push('');
+  }
+
+  if (extras?.modelInfo) {
+    lines.push('<details>');
+    lines.push('<summary>Analysis metadata</summary>');
+    lines.push('');
+    lines.push('| | |');
+    lines.push('|---|---|');
+    lines.push(`| **Provider** | ${extras.modelInfo.provider} |`);
+    lines.push(`| **Fast model** (Stage 0, 1) | \`${extras.modelInfo.fastModel}\` |`);
+    lines.push(`| **Advanced model** (Stage 2, 3) | \`${extras.modelInfo.advancedModel}\` |`);
+    lines.push('');
+    lines.push('</details>');
     lines.push('');
   }
 

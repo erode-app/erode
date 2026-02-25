@@ -21,7 +21,7 @@ vi.mock('fs', () => ({
   writeFileSync: mockWriteFileSync,
 }));
 
-import { buildStructuredOutput, formatAnalysisForConsole, writeOutputToFile } from '../output.js';
+import { buildStructuredOutput, formatAnalysisForConsole, formatAnalysisAsComment, writeOutputToFile } from '../output.js';
 
 function makeAnalysisResult(
   overrides: Partial<DriftAnalysisResult> = {}
@@ -213,6 +213,71 @@ describe('formatAnalysisForConsole', () => {
     expect(output).toContain('redis -> comp.api');
     expect(output).toContain('memcached -> comp.api');
     expect(output).toContain('Cache migration');
+  });
+});
+
+describe('formatAnalysisAsComment', () => {
+  it('should show warning emoji when violations exist', () => {
+    const output = formatAnalysisAsComment(
+      makeAnalysisResult({ hasViolations: true, violations: [{ severity: 'high', description: 'Undeclared dep' }] })
+    );
+
+    expect(output).toContain('**Status**: :warning: Violations detected');
+    expect(output).not.toContain('**Status**: violations');
+  });
+
+  it('should show checkmark emoji when no violations', () => {
+    const output = formatAnalysisAsComment(makeAnalysisResult());
+
+    expect(output).toContain('**Status**: :white_check_mark: No drift detected');
+    expect(output).not.toContain('**Status**: success');
+  });
+
+  it('should wrap candidate components in a details tag', () => {
+    const output = formatAnalysisAsComment(makeAnalysisResult(), {
+      selectedComponentId: 'comp.api',
+      candidateComponents: [
+        { id: 'comp.api', name: 'API Service', type: 'service' },
+        { id: 'comp.web', name: 'Web App', type: 'webapp' },
+        { id: 'comp.worker', name: 'Worker', type: 'service' },
+      ],
+    });
+
+    expect(output).toContain('<details>');
+    expect(output).toContain('<summary>Selected from 3 candidates</summary>');
+    expect(output).toContain('- [x] `comp.api` (API Service)');
+    expect(output).toContain('- [ ] `comp.web` (Web App)');
+    expect(output).toContain('</details>');
+  });
+
+  it('should not show candidates details when only one component', () => {
+    const output = formatAnalysisAsComment(makeAnalysisResult(), {
+      selectedComponentId: 'comp.api',
+      candidateComponents: [{ id: 'comp.api', name: 'API Service', type: 'service' }],
+    });
+
+    expect(output).not.toContain('Selected from');
+  });
+
+  it('should render model metadata in a details section', () => {
+    const output = formatAnalysisAsComment(makeAnalysisResult(), {
+      modelInfo: {
+        provider: 'gemini',
+        fastModel: 'gemini-2.5-flash',
+        advancedModel: 'gemini-2.5-pro',
+      },
+    });
+
+    expect(output).toContain('<summary>Analysis metadata</summary>');
+    expect(output).toContain('| **Provider** | gemini |');
+    expect(output).toContain('| **Fast model** (Stage 0, 1) | `gemini-2.5-flash` |');
+    expect(output).toContain('| **Advanced model** (Stage 2, 3) | `gemini-2.5-pro` |');
+  });
+
+  it('should not render model metadata when modelInfo is omitted', () => {
+    const output = formatAnalysisAsComment(makeAnalysisResult());
+
+    expect(output).not.toContain('Analysis metadata');
   });
 });
 

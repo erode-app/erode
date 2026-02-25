@@ -15,6 +15,7 @@ import {
   writeGitHubStepSummary,
 } from '../output/ci-output.js';
 import { ErrorHandler } from '../utils/error-handler.js';
+import { CONFIG } from '../utils/config.js';
 import {
   validatePath,
   validate,
@@ -298,9 +299,20 @@ export function createAnalyzeCommand(): Command {
           );
           if (analysisHasFindings(analysisResult)) {
             progress.start('Posting analysis comment on PR');
+            const providerName = CONFIG.ai.provider;
+            const providerConfig = CONFIG[providerName];
             const commentBody = formatAnalysisAsComment(
               analysisResult,
-              { selectedComponentId, candidateComponents, generatedChangeRequest }
+              {
+                selectedComponentId,
+                candidateComponents,
+                generatedChangeRequest,
+                modelInfo: {
+                  provider: providerName,
+                  fastModel: providerConfig.fastModel,
+                  advancedModel: providerConfig.advancedModel,
+                },
+              }
             );
             await commentWriter.commentOnChangeRequest(ref, commentBody, {
               upsertMarker: COMMENT_MARKER,
