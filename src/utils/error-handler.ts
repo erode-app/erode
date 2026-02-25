@@ -96,10 +96,7 @@ export const ErrorHandler = {
       Logger.fail(`An unexpected error occurred: ${String(error)}`);
     }
   },
-  async withRetry<T>(
-    operation: () => Promise<T>,
-    options: Partial<RetryOptions> = {}
-  ): Promise<T> {
+  async withRetry<T>(operation: () => Promise<T>, options: Partial<RetryOptions> = {}): Promise<T> {
     const config = { ...DEFAULT_RETRY_OPTIONS, ...options };
     let lastError: unknown;
     for (let attempt = 1; attempt <= config.maxAttempts; attempt++) {

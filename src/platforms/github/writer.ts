@@ -166,9 +166,19 @@ export class GitHubWriter implements SourcePlatformWriter {
 
     try {
       if (options?.upsertMarker) {
-        const existingId = await this.findCommentByMarker(owner, repo, ref.number, options.upsertMarker);
+        const existingId = await this.findCommentByMarker(
+          owner,
+          repo,
+          ref.number,
+          options.upsertMarker
+        );
         if (existingId) {
-          await this.octokit.rest.issues.updateComment({ owner, repo, comment_id: existingId, body });
+          await this.octokit.rest.issues.updateComment({
+            owner,
+            repo,
+            comment_id: existingId,
+            body,
+          });
           return;
         }
       }
@@ -201,9 +211,13 @@ export class GitHubWriter implements SourcePlatformWriter {
     } catch (error) {
       if (error instanceof ErodeError) throw error;
       if (error instanceof Error) {
-        throw new ApiError(`Failed to delete comment on pull request: ${error.message}`, undefined, {
-          provider: 'github',
-        });
+        throw new ApiError(
+          `Failed to delete comment on pull request: ${error.message}`,
+          undefined,
+          {
+            provider: 'github',
+          }
+        );
       }
       throw error;
     }

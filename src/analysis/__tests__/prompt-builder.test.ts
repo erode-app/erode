@@ -10,8 +10,12 @@ import type {
 // Mock the TemplateEngine to avoid filesystem reads
 vi.mock('../template-engine.js', () => ({
   TemplateEngine: {
-    loadDependencyExtractionPrompt: vi.fn((vars: DependencyExtractionPromptVars) => JSON.stringify(vars)),
-    loadComponentSelectionPrompt: vi.fn((vars: ComponentSelectionPromptVars) => JSON.stringify(vars)),
+    loadDependencyExtractionPrompt: vi.fn((vars: DependencyExtractionPromptVars) =>
+      JSON.stringify(vars)
+    ),
+    loadComponentSelectionPrompt: vi.fn((vars: ComponentSelectionPromptVars) =>
+      JSON.stringify(vars)
+    ),
     loadDriftAnalysisPrompt: vi.fn((vars: DriftAnalysisPromptVars) => JSON.stringify(vars)),
     loadModelGenerationPrompt: vi.fn((vars: ModelGenerationPromptVars) => JSON.stringify(vars)),
   },

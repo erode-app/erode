@@ -147,9 +147,7 @@ describe('GitLabWriter', () => {
         'org/repo',
         'erode/mr-42',
         'Update model',
-        expect.arrayContaining([
-          expect.objectContaining({ action: 'update' }),
-        ])
+        expect.arrayContaining([expect.objectContaining({ action: 'update' })])
       );
     });
 

@@ -33,5 +33,3 @@ export const GitLabCommitEntrySchema = z
     author_email: z.string().nullable(),
   })
   .loose();
-
-

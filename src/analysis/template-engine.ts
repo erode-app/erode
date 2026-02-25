@@ -22,7 +22,7 @@ function loadAdapterTemplate(adapterName: string, templateName: string): string 
     'adapters',
     adapterName,
     'prompts',
-    `${templateName}.md`,
+    `${templateName}.md`
   );
   return readFileSync(templatePath, 'utf-8');
 }

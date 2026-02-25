@@ -102,11 +102,9 @@ export class GitLabWriter implements SourcePlatformWriter {
     } catch (error) {
       if (error instanceof ErodeError) throw error;
       if (error instanceof Error) {
-        throw new ApiError(
-          `Failed to create/update merge request: ${error.message}`,
-          undefined,
-          { provider: 'gitlab' }
-        );
+        throw new ApiError(`Failed to create/update merge request: ${error.message}`, undefined, {
+          provider: 'gitlab',
+        });
       }
       throw error;
     }
@@ -123,7 +121,11 @@ export class GitLabWriter implements SourcePlatformWriter {
 
     try {
       if (options?.upsertMarker) {
-        const existingId = await this.findNoteByMarker(projectPath, ref.number, options.upsertMarker);
+        const existingId = await this.findNoteByMarker(
+          projectPath,
+          ref.number,
+          options.upsertMarker
+        );
         if (existingId) {
           await this.api.MergeRequestNotes.edit(projectPath, ref.number, existingId, { body });
           return;
@@ -133,11 +135,9 @@ export class GitLabWriter implements SourcePlatformWriter {
     } catch (error) {
       if (error instanceof ErodeError) throw error;
       if (error instanceof Error) {
-        throw new ApiError(
-          `Failed to comment on merge request: ${error.message}`,
-          undefined,
-          { provider: 'gitlab' }
-        );
+        throw new ApiError(`Failed to comment on merge request: ${error.message}`, undefined, {
+          provider: 'gitlab',
+        });
       }
       throw error;
     }

@@ -174,11 +174,7 @@ export class GitHubReader implements SourcePlatformReader {
           email: commit.commit.author?.email ?? 'unknown@example.com',
         },
       }));
-      return validate(
-        z.array(ChangeRequestCommitSchema),
-        result,
-        'GitHub change request commits'
-      );
+      return validate(z.array(ChangeRequestCommitSchema), result, 'GitHub change request commits');
     } catch (error) {
       if (error instanceof ErodeError) {
         throw error;

@@ -9,7 +9,12 @@ export function buildStructuredOutput(
   extras?: {
     selectedComponentId?: string;
     candidateComponents?: { id: string; name: string; type: string }[];
-    generatedChangeRequest?: { url: string; number: number; action: 'created' | 'updated'; branch: string };
+    generatedChangeRequest?: {
+      url: string;
+      number: number;
+      action: 'created' | 'updated';
+      branch: string;
+    };
   }
 ): StructuredAnalysisOutput {
   return {
@@ -63,9 +68,7 @@ export function buildStructuredOutput(
 }
 
 /** Format analysis results as a human-readable console string with color highlighting. */
-export function formatAnalysisForConsole(
-  result: DriftAnalysisResult
-): string {
+export function formatAnalysisForConsole(result: DriftAnalysisResult): string {
   const lines: string[] = [];
 
   lines.push(chalk.bold.cyan(`\n── Analysis Results: #${String(result.metadata.number)} ──`));
@@ -135,7 +138,12 @@ export function formatAnalysisAsComment(
   extras?: {
     selectedComponentId?: string;
     candidateComponents?: { id: string; name: string; type: string }[];
-    generatedChangeRequest?: { url: string; number: number; action: 'created' | 'updated'; branch: string };
+    generatedChangeRequest?: {
+      url: string;
+      number: number;
+      action: 'created' | 'updated';
+      branch: string;
+    };
     modelInfo?: { provider: string; fastModel: string; advancedModel: string };
   }
 ): string {
@@ -147,10 +155,16 @@ export function formatAnalysisAsComment(
 
   lines.push(`**Component**: \`${result.component.id}\` (${result.component.name})`);
 
-  if (extras?.selectedComponentId && extras.candidateComponents && extras.candidateComponents.length > 1) {
+  if (
+    extras?.selectedComponentId &&
+    extras.candidateComponents &&
+    extras.candidateComponents.length > 1
+  ) {
     lines.push('');
     lines.push('<details>');
-    lines.push(`<summary>Selected from ${String(extras.candidateComponents.length)} candidates</summary>`);
+    lines.push(
+      `<summary>Selected from ${String(extras.candidateComponents.length)} candidates</summary>`
+    );
     lines.push('');
     for (const c of extras.candidateComponents) {
       const checked = c.id === extras.selectedComponentId ? 'x' : ' ';

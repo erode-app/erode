@@ -41,7 +41,7 @@ export const PromptBuilder = {
         `buildDependencyExtractionPrompt expects exactly 1 component, got ${String(components.length)}`,
         ErrorCode.COMPONENT_NOT_FOUND,
         `Component selection error: Expected 1 component but got ${String(components.length)}. Component selection should happen in Stage 0.`,
-        { componentCount: components.length },
+        { componentCount: components.length }
       );
     } else {
       const [comp] = components;
@@ -49,7 +49,7 @@ export const PromptBuilder = {
         throw new ErodeError(
           'First component is undefined',
           ErrorCode.COMPONENT_NOT_FOUND,
-          'Unexpected error: First component is undefined. This appears to be a programming error.',
+          'Unexpected error: First component is undefined. This appears to be a programming error.'
         );
       }
       componentsContext = formatComponentContext(comp);
@@ -141,7 +141,7 @@ export const PromptBuilder = {
         modelUpdatesSection,
         date: new Date().toISOString().split('T')[0] ?? '',
       },
-      modelFormat,
+      modelFormat
     );
   },
 } as const;

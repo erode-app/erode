@@ -20,7 +20,12 @@ export function createValidateCommand(): Command {
         const validatedOptions = validate(ValidateOptionsSchema, options, 'command options');
         const adapter = createAdapter(validatedOptions.modelFormat);
 
-        let versionResult: { found: boolean; version?: string; compatible?: boolean; minimum: string } | null = null;
+        let versionResult: {
+          found: boolean;
+          version?: string;
+          compatible?: boolean;
+          minimum: string;
+        } | null = null;
         if (adapter.checkVersion) {
           progress.start(`Checking ${adapter.metadata.displayName} version compatibility`);
           versionResult = adapter.checkVersion(modelPath);
@@ -34,7 +39,9 @@ export function createValidateCommand(): Command {
             );
             process.exitCode = 1;
           } else {
-            progress.warn(`Could not detect ${adapter.metadata.displayName} version — skipping compatibility check`);
+            progress.warn(
+              `Could not detect ${adapter.metadata.displayName} version — skipping compatibility check`
+            );
           }
         }
 

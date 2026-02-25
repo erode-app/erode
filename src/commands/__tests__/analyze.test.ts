@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Command } from 'commander';
 import type { ArchitecturalComponent } from '../../adapters/architecture-types.js';
-import type {
-  ChangeRequestRef,
-  ChangeRequestData,
-} from '../../platforms/source-platform.js';
+import type { ChangeRequestRef, ChangeRequestData } from '../../platforms/source-platform.js';
 import type { DriftAnalysisResult } from '../../analysis/analysis-types.js';
 
 // 1. Declare mock functions via vi.hoisted so they are available in hoisted vi.mock factories
@@ -148,31 +145,48 @@ import { createAnalyzeCommand } from '../analyze.js';
 // 4. Factory helpers
 function makeComponent(overrides = {}): ArchitecturalComponent {
   return {
-    id: 'comp.api', name: 'API Service', type: 'service',
-    repository: 'https://github.com/org/repo', tags: [], ...overrides,
+    id: 'comp.api',
+    name: 'API Service',
+    type: 'service',
+    repository: 'https://github.com/org/repo',
+    tags: [],
+    ...overrides,
   };
 }
 
 function makeRef(overrides = {}): ChangeRequestRef {
   return {
-    number: 42, url: 'https://github.com/org/repo/pull/42',
+    number: 42,
+    url: 'https://github.com/org/repo/pull/42',
     repositoryUrl: 'https://github.com/org/repo',
-    platformId: { owner: 'org', repo: 'repo' }, ...overrides,
+    platformId: { owner: 'org', repo: 'repo' },
+    ...overrides,
   };
 }
 
 function makeChangeRequestData(overrides = {}): ChangeRequestData {
   return {
-    number: 42, title: 'Test PR', body: 'PR body', state: 'open',
+    number: 42,
+    title: 'Test PR',
+    body: 'PR body',
+    state: 'open',
     author: { login: 'testuser', name: 'Test User' },
     base: { ref: 'main', sha: 'base123' },
     head: { ref: 'feature/test', sha: 'head456' },
-    commits: 1, additions: 10, deletions: 5, changed_files: 1,
-    files: [{
-      filename: 'src/index.ts', status: 'modified',
-      additions: 10, deletions: 5, changes: 15,
-      patch: '@@ -1,3 +1,3 @@\n-old\n+new',
-    }],
+    commits: 1,
+    additions: 10,
+    deletions: 5,
+    changed_files: 1,
+    files: [
+      {
+        filename: 'src/index.ts',
+        status: 'modified',
+        additions: 10,
+        deletions: 5,
+        changes: 15,
+        patch: '@@ -1,3 +1,3 @@\n-old\n+new',
+      },
+    ],
     diff: 'diff --git a/src/index.ts\n-old\n+new',
     stats: { total: 15, additions: 10, deletions: 5 },
     ...overrides,
@@ -181,9 +195,13 @@ function makeChangeRequestData(overrides = {}): ChangeRequestData {
 
 function makeAnalysisResult(overrides = {}): DriftAnalysisResult {
   return {
-    hasViolations: false, violations: [], summary: 'No issues found',
+    hasViolations: false,
+    violations: [],
+    summary: 'No issues found',
     metadata: {
-      number: 42, title: 'Test PR', description: 'PR body',
+      number: 42,
+      title: 'Test PR',
+      description: 'PR body',
       repository: 'org/repo',
       author: { login: 'testuser' },
       base: { ref: 'main', sha: 'base123' },
@@ -260,11 +278,14 @@ describe('createAnalyzeCommand', () => {
     mockOutputFormat.mockReturnValue('json output');
     mockLoadSkipPatterns.mockReturnValue(['*.lock']);
     mockApplySkipPatterns.mockReturnValue({
-      included: makeChangeRequestData().files, excluded: 0,
+      included: makeChangeRequestData().files,
+      excluded: 0,
     });
     mockCreatePr.mockResolvedValue({
-      url: 'https://github.com/org/repo/pull/99', number: 99,
-      action: 'created', branch: 'erode/pr-42',
+      url: 'https://github.com/org/repo/pull/99',
+      number: 99,
+      action: 'created',
+      branch: 'erode/pr-42',
     });
   });
 
@@ -278,13 +299,20 @@ describe('createAnalyzeCommand', () => {
   });
 
   it('outputs analysis with violations', async () => {
-    mockAnalyzePr.mockResolvedValue(makeAnalysisResult({
-      hasViolations: true,
-      violations: [{
-        severity: 'high', description: 'Undeclared dep',
-        file: 'src/index.ts', line: 10, commit: 'abc123',
-      }],
-    }));
+    mockAnalyzePr.mockResolvedValue(
+      makeAnalysisResult({
+        hasViolations: true,
+        violations: [
+          {
+            severity: 'high',
+            description: 'Undeclared dep',
+            file: 'src/index.ts',
+            line: 10,
+            commit: 'abc123',
+          },
+        ],
+      })
+    );
 
     await run('./models', '--url', 'https://github.com/org/repo/pull/42');
 
@@ -292,9 +320,7 @@ describe('createAnalyzeCommand', () => {
   });
 
   it('calls selectComponent when multiple components found', async () => {
-    mockFindAll.mockReturnValue([
-      makeComponent({ id: 'a' }), makeComponent({ id: 'b' }),
-    ]);
+    mockFindAll.mockReturnValue([makeComponent({ id: 'a' }), makeComponent({ id: 'b' })]);
     mockSelectComponent.mockResolvedValue('b');
 
     await run('./models', '--url', 'https://github.com/org/repo/pull/42');
@@ -307,9 +333,7 @@ describe('createAnalyzeCommand', () => {
 
     await run('./models', '--url', 'https://github.com/org/repo/pull/42');
 
-    expect(mockProgressWarn).toHaveBeenCalledWith(
-      expect.stringContaining('No components found')
-    );
+    expect(mockProgressWarn).toHaveBeenCalledWith(expect.stringContaining('No components found'));
     expect(mockExtractDeps).not.toHaveBeenCalled();
   });
 
@@ -320,9 +344,7 @@ describe('createAnalyzeCommand', () => {
 
     expect(mockLoadSkipPatterns).toHaveBeenCalled();
     expect(mockApplySkipPatterns).toHaveBeenCalled();
-    expect(mockProgressInfo).toHaveBeenCalledWith(
-      expect.stringContaining('Filtered out 2')
-    );
+    expect(mockProgressInfo).toHaveBeenCalledWith(expect.stringContaining('Filtered out 2'));
   });
 
   it('skips file filtering when --skip-file-filtering', async () => {
@@ -339,7 +361,13 @@ describe('createAnalyzeCommand', () => {
   });
 
   it('writes output to file when --output-file', async () => {
-    await run('./models', '--url', 'https://github.com/org/repo/pull/42', '--output-file', 'out.json');
+    await run(
+      './models',
+      '--url',
+      'https://github.com/org/repo/pull/42',
+      '--output-file',
+      'out.json'
+    );
 
     expect(mockBuildStructured).toHaveBeenCalled();
     expect(mockWriteOutput).toHaveBeenCalledWith(expect.anything(), 'out.json');
@@ -354,8 +382,11 @@ describe('createAnalyzeCommand', () => {
 
   it('creates PR when --open-pr and --generate-model', async () => {
     await run(
-      './models', '--url', 'https://github.com/org/repo/pull/42',
-      '--generate-model', '--open-pr',
+      './models',
+      '--url',
+      'https://github.com/org/repo/pull/42',
+      '--generate-model',
+      '--open-pr'
     );
 
     expect(mockCreatePr).toHaveBeenCalledWith(
@@ -365,14 +396,16 @@ describe('createAnalyzeCommand', () => {
 
   it('skips PR creation on dry run', async () => {
     await run(
-      './models', '--url', 'https://github.com/org/repo/pull/42',
-      '--generate-model', '--open-pr', '--dry-run',
+      './models',
+      '--url',
+      'https://github.com/org/repo/pull/42',
+      '--generate-model',
+      '--open-pr',
+      '--dry-run'
     );
 
     expect(mockCreatePr).not.toHaveBeenCalled();
-    expect(mockProgressInfo).toHaveBeenCalledWith(
-      expect.stringContaining('Dry run')
-    );
+    expect(mockProgressInfo).toHaveBeenCalledWith(expect.stringContaining('Dry run'));
   });
 
   it('warns when --open-pr without --generate-model', async () => {
@@ -385,9 +418,7 @@ describe('createAnalyzeCommand', () => {
   });
 
   it('falls back to first component when provider has no selectComponent', async () => {
-    mockFindAll.mockReturnValue([
-      makeComponent({ id: 'a' }), makeComponent({ id: 'b' }),
-    ]);
+    mockFindAll.mockReturnValue([makeComponent({ id: 'a' }), makeComponent({ id: 'b' })]);
     mockCreateAIProvider.mockReturnValue({
       extractDependencies: mockExtractDeps,
       analyzeDrift: mockAnalyzePr,

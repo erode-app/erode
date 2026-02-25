@@ -2,12 +2,14 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Command } from 'commander';
 
 // 1. Declare mock functions via vi.hoisted so they are available in hoisted vi.mock factories
-const { mockLoadAndListComponents, mockHandleCliError, mockFormat, mockCreateAdapter } = vi.hoisted(() => ({
-  mockLoadAndListComponents: vi.fn(),
-  mockHandleCliError: vi.fn(),
-  mockFormat: vi.fn(),
-  mockCreateAdapter: vi.fn(),
-}));
+const { mockLoadAndListComponents, mockHandleCliError, mockFormat, mockCreateAdapter } = vi.hoisted(
+  () => ({
+    mockLoadAndListComponents: vi.fn(),
+    mockHandleCliError: vi.fn(),
+    mockFormat: vi.fn(),
+    mockCreateAdapter: vi.fn(),
+  })
+);
 
 const MOCK_METADATA = {
   id: 'likec4',

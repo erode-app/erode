@@ -29,7 +29,9 @@ export function createConnectionsCommand(): Command {
 
         if (components.length === 0) {
           progress.warn(`No components found for repository: ${validatedOptions.repo}`);
-          progress.info('Run "erode validate <model-path>" to check which components have repository links.');
+          progress.info(
+            'Run "erode validate <model-path>" to check which components have repository links.'
+          );
           return;
         }
         progress.succeed(`Found ${String(components.length)} component(s)`);

@@ -44,7 +44,14 @@ function makeMrResponse(overrides = {}) {
 }
 
 function makeDiffsResponse(
-  diffs: { old_path: string; new_path: string; diff?: string; new_file?: boolean; deleted_file?: boolean; renamed_file?: boolean }[] = []
+  diffs: {
+    old_path: string;
+    new_path: string;
+    diff?: string;
+    new_file?: boolean;
+    deleted_file?: boolean;
+    renamed_file?: boolean;
+  }[] = []
 ) {
   return diffs.map((d) => ({
     old_path: d.old_path,
@@ -108,9 +115,7 @@ describe('GitLabReader', () => {
     });
 
     it('should parse URL with http scheme', () => {
-      const result = reader.parseChangeRequestUrl(
-        'http://gitlab.com/org/repo/-/merge_requests/1'
-      );
+      const result = reader.parseChangeRequestUrl('http://gitlab.com/org/repo/-/merge_requests/1');
       expect(result.number).toBe(1);
       expect(result.platformId).toEqual({ owner: 'org', repo: 'repo' });
     });
@@ -146,7 +151,11 @@ describe('GitLabReader', () => {
       mockMrShow.mockResolvedValueOnce(makeMrResponse());
       mockMrAllDiffs.mockResolvedValueOnce(
         makeDiffsResponse([
-          { old_path: 'src/index.ts', new_path: 'src/index.ts', diff: '@@ -1,3 +1,3 @@\n-old\n+new line' },
+          {
+            old_path: 'src/index.ts',
+            new_path: 'src/index.ts',
+            diff: '@@ -1,3 +1,3 @@\n-old\n+new line',
+          },
         ])
       );
 

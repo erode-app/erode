@@ -131,9 +131,7 @@ describe('createConnectionsCommand', () => {
   });
 
   it('loads model and displays single component connections', async () => {
-    mockGetDeps.mockReturnValue([
-      makeComponent({ id: 'comp.db', name: 'DB', type: 'database' }),
-    ]);
+    mockGetDeps.mockReturnValue([makeComponent({ id: 'comp.db', name: 'DB', type: 'database' })]);
 
     await run('./models', '--repo', 'https://github.com/org/repo');
 
@@ -169,9 +167,7 @@ describe('createConnectionsCommand', () => {
 
     await run('./models', '--repo', 'https://github.com/org/repo');
 
-    expect(mockProgressWarn).toHaveBeenCalledWith(
-      expect.stringContaining('No components found')
-    );
+    expect(mockProgressWarn).toHaveBeenCalledWith(expect.stringContaining('No components found'));
     expect(mockGetDeps).not.toHaveBeenCalled();
   });
 

@@ -80,7 +80,13 @@ describe('section-formatters', () => {
     it('should format added dependencies', () => {
       const result = formatDependencyChanges({
         dependencies: [
-          { type: 'added', file: 'src/a.ts', dependency: 'redis', description: 'Added Redis', code: '' },
+          {
+            type: 'added',
+            file: 'src/a.ts',
+            dependency: 'redis',
+            description: 'Added Redis',
+            code: '',
+          },
         ],
         summary: '',
       });
@@ -92,7 +98,13 @@ describe('section-formatters', () => {
     it('should format modified dependencies', () => {
       const result = formatDependencyChanges({
         dependencies: [
-          { type: 'modified', file: 'src/b.ts', dependency: 'pg', description: 'Updated PG', code: '' },
+          {
+            type: 'modified',
+            file: 'src/b.ts',
+            dependency: 'pg',
+            description: 'Updated PG',
+            code: '',
+          },
         ],
         summary: '',
       });
@@ -103,7 +115,13 @@ describe('section-formatters', () => {
     it('should format removed dependencies', () => {
       const result = formatDependencyChanges({
         dependencies: [
-          { type: 'removed', file: 'src/c.ts', dependency: 'mysql', description: 'Removed MySQL', code: '' },
+          {
+            type: 'removed',
+            file: 'src/c.ts',
+            dependency: 'mysql',
+            description: 'Removed MySQL',
+            code: '',
+          },
         ],
         summary: '',
       });
@@ -129,7 +147,10 @@ describe('section-formatters', () => {
   describe('formatComponentContext', () => {
     it('should format component with technology', () => {
       const result = formatComponentContext({
-        name: 'API', id: 'comp.api', type: 'service', technology: 'Node.js',
+        name: 'API',
+        id: 'comp.api',
+        type: 'service',
+        technology: 'Node.js',
       });
       expect(result).toContain('Component: API (comp.api)');
       expect(result).toContain('Type: service');
@@ -138,7 +159,9 @@ describe('section-formatters', () => {
 
     it('should omit technology when not provided', () => {
       const result = formatComponentContext({
-        name: 'API', id: 'comp.api', type: 'service',
+        name: 'API',
+        id: 'comp.api',
+        type: 'service',
       });
       expect(result).toContain('Component: API (comp.api)');
       expect(result).not.toContain('Technology');
@@ -148,7 +171,13 @@ describe('section-formatters', () => {
   describe('formatComponentList', () => {
     it('should format numbered list of components', () => {
       const result = formatComponentList([
-        { id: 'comp.api', name: 'API', type: 'service', technology: 'Express', description: 'REST API' },
+        {
+          id: 'comp.api',
+          name: 'API',
+          type: 'service',
+          technology: 'Express',
+          description: 'REST API',
+        },
         { id: 'comp.web', name: 'Web', type: 'webapp' },
       ]);
       expect(result).toContain('1. **comp.api**');
@@ -226,7 +255,7 @@ describe('section-formatters', () => {
 
     it('should return "No dependency changes" when empty', () => {
       expect(formatDependencyChangesSummary({ dependencies: [], summary: '' })).toBe(
-        'No dependency changes detected',
+        'No dependency changes detected'
       );
     });
   });

@@ -1,4 +1,8 @@
-import type { ArchitectureModel, ArchitecturalComponent, SimpleComponent } from './architecture-types.js';
+import type {
+  ArchitectureModel,
+  ArchitecturalComponent,
+  SimpleComponent,
+} from './architecture-types.js';
 import type { DriftAnalysisResult } from '../analysis/analysis-types.js';
 import type { AdapterMetadata } from './adapter-metadata.js';
 

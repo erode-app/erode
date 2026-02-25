@@ -16,14 +16,14 @@ npm install
 
 Set via `.env` or export directly:
 
-| Variable | Required | Description |
-|---|---|---|
-| `GITHUB_TOKEN` | Conditional | Required for GitHub PRs |
-| `GITLAB_TOKEN` | Conditional | Required for GitLab MRs |
-| `GITLAB_BASE_URL` | No | GitLab instance URL (default: `https://gitlab.com`) |
-| `AI_PROVIDER` | No | `gemini` (default) or `anthropic` |
-| `GEMINI_API_KEY` | Conditional | Required when using Gemini |
-| `ANTHROPIC_API_KEY` | Conditional | Required when using Anthropic |
+| Variable            | Required    | Description                                         |
+| ------------------- | ----------- | --------------------------------------------------- |
+| `GITHUB_TOKEN`      | Conditional | Required for GitHub PRs                             |
+| `GITLAB_TOKEN`      | Conditional | Required for GitLab MRs                             |
+| `GITLAB_BASE_URL`   | No          | GitLab instance URL (default: `https://gitlab.com`) |
+| `AI_PROVIDER`       | No          | `gemini` (default) or `anthropic`                   |
+| `GEMINI_API_KEY`    | Conditional | Required when using Gemini                          |
+| `ANTHROPIC_API_KEY` | Conditional | Required when using Anthropic                       |
 
 ### Run directly (no build)
 
@@ -49,6 +49,7 @@ erode components ./model --format table
 ```
 
 Options:
+
 - `--model-format <format>` — Architecture model format (default: `likec4`)
 - `--format <format>` — Output format: `table`, `json`, `yaml` (default: `table`)
 
@@ -62,6 +63,7 @@ erode connections ./model --repo https://gitlab.com/group/project
 ```
 
 Options:
+
 - `--model-format <format>` — Architecture model format (default: `likec4`)
 - `--repo <url>` — Repository URL (GitHub or GitLab)
 - `--output <format>` — Output format: `console`, `json` (default: `console`)
@@ -76,6 +78,7 @@ erode analyze ./model --url https://gitlab.com/group/project/-/merge_requests/42
 ```
 
 Options:
+
 - `--url <url>` — Change request URL (GitHub PR or GitLab MR)
 - `--model-format <format>` — Architecture model format (default: `likec4`)
 - `--generate-model` — Generate architecture model code from the analysis
@@ -99,6 +102,7 @@ erode validate ./model --format json
 ```
 
 Options:
+
 - `--model-format <format>` — Architecture model format (default: `likec4`)
 - `--format <format>` — Output format: `table`, `json` (default: `table`)
 
@@ -186,27 +190,27 @@ jobs:
 
 ### Inputs
 
-| Input | Required | Default | Description |
-|---|---|---|---|
-| `model-repo` | Yes | | Repository containing the architecture model (`owner/repo`) |
-| `model-path` | No | `.` | Path to the model within the model repository |
-| `model-ref` | No | `main` | Git ref (branch/tag) of the model repository |
-| `ai-provider` | No | `anthropic` | AI provider (`anthropic` or `gemini`) |
-| `anthropic-api-key` | No | | Anthropic API key |
-| `gemini-api-key` | No | | Gemini API key |
-| `github-token` | Yes | | GitHub token for API access |
-| `model-repo-token` | No | | Separate token for the model repository |
-| `create-pr` | No | `false` | Create a PR with suggested model updates |
-| `fail-on-violations` | No | `false` | Fail the action if violations are detected |
-| `skip-file-filtering` | No | `false` | Analyze all changed files |
+| Input                 | Required | Default     | Description                                                 |
+| --------------------- | -------- | ----------- | ----------------------------------------------------------- |
+| `model-repo`          | Yes      |             | Repository containing the architecture model (`owner/repo`) |
+| `model-path`          | No       | `.`         | Path to the model within the model repository               |
+| `model-ref`           | No       | `main`      | Git ref (branch/tag) of the model repository                |
+| `ai-provider`         | No       | `anthropic` | AI provider (`anthropic` or `gemini`)                       |
+| `anthropic-api-key`   | No       |             | Anthropic API key                                           |
+| `gemini-api-key`      | No       |             | Gemini API key                                              |
+| `github-token`        | Yes      |             | GitHub token for API access                                 |
+| `model-repo-token`    | No       |             | Separate token for the model repository                     |
+| `create-pr`           | No       | `false`     | Create a PR with suggested model updates                    |
+| `fail-on-violations`  | No       | `false`     | Fail the action if violations are detected                  |
+| `skip-file-filtering` | No       | `false`     | Analyze all changed files                                   |
 
 ### Outputs
 
-| Output | Description |
-|---|---|
-| `has-violations` | Whether architectural violations were detected |
-| `violations-count` | Number of violations detected |
-| `analysis-summary` | Summary of the analysis results |
+| Output             | Description                                    |
+| ------------------ | ---------------------------------------------- |
+| `has-violations`   | Whether architectural violations were detected |
+| `violations-count` | Number of violations detected                  |
+| `analysis-summary` | Summary of the analysis results                |
 
 ## GitLab CI usage
 
@@ -217,30 +221,30 @@ The Docker image includes `entrypoint-gitlab.sh` which handles model cloning and
 ```yaml
 erode:
   image: ghcr.io/erode-app/core:latest
-  entrypoint: ["/entrypoint-gitlab.sh"]
+  entrypoint: ['/entrypoint-gitlab.sh']
   rules:
     - if: $CI_MERGE_REQUEST_IID
   variables:
     GITLAB_TOKEN: $GITLAB_API_TOKEN
     ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
-    LIKEC4_MODEL_REPO: "group/architecture-model"
+    LIKEC4_MODEL_REPO: 'group/architecture-model'
 ```
 
 The entrypoint supports these variables:
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `GITLAB_TOKEN` | Yes | | GitLab API token with `api` scope |
-| `ANTHROPIC_API_KEY` or `GEMINI_API_KEY` | Yes | | AI provider API key |
-| `AI_PROVIDER` | No | `anthropic` | `anthropic` or `gemini` |
-| `LIKEC4_MODEL_REPO` | No | | Model repository path (e.g. `group/architecture-model`). Omit if the model is in the same repo |
-| `LIKEC4_MODEL_PATH` | No | `.` | Path to model within the repository |
-| `LIKEC4_MODEL_REF` | No | `main` | Git ref for the model repository |
-| `LIKEC4_MODEL_REPO_TOKEN` | No | `$GITLAB_TOKEN` | Separate token for model repository access |
-| `LIKEC4_CREATE_PR` | No | `false` | Create MR with suggested model updates |
-| `LIKEC4_FAIL_ON_VIOLATIONS` | No | `false` | Exit with code 1 when violations are found |
-| `LIKEC4_SKIP_FILE_FILTERING` | No | `false` | Analyze all changed files |
-| `GITLAB_BASE_URL` | No | `https://gitlab.com` | For self-hosted GitLab instances |
+| Variable                                | Required | Default              | Description                                                                                    |
+| --------------------------------------- | -------- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| `GITLAB_TOKEN`                          | Yes      |                      | GitLab API token with `api` scope                                                              |
+| `ANTHROPIC_API_KEY` or `GEMINI_API_KEY` | Yes      |                      | AI provider API key                                                                            |
+| `AI_PROVIDER`                           | No       | `anthropic`          | `anthropic` or `gemini`                                                                        |
+| `LIKEC4_MODEL_REPO`                     | No       |                      | Model repository path (e.g. `group/architecture-model`). Omit if the model is in the same repo |
+| `LIKEC4_MODEL_PATH`                     | No       | `.`                  | Path to model within the repository                                                            |
+| `LIKEC4_MODEL_REF`                      | No       | `main`               | Git ref for the model repository                                                               |
+| `LIKEC4_MODEL_REPO_TOKEN`               | No       | `$GITLAB_TOKEN`      | Separate token for model repository access                                                     |
+| `LIKEC4_CREATE_PR`                      | No       | `false`              | Create MR with suggested model updates                                                         |
+| `LIKEC4_FAIL_ON_VIOLATIONS`             | No       | `false`              | Exit with code 1 when violations are found                                                     |
+| `LIKEC4_SKIP_FILE_FILTERING`            | No       | `false`              | Analyze all changed files                                                                      |
+| `GITLAB_BASE_URL`                       | No       | `https://gitlab.com` | For self-hosted GitLab instances                                                               |
 
 ### Calling the CLI directly
 
@@ -249,7 +253,7 @@ If you prefer more control, disable the default entrypoint and call the CLI:
 ```yaml
 erode:
   image: ghcr.io/erode-app/core:latest
-  entrypoint: [""]
+  entrypoint: ['']
   script:
     - >
       node /app/dist/cli.js analyze ./model
@@ -267,7 +271,7 @@ erode:
 ```yaml
 erode:
   image: ghcr.io/erode-app/core:latest
-  entrypoint: [""]
+  entrypoint: ['']
   script:
     - git clone --depth 1 "https://gitlab-ci-token:${GITLAB_TOKEN}@gitlab.com/group/architecture-model.git" /tmp/model
     - >

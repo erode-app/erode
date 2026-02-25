@@ -15,11 +15,7 @@ export function detectPlatform(url: string): Platform {
       return 'gitlab';
     }
   } catch {
-    throw new ErodeError(
-      `Invalid URL: ${url}`,
-      ErrorCode.INVALID_URL,
-      `Invalid URL: ${url}`
-    );
+    throw new ErodeError(`Invalid URL: ${url}`, ErrorCode.INVALID_URL, `Invalid URL: ${url}`);
   }
 
   throw new ErodeError(

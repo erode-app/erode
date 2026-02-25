@@ -129,16 +129,12 @@ describe('GitHubReader', () => {
     });
 
     it('should populate repositoryUrl correctly', () => {
-      const result = reader.parseChangeRequestUrl(
-        'https://github.com/my-org/my-repo/pull/123'
-      );
+      const result = reader.parseChangeRequestUrl('https://github.com/my-org/my-repo/pull/123');
       expect(result.repositoryUrl).toBe('https://github.com/my-org/my-repo');
     });
 
     it('should populate platformId with owner and repo', () => {
-      const result = reader.parseChangeRequestUrl(
-        'https://github.com/my-org/my-repo/pull/123'
-      );
+      const result = reader.parseChangeRequestUrl('https://github.com/my-org/my-repo/pull/123');
       expect(result.platformId).toEqual({ owner: 'my-org', repo: 'my-repo' });
     });
   });

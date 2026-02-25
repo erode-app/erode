@@ -69,8 +69,7 @@ export function checkLikeC4Version(likec4Path: string): VersionCheckResult {
     return { found: false, minimum };
   }
 
-  const versionRange =
-    parsed.dependencies?.['likec4'] ?? parsed.devDependencies?.['likec4'];
+  const versionRange = parsed.dependencies?.['likec4'] ?? parsed.devDependencies?.['likec4'];
   if (!versionRange) {
     return { found: false, minimum };
   }

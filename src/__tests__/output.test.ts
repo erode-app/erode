@@ -21,11 +21,14 @@ vi.mock('fs', () => ({
   writeFileSync: mockWriteFileSync,
 }));
 
-import { buildStructuredOutput, formatAnalysisForConsole, formatAnalysisAsComment, writeOutputToFile } from '../output.js';
+import {
+  buildStructuredOutput,
+  formatAnalysisForConsole,
+  formatAnalysisAsComment,
+  writeOutputToFile,
+} from '../output.js';
 
-function makeAnalysisResult(
-  overrides: Partial<DriftAnalysisResult> = {}
-): DriftAnalysisResult {
+function makeAnalysisResult(overrides: Partial<DriftAnalysisResult> = {}): DriftAnalysisResult {
   return {
     hasViolations: false,
     violations: [],
@@ -219,7 +222,10 @@ describe('formatAnalysisForConsole', () => {
 describe('formatAnalysisAsComment', () => {
   it('should show warning emoji when violations exist', () => {
     const output = formatAnalysisAsComment(
-      makeAnalysisResult({ hasViolations: true, violations: [{ severity: 'high', description: 'Undeclared dep' }] })
+      makeAnalysisResult({
+        hasViolations: true,
+        violations: [{ severity: 'high', description: 'Undeclared dep' }],
+      })
     );
 
     expect(output).toContain('**Status**: :warning: Violations detected');

@@ -13,7 +13,10 @@ vi.mock('@anthropic-ai/sdk', () => {
 
 // Must import after mock setup
 import { AnthropicProvider } from '../provider.js';
-import type { ComponentSelectionPromptData, DriftAnalysisPromptData } from '../../../analysis/analysis-types.js';
+import type {
+  ComponentSelectionPromptData,
+  DriftAnalysisPromptData,
+} from '../../../analysis/analysis-types.js';
 
 function makeStage0Data(componentIds: string[]): ComponentSelectionPromptData {
   return {
@@ -122,9 +125,7 @@ describe('AnthropicProvider', () => {
     });
 
     it('should return null when no component matches', async () => {
-      mockCreate.mockResolvedValueOnce(
-        makeAnthropicResponse('I cannot determine the component')
-      );
+      mockCreate.mockResolvedValueOnce(makeAnthropicResponse('I cannot determine the component'));
 
       const provider = createProvider();
       const result = await provider.selectComponent(
@@ -174,9 +175,7 @@ describe('AnthropicProvider', () => {
     });
 
     it('should throw on non-JSON response', async () => {
-      mockCreate.mockResolvedValueOnce(
-        makeAnthropicResponse('This is not JSON at all')
-      );
+      mockCreate.mockResolvedValueOnce(makeAnthropicResponse('This is not JSON at all'));
 
       const provider = createProvider();
       await expect(provider.extractDependencies(makePreprocessingData())).rejects.toThrow(
@@ -235,9 +234,7 @@ describe('AnthropicProvider', () => {
       const analysisResult = await provider.analyzeDrift(data);
 
       const likec4Code = 'specification { element component }';
-      mockCreate.mockResolvedValueOnce(
-        makeAnthropicResponse(likec4Code)
-      );
+      mockCreate.mockResolvedValueOnce(makeAnthropicResponse(likec4Code));
 
       const result = await provider.generateArchitectureCode(analysisResult);
       expect(result).toBe(likec4Code);
@@ -266,9 +263,9 @@ describe('AnthropicProvider', () => {
   describe('retry on rate limit', () => {
     it('should retry on 429 and eventually succeed', async () => {
       const rateLimitError = new ApiError('Rate limited', 429);
-      mockCreate.mockRejectedValueOnce(rateLimitError).mockResolvedValueOnce(
-        makeAnthropicResponse('comp.api', 'end_turn', 100, 10)
-      );
+      mockCreate
+        .mockRejectedValueOnce(rateLimitError)
+        .mockResolvedValueOnce(makeAnthropicResponse('comp.api', 'end_turn', 100, 10));
 
       const provider = createProvider();
       const result = await provider.selectComponent(makeStage0Data(['comp.api']));

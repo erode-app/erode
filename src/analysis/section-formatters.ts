@@ -83,7 +83,13 @@ ${comp.technology ? `Technology: ${comp.technology}` : ''}`;
 }
 
 export function formatComponentList(
-  components: { id: string; name: string; type: string; technology?: string; description?: string }[],
+  components: {
+    id: string;
+    name: string;
+    type: string;
+    technology?: string;
+    description?: string;
+  }[]
 ): string {
   return components
     .map(
@@ -92,20 +98,20 @@ ${String(idx + 1)}. **${c.id}**
    - Name: ${c.name}
    - Type: ${c.type}
    ${c.technology ? `- Technology: ${c.technology}` : ''}
-   ${c.description ? `- Description: ${c.description}` : ''}`,
+   ${c.description ? `- Description: ${c.description}` : ''}`
     )
     .join('\n');
 }
 
-export function formatCommits(
-  commits: { sha: string; message: string; author: string }[],
-): { section: string; note: string } {
+export function formatCommits(commits: { sha: string; message: string; author: string }[]): {
+  section: string;
+  note: string;
+} {
   const section = commits
     .slice(0, 10)
     .map((c) => `  - ${c.sha.substring(0, 7)}: ${c.message.split('\n')[0] ?? ''} (${c.author})`)
     .join('\n');
-  const note =
-    commits.length > 10 ? `\n  ... and ${String(commits.length - 10)} more commits` : '';
+  const note = commits.length > 10 ? `\n  ... and ${String(commits.length - 10)} more commits` : '';
   return { section, note };
 }
 
@@ -115,22 +121,22 @@ export function formatViolations(violations: DriftViolation[]): string {
     : 'No violations detected';
 }
 
-export function formatDependencyChangesSummary(
-  dependencies: DependencyExtractionResult,
-): string {
+export function formatDependencyChangesSummary(dependencies: DependencyExtractionResult): string {
   return dependencies.dependencies.length > 0
     ? dependencies.dependencies
         .map(
           (d) =>
-            `- ${d.type === 'added' ? '+' : d.type === 'removed' ? '-' : '~'} ${d.dependency}: ${d.description}`,
+            `- ${d.type === 'added' ? '+' : d.type === 'removed' ? '-' : '~'} ${d.dependency}: ${d.description}`
         )
         .join('\n')
     : 'No dependency changes detected';
 }
 
-export function formatModelUpdates(
-  modelUpdates?: { add?: string[]; remove?: string[]; notes?: string },
-): string {
+export function formatModelUpdates(modelUpdates?: {
+  add?: string[];
+  remove?: string[];
+  notes?: string;
+}): string {
   if (!modelUpdates) {
     return 'No model updates recommended';
   }
@@ -144,9 +150,7 @@ ${modelUpdates.notes ?? 'None'}
 `;
 }
 
-export function formatExistingComponents(
-  allComponents?: ArchitecturalComponent[],
-): string {
+export function formatExistingComponents(allComponents?: ArchitecturalComponent[]): string {
   if (!allComponents || allComponents.length === 0) {
     return '';
   }
@@ -155,7 +159,7 @@ EXISTING COMPONENTS IN THE MODEL:
 ${allComponents
   .map(
     (c: ArchitecturalComponent) =>
-      `- ${c.id}: "${c.name}" (${c.type}${c.repository ? `, repo: ${c.repository}` : ''})`,
+      `- ${c.id}: "${c.name}" (${c.type}${c.repository ? `, repo: ${c.repository}` : ''})`
   )
   .join('\n')}
 ⚠️ CRITICAL: Before creating a NEW component, search this list for existing components that match.

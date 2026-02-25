@@ -10,17 +10,10 @@ import {
   COMMENT_MARKER,
   writeOutputToFile,
 } from '../output.js';
-import {
-  writeGitHubActionsOutputs,
-  writeGitHubStepSummary,
-} from '../output/ci-output.js';
+import { writeGitHubActionsOutputs, writeGitHubStepSummary } from '../output/ci-output.js';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { CONFIG } from '../utils/config.js';
-import {
-  validatePath,
-  validate,
-  AnalyzeOptionsSchema,
-} from '../utils/validation.js';
+import { validatePath, validate, AnalyzeOptionsSchema } from '../utils/validation.js';
 import { createProgress, displaySection, OutputFormatter } from '../utils/cli-helpers.js';
 import { loadSkipPatterns, applySkipPatterns } from '../utils/skip-patterns.js';
 import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
@@ -74,9 +67,7 @@ export function createAnalyzeCommand(): Command {
           if (excluded > 0) {
             prData.files = included;
             prData.diff = included
-              .map((f) =>
-                f.patch ? `diff --git a/${f.filename} b/${f.filename}\n${f.patch}` : ''
-              )
+              .map((f) => (f.patch ? `diff --git a/${f.filename} b/${f.filename}\n${f.patch}` : ''))
               .filter(Boolean)
               .join('\n\n');
             prData.changed_files = included.length;
@@ -125,8 +116,7 @@ export function createAnalyzeCommand(): Command {
               files: prData.files.map((f) => ({ filename: f.filename })),
             });
             if (componentId) {
-              selectedComponent =
-                components.find((c) => c.id === componentId) ?? defaultComponent;
+              selectedComponent = components.find((c) => c.id === componentId) ?? defaultComponent;
               selectedComponentId = componentId;
               progress.succeed(`Selected component: ${selectedComponent.name} (${componentId})`);
             } else {
@@ -209,7 +199,9 @@ export function createAnalyzeCommand(): Command {
         if (validatedOptions.generateModel) {
           displaySection(`Stage 3: ${adapter.metadata.displayName} Model Generation`);
           if (!provider.generateArchitectureCode) {
-            progress.warn(`Provider does not support ${adapter.metadata.displayName} model generation`);
+            progress.warn(
+              `Provider does not support ${adapter.metadata.displayName} model generation`
+            );
           } else {
             progress.start(`Generating ${adapter.metadata.displayName} model code`);
             // Pass all components for context
@@ -249,7 +241,9 @@ export function createAnalyzeCommand(): Command {
           | undefined;
         if (validatedOptions.openPr && !validatedOptions.dryRun) {
           if (!generatedCode) {
-            progress.warn('--open-pr requires --generate-model to produce model code. PR creation skipped.');
+            progress.warn(
+              '--open-pr requires --generate-model to produce model code. PR creation skipped.'
+            );
           } else {
             displaySection('Creating Pull Request');
             progress.start('Creating PR with model updates');
@@ -301,19 +295,16 @@ export function createAnalyzeCommand(): Command {
             progress.start('Posting analysis comment on PR');
             const providerName = CONFIG.ai.provider;
             const providerConfig = CONFIG[providerName];
-            const commentBody = formatAnalysisAsComment(
-              analysisResult,
-              {
-                selectedComponentId,
-                candidateComponents,
-                generatedChangeRequest,
-                modelInfo: {
-                  provider: providerName,
-                  fastModel: providerConfig.fastModel,
-                  advancedModel: providerConfig.advancedModel,
-                },
-              }
-            );
+            const commentBody = formatAnalysisAsComment(analysisResult, {
+              selectedComponentId,
+              candidateComponents,
+              generatedChangeRequest,
+              modelInfo: {
+                provider: providerName,
+                fastModel: providerConfig.fastModel,
+                advancedModel: providerConfig.advancedModel,
+              },
+            });
             await commentWriter.commentOnChangeRequest(ref, commentBody, {
               upsertMarker: COMMENT_MARKER,
             });

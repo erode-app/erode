@@ -60,7 +60,9 @@ export class AnthropicProvider implements AIProvider {
     return null;
   }
 
-  async extractDependencies(data: DependencyExtractionPromptData): Promise<DependencyExtractionResult> {
+  async extractDependencies(
+    data: DependencyExtractionPromptData
+  ): Promise<DependencyExtractionResult> {
     const prompt = PromptBuilder.buildDependencyExtractionPrompt(data);
     const model = this.fastModel;
 
@@ -86,9 +88,7 @@ export class AnthropicProvider implements AIProvider {
     return validate(DependencyExtractionResultSchema, parsed, 'DependencyExtractionResult');
   }
 
-  async analyzeDrift(
-    data: DriftAnalysisPromptData
-  ): Promise<DriftAnalysisResult> {
+  async analyzeDrift(data: DriftAnalysisPromptData): Promise<DriftAnalysisResult> {
     const prompt = PromptBuilder.buildDriftAnalysisPrompt(data);
     const model = this.advancedModel;
 
@@ -111,11 +111,7 @@ export class AnthropicProvider implements AIProvider {
     }
 
     const parsed: unknown = JSON.parse(jsonStr);
-    const analysisResponse = validate(
-      DriftAnalysisResponseSchema,
-      parsed,
-      'DriftAnalysisResponse'
-    );
+    const analysisResponse = validate(DriftAnalysisResponseSchema, parsed, 'DriftAnalysisResponse');
 
     return {
       ...analysisResponse,

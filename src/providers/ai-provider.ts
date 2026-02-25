@@ -18,9 +18,7 @@ export interface AIProvider {
   extractDependencies(data: DependencyExtractionPromptData): Promise<DependencyExtractionResult>;
 
   /** Analyze a change request for architectural drift violations. */
-  analyzeDrift(
-    data: DriftAnalysisPromptData
-  ): Promise<DriftAnalysisResult>;
+  analyzeDrift(data: DriftAnalysisPromptData): Promise<DriftAnalysisResult>;
 
   /**
    * Generate architecture model code from analysis results.

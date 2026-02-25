@@ -64,12 +64,12 @@ import { validate } from './utils/validation';
 import { validate } from './utils/validation.js';
 
 // ❌ File naming
-src/utils/myHelper.ts
-src/UserService/index.ts
+src / utils / myHelper.ts;
+src / UserService / index.ts;
 
 // ✅ File naming
-src/utils/my-helper.ts
-src/user-service/index.ts
+src / utils / my - helper.ts;
+src / user - service / index.ts;
 ```
 
 ## Type Safety
@@ -107,10 +107,11 @@ type Config = z.infer<typeof ConfigSchema>;
 
 // Wrap parse in helper that converts ZodError to project error type
 function validate<T>(schema: z.ZodType<T>, data: unknown): T {
-  try { return schema.parse(data); }
-  catch (error) {
+  try {
+    return schema.parse(data);
+  } catch (error) {
     if (error instanceof z.ZodError) {
-      throw new AppError(`Validation failed: ${error.issues.map(i => i.message).join(', ')}`);
+      throw new AppError(`Validation failed: ${error.issues.map((i) => i.message).join(', ')}`);
     }
     throw error;
   }
@@ -127,15 +128,19 @@ Base error class with `code` (enum), `message`, and `context` metadata:
 
 ```typescript
 class AppError extends Error {
-  constructor(message: string, public readonly code: ErrorCode,
-    public readonly context: Record<string, unknown> = {}) {
+  constructor(
+    message: string,
+    public readonly code: ErrorCode,
+    public readonly context: Record<string, unknown> = {}
+  ) {
     super(message);
     this.name = 'AppError';
     Error.captureStackTrace(this, AppError);
   }
   static fromError(error: unknown, code = ErrorCode.UNKNOWN): AppError {
     if (error instanceof AppError) return error;
-    if (error instanceof Error) return new AppError(error.message, code, { originalError: error.name });
+    if (error instanceof Error)
+      return new AppError(error.message, code, { originalError: error.name });
     return new AppError(String(error), code);
   }
 }
@@ -144,7 +149,7 @@ class AppError extends Error {
 ## Testing with Vitest
 
 - Tests colocated near source in `__tests__/` directories
-- Behavior-focused tests — test *what* the code does, not *how*
+- Behavior-focused tests — test _what_ the code does, not _how_
 - Test file naming: `*.test.ts`
 - Use `.js` extensions in test imports too
 

@@ -100,8 +100,8 @@ describe('createPlatformWriter', () => {
   });
 
   it('should throw for unsupported platform URLs', () => {
-    expect(() =>
-      createPlatformWriter('https://bitbucket.org/org/repo', 'org', 'repo')
-    ).toThrow(ErodeError);
+    expect(() => createPlatformWriter('https://bitbucket.org/org/repo', 'org', 'repo')).toThrow(
+      ErodeError
+    );
   });
 });

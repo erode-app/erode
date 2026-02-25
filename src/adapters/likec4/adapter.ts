@@ -301,7 +301,9 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
         'LikeC4 elements'
       );
       for (const element of validatedElements) {
-        if (this.isExcluded({ componentId: element.id, componentTags: element.tags ?? undefined })) {
+        if (
+          this.isExcluded({ componentId: element.id, componentTags: element.tags ?? undefined })
+        ) {
           continue;
         }
         const component: SimpleComponent = {

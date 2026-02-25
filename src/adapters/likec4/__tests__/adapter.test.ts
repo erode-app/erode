@@ -298,7 +298,11 @@ describe('LikeC4Adapter - Component Exclusion', () => {
 
     it('should exclude multiple component ID prefixes', async () => {
       const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludePaths = ['azure_infrastructure', 'experimental', 'temp'];
+      configModule.CONFIG.adapter.likec4.excludePaths = [
+        'azure_infrastructure',
+        'experimental',
+        'temp',
+      ];
 
       adapter = new TestLikeC4Adapter();
       adapter.setMockModel(createMockModel());

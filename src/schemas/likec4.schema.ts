@@ -8,9 +8,7 @@ export const LikeC4ElementSchema = z
     kind: z.string(),
     tags: z.array(z.string()).nullish(),
     links: z
-      .array(
-        z.union([z.string(), z.object({ url: z.string(), title: z.string().optional() })])
-      )
+      .array(z.union([z.string(), z.object({ url: z.string(), title: z.string().optional() })]))
       .nullish(),
     technology: z.string().nullish(),
   })

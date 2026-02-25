@@ -4,11 +4,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import {
-  extractMinVersion,
-  isVersionBelow,
-  checkLikeC4Version,
-} from '../version-check.js';
+import { extractMinVersion, isVersionBelow, checkLikeC4Version } from '../version-check.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,38 +41,45 @@ describe('extractMinVersion', () => {
 
 describe('isVersionBelow', () => {
   it('returns true when major is lower', () => {
-    expect(isVersionBelow({ major: 0, minor: 99, patch: 99 }, { major: 1, minor: 0, patch: 0 }))
-      .toBe(true);
+    expect(
+      isVersionBelow({ major: 0, minor: 99, patch: 99 }, { major: 1, minor: 0, patch: 0 })
+    ).toBe(true);
   });
 
   it('returns true when minor is lower', () => {
-    expect(isVersionBelow({ major: 1, minor: 30, patch: 0 }, { major: 1, minor: 45, patch: 0 }))
-      .toBe(true);
+    expect(
+      isVersionBelow({ major: 1, minor: 30, patch: 0 }, { major: 1, minor: 45, patch: 0 })
+    ).toBe(true);
   });
 
   it('returns true when patch is lower', () => {
-    expect(isVersionBelow({ major: 1, minor: 45, patch: 0 }, { major: 1, minor: 45, patch: 1 }))
-      .toBe(true);
+    expect(
+      isVersionBelow({ major: 1, minor: 45, patch: 0 }, { major: 1, minor: 45, patch: 1 })
+    ).toBe(true);
   });
 
   it('returns false when equal', () => {
-    expect(isVersionBelow({ major: 1, minor: 45, patch: 0 }, { major: 1, minor: 45, patch: 0 }))
-      .toBe(false);
+    expect(
+      isVersionBelow({ major: 1, minor: 45, patch: 0 }, { major: 1, minor: 45, patch: 0 })
+    ).toBe(false);
   });
 
   it('returns false when major is higher', () => {
-    expect(isVersionBelow({ major: 2, minor: 0, patch: 0 }, { major: 1, minor: 45, patch: 0 }))
-      .toBe(false);
+    expect(
+      isVersionBelow({ major: 2, minor: 0, patch: 0 }, { major: 1, minor: 45, patch: 0 })
+    ).toBe(false);
   });
 
   it('returns false when minor is higher', () => {
-    expect(isVersionBelow({ major: 1, minor: 50, patch: 0 }, { major: 1, minor: 45, patch: 0 }))
-      .toBe(false);
+    expect(
+      isVersionBelow({ major: 1, minor: 50, patch: 0 }, { major: 1, minor: 45, patch: 0 })
+    ).toBe(false);
   });
 
   it('returns false when patch is higher', () => {
-    expect(isVersionBelow({ major: 1, minor: 45, patch: 5 }, { major: 1, minor: 45, patch: 0 }))
-      .toBe(false);
+    expect(
+      isVersionBelow({ major: 1, minor: 45, patch: 5 }, { major: 1, minor: 45, patch: 0 })
+    ).toBe(false);
   });
 });
 

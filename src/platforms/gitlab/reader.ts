@@ -196,21 +196,15 @@ export class GitLabReader implements SourcePlatformReader {
           email: commit.author_email ?? 'unknown@example.com',
         },
       }));
-      return validate(
-        z.array(ChangeRequestCommitSchema),
-        result,
-        'GitLab change request commits'
-      );
+      return validate(z.array(ChangeRequestCommitSchema), result, 'GitLab change request commits');
     } catch (error) {
       if (error instanceof ErodeError) {
         throw error;
       }
       if (error instanceof Error) {
-        throw new ApiError(
-          `Failed to fetch merge request commits: ${error.message}`,
-          undefined,
-          { provider: 'gitlab' }
-        );
+        throw new ApiError(`Failed to fetch merge request commits: ${error.message}`, undefined, {
+          provider: 'gitlab',
+        });
       }
       throw error;
     }

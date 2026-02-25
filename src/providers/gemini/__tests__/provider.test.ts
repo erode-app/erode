@@ -28,7 +28,10 @@ vi.mock('@google/genai', () => {
 
 // Must import after mock setup
 import { GeminiProvider } from '../provider.js';
-import type { ComponentSelectionPromptData, DriftAnalysisPromptData } from '../../../analysis/analysis-types.js';
+import type {
+  ComponentSelectionPromptData,
+  DriftAnalysisPromptData,
+} from '../../../analysis/analysis-types.js';
 
 function makeStage0Data(componentIds: string[]): ComponentSelectionPromptData {
   return {

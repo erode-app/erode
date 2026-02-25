@@ -29,12 +29,24 @@ class ConsoleProgress implements ProgressIndicator {
   }
 }
 class SilentProgress implements ProgressIndicator {
-  start(_message: string): void { /* noop */ }
-  update(_message: string): void { /* noop */ }
-  succeed(_message: string): void { /* noop */ }
-  fail(_message: string): void { /* noop */ }
-  warn(_message: string): void { /* noop */ }
-  info(_message: string): void { /* noop */ }
+  start(_message: string): void {
+    /* noop */
+  }
+  update(_message: string): void {
+    /* noop */
+  }
+  succeed(_message: string): void {
+    /* noop */
+  }
+  fail(_message: string): void {
+    /* noop */
+  }
+  warn(_message: string): void {
+    /* noop */
+  }
+  info(_message: string): void {
+    /* noop */
+  }
 }
 export const Logger = {
   fail(message: string): void {
@@ -100,9 +112,7 @@ function toYaml(data: unknown, indent = 0): string {
   const spaces = '  '.repeat(indent);
   if (Array.isArray(data)) {
     if (data.length === 0) return '[]';
-    return data
-      .map((item) => `${spaces}- ${toYaml(item, indent + 1).trim()}`)
-      .join('\n');
+    return data.map((item) => `${spaces}- ${toYaml(item, indent + 1).trim()}`).join('\n');
   }
   if (typeof data === 'object' && data !== null) {
     const entries = Object.entries(data);

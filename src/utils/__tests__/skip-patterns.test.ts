@@ -72,10 +72,7 @@ describe('applySkipPatterns', () => {
   });
 
   it('excludes __tests__ directory files', () => {
-    const files = [
-      makeFile('src/index.ts'),
-      makeFile('src/utils/__tests__/config.test.ts'),
-    ];
+    const files = [makeFile('src/index.ts'), makeFile('src/utils/__tests__/config.test.ts')];
     const result = applySkipPatterns(files, patterns);
     expect(result.included).toHaveLength(1);
     expect(result.included[0]?.filename).toBe('src/index.ts');
