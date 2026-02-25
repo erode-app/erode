@@ -8,6 +8,7 @@
     "erode": "./dist/cli.js"
   },
   "scripts": {
+    "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\" \"npm:knip\" \"npm:build\"",
     "build": "tsc && npm run copy-assets",
     "copy-assets": "bash scripts/copy-assets.sh",
     "dev": "tsx watch src/cli.ts",
@@ -47,6 +48,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.3",
     "@types/node": "^24.10.1",
+    "concurrently": "^9.2.1",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-check-file": "^3.3.1",
