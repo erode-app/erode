@@ -6,7 +6,7 @@ allowed-tools: Bash
 
 # Linear Issue Tracking
 
-We track tickets and projects in Linear (https://linear.app). Use the `linearis` CLI tool via Bash.
+We track tickets and projects in Linear (<https://linear.app>). Use the `linearis` CLI tool via Bash.
 
 **Run `linearis usage` to see all available commands and options.**
 
@@ -136,4 +136,4 @@ A project-local token file `.linear_api_token` exists in the project root. **Alw
 
 Do NOT rely on `~/.linear_api_token` or `LINEAR_API_TOKEN` env var — those may belong to a different team.
 
-Docs: https://github.com/czottmann/linearis
+Docs: <https://github.com/czottmann/linearis>
