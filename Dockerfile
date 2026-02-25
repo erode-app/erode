@@ -30,10 +30,9 @@ RUN npm ci --omit=dev
 # Copy built output from builder
 COPY --from=builder /app/dist/ dist/
 
-# Copy entrypoints and skip patterns
+# Copy entrypoints
 COPY entrypoint.sh /entrypoint.sh
 COPY entrypoint-gitlab.sh /entrypoint-gitlab.sh
-COPY skip-patterns /app/skip-patterns
 
 RUN chmod +x /entrypoint.sh /entrypoint-gitlab.sh
 
