@@ -44,7 +44,7 @@ This extraction step isolates the dependency signal from the noise of a full dif
 
 ## Stage 2 -- Analyze
 
-This is the core of erode. A stronger model (Sonnet for Anthropic, Pro for Gemini) compares the extracted dependency changes against the declared architecture model. It produces violation findings, each with:
+This is the core of erode. A stronger model (Sonnet for Anthropic, Flash for Gemini) compares the extracted dependency changes against the declared architecture model. It produces violation findings, each with:
 
 - A **severity level** (high, medium, or low)
 - A description of the drift

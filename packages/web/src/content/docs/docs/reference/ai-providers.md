@@ -42,12 +42,12 @@ Each provider uses two model tiers to balance cost and quality:
 
 You can override the default models with environment variables:
 
-| Variable                   | Description                                 |
-| -------------------------- | ------------------------------------------- |
-| `GEMINI_FAST_MODEL`        | Gemini model for fast tier (Stages 0-1)     |
-| `GEMINI_ADVANCED_MODEL`    | Gemini model for advanced tier (Stage 2)    |
-| `ANTHROPIC_FAST_MODEL`     | Anthropic model for fast tier (Stages 0-1)  |
-| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for advanced tier (Stage 2) |
+| Variable                   | Description                                    |
+| -------------------------- | ---------------------------------------------- |
+| `GEMINI_FAST_MODEL`        | Gemini model for fast tier (Stages 0–1)        |
+| `GEMINI_ADVANCED_MODEL`    | Gemini model for advanced tier (Stages 2–3)    |
+| `ANTHROPIC_FAST_MODEL`     | Anthropic model for fast tier (Stages 0–1)     |
+| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for advanced tier (Stages 2–3) |
 
 ## Timeout configuration
 

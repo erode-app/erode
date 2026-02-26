@@ -17,11 +17,11 @@ For GitHub Actions-specific inputs (`model-repo`, `fail-on-violations`, etc.), s
 
 ## Architecture model
 
-| Variable               | Description                                         | Default   |
-| ---------------------- | --------------------------------------------------- | --------- |
-| `MODEL_FORMAT`         | Architecture model format                           | `likec4`  |
-| `LIKEC4_EXCLUDE_PATHS` | Comma-separated paths to exclude from model loading | —         |
-| `LIKEC4_EXCLUDE_TAGS`  | Comma-separated tags to exclude from model loading  | `adr,rfc` |
+| Variable               | Description                                         | Default  |
+| ---------------------- | --------------------------------------------------- | -------- |
+| `MODEL_FORMAT`         | Architecture model format                           | `likec4` |
+| `LIKEC4_EXCLUDE_PATHS` | Comma-separated paths to exclude from model loading | —        |
+| `LIKEC4_EXCLUDE_TAGS`  | Comma-separated tags to exclude from model loading  | —        |
 
 ## Diff limits
 
@@ -29,6 +29,7 @@ For GitHub Actions-specific inputs (`model-repo`, `fail-on-violations`, etc.), s
 | -------------------- | ---------------------------------------------- | ------- |
 | `MAX_FILES_PER_DIFF` | Maximum number of files to include in the diff | `50`    |
 | `MAX_LINES_PER_DIFF` | Maximum number of lines to include in the diff | `5000`  |
+| `MAX_CONTEXT_CHARS`  | Maximum characters of architectural context    | `10000` |
 
 Large diffs are truncated to stay within these limits. If a PR exceeds them, erode processes the most relevant files first based on the architecture model context.
 
@@ -39,11 +40,26 @@ Each AI provider uses two model tiers: a fast model for extraction stages and an
 | Variable                   | Description                                 |
 | -------------------------- | ------------------------------------------- |
 | `GEMINI_FAST_MODEL`        | Gemini model for Stages 0–1 (extraction)    |
-| `GEMINI_ADVANCED_MODEL`    | Gemini model for Stage 2 (analysis)         |
+| `GEMINI_ADVANCED_MODEL`    | Gemini model for Stages 2–3 (analysis)      |
 | `ANTHROPIC_FAST_MODEL`     | Anthropic model for Stages 0–1 (extraction) |
-| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for Stage 2 (analysis)      |
+| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for Stages 2–3 (analysis)   |
 
 See [AI Providers](/docs/reference/ai-providers/) for default model names and guidance on choosing a provider.
+
+## GitHub
+
+| Variable              | Description                             | Default             |
+| --------------------- | --------------------------------------- | ------------------- |
+| `GITHUB_TOKEN`        | GitHub token for API access             | —                   |
+| `GITHUB_TIMEOUT`      | Request timeout for GitHub API (ms)     | `30000`             |
+| `MODEL_REPO_PR_TOKEN` | Separate token for the model repository | Uses `GITHUB_TOKEN` |
+
+## GitLab
+
+| Variable          | Description                   | Default              |
+| ----------------- | ----------------------------- | -------------------- |
+| `GITLAB_TOKEN`    | GitLab token with `api` scope | —                    |
+| `GITLAB_BASE_URL` | GitLab instance URL           | `https://gitlab.com` |
 
 ## Timeouts
 
@@ -51,6 +67,7 @@ See [AI Providers](/docs/reference/ai-providers/) for default model names and gu
 | ------------------- | -------------------------------------------- | ------- |
 | `GEMINI_TIMEOUT`    | Request timeout for Gemini API calls (ms)    | `60000` |
 | `ANTHROPIC_TIMEOUT` | Request timeout for Anthropic API calls (ms) | `60000` |
+| `GITHUB_TIMEOUT`    | Request timeout for GitHub API calls (ms)    | `30000` |
 
 ## Debug
 
