@@ -101,13 +101,13 @@ Exits with code 1 if any components are missing repository links.
 
 Set these before running any command:
 
-| Variable                                                   | Description                                             |
-| ---------------------------------------------------------- | ------------------------------------------------------- |
-| `GITHUB_TOKEN`                                             | Required for GitHub PRs. Read access to the repository. |
-| `GITLAB_TOKEN`                                             | Required for GitLab MRs. Token with `api` scope.        |
-| `BITBUCKET_TOKEN`                                          | Required for Bitbucket PRs. App password or token.      |
-| `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY` | API key for your chosen AI provider.                    |
-| `AI_PROVIDER`                                              | `gemini` (default), `openai`, or `anthropic`.           |
+| Variable                                                   | Description                                                                                                                   |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `GITHUB_TOKEN`                                             | Required for GitHub PRs. See [Configuration](/docs/guides/configuration/#github) for required permissions.                    |
+| `GITLAB_TOKEN`                                             | Required for GitLab MRs. Requires `api` scope.                                                                                |
+| `BITBUCKET_TOKEN`                                          | Required for Bitbucket PRs. See [Configuration](/docs/guides/configuration/#bitbucket-experimental) for required permissions. |
+| `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY` | API key for your chosen AI provider.                                                                                          |
+| `AI_PROVIDER`                                              | `gemini` (default), `openai`, or `anthropic`.                                                                                 |
 
 See [Configuration](/docs/guides/configuration/) for the full list of environment variables including diff limits, timeouts, and model overrides.
 

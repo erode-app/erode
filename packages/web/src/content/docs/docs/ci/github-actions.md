@@ -122,24 +122,40 @@ If no violations are found, the comment confirms that the PR aligns with the dec
 
 ## GitHub App Token
 
-For organizations that prefer GitHub App authentication over personal access tokens, use the `create-github-app-token` action:
+For organizations, GitHub Apps are the recommended authentication method. Unlike personal access tokens, App tokens are short-lived, scoped to specific repositories, and not tied to individual user accounts — so they keep working when people leave the organization. Permissions are managed centrally through the App's installation settings.
+
+Use the [`create-github-app-token`](https://github.com/actions/create-github-app-token) action to generate a token at the start of each workflow run:
 
 ```yaml
-steps:
-  - uses: actions/create-github-app-token@v1
-    id: app-token
-    with:
-      app-id: ${{ vars.ERODE_APP_ID }}
-      private-key: ${{ secrets.ERODE_PRIVATE_KEY }}
+name: Architecture Drift Check
+on: [pull_request]
 
-  - uses: erode-app/core@main
-    with:
-      model-repo: your-org/architecture
-      github-token: ${{ steps.app-token.outputs.token }}
-      gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+concurrency:
+  group: erode-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  erode:
+    if: github.actor != 'dependabot[bot]' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.ERODE_APP_ID }}
+          private-key: ${{ secrets.ERODE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - uses: erode-app/core@main
+        with:
+          model-repo: your-org/architecture
+          github-token: ${{ steps.app-token.outputs.token }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
 
-This is useful when the default `GITHUB_TOKEN` lacks permissions to access the model repository or when you need finer-grained access control.
+The `owner` field ensures the token covers all repositories the App is installed on within the organization. `permissions: {}` drops the default `GITHUB_TOKEN` permissions since the App token provides its own, and `concurrency` cancels stale runs when a PR is updated.
 
 ## Tips
 

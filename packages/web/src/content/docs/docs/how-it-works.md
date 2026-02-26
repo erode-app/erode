@@ -32,7 +32,7 @@ To analyze all files regardless of these patterns, set `skip-file-filtering: 'tr
 
 ## Stage 1 -- Resolve
 
-When a repository maps to multiple components in the architecture model, erode uses AI to determine which component is most relevant to the pull request. This stage uses a cheaper model (Haiku for Anthropic, Flash for Gemini) to keep costs low.
+When a repository maps to multiple components in the architecture model, erode uses AI to determine which component is most relevant to the pull request. This stage uses a cheaper model (Haiku for Anthropic, Mini for OpenAI, Flash for Gemini) to keep costs low.
 
 This stage is skipped entirely when the repository maps to a single component.
 
@@ -44,7 +44,7 @@ This keeps the analysis stage focused on dependency changes rather than the full
 
 ## Stage 3 -- Analyze
 
-A stronger model (Sonnet for Anthropic, Flash for Gemini) compares the extracted dependency changes against the declared architecture model and produces violation findings, each with:
+A stronger model (Sonnet for Anthropic, GPT-4.1 for OpenAI, Flash for Gemini) compares the extracted dependency changes against the declared architecture model and produces violation findings, each with:
 
 - A **severity level** (high, medium, or low)
 - A description of the drift
