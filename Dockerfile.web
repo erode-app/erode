@@ -6,6 +6,7 @@ COPY package.json package-lock.json ./
 COPY packages/web/package.json packages/web/
 COPY packages/core/package.json packages/core/
 COPY packages/eslint-config/package.json packages/eslint-config/
+COPY packages/architecture/package.json packages/architecture/
 
 # Lockfile records macOS-specific rollup binaries; npm ci/install
 # won't resolve the correct linux native binary (npm#4828).
@@ -13,6 +14,7 @@ COPY packages/eslint-config/package.json packages/eslint-config/
 RUN rm package-lock.json && npm install
 
 COPY packages/web/ packages/web/
+COPY packages/architecture/ packages/architecture/
 RUN npm run build --workspace=packages/web
 
 # Stage 2: Serve static files
