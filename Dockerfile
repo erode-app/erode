@@ -39,5 +39,6 @@ RUN npm ci --workspace=packages/core --omit=dev
 COPY --from=builder /app/packages/core/dist/ packages/core/dist/
 COPY entrypoint.sh /entrypoint.sh
 COPY entrypoint-gitlab.sh /entrypoint-gitlab.sh
-RUN chmod +x /entrypoint.sh /entrypoint-gitlab.sh
+COPY entrypoint-bitbucket.sh /entrypoint-bitbucket.sh
+RUN chmod +x /entrypoint.sh /entrypoint-gitlab.sh /entrypoint-bitbucket.sh
 ENTRYPOINT ["/entrypoint.sh"]

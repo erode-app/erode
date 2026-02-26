@@ -48,6 +48,7 @@ export default defineConfig({
           items: [
             { slug: 'docs/ci/github-actions' },
             { slug: 'docs/ci/gitlab-ci' },
+            { slug: 'docs/ci/bitbucket-pipelines' },
             { slug: 'docs/ci/self-hosted' },
           ],
         },

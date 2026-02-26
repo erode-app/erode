@@ -35,6 +35,10 @@ jobs:
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
 
+:::tip[Working example]
+See the [playground repository](https://github.com/erode-app/playground) for a complete working setup with a LikeC4 model and GitHub Actions workflow you can fork.
+:::
+
 The `if` guard skips dependabot PRs and draft PRs. Since erode uses AI tokens on every run, this avoids spending them on automated dependency bumps and work-in-progress PRs that rarely introduce architectural drift. Remove the guard if you want erode to run on all PRs.
 
 The action runs in a Docker container that clones the model repository directly — you do not need an `actions/checkout` step.

@@ -42,6 +42,15 @@ Replace `your-org/architecture` with the repository that contains your architect
 
 erode runs on every PR and posts a comment listing any undeclared dependencies, their severity, and how to fix them. If no violations are found, it confirms the PR aligns with the declared architecture.
 
+## Try the example project
+
+The [playground repository](https://github.com/erode-app/playground) is a ready-made example you can fork and use to try erode. It contains a multi-service architecture (frontend, API gateway, microservices, database) with a LikeC4 model and a pre-configured GitHub Actions workflow.
+
+1. [Fork the repository](https://github.com/erode-app/playground/fork)
+2. Add your `GEMINI_API_KEY` (or another [AI provider](/docs/reference/ai-providers/) key) as a repository secret
+3. Open a PR that introduces an undeclared dependency — for example, make the frontend call `user-service` directly instead of going through `api-gateway`
+4. erode will comment on the PR with the detected violation
+
 ## What's next
 
 - [GitHub Actions reference](/docs/ci/github-actions/) — all action inputs, outputs, and advanced examples
