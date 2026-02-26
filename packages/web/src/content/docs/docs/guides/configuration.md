@@ -57,12 +57,19 @@ See [AI Providers](/docs/reference/ai-providers/) for default model names and gu
 | `GITHUB_TIMEOUT`      | Request timeout for GitHub API (ms)     | `30000`             |
 | `MODEL_REPO_PR_TOKEN` | Separate token for the model repository | Uses `GITHUB_TOKEN` |
 
-## GitLab
+## GitLab (experimental)
 
 | Variable          | Description                   | Default              |
 | ----------------- | ----------------------------- | -------------------- |
 | `GITLAB_TOKEN`    | GitLab token with `api` scope | —                    |
 | `GITLAB_BASE_URL` | GitLab instance URL           | `https://gitlab.com` |
+
+## Bitbucket (experimental)
+
+| Variable             | Description                     | Default                         |
+| -------------------- | ------------------------------- | ------------------------------- |
+| `BITBUCKET_TOKEN`    | Bitbucket app password or token | —                               |
+| `BITBUCKET_BASE_URL` | Bitbucket API base URL          | `https://api.bitbucket.org/2.0` |
 
 ## Timeouts
 

@@ -1,0 +1,11 @@
+changelog:
+  categories:
+    - title: "\U0001F3D5 Features and fixes"
+      labels:
+        - '*'
+      exclude:
+        labels:
+          - dependencies
+    - title: "\U0001F452 Dependencies"
+      labels:
+        - dependencies

@@ -120,6 +120,27 @@ After analysis, erode posts a comment on the pull request containing:
 
 If no violations are found, the comment confirms that the PR aligns with the declared architecture.
 
+## GitHub App Token
+
+For organizations that prefer GitHub App authentication over personal access tokens, use the `create-github-app-token` action:
+
+```yaml
+steps:
+  - uses: actions/create-github-app-token@v1
+    id: app-token
+    with:
+      app-id: ${{ vars.ERODE_APP_ID }}
+      private-key: ${{ secrets.ERODE_PRIVATE_KEY }}
+
+  - uses: erode-app/core@main
+    with:
+      model-repo: your-org/architecture
+      github-token: ${{ steps.app-token.outputs.token }}
+      gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+```
+
+This is useful when the default `GITHUB_TOKEN` lacks permissions to access the model repository or when you need finer-grained access control.
+
 ## Tips
 
 - Start with the Gemini provider during evaluation — it is generally cheaper. OpenAI is another good option for production workflows.

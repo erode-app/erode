@@ -34,22 +34,23 @@ Analyze a change request for architecture drift.
 ```bash
 erode analyze ./model --url https://github.com/org/repo/pull/42
 erode analyze ./model --url https://gitlab.com/group/project/-/merge_requests/42
+erode analyze ./model --url https://bitbucket.org/workspace/repo/pull-requests/42
 ```
 
-| Flag                    | Description                                              | Default   |
-| ----------------------- | -------------------------------------------------------- | --------- |
-| `--url <url>`           | Change request URL (GitHub PR or GitLab MR). Required.   |           |
-| `--model-format <fmt>`  | Architecture model format                                | `likec4`  |
-| `--format <fmt>`        | Output format: `console`, `json`                         | `console` |
-| `--generate-model`      | Generate architecture model code from the analysis       |           |
-| `--open-pr`             | Create a PR with suggested model updates                 |           |
-| `--dry-run`             | Preview without creating a PR                            |           |
-| `--draft`               | Create change request as draft                           | `true`    |
-| `--output-file <path>`  | Write structured JSON output to a file                   |           |
-| `--skip-file-filtering` | Analyze all changed files (skip pattern-based filtering) |           |
-| `--comment`             | Post analysis results as a PR/MR comment                 |           |
-| `--github-actions`      | Write GitHub Actions outputs and step summary            |           |
-| `--fail-on-violations`  | Exit with code 1 when violations are found               |           |
+| Flag                    | Description                                                           | Default   |
+| ----------------------- | --------------------------------------------------------------------- | --------- |
+| `--url <url>`           | Change request URL (GitHub PR, GitLab MR, or Bitbucket PR). Required. |           |
+| `--model-format <fmt>`  | Architecture model format                                             | `likec4`  |
+| `--format <fmt>`        | Output format: `console`, `json`                                      | `console` |
+| `--generate-model`      | Generate architecture model code from the analysis                    |           |
+| `--open-pr`             | Create a PR with suggested model updates                              |           |
+| `--dry-run`             | Preview without creating a PR                                         |           |
+| `--draft`               | Create change request as draft                                        | `true`    |
+| `--output-file <path>`  | Write structured JSON output to a file                                |           |
+| `--skip-file-filtering` | Analyze all changed files (skip pattern-based filtering)              |           |
+| `--comment`             | Post analysis results as a PR/MR comment                              |           |
+| `--github-actions`      | Write GitHub Actions outputs and step summary                         |           |
+| `--fail-on-violations`  | Exit with code 1 when violations are found                            |           |
 
 ### `components <model-path>`
 
@@ -104,6 +105,7 @@ Set these before running any command:
 | ---------------------------------------------------------- | ------------------------------------------------------- |
 | `GITHUB_TOKEN`                                             | Required for GitHub PRs. Read access to the repository. |
 | `GITLAB_TOKEN`                                             | Required for GitLab MRs. Token with `api` scope.        |
+| `BITBUCKET_TOKEN`                                          | Required for Bitbucket PRs. App password or token.      |
 | `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY` | API key for your chosen AI provider.                    |
 | `AI_PROVIDER`                                              | `gemini` (default), `openai`, or `anthropic`.           |
 

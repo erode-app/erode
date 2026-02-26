@@ -1,12 +1,13 @@
 import { Gitlab } from '@gitbeaker/rest';
 import { CONFIG } from '../../utils/config.js';
-import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
+import { ErodeError, ErrorCode } from '../../errors.js';
 import type {
   SourcePlatformWriter,
   ChangeRequestRef,
   ChangeRequestResult,
   CreateOrUpdateChangeRequestOptions,
 } from '../source-platform.js';
+import { wrapPlatformError } from '../platform-utils.js';
 
 /** Subset of the GitLab MR response fields we access. */
 interface GitLabMrResponse {
@@ -100,17 +101,7 @@ export class GitLabWriter implements SourcePlatformWriter {
         branch: branchName,
       };
     } catch (error) {
-      if (error instanceof ErodeError) throw error;
-      if (error instanceof Error) {
-        throw new ApiError(
-          `Could not create or update merge request: ${error.message}`,
-          undefined,
-          {
-            provider: 'gitlab',
-          }
-        );
-      }
-      throw error;
+      wrapPlatformError(error, 'gitlab', 'Could not create or update merge request');
     }
   }
 
@@ -137,13 +128,7 @@ export class GitLabWriter implements SourcePlatformWriter {
       }
       await this.api.MergeRequestNotes.create(projectPath, ref.number, body);
     } catch (error) {
-      if (error instanceof ErodeError) throw error;
-      if (error instanceof Error) {
-        throw new ApiError(`Could not comment on merge request: ${error.message}`, undefined, {
-          provider: 'gitlab',
-        });
-      }
-      throw error;
+      wrapPlatformError(error, 'gitlab', 'Could not comment on merge request');
     }
   }
 
@@ -158,15 +143,7 @@ export class GitLabWriter implements SourcePlatformWriter {
         await this.api.MergeRequestNotes.remove(projectPath, ref.number, existingId);
       }
     } catch (error) {
-      if (error instanceof ErodeError) throw error;
-      if (error instanceof Error) {
-        throw new ApiError(
-          `Could not remove comment from merge request: ${error.message}`,
-          undefined,
-          { provider: 'gitlab' }
-        );
-      }
-      throw error;
+      wrapPlatformError(error, 'gitlab', 'Could not remove comment from merge request');
     }
   }
 

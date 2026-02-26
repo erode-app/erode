@@ -28,6 +28,10 @@ const ConfigSchema = z.object({
     token: z.string().optional(),
     baseUrl: z.url().default('https://gitlab.com'),
   }),
+  bitbucket: z.object({
+    token: z.string().optional(),
+    baseUrl: z.url().default('https://api.bitbucket.org/2.0'),
+  }),
   anthropic: z.object({
     apiKey: z.string().optional(),
     timeout: z.number().int().min(1000).max(300000).default(60000),
@@ -75,6 +79,8 @@ const ENV_MAPPINGS: Record<string, string[]> = {
   GITHUB_TIMEOUT: ['github', 'defaultTimeout'],
   GITLAB_TOKEN: ['gitlab', 'token'],
   GITLAB_BASE_URL: ['gitlab', 'baseUrl'],
+  BITBUCKET_TOKEN: ['bitbucket', 'token'],
+  BITBUCKET_BASE_URL: ['bitbucket', 'baseUrl'],
   ANTHROPIC_TIMEOUT: ['anthropic', 'timeout'],
   ANTHROPIC_FAST_MODEL: ['anthropic', 'fastModel'],
   ANTHROPIC_ADVANCED_MODEL: ['anthropic', 'advancedModel'],
@@ -92,6 +98,7 @@ function loadConfigFromEnv(): Record<string, Record<string, unknown>> {
     adapter: { likec4: {} } as Record<string, unknown>,
     github: {} as Record<string, unknown>,
     gitlab: {} as Record<string, unknown>,
+    bitbucket: {} as Record<string, unknown>,
     anthropic: {} as Record<string, unknown>,
     gemini: {} as Record<string, unknown>,
     openai: {} as Record<string, unknown>,

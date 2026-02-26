@@ -23,6 +23,7 @@ export interface ChangeRequestRef {
    * should access these fields.
    * - GitHub: { owner: string, repo: string }
    * - GitLab: { owner: string (namespace/group path), repo: string (project name) }
+   * - Bitbucket: { owner: string (workspace), repo: string (repo slug) }
    */
   platformId: PlatformId;
 }

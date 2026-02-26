@@ -6,7 +6,7 @@ description: Run erode outside the official GitHub Action.
 The [GitHub Action](/docs/ci/github-actions/) is the fastest way to get started, but you may want to run erode yourself if you:
 
 - Need full control over the runtime environment
-- Use GitHub Enterprise Server or self-hosted GitLab
+- Use GitHub Enterprise Server, self-hosted GitLab, or Bitbucket Cloud
 - Run a CI platform other than GitHub Actions or GitLab CI
 
 ## Option 1: Fork the repo

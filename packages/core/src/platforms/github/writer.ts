@@ -1,6 +1,6 @@
 import { Octokit } from '@octokit/rest';
 import { CONFIG } from '../../utils/config.js';
-import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
+import { ErodeError, ErrorCode } from '../../errors.js';
 import { withRetry } from '../../utils/retry.js';
 import type {
   SourcePlatformWriter,
@@ -8,29 +8,7 @@ import type {
   ChangeRequestResult,
   CreateOrUpdateChangeRequestOptions,
 } from '../source-platform.js';
-
-function isTransientError(error: unknown): boolean {
-  const status =
-    error instanceof Error && 'status' in error ? (error as { status: unknown }).status : undefined;
-  return typeof status === 'number' && status >= 500;
-}
-
-function sanitizeErrorMessage(message: string): string {
-  if (message.includes('<!DOCTYPE') || message.includes('<html')) {
-    return message
-      .replace(/<[^>]*>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 200);
-  }
-  return message;
-}
-
-function extractStatusCode(error: Error): number | undefined {
-  return 'status' in error && typeof (error as { status: unknown }).status === 'number'
-    ? (error as { status: number }).status
-    : undefined;
-}
+import { wrapPlatformError, isTransientError } from '../platform-utils.js';
 
 export class GitHubWriter implements SourcePlatformWriter {
   private readonly octokit: Octokit;
@@ -170,13 +148,7 @@ export class GitHubWriter implements SourcePlatformWriter {
         branch: branchName,
       };
     } catch (error) {
-      if (error instanceof ErodeError) throw error;
-      if (error instanceof Error) {
-        throw new ApiError(`Could not create or update pull request: ${error.message}`, undefined, {
-          provider: 'github',
-        });
-      }
-      throw error;
+      wrapPlatformError(error, 'github', 'Could not create or update pull request');
     }
   }
 
@@ -218,15 +190,7 @@ export class GitHubWriter implements SourcePlatformWriter {
         { maxAttempts: 2, baseDelay: 2000, shouldRetry: isTransientError }
       );
     } catch (error) {
-      if (error instanceof ErodeError) throw error;
-      if (error instanceof Error) {
-        throw new ApiError(
-          `Could not comment on pull request: ${sanitizeErrorMessage(error.message)}`,
-          extractStatusCode(error),
-          { provider: 'github' }
-        );
-      }
-      throw error;
+      wrapPlatformError(error, 'github', 'Could not comment on pull request');
     }
   }
 
@@ -245,15 +209,7 @@ export class GitHubWriter implements SourcePlatformWriter {
         { maxAttempts: 2, baseDelay: 2000, shouldRetry: isTransientError }
       );
     } catch (error) {
-      if (error instanceof ErodeError) throw error;
-      if (error instanceof Error) {
-        throw new ApiError(
-          `Could not remove comment from pull request: ${sanitizeErrorMessage(error.message)}`,
-          extractStatusCode(error),
-          { provider: 'github' }
-        );
-      }
-      throw error;
+      wrapPlatformError(error, 'github', 'Could not remove comment from pull request');
     }
   }
 

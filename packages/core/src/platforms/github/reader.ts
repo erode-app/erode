@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
 import { CONFIG } from '../../utils/config.js';
-import { ErodeError, ApiError, ErrorCode } from '../../errors.js';
+import { ErodeError, ErrorCode } from '../../errors.js';
 import type {
   SourcePlatformReader,
   ChangeRequestRef,
@@ -13,6 +13,7 @@ import {
   ChangeRequestDataSchema,
   ChangeRequestCommitSchema,
 } from '../../schemas/source-platform.schema.js';
+import { applyDiffTruncation, wrapPlatformError } from '../platform-utils.js';
 
 const GITHUB_PR_URL_PATTERN = /^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)$/i;
 
@@ -70,21 +71,23 @@ export class GitHubReader implements SourcePlatformReader {
         per_page: 100,
       });
 
-      const totalFiles = files.length;
       const totalLines = files.reduce((sum, file) => sum + file.changes, 0);
 
-      let wasTruncated = false;
-      let truncationReason: string | undefined;
-      let filesToInclude = files;
-
-      if (totalFiles > CONFIG.constraints.maxFilesPerDiff) {
-        wasTruncated = true;
-        truncationReason = `Diff surpassed the ${String(CONFIG.constraints.maxFilesPerDiff)}-file limit (${String(totalFiles)} files found). Only the first ${String(CONFIG.constraints.maxFilesPerDiff)} files were analyzed.`;
-        filesToInclude = files.slice(0, CONFIG.constraints.maxFilesPerDiff);
-      } else if (totalLines > CONFIG.constraints.maxLinesPerDiff) {
-        wasTruncated = true;
-        truncationReason = `Diff surpassed the ${String(CONFIG.constraints.maxLinesPerDiff)}-line limit (${String(totalLines)} lines found). Analysis may be partial.`;
-      }
+      const {
+        files: filesToInclude,
+        wasTruncated,
+        truncationReason,
+      } = applyDiffTruncation(
+        files.map((file) => ({
+          filename: file.filename,
+          status: file.status,
+          additions: file.additions,
+          deletions: file.deletions,
+          changes: file.changes,
+          patch: file.patch,
+        })),
+        totalLines
+      );
 
       const { data: comparison } = await this.octokit.rest.repos.compareCommits({
         owner,
@@ -123,14 +126,7 @@ export class GitHubReader implements SourcePlatformReader {
         additions: pr.additions,
         deletions: pr.deletions,
         changed_files: pr.changed_files,
-        files: filesToInclude.map((file) => ({
-          filename: file.filename,
-          status: file.status,
-          additions: file.additions,
-          deletions: file.deletions,
-          changes: file.changes,
-          patch: file.patch,
-        })),
+        files: filesToInclude,
         diff,
         stats: {
           total: pr.additions + pr.deletions,
@@ -142,15 +138,7 @@ export class GitHubReader implements SourcePlatformReader {
       };
       return validate(ChangeRequestDataSchema, result, 'GitHub change request data');
     } catch (error) {
-      if (error instanceof ErodeError) {
-        throw error;
-      }
-      if (error instanceof Error) {
-        throw new ApiError(`Could not retrieve pull request: ${error.message}`, undefined, {
-          provider: 'github',
-        });
-      }
-      throw error;
+      wrapPlatformError(error, 'github', 'Could not retrieve pull request');
     }
   }
 
@@ -176,15 +164,7 @@ export class GitHubReader implements SourcePlatformReader {
       }));
       return validate(z.array(ChangeRequestCommitSchema), result, 'GitHub change request commits');
     } catch (error) {
-      if (error instanceof ErodeError) {
-        throw error;
-      }
-      if (error instanceof Error) {
-        throw new ApiError(`Could not retrieve pull request commits: ${error.message}`, undefined, {
-          provider: 'github',
-        });
-      }
-      throw error;
+      wrapPlatformError(error, 'github', 'Could not retrieve pull request commits');
     }
   }
 }

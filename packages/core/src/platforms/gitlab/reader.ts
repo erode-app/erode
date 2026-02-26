@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Gitlab } from '@gitbeaker/rest';
 import { CONFIG } from '../../utils/config.js';
-import { ErodeError, ApiError, ErrorCode } from '../../errors.js';
+import { ErodeError, ErrorCode } from '../../errors.js';
 import type {
   SourcePlatformReader,
   ChangeRequestRef,
@@ -18,6 +18,7 @@ import {
   ChangeRequestDataSchema,
   ChangeRequestCommitSchema,
 } from '../../schemas/source-platform.schema.js';
+import { applyDiffTruncation, wrapPlatformError } from '../platform-utils.js';
 
 const GITLAB_MR_URL_PATTERN = /^https?:\/\/gitlab\.com\/(.+)\/-\/merge_requests\/(\d+)$/i;
 
@@ -80,7 +81,6 @@ export class GitLabReader implements SourcePlatformReader {
         'GitLab MR diffs'
       );
 
-      const totalFiles = diffs.length;
       const files = diffs.map((d) => {
         const diffStr = d.diff ?? '';
         const lines = diffStr.split('\n');
@@ -104,18 +104,11 @@ export class GitLabReader implements SourcePlatformReader {
 
       const totalLines = files.reduce((sum, f) => sum + f.changes, 0);
 
-      let wasTruncated = false;
-      let truncationReason: string | undefined;
-      let filesToInclude = files;
-
-      if (totalFiles > CONFIG.constraints.maxFilesPerDiff) {
-        wasTruncated = true;
-        truncationReason = `Diff surpassed the ${String(CONFIG.constraints.maxFilesPerDiff)}-file limit (${String(totalFiles)} files found). Only the first ${String(CONFIG.constraints.maxFilesPerDiff)} files were analyzed.`;
-        filesToInclude = files.slice(0, CONFIG.constraints.maxFilesPerDiff);
-      } else if (totalLines > CONFIG.constraints.maxLinesPerDiff) {
-        wasTruncated = true;
-        truncationReason = `Diff surpassed the ${String(CONFIG.constraints.maxLinesPerDiff)}-line limit (${String(totalLines)} lines found). Analysis may be partial.`;
-      }
+      const {
+        files: filesToInclude,
+        wasTruncated,
+        truncationReason,
+      } = applyDiffTruncation(files, totalLines);
 
       const diff = diffs
         .map((d) => {
@@ -164,15 +157,7 @@ export class GitLabReader implements SourcePlatformReader {
         'GitLab change request data'
       );
     } catch (error) {
-      if (error instanceof ErodeError) {
-        throw error;
-      }
-      if (error instanceof Error) {
-        throw new ApiError(`Could not retrieve merge request: ${error.message}`, undefined, {
-          provider: 'gitlab',
-        });
-      }
-      throw error;
+      wrapPlatformError(error, 'gitlab', 'Could not retrieve merge request');
     }
   }
 
@@ -198,19 +183,7 @@ export class GitLabReader implements SourcePlatformReader {
       }));
       return validate(z.array(ChangeRequestCommitSchema), result, 'GitLab change request commits');
     } catch (error) {
-      if (error instanceof ErodeError) {
-        throw error;
-      }
-      if (error instanceof Error) {
-        throw new ApiError(
-          `Could not retrieve merge request commits: ${error.message}`,
-          undefined,
-          {
-            provider: 'gitlab',
-          }
-        );
-      }
-      throw error;
+      wrapPlatformError(error, 'gitlab', 'Could not retrieve merge request commits');
     }
   }
 }

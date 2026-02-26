@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ErodeError } from '../../errors.js';
 
-// Mock config (needed by GitHubReader/GitHubWriter/GitLabReader/GitLabWriter constructors)
+// Mock config (needed by GitHubReader/GitHubWriter/GitLabReader/GitLabWriter/BitbucketReader/BitbucketWriter constructors)
 vi.mock('../../utils/config.js', () => ({
   CONFIG: {
     github: { token: 'test-token', modelRepoPrToken: null },
     gitlab: { token: 'test-token', baseUrl: 'https://gitlab.com' },
+    bitbucket: { token: 'test-token', baseUrl: 'https://api.bitbucket.org/2.0' },
     constraints: { maxFilesPerDiff: 50, maxLinesPerDiff: 5000 },
   },
 }));
@@ -32,6 +33,8 @@ import { GitHubReader } from '../github/reader.js';
 import { GitHubWriter } from '../github/writer.js';
 import { GitLabReader } from '../gitlab/reader.js';
 import { GitLabWriter } from '../gitlab/writer.js';
+import { BitbucketReader } from '../bitbucket/reader.js';
+import { BitbucketWriter } from '../bitbucket/writer.js';
 
 describe('detectPlatform', () => {
   it('should detect github.com URLs', () => {
@@ -50,11 +53,17 @@ describe('detectPlatform', () => {
     expect(detectPlatform('https://www.gitlab.com/org/repo/-/merge_requests/1')).toBe('gitlab');
   });
 
+  it('should detect bitbucket.org URLs', () => {
+    expect(detectPlatform('https://bitbucket.org/org/repo/pull-requests/1')).toBe('bitbucket');
+  });
+
+  it('should detect www.bitbucket.org URLs', () => {
+    expect(detectPlatform('https://www.bitbucket.org/org/repo/pull-requests/1')).toBe('bitbucket');
+  });
+
   it('should throw for unsupported platforms', () => {
-    expect(() => detectPlatform('https://bitbucket.org/org/repo/pull-requests/1')).toThrow(
-      ErodeError
-    );
-    expect(() => detectPlatform('https://bitbucket.org/org/repo/pull-requests/1')).toThrow(
+    expect(() => detectPlatform('https://sourcehut.org/org/repo/pull/1')).toThrow(ErodeError);
+    expect(() => detectPlatform('https://sourcehut.org/org/repo/pull/1')).toThrow(
       'Unsupported platform'
     );
   });
@@ -81,10 +90,13 @@ describe('createPlatformReader', () => {
     expect(reader).toBeInstanceOf(GitLabReader);
   });
 
+  it('should return a BitbucketReader for Bitbucket URLs', () => {
+    const reader = createPlatformReader('https://bitbucket.org/org/repo/pull-requests/1');
+    expect(reader).toBeInstanceOf(BitbucketReader);
+  });
+
   it('should throw for unsupported platform URLs', () => {
-    expect(() => createPlatformReader('https://bitbucket.org/org/repo/pull-requests/1')).toThrow(
-      ErodeError
-    );
+    expect(() => createPlatformReader('https://sourcehut.org/org/repo/pull/1')).toThrow(ErodeError);
   });
 });
 
@@ -99,8 +111,13 @@ describe('createPlatformWriter', () => {
     expect(writer).toBeInstanceOf(GitLabWriter);
   });
 
+  it('should return a BitbucketWriter for Bitbucket URLs', () => {
+    const writer = createPlatformWriter('https://bitbucket.org/org/repo', 'org', 'repo');
+    expect(writer).toBeInstanceOf(BitbucketWriter);
+  });
+
   it('should throw for unsupported platform URLs', () => {
-    expect(() => createPlatformWriter('https://bitbucket.org/org/repo', 'org', 'repo')).toThrow(
+    expect(() => createPlatformWriter('https://sourcehut.org/org/repo', 'org', 'repo')).toThrow(
       ErodeError
     );
   });
