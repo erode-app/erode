@@ -23,15 +23,19 @@ specification {
 model {
   component backend "Backend API" {
     description "Handles business logic and data access"
+    link https://github.com/your-org/backend
   }
 
   component frontend "Frontend App" {
     description "Web application served to users"
+    link https://github.com/your-org/frontend
   }
 
   frontend -> backend "Calls REST API"
 }
 ```
+
+Each component needs a `link` pointing to its GitHub repository. erode uses this to match a pull request to the right component in the model. Components without a `link` are invisible to the analysis.
 
 This declares that the frontend depends on the backend through a REST API. If a pull request introduces a direct database call from the frontend, erode would flag this as an undeclared dependency.
 
@@ -80,7 +84,7 @@ See [GitHub Actions](/docs/ci/github-actions/) for all model repository options 
 
 During analysis, erode:
 
-1. Loads the LikeC4 model and resolves the component(s) relevant to the repository
+1. Loads the architecture model and resolves the component(s) relevant to the repository
 2. Extracts dependency changes from the PR diff
 3. Compares those changes against the declared relationships in the model
 4. Reports any dependencies that exist in the code but are missing from the model

@@ -1,0 +1,20 @@
+---
+title: Model Formats
+description: Architecture model formats supported by erode.
+---
+
+erode needs an architecture model that describes your system as components with relationships between them. Each component must link to its GitHub repository so erode can match pull requests to the right part of the model.
+
+At a minimum, the model must provide:
+
+- **Components** — the services, apps, or modules in your system
+- **Repository links** — a URL tying each component to its GitHub repository
+- **Relationships** — the declared dependencies between components
+
+erode loads the model, finds the component that owns the repository under review, and compares the PR's dependency changes against the declared relationships. Anything not in the model is flagged as drift.
+
+## Supported formats
+
+| Format | Description | Docs |
+| ------ | ----------- | ---- |
+| [LikeC4](/docs/models/likec4/) | Architecture-as-code DSL with built-in diagram rendering | [likec4.dev](https://likec4.dev) |

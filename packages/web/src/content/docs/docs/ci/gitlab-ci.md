@@ -23,19 +23,19 @@ erode:
 
 ### Environment variables
 
-| Variable                                | Required | Default              | Description                                                                                    |
-| --------------------------------------- | -------- | -------------------- | ---------------------------------------------------------------------------------------------- |
-| `GITLAB_TOKEN`                          | Yes      |                      | GitLab API token with `api` scope                                                              |
-| `ANTHROPIC_API_KEY` or `GEMINI_API_KEY` | Yes      |                      | AI provider API key                                                                            |
-| `AI_PROVIDER`                           | No       | `anthropic`          | `anthropic` or `gemini`                                                                        |
-| `LIKEC4_MODEL_REPO`                     | No       |                      | Model repository path (e.g. `group/architecture-model`). Omit if the model is in the same repo |
-| `LIKEC4_MODEL_PATH`                     | No       | `.`                  | Path to model within the repository                                                            |
-| `LIKEC4_MODEL_REF`                      | No       | `main`               | Git ref for the model repository                                                               |
-| `LIKEC4_MODEL_REPO_TOKEN`               | No       | `$GITLAB_TOKEN`      | Separate token for model repository access                                                     |
-| `LIKEC4_OPEN_PR`                        | No       | `false`              | Create MR with suggested model updates                                                         |
-| `LIKEC4_FAIL_ON_VIOLATIONS`             | No       | `false`              | Exit with code 1 when violations are found                                                     |
-| `LIKEC4_SKIP_FILE_FILTERING`            | No       | `false`              | Analyze all changed files                                                                      |
-| `GITLAB_BASE_URL`                       | No       | `https://gitlab.com` | For self-hosted GitLab instances                                                               |
+| Variable                                                   | Required | Default              | Description                                                                                    |
+| ---------------------------------------------------------- | -------- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| `GITLAB_TOKEN`                                             | Yes      |                      | GitLab API token with `api` scope                                                              |
+| `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY` | Yes      |                      | AI provider API key                                                                            |
+| `AI_PROVIDER`                                              | No       | `anthropic`          | `gemini`, `openai`, or `anthropic`                                                             |
+| `LIKEC4_MODEL_REPO`                                        | No       |                      | Model repository path (e.g. `group/architecture-model`). Omit if the model is in the same repo |
+| `LIKEC4_MODEL_PATH`                                        | No       | `.`                  | Path to model within the repository                                                            |
+| `LIKEC4_MODEL_REF`                                         | No       | `main`               | Git ref for the model repository                                                               |
+| `LIKEC4_MODEL_REPO_TOKEN`                                  | No       | `$GITLAB_TOKEN`      | Separate token for model repository access                                                     |
+| `LIKEC4_OPEN_PR`                                           | No       | `false`              | Create MR with suggested model updates                                                         |
+| `LIKEC4_FAIL_ON_VIOLATIONS`                                | No       | `false`              | Exit with code 1 when violations are found                                                     |
+| `LIKEC4_SKIP_FILE_FILTERING`                               | No       | `false`              | Analyze all changed files                                                                      |
+| `GITLAB_BASE_URL`                                          | No       | `https://gitlab.com` | For self-hosted GitLab instances                                                               |
 
 ## Calling the CLI directly
 

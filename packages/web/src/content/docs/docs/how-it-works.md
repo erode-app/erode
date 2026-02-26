@@ -32,7 +32,7 @@ To analyze all files regardless of these patterns, set `skip-file-filtering: 'tr
 
 ## Stage 1 -- Resolve
 
-When a repository maps to multiple components in the LikeC4 model, erode uses AI to determine which component is most relevant to the pull request. This stage uses a cheaper model (Haiku for Anthropic, Flash for Gemini) to keep costs low.
+When a repository maps to multiple components in the architecture model, erode uses AI to determine which component is most relevant to the pull request. This stage uses a cheaper model (Haiku for Anthropic, Flash for Gemini) to keep costs low.
 
 This stage is skipped entirely when the repository maps to a single component.
 

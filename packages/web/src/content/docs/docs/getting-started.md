@@ -8,17 +8,14 @@ erode detects architecture drift by comparing pull requests against your archite
 ## Prerequisites
 
 - A **GitHub repository** with pull requests
-- A **LikeC4 architecture model** describing your system (see [Model Formats](/docs/models/likec4/))
-- An **API key** for [Gemini or Anthropic](/docs/reference/ai-providers/)
+- An **architecture model** describing your system (see [Model Formats](/docs/models/))
+- An **API key** for [Gemini, OpenAI, or Anthropic](/docs/reference/ai-providers/)
 
 ## Setup
 
 ### 1. Add your AI provider API key as a repository secret
 
-Go to your repository's **Settings > Secrets and variables > Actions** and add one of:
-
-- `GEMINI_API_KEY` — for Gemini (default provider)
-- `ANTHROPIC_API_KEY` — for Anthropic
+Go to your repository's **Settings > Secrets and variables > Actions** and add the API key for your chosen [AI provider](/docs/reference/ai-providers/) (e.g. `GEMINI_API_KEY` for the default Gemini provider).
 
 ### 2. Create the workflow file
 
@@ -39,7 +36,7 @@ jobs:
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
 
-Replace `your-org/architecture` with the repository that contains your LikeC4 model. The action clones the model repo automatically — no `actions/checkout` step is needed.
+Replace `your-org/architecture` with the repository that contains your architecture model. The action clones the model repo automatically — no `actions/checkout` step is needed.
 
 ### 3. Open a pull request
 

@@ -132,6 +132,19 @@ export class ApiError extends ErodeError {
     }
     return new ApiError(String(error), undefined, { provider: 'gemini' });
   }
+  static fromOpenAIError(error: unknown): ApiError {
+    if (error instanceof Error) {
+      const statusCode =
+        'status' in error && typeof (error as { status: unknown }).status === 'number'
+          ? (error as { status: number }).status
+          : undefined;
+      return new ApiError(error.message, statusCode, {
+        originalError: error.name,
+        provider: 'openai',
+      });
+    }
+    return new ApiError(String(error), undefined, { provider: 'openai' });
+  }
 }
 type AdapterType = 'likec4';
 export class AdapterError extends ErodeError {

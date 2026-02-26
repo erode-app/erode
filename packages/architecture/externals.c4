@@ -14,6 +14,13 @@ model {
     link https://ai.google.dev
   }
 
+  openaiApi = external 'OpenAI API' {
+    #ai
+    description 'OpenAI language models'
+    technology 'REST API'
+    link https://platform.openai.com/docs
+  }
+
   githubApi = external 'GitHub API' {
     #git-platform
     description 'Pull requests, commits, and comments'

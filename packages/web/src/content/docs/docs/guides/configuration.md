@@ -9,11 +9,12 @@ For GitHub Actions-specific inputs (`model-repo`, `fail-on-violations`, etc.), s
 
 ## AI provider
 
-| Variable            | Description                                  | Default  |
-| ------------------- | -------------------------------------------- | -------- |
-| `AI_PROVIDER`       | AI provider to use (`gemini` or `anthropic`) | `gemini` |
-| `GEMINI_API_KEY`    | Google Gemini API key                        | —        |
-| `ANTHROPIC_API_KEY` | Anthropic API key                            | —        |
+| Variable            | Description                                             | Default  |
+| ------------------- | ------------------------------------------------------- | -------- |
+| `AI_PROVIDER`       | AI provider to use (`gemini`, `openai`, or `anthropic`) | `gemini` |
+| `GEMINI_API_KEY`    | Google Gemini API key                                   | —        |
+| `OPENAI_API_KEY`    | OpenAI API key                                          | —        |
+| `ANTHROPIC_API_KEY` | Anthropic API key (experimental)                        | —        |
 
 ## Architecture model
 
@@ -41,6 +42,8 @@ Each AI provider uses two model tiers: a fast model for extraction stages and an
 | -------------------------- | ------------------------------------------- |
 | `GEMINI_FAST_MODEL`        | Gemini model for Stages 1–2 (extraction)    |
 | `GEMINI_ADVANCED_MODEL`    | Gemini model for Stages 3–4 (analysis)      |
+| `OPENAI_FAST_MODEL`        | OpenAI model for Stages 1–2 (extraction)    |
+| `OPENAI_ADVANCED_MODEL`    | OpenAI model for Stages 3–4 (analysis)      |
 | `ANTHROPIC_FAST_MODEL`     | Anthropic model for Stages 1–2 (extraction) |
 | `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for Stages 3–4 (analysis)   |
 
@@ -66,6 +69,7 @@ See [AI Providers](/docs/reference/ai-providers/) for default model names and gu
 | Variable            | Description                                  | Default |
 | ------------------- | -------------------------------------------- | ------- |
 | `GEMINI_TIMEOUT`    | Request timeout for Gemini API calls (ms)    | `60000` |
+| `OPENAI_TIMEOUT`    | Request timeout for OpenAI API calls (ms)    | `60000` |
 | `ANTHROPIC_TIMEOUT` | Request timeout for Anthropic API calls (ms) | `60000` |
 | `GITHUB_TIMEOUT`    | Request timeout for GitHub API calls (ms)    | `30000` |
 

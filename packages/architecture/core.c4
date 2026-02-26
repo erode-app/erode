@@ -29,14 +29,18 @@ model {
 
     providers = module 'Providers' {
       #ai
-      description 'Provider-agnostic AI interface with Anthropic and Gemini implementations'
+      description 'Provider-agnostic AI interface with Gemini, OpenAI, and Anthropic implementations'
 
       anthropic = provider 'Anthropic' {
-        description 'Anthropic models for fast and advanced tiers'
+        description 'Anthropic models for fast and advanced tiers (experimental)'
       }
 
       gemini = provider 'Gemini' {
         description 'Gemini models for fast and advanced tiers'
+      }
+
+      openai = provider 'OpenAI' {
+        description 'OpenAI models for fast and advanced tiers'
       }
     }
 
@@ -100,6 +104,7 @@ model {
   // Providers to external APIs
   erode.core.providers.anthropic -[async]-> anthropicApi 'calls Anthropic models'
   erode.core.providers.gemini -[async]-> geminiApi 'calls Gemini models'
+  erode.core.providers.openai -[async]-> openaiApi 'calls OpenAI models'
 
   // Platforms to external APIs
   erode.core.platforms.github -[async]-> githubApi 'fetches PRs and posts comments'

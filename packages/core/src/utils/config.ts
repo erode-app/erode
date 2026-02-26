@@ -4,7 +4,7 @@ import { ConfigurationError } from '../errors.js';
 dotenv.config();
 const ConfigSchema = z.object({
   ai: z.object({
-    provider: z.enum(['gemini', 'anthropic']).default('gemini'),
+    provider: z.enum(['gemini', 'anthropic', 'openai']).default('gemini'),
   }),
   constraints: z.object({
     maxFilesPerDiff: z.number().int().min(1).max(1000).default(50),
@@ -40,6 +40,12 @@ const ConfigSchema = z.object({
     fastModel: z.string().default('gemini-2.5-flash'),
     advancedModel: z.string().default('gemini-2.5-flash'),
   }),
+  openai: z.object({
+    apiKey: z.string().optional(),
+    timeout: z.number().int().min(1000).max(300000).default(60000),
+    fastModel: z.string().default('gpt-4.1-mini'),
+    advancedModel: z.string().default('gpt-4.1'),
+  }),
   debug: z.object({
     enabled: z.boolean().default(false),
     outputDir: z.string().min(1).default('prompts'),
@@ -74,6 +80,10 @@ const ENV_MAPPINGS: Record<string, string[]> = {
   ANTHROPIC_ADVANCED_MODEL: ['anthropic', 'advancedModel'],
   GEMINI_FAST_MODEL: ['gemini', 'fastModel'],
   GEMINI_ADVANCED_MODEL: ['gemini', 'advancedModel'],
+  OPENAI_API_KEY: ['openai', 'apiKey'],
+  OPENAI_TIMEOUT: ['openai', 'timeout'],
+  OPENAI_FAST_MODEL: ['openai', 'fastModel'],
+  OPENAI_ADVANCED_MODEL: ['openai', 'advancedModel'],
 };
 function loadConfigFromEnv(): Record<string, Record<string, unknown>> {
   const config = {
@@ -84,6 +94,7 @@ function loadConfigFromEnv(): Record<string, Record<string, unknown>> {
     gitlab: {} as Record<string, unknown>,
     anthropic: {} as Record<string, unknown>,
     gemini: {} as Record<string, unknown>,
+    openai: {} as Record<string, unknown>,
     debug: {} as Record<string, unknown>,
     app: {} as Record<string, unknown>,
   };
@@ -132,6 +143,8 @@ function validateRequiredConfig(config: Config): void {
       errors.push('GEMINI_API_KEY must be set when AI_PROVIDER is gemini');
     } else if (provider === 'anthropic' && !config.anthropic.apiKey) {
       errors.push('ANTHROPIC_API_KEY must be set when AI_PROVIDER is anthropic');
+    } else if (provider === 'openai' && !config.openai.apiKey) {
+      errors.push('OPENAI_API_KEY must be set when AI_PROVIDER is openai');
     }
   }
   if (errors.length > 0) {

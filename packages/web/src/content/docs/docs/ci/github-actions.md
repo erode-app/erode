@@ -76,9 +76,10 @@ If the model repo requires different credentials than the repository running the
 | `model-path`          | Path to the model within the model repository               | No                   | `.`                 |
 | `model-ref`           | Git ref (branch/tag) of the model repository                | No                   | `main`              |
 | `model-format`        | Architecture model format                                   | No                   | `likec4`            |
-| `ai-provider`         | AI provider (`gemini` or `anthropic`)                       | No                   | `anthropic`         |
+| `ai-provider`         | AI provider (`gemini`, `openai`, or `anthropic`)            | No                   | `anthropic`         |
 | `gemini-api-key`      | Gemini API key                                              | When using Gemini    | —                   |
-| `anthropic-api-key`   | Anthropic API key                                           | When using Anthropic | —                   |
+| `openai-api-key`      | OpenAI API key                                              | When using OpenAI    | —                   |
+| `anthropic-api-key`   | Anthropic API key (experimental)                            | When using Anthropic | —                   |
 | `github-token`        | GitHub token for reading PRs and posting comments           | Yes                  | —                   |
 | `model-repo-token`    | Separate GitHub token for cloning the model repository      | No                   | Uses `github-token` |
 | `open-pr`             | Open a PR with suggested model updates                      | No                   | `false`             |
@@ -121,7 +122,7 @@ If no violations are found, the comment confirms that the PR aligns with the dec
 
 ## Tips
 
-- Start with the Gemini provider during evaluation — it is generally cheaper than Anthropic.
-- Keep your LikeC4 model up to date. erode can only detect drift against what is declared in the model.
+- Start with the Gemini provider during evaluation — it is generally cheaper. OpenAI is another good option for production workflows.
+- Keep your architecture model up to date. erode can only detect drift against what is declared in the model.
 - Set `fail-on-violations: 'true'` to block PRs that introduce undeclared dependencies.
 - See [Configuration](/docs/guides/configuration/) for tuning diff limits, timeouts, and model overrides.

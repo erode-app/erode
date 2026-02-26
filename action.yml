@@ -22,7 +22,7 @@ inputs:
     required: false
     default: 'main'
   ai-provider:
-    description: 'AI provider to use (anthropic or gemini)'
+    description: 'AI provider to use (gemini, openai, or anthropic)'
     required: false
     default: 'anthropic'
   anthropic-api-key:
@@ -30,6 +30,9 @@ inputs:
     required: false
   gemini-api-key:
     description: 'Gemini API key (required when ai-provider is gemini)'
+    required: false
+  openai-api-key:
+    description: 'OpenAI API key (required when ai-provider is openai)'
     required: false
   github-token:
     description: 'GitHub token for API access'

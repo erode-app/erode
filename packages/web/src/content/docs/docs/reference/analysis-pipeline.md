@@ -15,13 +15,13 @@ head:
 
 ## Stage 1 -- Component Resolution
 
-|                |                                                                     |
-| -------------- | ------------------------------------------------------------------- |
-| **Model tier** | Fast                                                                |
-| **Input**      | Repository metadata, LikeC4 model with multiple matching components |
-| **Output**     | Selected component ID                                               |
+|                |                                                                           |
+| -------------- | ------------------------------------------------------------------------- |
+| **Model tier** | Fast                                                                      |
+| **Input**      | Repository metadata, architecture model with multiple matching components |
+| **Output**     | Selected component ID                                                     |
 
-When a repository maps to multiple components in the LikeC4 model, this stage uses AI to determine which component is most relevant to the current pull request. The fast model evaluates the repo context against each candidate component and selects the best match.
+When a repository maps to multiple components in the architecture model, this stage uses AI to determine which component is most relevant to the current pull request. The fast model evaluates the repo context against each candidate component and selects the best match.
 
 This stage is **skipped entirely** when only one component matches the repository.
 

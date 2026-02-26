@@ -1,25 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
-import type { AIProvider } from '../ai-provider.js';
-import type {
-  DependencyExtractionPromptData,
-  ComponentSelectionPromptData,
-  DriftAnalysisPromptData,
-  DriftAnalysisResult,
-} from '../../analysis/analysis-types.js';
-import type { DependencyExtractionResult } from '../../schemas/dependency-extraction.schema.js';
-import { DependencyExtractionResultSchema } from '../../schemas/dependency-extraction.schema.js';
-import { DriftAnalysisResponseSchema } from '../../schemas/drift-analysis.schema.js';
-import { PromptBuilder } from '../../analysis/prompt-builder.js';
-import { validate } from '../../utils/validation.js';
+import { BaseProvider } from '../base-provider.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
-import { withRetry } from '../../utils/retry.js';
-import { AnalysisPhase } from '../analysis-phase.js';
+import type { AnalysisPhase } from '../analysis-phase.js';
 import { ANTHROPIC_MODELS } from './models.js';
 
-export class AnthropicProvider implements AIProvider {
+export class AnthropicProvider extends BaseProvider {
   private readonly client: Anthropic;
-  private readonly fastModel: string;
-  private readonly advancedModel: string;
 
   constructor(config: { apiKey: string; fastModel?: string; advancedModel?: string }) {
     if (!config.apiKey) {
@@ -29,112 +15,14 @@ export class AnthropicProvider implements AIProvider {
         'No Anthropic API key found. Set ANTHROPIC_API_KEY in your environment.'
       );
     }
+    super({
+      fastModel: config.fastModel ?? ANTHROPIC_MODELS.FAST,
+      advancedModel: config.advancedModel ?? ANTHROPIC_MODELS.ADVANCED,
+    });
     this.client = new Anthropic({ apiKey: config.apiKey });
-    this.fastModel = config.fastModel ?? ANTHROPIC_MODELS.FAST;
-    this.advancedModel = config.advancedModel ?? ANTHROPIC_MODELS.ADVANCED;
   }
 
-  async selectComponent(data: ComponentSelectionPromptData): Promise<string | null> {
-    const prompt = PromptBuilder.buildComponentSelectionPrompt(data);
-    const model = this.fastModel;
-
-    const responseText = await withRetry(
-      () => this.callAnthropic(model, prompt, AnalysisPhase.COMPONENT_RESOLUTION, 256),
-      {
-        maxAttempts: 3,
-        shouldRetry: (error) => this.shouldRetry(error),
-      }
-    );
-
-    if (!responseText) {
-      return null;
-    }
-
-    const componentIds = data.components.map((c) => c.id);
-    for (const id of componentIds) {
-      if (responseText.includes(id)) {
-        return id;
-      }
-    }
-
-    return null;
-  }
-
-  async extractDependencies(
-    data: DependencyExtractionPromptData
-  ): Promise<DependencyExtractionResult> {
-    const prompt = PromptBuilder.buildDependencyExtractionPrompt(data);
-    const model = this.fastModel;
-
-    const responseText = await withRetry(
-      () => this.callAnthropic(model, prompt, AnalysisPhase.DEPENDENCY_SCAN, 4096),
-      {
-        maxAttempts: 3,
-        shouldRetry: (error) => this.shouldRetry(error),
-      }
-    );
-
-    const jsonStr = PromptBuilder.extractJson(responseText);
-    if (!jsonStr) {
-      throw new ErodeError(
-        'Anthropic response for dependency extraction contained no JSON',
-        ErrorCode.INVALID_RESPONSE,
-        'Could not extract JSON from Anthropic response',
-        { responseText }
-      );
-    }
-
-    const parsed: unknown = JSON.parse(jsonStr);
-    return validate(DependencyExtractionResultSchema, parsed, 'DependencyExtractionResult');
-  }
-
-  async analyzeDrift(data: DriftAnalysisPromptData): Promise<DriftAnalysisResult> {
-    const prompt = PromptBuilder.buildDriftAnalysisPrompt(data);
-    const model = this.advancedModel;
-
-    const responseText = await withRetry(
-      () => this.callAnthropic(model, prompt, AnalysisPhase.CHANGE_ANALYSIS, 8192),
-      {
-        maxAttempts: 3,
-        shouldRetry: (error) => this.shouldRetry(error),
-      }
-    );
-
-    const jsonStr = PromptBuilder.extractJson(responseText);
-    if (!jsonStr) {
-      throw new ErodeError(
-        'Anthropic response for PR analysis contained no JSON',
-        ErrorCode.INVALID_RESPONSE,
-        'Could not extract JSON from Anthropic response',
-        { responseText }
-      );
-    }
-
-    const parsed: unknown = JSON.parse(jsonStr);
-    const analysisResponse = validate(DriftAnalysisResponseSchema, parsed, 'DriftAnalysisResponse');
-
-    return {
-      ...analysisResponse,
-      metadata: data.changeRequest,
-      component: data.component,
-      dependencyChanges: data.dependencies,
-    };
-  }
-
-  async generateArchitectureCode(analysisResult: DriftAnalysisResult): Promise<string> {
-    const prompt = PromptBuilder.buildModelGenerationPrompt(analysisResult);
-    const model = this.advancedModel;
-
-    return withRetry(
-      () => this.callAnthropic(model, prompt, AnalysisPhase.MODEL_GENERATION, 8192),
-      {
-        maxAttempts: 3,
-        shouldRetry: (error) => this.shouldRetry(error),
-      }
-    );
-  }
-
-  private async callAnthropic(
+  protected async callModel(
     model: string,
     prompt: string,
     phase: AnalysisPhase,
@@ -185,12 +73,5 @@ export class AnthropicProvider implements AIProvider {
       }
       throw ApiError.fromAnthropicError(error);
     }
-  }
-
-  private shouldRetry(error: unknown): boolean {
-    if (error instanceof ApiError) {
-      return error.isRateLimited || error.isTimeout;
-    }
-    return false;
   }
 }

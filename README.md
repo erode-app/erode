@@ -4,7 +4,7 @@ Architecture erosion detection for GitHub PRs and GitLab MRs using LikeC4 models
 
 Compares pull request diffs against a [LikeC4](https://likec4.dev) architecture model to find undeclared dependencies and architectural violations. Works as both a CLI tool and a GitHub Action. Supports GitHub pull requests and GitLab merge requests.
 
-Supported AI providers: **Gemini** and **Anthropic**.
+Supported AI providers: **Gemini** (default), **OpenAI**, and **Anthropic** (experimental).
 
 ## Quick start
 

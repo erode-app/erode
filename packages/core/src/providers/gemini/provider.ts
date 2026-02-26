@@ -1,25 +1,11 @@
 import { FinishReason, GoogleGenAI } from '@google/genai';
-import type { AIProvider } from '../ai-provider.js';
-import type {
-  DependencyExtractionPromptData,
-  ComponentSelectionPromptData,
-  DriftAnalysisPromptData,
-  DriftAnalysisResult,
-} from '../../analysis/analysis-types.js';
-import type { DependencyExtractionResult } from '../../schemas/dependency-extraction.schema.js';
-import { DependencyExtractionResultSchema } from '../../schemas/dependency-extraction.schema.js';
-import { DriftAnalysisResponseSchema } from '../../schemas/drift-analysis.schema.js';
-import { PromptBuilder } from '../../analysis/prompt-builder.js';
-import { validate } from '../../utils/validation.js';
+import { BaseProvider } from '../base-provider.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
-import { withRetry } from '../../utils/retry.js';
-import { AnalysisPhase } from '../analysis-phase.js';
+import type { AnalysisPhase } from '../analysis-phase.js';
 import { GEMINI_MODELS } from './models.js';
 
-export class GeminiProvider implements AIProvider {
+export class GeminiProvider extends BaseProvider {
   private readonly client: GoogleGenAI;
-  private readonly fastModel: string;
-  private readonly advancedModel: string;
 
   constructor(config: { apiKey: string; fastModel?: string; advancedModel?: string }) {
     if (!config.apiKey) {
@@ -29,110 +15,19 @@ export class GeminiProvider implements AIProvider {
         'No Gemini API key found. Set GEMINI_API_KEY in your environment.'
       );
     }
-    this.client = new GoogleGenAI({ apiKey: config.apiKey });
-    this.fastModel = config.fastModel ?? GEMINI_MODELS.FAST;
-    this.advancedModel = config.advancedModel ?? GEMINI_MODELS.ADVANCED;
-  }
-
-  async selectComponent(data: ComponentSelectionPromptData): Promise<string | null> {
-    const prompt = PromptBuilder.buildComponentSelectionPrompt(data);
-    const model = this.fastModel;
-
-    const responseText = await withRetry(
-      () => this.callGemini(model, prompt, AnalysisPhase.COMPONENT_RESOLUTION),
-      {
-        maxAttempts: 3,
-        shouldRetry: (error) => this.shouldRetry(error),
-      }
-    );
-
-    if (!responseText) {
-      return null;
-    }
-
-    // Match response against known component IDs
-    const componentIds = data.components.map((c) => c.id);
-    for (const id of componentIds) {
-      if (responseText.includes(id)) {
-        return id;
-      }
-    }
-
-    return null;
-  }
-
-  async extractDependencies(
-    data: DependencyExtractionPromptData
-  ): Promise<DependencyExtractionResult> {
-    const prompt = PromptBuilder.buildDependencyExtractionPrompt(data);
-    const model = this.fastModel;
-
-    const responseText = await withRetry(
-      () => this.callGemini(model, prompt, AnalysisPhase.DEPENDENCY_SCAN),
-      {
-        maxAttempts: 3,
-        shouldRetry: (error) => this.shouldRetry(error),
-      }
-    );
-
-    const jsonStr = PromptBuilder.extractJson(responseText);
-    if (!jsonStr) {
-      throw new ErodeError(
-        'Gemini response for dependency extraction contained no JSON',
-        ErrorCode.INVALID_RESPONSE,
-        'Could not extract JSON from Gemini response',
-        { responseText }
-      );
-    }
-
-    const parsed: unknown = JSON.parse(jsonStr);
-    return validate(DependencyExtractionResultSchema, parsed, 'DependencyExtractionResult');
-  }
-
-  async analyzeDrift(data: DriftAnalysisPromptData): Promise<DriftAnalysisResult> {
-    const prompt = PromptBuilder.buildDriftAnalysisPrompt(data);
-    const model = this.advancedModel;
-
-    const responseText = await withRetry(
-      () => this.callGemini(model, prompt, AnalysisPhase.CHANGE_ANALYSIS),
-      {
-        maxAttempts: 3,
-        shouldRetry: (error) => this.shouldRetry(error),
-      }
-    );
-
-    const jsonStr = PromptBuilder.extractJson(responseText);
-    if (!jsonStr) {
-      throw new ErodeError(
-        'Gemini response for PR analysis contained no JSON',
-        ErrorCode.INVALID_RESPONSE,
-        'Could not extract JSON from Gemini response',
-        { responseText }
-      );
-    }
-
-    const parsed: unknown = JSON.parse(jsonStr);
-    const analysisResponse = validate(DriftAnalysisResponseSchema, parsed, 'DriftAnalysisResponse');
-
-    return {
-      ...analysisResponse,
-      metadata: data.changeRequest,
-      component: data.component,
-      dependencyChanges: data.dependencies,
-    };
-  }
-
-  async generateArchitectureCode(analysisResult: DriftAnalysisResult): Promise<string> {
-    const prompt = PromptBuilder.buildModelGenerationPrompt(analysisResult);
-    const model = this.advancedModel;
-
-    return withRetry(() => this.callGemini(model, prompt, AnalysisPhase.MODEL_GENERATION), {
-      maxAttempts: 3,
-      shouldRetry: (error) => this.shouldRetry(error),
+    super({
+      fastModel: config.fastModel ?? GEMINI_MODELS.FAST,
+      advancedModel: config.advancedModel ?? GEMINI_MODELS.ADVANCED,
     });
+    this.client = new GoogleGenAI({ apiKey: config.apiKey });
   }
 
-  private async callGemini(model: string, prompt: string, phase: AnalysisPhase): Promise<string> {
+  protected async callModel(
+    model: string,
+    prompt: string,
+    phase: AnalysisPhase,
+    _maxTokens: number
+  ): Promise<string> {
     try {
       const response = await this.client.models.generateContent({
         model,
@@ -166,12 +61,5 @@ export class GeminiProvider implements AIProvider {
       }
       throw ApiError.fromGeminiError(error);
     }
-  }
-
-  private shouldRetry(error: unknown): boolean {
-    if (error instanceof ApiError) {
-      return error.isRateLimited || error.isTimeout;
-    }
-    return false;
   }
 }

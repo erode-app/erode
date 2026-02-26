@@ -1,6 +1,7 @@
 import type { AIProvider } from './ai-provider.js';
 import { GeminiProvider } from './gemini/provider.js';
 import { AnthropicProvider } from './anthropic/provider.js';
+import { OpenAIProvider } from './openai/provider.js';
 import { CONFIG } from '../utils/config.js';
 import { ErodeError, ErrorCode } from '../errors.js';
 
@@ -19,6 +20,21 @@ export function createAIProvider(): AIProvider {
       apiKey: CONFIG.gemini.apiKey,
       fastModel: CONFIG.gemini.fastModel,
       advancedModel: CONFIG.gemini.advancedModel,
+    });
+  }
+
+  if (provider === 'openai') {
+    if (!CONFIG.openai.apiKey) {
+      throw new ErodeError(
+        'An OpenAI API key is needed',
+        ErrorCode.MISSING_API_KEY,
+        'No OpenAI API key found. Set OPENAI_API_KEY in your environment or .env file.'
+      );
+    }
+    return new OpenAIProvider({
+      apiKey: CONFIG.openai.apiKey,
+      fastModel: CONFIG.openai.fastModel,
+      advancedModel: CONFIG.openai.advancedModel,
     });
   }
 
