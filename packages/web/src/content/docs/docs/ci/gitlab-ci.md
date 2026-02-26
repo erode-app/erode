@@ -1,6 +1,10 @@
 ---
 title: GitLab CI
 description: Set up erode as a GitLab CI pipeline job.
+sidebar:
+  badge:
+    text: Experimental
+    variant: caution
 ---
 
 erode analyzes GitLab merge requests using the same Docker image published for the GitHub Action.

@@ -1,13 +1,13 @@
 ---
 title: Getting Started
-description: Add erode to your GitHub repository in under five minutes.
+description: Set up erode in your CI pipeline in under five minutes.
 ---
 
 erode detects architecture drift by comparing pull requests against your architecture model. When a PR introduces an undeclared dependency, erode flags it as a violation and comments directly on the pull request.
 
 ## Prerequisites
 
-- A **GitHub repository** with pull requests
+- A **repository** with pull requests (this guide uses GitHub Actions — see [CI Integration](/docs/ci/) for GitLab, Bitbucket, and other platforms)
 - An **architecture model** describing your system (see [Model Formats](/docs/models/))
 - An **API key** for [Gemini, OpenAI, or Anthropic](/docs/reference/ai-providers/)
 
@@ -53,6 +53,7 @@ The [playground repository](https://github.com/erode-app/playground) is a ready-
 
 ## What's next
 
+- [CI Integration overview](/docs/ci/) — supported platforms and setup options
 - [GitHub Actions reference](/docs/ci/github-actions/) — all action inputs, outputs, and advanced examples
 - [CLI usage](/docs/guides/cli-usage/) — run erode locally against any PR
 - [Configuration](/docs/guides/configuration/) — environment variables for tuning the analysis engine

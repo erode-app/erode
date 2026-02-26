@@ -1,6 +1,10 @@
 ---
 title: Bitbucket Pipelines
 description: Set up erode as a Bitbucket Pipelines step.
+sidebar:
+  badge:
+    text: Experimental
+    variant: caution
 ---
 
 erode analyzes Bitbucket pull requests using the same Docker image published for the GitHub Action.

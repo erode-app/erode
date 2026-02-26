@@ -46,10 +46,14 @@ export default defineConfig({
         {
           label: 'CI Integration',
           items: [
-            { slug: 'docs/ci/github-actions' },
-            { slug: 'docs/ci/gitlab-ci' },
-            { slug: 'docs/ci/bitbucket-pipelines' },
+            { slug: 'docs/ci', label: 'Overview' },
             { slug: 'docs/ci/self-hosted' },
+            { slug: 'docs/ci/github-actions' },
+            { slug: 'docs/ci/gitlab-ci', badge: { text: 'Experimental', variant: 'caution' } },
+            {
+              slug: 'docs/ci/bitbucket-pipelines',
+              badge: { text: 'Experimental', variant: 'caution' },
+            },
           ],
         },
         { label: 'Model Formats', autogenerate: { directory: 'docs/models' } },
