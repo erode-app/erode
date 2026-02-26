@@ -33,7 +33,7 @@ import type {
   DriftAnalysisPromptData,
 } from '../../../analysis/analysis-types.js';
 
-function makeStage0Data(componentIds: string[]): ComponentSelectionPromptData {
+function makeStage1Data(componentIds: string[]): ComponentSelectionPromptData {
   return {
     components: componentIds.map((id) => ({
       id,
@@ -123,7 +123,7 @@ describe('GeminiProvider', () => {
 
       const provider = createProvider();
       const result = await provider.selectComponent(
-        makeStage0Data(['comp.frontend', 'comp.backend'])
+        makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBe('comp.backend');
     });
@@ -137,7 +137,7 @@ describe('GeminiProvider', () => {
 
       const provider = createProvider();
       const result = await provider.selectComponent(
-        makeStage0Data(['comp.frontend', 'comp.backend'])
+        makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBeNull();
     });
@@ -152,7 +152,7 @@ describe('GeminiProvider', () => {
       const provider = createProvider();
       // Empty text triggers INVALID_RESPONSE error, but selectComponent
       // calls callGemini which throws. The retry wraps it.
-      await expect(provider.selectComponent(makeStage0Data(['comp.frontend']))).rejects.toThrow();
+      await expect(provider.selectComponent(makeStage1Data(['comp.frontend']))).rejects.toThrow();
     });
   });
 
@@ -242,7 +242,7 @@ describe('GeminiProvider', () => {
 
       const provider = createProvider();
       try {
-        await provider.selectComponent(makeStage0Data(['comp.api']));
+        await provider.selectComponent(makeStage1Data(['comp.api']));
         expect.fail('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ErodeError);
@@ -261,7 +261,7 @@ describe('GeminiProvider', () => {
       });
 
       const provider = createProvider();
-      const result = await provider.selectComponent(makeStage0Data(['comp.api']));
+      const result = await provider.selectComponent(makeStage1Data(['comp.api']));
       expect(result).toBe('comp.api');
       expect(mockGenerateContent).toHaveBeenCalledTimes(2);
     });
@@ -277,7 +277,7 @@ describe('GeminiProvider', () => {
       mockGenerateContent.mockRejectedValueOnce(nonRecoverableError);
 
       const provider = createProvider();
-      await expect(provider.selectComponent(makeStage0Data(['comp.api']))).rejects.toThrow(
+      await expect(provider.selectComponent(makeStage1Data(['comp.api']))).rejects.toThrow(
         ErodeError
       );
       expect(mockGenerateContent).toHaveBeenCalledTimes(1);

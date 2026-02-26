@@ -2,7 +2,7 @@ import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 
 /**
- * Stage 0: Component selection from monorepo
+ * Stage 1: Component selection from monorepo
  * Input for selecting which component in a monorepo is being modified
  */
 export interface ComponentSelectionPromptData {
@@ -106,7 +106,7 @@ export interface DriftAnalysisResult {
   component: ArchitecturalComponent;
   /** Aggregated dependency changes across all commits */
   dependencyChanges: DependencyExtractionResult;
-  /** All components in the model (for LikeC4 generation context) */
+  /** All components in the model (for model generation context) */
   allComponents?: ArchitecturalComponent[];
   /** Architecture model format used for analysis */
   modelFormat?: string;

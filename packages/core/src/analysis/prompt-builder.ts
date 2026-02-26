@@ -26,8 +26,8 @@ export const PromptBuilder = {
     return jsonMatch ? jsonMatch[0] : null;
   },
   /**
-   * Stage 1: Build dependency extraction prompt to extract architectural dependencies from git diff
-   * @param data - Must contain exactly one component (selected in Stage 0)
+   * Stage 2: Build dependency extraction prompt to extract architectural dependencies from git diff
+   * @param data - Must contain exactly one component (selected in Stage 1)
    */
   buildDependencyExtractionPrompt(data: DependencyExtractionPromptData): string {
     const { diff, commit, repository, components } = data;
@@ -40,7 +40,7 @@ export const PromptBuilder = {
       throw new ErodeError(
         `buildDependencyExtractionPrompt requires exactly 1 component, received ${String(components.length)}`,
         ErrorCode.COMPONENT_NOT_FOUND,
-        `Component selection error: expected 1 component but received ${String(components.length)}. Component selection must occur in Stage 0.`,
+        `Component selection error: expected 1 component but received ${String(components.length)}. Component selection must occur in Stage 1.`,
         { componentCount: components.length }
       );
     } else {
@@ -63,7 +63,7 @@ export const PromptBuilder = {
     });
   },
   /**
-   * Stage 0: Build component selection prompt
+   * Stage 1: Build component selection prompt
    */
   buildComponentSelectionPrompt(data: ComponentSelectionPromptData): string {
     const { components, files } = data;

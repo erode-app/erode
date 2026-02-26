@@ -182,8 +182,8 @@ export function formatAnalysisAsComment(
     lines.push('| | |');
     lines.push('|---|---|');
     lines.push(`| **AI Provider** | ${extras.modelInfo.provider} |`);
-    lines.push(`| **Quick model** (Stages 0, 1) | \`${extras.modelInfo.fastModel}\` |`);
-    lines.push(`| **Deep model** (Stages 2, 3) | \`${extras.modelInfo.advancedModel}\` |`);
+    lines.push(`| **Quick model** (Stages 1, 2) | \`${extras.modelInfo.fastModel}\` |`);
+    lines.push(`| **Deep model** (Stages 3, 4) | \`${extras.modelInfo.advancedModel}\` |`);
     lines.push('');
     lines.push('</details>');
     lines.push('');

@@ -39,10 +39,10 @@ Each AI provider uses two model tiers: a fast model for extraction stages and an
 
 | Variable                   | Description                                 |
 | -------------------------- | ------------------------------------------- |
-| `GEMINI_FAST_MODEL`        | Gemini model for Stages 0–1 (extraction)    |
-| `GEMINI_ADVANCED_MODEL`    | Gemini model for Stages 2–3 (analysis)      |
-| `ANTHROPIC_FAST_MODEL`     | Anthropic model for Stages 0–1 (extraction) |
-| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for Stages 2–3 (analysis)   |
+| `GEMINI_FAST_MODEL`        | Gemini model for Stages 1–2 (extraction)    |
+| `GEMINI_ADVANCED_MODEL`    | Gemini model for Stages 3–4 (analysis)      |
+| `ANTHROPIC_FAST_MODEL`     | Anthropic model for Stages 1–2 (extraction) |
+| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for Stages 3–4 (analysis)   |
 
 See [AI Providers](/docs/reference/ai-providers/) for default model names and guidance on choosing a provider.
 

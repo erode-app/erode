@@ -136,7 +136,7 @@ export async function runAnalyze(
     throw new Error('Unexpected: components array was non-empty but first element was undefined');
   }
 
-  // ── Stage 0: Component selection ─────────────────────────────────────
+  // ── Stage 1: Component selection ─────────────────────────────────────
   let selectedComponent: ArchitecturalComponent = defaultComponent;
   let selectedComponentId: string | undefined;
   const candidateComponents =
@@ -147,7 +147,7 @@ export async function runAnalyze(
   if (components.length === 1) {
     selectedComponentId = selectedComponent.id;
   } else {
-    p.section('Stage 0: Component Selection');
+    p.section('Stage 1: Component Selection');
     p.start('Asking the model to pick the best-matching component');
     if (!provider.selectComponent) {
       p.warn(`Provider lacks component selection, defaulting to: ${selectedComponent.name}`);
@@ -166,8 +166,8 @@ export async function runAnalyze(
     }
   }
 
-  // ── Stage 1: Dependency extraction ───────────────────────────────────
-  p.section('Stage 1: Extract Dependencies');
+  // ── Stage 2: Dependency extraction ───────────────────────────────────
+  p.section('Stage 2: Extract Dependencies');
   const fullDiff = prData.files
     .map((f) => (f.patch ? `diff --git a/${f.filename} b/${f.filename}\n${f.patch}` : ''))
     .filter(Boolean)
@@ -229,16 +229,16 @@ export async function runAnalyze(
     },
   };
 
-  // ── Stage 2: Drift analysis ──────────────────────────────────────────
-  p.section('Stage 2: Drift Analysis');
+  // ── Stage 3: Drift analysis ──────────────────────────────────────────
+  p.section('Stage 3: Drift Analysis');
   p.start('Evaluating the change request for architectural drift');
   const analysisResult = await provider.analyzeDrift(promptData);
   p.succeed('Drift analysis finished');
 
-  // ── Stage 3 (optional): Model generation ─────────────────────────────
+  // ── Stage 4 (optional): Model generation ─────────────────────────────
   let generatedCode: string | undefined;
   if (options.generateModel) {
-    p.section(`Stage 3: Generate ${adapter.metadata.displayName} Model`);
+    p.section(`Stage 4: Generate ${adapter.metadata.displayName} Model`);
     if (!provider.generateArchitectureCode) {
       p.warn(`Provider lacks ${adapter.metadata.displayName} model generation support`);
     } else {

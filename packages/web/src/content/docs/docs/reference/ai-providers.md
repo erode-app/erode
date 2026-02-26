@@ -19,8 +19,8 @@ erode supports two AI providers: **Gemini** (default) and **Anthropic**. Set the
 
 Each provider uses two model tiers to balance cost and quality:
 
-- **Fast model**: Used for Stage 0 (component resolution) and Stage 1 (dependency scan). These are cheaper, faster models suited for extraction tasks.
-- **Advanced model**: Used for Stage 2 (PR analysis) and Stage 3 (LikeC4 generation). These are stronger models that handle the deeper architectural reasoning.
+- **Fast model**: Used for Stage 1 (component resolution) and Stage 2 (dependency scan). These are cheaper, faster models suited for extraction tasks.
+- **Advanced model**: Used for Stage 3 (PR analysis) and Stage 4 (model generation). These are stronger models that handle the deeper architectural reasoning.
 
 ## Default models
 
@@ -44,10 +44,10 @@ You can override the default models with environment variables:
 
 | Variable                   | Description                                    |
 | -------------------------- | ---------------------------------------------- |
-| `GEMINI_FAST_MODEL`        | Gemini model for fast tier (Stages 0–1)        |
-| `GEMINI_ADVANCED_MODEL`    | Gemini model for advanced tier (Stages 2–3)    |
-| `ANTHROPIC_FAST_MODEL`     | Anthropic model for fast tier (Stages 0–1)     |
-| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for advanced tier (Stages 2–3) |
+| `GEMINI_FAST_MODEL`        | Gemini model for fast tier (Stages 1–2)        |
+| `GEMINI_ADVANCED_MODEL`    | Gemini model for advanced tier (Stages 3–4)    |
+| `ANTHROPIC_FAST_MODEL`     | Anthropic model for fast tier (Stages 1–2)     |
+| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for advanced tier (Stages 3–4) |
 
 ## Timeout configuration
 

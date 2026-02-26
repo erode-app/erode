@@ -13,7 +13,7 @@ head:
 
 > [Open full interactive viewer →](/architecture/#/view/pipeline/)
 
-## Stage 0 -- Component Resolution
+## Stage 1 -- Component Resolution
 
 |                |                                                                     |
 | -------------- | ------------------------------------------------------------------- |
@@ -25,7 +25,7 @@ When a repository maps to multiple components in the LikeC4 model, this stage us
 
 This stage is **skipped entirely** when only one component matches the repository.
 
-## Stage 1 -- Dependency Scan
+## Stage 2 -- Dependency Scan
 
 |                |                                                              |
 | -------------- | ------------------------------------------------------------ |
@@ -37,12 +37,12 @@ The PR diff is analyzed to extract dependency changes. The fast model identifies
 
 This keeps the analysis stage focused on dependency changes rather than the full diff.
 
-## Stage 2 -- PR Analysis
+## Stage 3 -- PR Analysis
 
 |                |                                                                          |
 | -------------- | ------------------------------------------------------------------------ |
 | **Model tier** | Advanced                                                                 |
-| **Input**      | Dependency list from Stage 1, full architecture model, component context |
+| **Input**      | Dependency list from Stage 2, full architecture model, component context |
 | **Output**     | Violation findings with severity, suggestions, and summary               |
 
 The advanced model compares the extracted dependency changes against the full declared architecture. For each undeclared or violating dependency, it produces a finding with:
@@ -52,15 +52,15 @@ The advanced model compares the extracted dependency changes against the full de
 - **Suggestion**: How to resolve the drift (update the model, refactor the code, or accept the change)
 - **Summary**: An overall assessment of the PR's architectural impact
 
-## Stage 3 -- LikeC4 Generation (optional)
+## Stage 4 -- Model Generation (optional)
 
-|                |                                                       |
-| -------------- | ----------------------------------------------------- |
-| **Model tier** | Advanced                                              |
-| **Input**      | Violation findings from Stage 2, current LikeC4 model |
-| **Output**     | LikeC4 DSL code patches                               |
+|                |                                                             |
+| -------------- | ----------------------------------------------------------- |
+| **Model tier** | Advanced                                                    |
+| **Input**      | Violation findings from Stage 3, current architecture model |
+| **Output**     | Architecture model code patches                             |
 
-When enabled, this stage generates LikeC4 DSL updates that would bring the architecture model in sync with the changes found in the PR. The output can be used to open a follow-up pull request that updates the model.
+When enabled, this stage generates architecture model updates that would bring the model in sync with the changes found in the PR. The output can be used to open a follow-up pull request that updates the model.
 
 ## Prompt templates
 

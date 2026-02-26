@@ -33,24 +33,24 @@ views {
     erode.core.analyze -> erode.core.adapters.likec4Adapter 'load architecture model'
     erode.core.analyze -> erode.core.platforms.github 'fetch PR and commits'
 
-    // Stage 0 — resolve component (conditional: multiple candidates)
-    erode.core.analyze -> erode.core.pipelines.stage0 'resolve component'
-    erode.core.pipelines.stage0 -> erode.core.providers.gemini 'select component'
+    // Stage 1 — resolve component (conditional: multiple candidates)
+    erode.core.analyze -> erode.core.pipelines.stage1 'resolve component'
+    erode.core.pipelines.stage1 -> erode.core.providers.gemini 'select component'
 
-    // Stage 1 — extract dependencies from diff
-    erode.core.analyze -> erode.core.pipelines.stage1 'extract dependencies'
-    erode.core.pipelines.stage1 -> erode.core.providers.gemini 'scan diff'
+    // Stage 2 — extract dependencies from diff
+    erode.core.analyze -> erode.core.pipelines.stage2 'extract dependencies'
+    erode.core.pipelines.stage2 -> erode.core.providers.gemini 'scan diff'
 
     // Query architectural context from loaded model
     erode.core.analyze -> erode.core.adapters.likec4Adapter 'query relationships'
 
-    // Stage 2 — drift analysis
-    erode.core.analyze -> erode.core.pipelines.stage2 'analyze drift'
-    erode.core.pipelines.stage2 -> erode.core.providers.gemini 'evaluate drift'
+    // Stage 3 — drift analysis
+    erode.core.analyze -> erode.core.pipelines.stage3 'analyze drift'
+    erode.core.pipelines.stage3 -> erode.core.providers.gemini 'evaluate drift'
 
-    // Stage 3 — generate model updates (optional)
-    erode.core.analyze -> erode.core.pipelines.stage3 'generate model'
-    erode.core.pipelines.stage3 -> erode.core.providers.gemini 'produce DSL'
+    // Stage 4 — generate model updates (optional)
+    erode.core.analyze -> erode.core.pipelines.stage4 'generate model'
+    erode.core.pipelines.stage4 -> erode.core.providers.gemini 'produce DSL'
 
     // Output
     erode.core.analyze -> erode.core.output 'format results'
@@ -60,10 +60,10 @@ views {
       erode.core.analyze,
       erode.core.adapters.likec4Adapter,
       erode.core.platforms.github,
-      erode.core.pipelines.stage0,
       erode.core.pipelines.stage1,
       erode.core.pipelines.stage2,
       erode.core.pipelines.stage3,
+      erode.core.pipelines.stage4,
       erode.core.providers.gemini,
       erode.core.output
   }

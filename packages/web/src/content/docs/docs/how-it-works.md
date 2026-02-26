@@ -30,19 +30,19 @@ The built-in skip patterns cover:
 
 To analyze all files regardless of these patterns, set `skip-file-filtering: 'true'` in the [GitHub Action](/docs/ci/github-actions/) or pass `--skip-file-filtering` on the CLI.
 
-## Stage 0 -- Resolve
+## Stage 1 -- Resolve
 
 When a repository maps to multiple components in the LikeC4 model, erode uses AI to determine which component is most relevant to the pull request. This stage uses a cheaper model (Haiku for Anthropic, Flash for Gemini) to keep costs low.
 
 This stage is skipped entirely when the repository maps to a single component.
 
-## Stage 1 -- Scan
+## Stage 2 -- Scan
 
 The PR diff is fed to a fast model that extracts dependency changes and new integrations. The output is a structured list of added, removed, or modified dependencies found in the code changes.
 
 This keeps the analysis stage focused on dependency changes rather than the full diff.
 
-## Stage 2 -- Analyze
+## Stage 3 -- Analyze
 
 A stronger model (Sonnet for Anthropic, Flash for Gemini) compares the extracted dependency changes against the declared architecture model and produces violation findings, each with:
 
@@ -50,9 +50,9 @@ A stronger model (Sonnet for Anthropic, Flash for Gemini) compares the extracted
 - A description of the drift
 - **Suggestions** for resolving the violation
 
-## Stage 3 -- Generate (optional)
+## Stage 4 -- Generate (optional)
 
-When enabled, erode produces LikeC4 DSL updates that bring the architecture model back in sync with reality. This can be used to open a follow-up pull request that updates the model.
+When enabled, erode produces architecture model updates that bring the model back in sync with reality. This can be used to open a follow-up pull request that updates the model.
 
 ## Prompt templates
 

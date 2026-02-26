@@ -5,25 +5,25 @@ model {
     pipelines = pipeline 'Pipelines' {
       description 'Multi-stage AI analysis pipeline that orchestrates the full flow'
 
-      stage0 = stage 'Stage 0: Resolve' {
+      stage1 = stage 'Stage 1: Resolve' {
         #fast-model
         description 'Selects the most relevant component when a repo maps to multiple'
       }
 
-      stage1 = stage 'Stage 1: Scan' {
+      stage2 = stage 'Stage 2: Scan' {
         #fast-model
         description 'Extracts dependency changes from the PR diff'
       }
 
-      stage2 = stage 'Stage 2: Analyze' {
+      stage3 = stage 'Stage 3: Analyze' {
         #advanced-model
         description 'Compares dependencies against the declared architecture model'
       }
 
-      stage3 = stage 'Stage 3: Generate' {
+      stage4 = stage 'Stage 4: Generate' {
         #advanced-model
         #optional
-        description 'Generates LikeC4 DSL updates to bring the model in sync'
+        description 'Generates architecture model updates to bring the model in sync'
       }
     }
 
@@ -82,9 +82,9 @@ model {
   }
 
   // Pipeline stage flow
-  erode.core.pipelines.stage0 -> erode.core.pipelines.stage1 'component resolved'
-  erode.core.pipelines.stage1 -> erode.core.pipelines.stage2 'dependencies extracted'
-  erode.core.pipelines.stage2 -> erode.core.pipelines.stage3 'violations found'
+  erode.core.pipelines.stage1 -> erode.core.pipelines.stage2 'component resolved'
+  erode.core.pipelines.stage2 -> erode.core.pipelines.stage3 'dependencies extracted'
+  erode.core.pipelines.stage3 -> erode.core.pipelines.stage4 'violations found'
 
   // Analyze delegates to pipeline stages and other modules
   erode.core.analyze -> erode.core.pipelines 'runs pipeline stages'

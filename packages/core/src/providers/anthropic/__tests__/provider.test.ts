@@ -18,7 +18,7 @@ import type {
   DriftAnalysisPromptData,
 } from '../../../analysis/analysis-types.js';
 
-function makeStage0Data(componentIds: string[]): ComponentSelectionPromptData {
+function makeStage1Data(componentIds: string[]): ComponentSelectionPromptData {
   return {
     components: componentIds.map((id) => ({
       id,
@@ -119,7 +119,7 @@ describe('AnthropicProvider', () => {
 
       const provider = createProvider();
       const result = await provider.selectComponent(
-        makeStage0Data(['comp.frontend', 'comp.backend'])
+        makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBe('comp.backend');
     });
@@ -129,7 +129,7 @@ describe('AnthropicProvider', () => {
 
       const provider = createProvider();
       const result = await provider.selectComponent(
-        makeStage0Data(['comp.frontend', 'comp.backend'])
+        makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBeNull();
     });
@@ -142,7 +142,7 @@ describe('AnthropicProvider', () => {
       });
 
       const provider = createProvider();
-      await expect(provider.selectComponent(makeStage0Data(['comp.frontend']))).rejects.toThrow(
+      await expect(provider.selectComponent(makeStage1Data(['comp.frontend']))).rejects.toThrow(
         ErodeError
       );
     });
@@ -251,7 +251,7 @@ describe('AnthropicProvider', () => {
 
       const provider = createProvider();
       try {
-        await provider.selectComponent(makeStage0Data(['comp.api']));
+        await provider.selectComponent(makeStage1Data(['comp.api']));
         expect.fail('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ErodeError);
@@ -268,7 +268,7 @@ describe('AnthropicProvider', () => {
         .mockResolvedValueOnce(makeAnthropicResponse('comp.api', 'end_turn', 100, 10));
 
       const provider = createProvider();
-      const result = await provider.selectComponent(makeStage0Data(['comp.api']));
+      const result = await provider.selectComponent(makeStage1Data(['comp.api']));
       expect(result).toBe('comp.api');
       expect(mockCreate).toHaveBeenCalledTimes(2);
     });
@@ -284,7 +284,7 @@ describe('AnthropicProvider', () => {
       mockCreate.mockRejectedValueOnce(nonRecoverableError);
 
       const provider = createProvider();
-      await expect(provider.selectComponent(makeStage0Data(['comp.api']))).rejects.toThrow(
+      await expect(provider.selectComponent(makeStage1Data(['comp.api']))).rejects.toThrow(
         ErodeError
       );
       expect(mockCreate).toHaveBeenCalledTimes(1);
@@ -301,7 +301,7 @@ describe('AnthropicProvider', () => {
 
       const provider = createProvider();
       try {
-        await provider.selectComponent(makeStage0Data(['comp.api']));
+        await provider.selectComponent(makeStage1Data(['comp.api']));
         expect.fail('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
@@ -322,7 +322,7 @@ describe('AnthropicProvider', () => {
 
       const provider = createProvider();
       try {
-        await provider.selectComponent(makeStage0Data(['comp.api']));
+        await provider.selectComponent(makeStage1Data(['comp.api']));
         expect.fail('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);

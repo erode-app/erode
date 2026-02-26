@@ -43,10 +43,10 @@ npm run test -- packages/core/src/providers/__tests__/some-provider.test.ts  # S
 
 The `analyze` command (`packages/core/src/commands/analyze.ts`) orchestrates a multi-stage AI pipeline:
 
-1. **Stage 0 - Component Resolution**: When a repo maps to multiple LikeC4 components, AI picks the most relevant one (uses cheaper/faster model: Haiku/Flash)
-2. **Stage 1 - Dependency Scan**: AI extracts dependency changes from the PR diff (Haiku/Flash)
-3. **Stage 2 - PR Analysis**: AI analyzes the PR for architectural drift violations against the declared model (uses stronger model: Sonnet/Pro)
-4. **Stage 3 - LikeC4 Generation** (optional): AI generates LikeC4 DSL code to update the architecture model
+1. **Stage 1 - Component Resolution**: When a repo maps to multiple LikeC4 components, AI picks the most relevant one (uses cheaper/faster model: Haiku/Flash)
+2. **Stage 2 - Dependency Scan**: AI extracts dependency changes from the PR diff (Haiku/Flash)
+3. **Stage 3 - PR Analysis**: AI analyzes the PR for architectural drift violations against the declared model (uses stronger model: Sonnet/Pro)
+4. **Stage 4 - Model Generation** (optional): AI generates architecture model code to update the model
 
 ### Key Abstractions
 
