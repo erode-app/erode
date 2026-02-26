@@ -18,7 +18,7 @@
     "knip": "knip",
     "lint:md": "markdownlint-cli2 \"**/*.md\"",
     "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\"",
-    "check:ci": "npm run check:ci --workspaces --if-present && npm run lint:md && npm run knip",
+    "check:ci": "npm run build:ci && npm run check:ci --workspaces --if-present && npm run lint:md && npm run knip",
     "build:web": "npm run build --workspace=packages/architecture && npm run build --workspace=packages/web",
     "cli": "tsx packages/cli/src/cli.ts",
     "dev:web": "npm run dev --workspace=packages/web",
