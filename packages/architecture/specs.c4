@@ -1,0 +1,82 @@
+specification {
+
+  element system {
+    style {
+      shape rectangle
+      color secondary
+      icon tech:typescript
+    }
+  }
+
+  element package {
+    style {
+      shape component
+      color indigo
+    }
+  }
+
+  element module {
+    style {
+      shape component
+      color primary
+    }
+  }
+
+  element pipeline {
+    style {
+      shape rectangle
+      color indigo
+    }
+  }
+
+  element stage {
+    style {
+      shape rectangle
+      color indigo
+    }
+  }
+
+  element provider {
+    style {
+      shape rectangle
+      color amber
+    }
+  }
+
+  element adapter {
+    style {
+      shape rectangle
+      color green
+    }
+  }
+
+  element platform {
+    style {
+      shape rectangle
+      color secondary
+    }
+  }
+
+  element external {
+    style {
+      shape rectangle
+      color muted
+    }
+  }
+
+  relationship async {
+    line dotted
+    color amber
+  }
+
+  relationship sync {
+    line solid
+  }
+
+  tag fast-model
+  tag advanced-model
+  tag optional
+  tag ai
+  tag git-platform
+
+}

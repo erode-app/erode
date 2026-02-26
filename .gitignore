@@ -16,3 +16,6 @@ oldversion
 
 # Astro generated
 .astro/
+
+# Copied architecture build
+packages/web/public/architecture/

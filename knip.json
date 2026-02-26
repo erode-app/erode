@@ -11,6 +11,7 @@
     "packages/eslint-config": {
       "project": ["*.js"]
     },
-    "packages/web": {}
+    "packages/web": {},
+    "packages/architecture": {}
   }
 }

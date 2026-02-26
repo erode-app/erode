@@ -4,8 +4,9 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro check && astro build",
+    "dev": "npm run prebuild:diagrams && astro dev",
+    "prebuild:diagrams": "cd ../architecture && npm run build && cd ../web && rm -rf public/architecture && cp -r ../architecture/dist public/architecture",
+    "build": "astro check && npm run prebuild:diagrams && astro build",
     "preview": "astro preview",
     "typecheck": "astro check --minimumFailingSeverity hint",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0"

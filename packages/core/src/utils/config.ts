@@ -15,7 +15,7 @@ const ConfigSchema = z.object({
     format: z.string().default('likec4'),
     likec4: z.object({
       excludePaths: z.array(z.string()).default([]),
-      excludeTags: z.array(z.string()).default(['adr', 'rfc']),
+      excludeTags: z.array(z.string()).default([]),
     }),
   }),
   github: z.object({

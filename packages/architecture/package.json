@@ -1,0 +1,14 @@
+{
+  "name": "@erode/architecture",
+  "private": true,
+  "scripts": {
+    "dev": "likec4 dev .",
+    "validate": "likec4 validate .",
+    "build": "likec4 build . -o dist --use-hash-history --base /architecture/ --title erode",
+    "lint": "likec4 validate .",
+    "check:ci": "likec4 validate ."
+  },
+  "devDependencies": {
+    "likec4": "^1.45.0"
+  }
+}

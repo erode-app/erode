@@ -54,6 +54,7 @@ export default defineConfig({
         { label: 'Model Formats', autogenerate: { directory: 'docs/models' } },
         { label: 'Guides', autogenerate: { directory: 'docs/guides' } },
         { label: 'Reference', autogenerate: { directory: 'docs/reference' } },
+        { label: 'Contributing', items: [{ slug: 'docs/contributing' }] },
       ],
     }),
   ],

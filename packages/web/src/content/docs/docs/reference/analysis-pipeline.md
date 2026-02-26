@@ -1,9 +1,19 @@
 ---
 title: Analysis Pipeline
 description: Detailed stage-by-stage reference for erode's analysis pipeline.
+head:
+  - tag: script
+    attrs:
+      src: /architecture/likec4-views.js
 ---
 
 This page provides a detailed reference for each stage of erode's analysis pipeline, including inputs, outputs, model tier, and behavior.
+
+<div class="likec4-embed">
+<likec4-view view-id="pipeline" browser="true" dynamic-variant="sequence"></likec4-view>
+</div>
+
+> [Open full interactive viewer →](/architecture/#/view/pipeline/)
 
 ## Stage 0 -- Component Resolution
 

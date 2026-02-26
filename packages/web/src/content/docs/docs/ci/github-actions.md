@@ -1,9 +1,19 @@
 ---
 title: GitHub Actions
 description: Set up erode as a GitHub Actions workflow.
+head:
+  - tag: script
+    attrs:
+      src: /architecture/likec4-views.js
 ---
 
 The recommended way to run erode is as a GitHub Actions workflow that checks every pull request automatically.
+
+<div class="likec4-embed">
+<likec4-view view-id="platforms" browser="true"></likec4-view>
+</div>
+
+> [Open full interactive viewer →](/architecture/#/view/platforms/)
 
 ## Basic workflow
 

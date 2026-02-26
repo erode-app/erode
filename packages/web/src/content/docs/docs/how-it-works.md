@@ -1,9 +1,19 @@
 ---
 title: How It Works
 description: Understand the multi-stage AI pipeline that powers erode.
+head:
+  - tag: script
+    attrs:
+      src: /architecture/likec4-views.js
 ---
 
 erode uses a multi-stage AI pipeline to analyze pull requests for architecture drift. The pipeline is designed to be cost-effective: cheaper, faster models handle extraction and routing, while stronger models perform the deeper architectural analysis.
+
+<div class="likec4-embed">
+<likec4-view view-id="pipeline-overview" browser="true"></likec4-view>
+</div>
+
+> [Open full interactive viewer →](/architecture/#/view/pipeline-overview/)
 
 ## File filtering
 
