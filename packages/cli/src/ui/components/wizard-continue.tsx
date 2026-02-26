@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import { Box, Text, useApp } from 'ink';
 import { WizardSelect } from './wizard-select.js';
 import { renderApp } from '../app.js';

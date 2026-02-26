@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { Box, useApp } from 'ink';
 import { runAnalyze } from '@erode/core';
 import type { AnalyzeOptions, AnalyzeResult } from '@erode/core';

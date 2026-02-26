@@ -11,9 +11,9 @@ import {
   applyDiffTruncation,
   wrapPlatformError,
   sanitizeErrorMessage,
-  extractStatusCode,
   isTransientError,
 } from '../platform-utils.js';
+import { extractStatusCode } from '../../utils/error-utils.js';
 
 function makeFile(filename: string, changes = 1) {
   return { filename, status: 'modified', additions: changes, deletions: 0, changes };

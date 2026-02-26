@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import { Box, Static } from 'ink';
 import { ProgressStep } from './progress-step.js';
 import type { PipelineStep } from '../hooks/use-pipeline.js';

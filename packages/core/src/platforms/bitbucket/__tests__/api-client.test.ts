@@ -11,8 +11,7 @@ vi.mock('../../../utils/config.js', () => ({
 
 // Mock platform-utils (sanitizeErrorMessage)
 vi.mock('../../platform-utils.js', async (importOriginal) => {
-  const orig = await importOriginal<typeof import('../../platform-utils.js')>();
-  return { ...orig };
+  return importOriginal();
 });
 
 import { BitbucketApiClient } from '../api-client.js';

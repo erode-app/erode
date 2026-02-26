@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import { Box, Text, useApp } from 'ink';
 import { WizardSelect } from '../ui/components/wizard-select.js';
 import { WizardInput } from '../ui/components/wizard-input.js';

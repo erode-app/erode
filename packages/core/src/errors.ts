@@ -1,3 +1,5 @@
+import { extractStatusCode } from './utils/error-utils.js';
+
 export enum ErrorCode {
   MISSING_CONFIG = 'MISSING_CONFIG',
   INVALID_CONFIG = 'INVALID_CONFIG',
@@ -108,12 +110,7 @@ export class ApiError extends ErodeError {
   }
   static fromAnthropicError(error: unknown): ApiError {
     if (error instanceof Error) {
-      // Anthropic SDK errors (APIError, RateLimitError, etc.) expose a .status property
-      const statusCode =
-        'status' in error && typeof (error as { status: unknown }).status === 'number'
-          ? (error as { status: number }).status
-          : undefined;
-      return new ApiError(error.message, statusCode, {
+      return new ApiError(error.message, extractStatusCode(error), {
         originalError: error.name,
         provider: 'anthropic',
       });
@@ -134,11 +131,7 @@ export class ApiError extends ErodeError {
   }
   static fromOpenAIError(error: unknown): ApiError {
     if (error instanceof Error) {
-      const statusCode =
-        'status' in error && typeof (error as { status: unknown }).status === 'number'
-          ? (error as { status: number }).status
-          : undefined;
-      return new ApiError(error.message, statusCode, {
+      return new ApiError(error.message, extractStatusCode(error), {
         originalError: error.name,
         provider: 'openai',
       });
@@ -176,8 +169,8 @@ export class AdapterError extends ErodeError {
     adapterType: AdapterType,
     displayName: string
   ): AdapterError {
-    if (error instanceof ErodeError) {
-      return error as AdapterError;
+    if (error instanceof AdapterError) {
+      return error;
     }
     if (error instanceof Error) {
       return new AdapterError(

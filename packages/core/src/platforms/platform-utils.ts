@@ -1,6 +1,7 @@
 import type { ChangeRequestFile } from './source-platform.js';
 import { CONFIG } from '../utils/config.js';
 import { ErodeError, ApiError } from '../errors.js';
+import { extractStatusCode } from '../utils/error-utils.js';
 
 interface TruncationResult {
   files: ChangeRequestFile[];
@@ -31,12 +32,6 @@ export function applyDiffTruncation(
   return { files, wasTruncated: false };
 }
 
-export function extractStatusCode(error: Error): number | undefined {
-  return 'status' in error && typeof (error as { status: unknown }).status === 'number'
-    ? (error as { status: number }).status
-    : undefined;
-}
-
 export function sanitizeErrorMessage(message: string): string {
   if (message.includes('<!DOCTYPE') || message.includes('<html')) {
     return message
@@ -49,9 +44,9 @@ export function sanitizeErrorMessage(message: string): string {
 }
 
 export function isTransientError(error: unknown): boolean {
-  const status =
-    error instanceof Error && 'status' in error ? (error as { status: unknown }).status : undefined;
-  return typeof status === 'number' && status >= 500;
+  if (!(error instanceof Error)) return false;
+  const status = extractStatusCode(error);
+  return status !== undefined && status >= 500;
 }
 
 export function wrapPlatformError(error: unknown, provider: string, operation: string): never {

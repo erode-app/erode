@@ -35,13 +35,22 @@ export function detectPlatform(url: string): Platform {
 
 export function createPlatformReader(url: string, token?: string): SourcePlatformReader {
   const platform = detectPlatform(url);
-  if (platform === 'gitlab') {
-    return new GitLabReader(token);
+  switch (platform) {
+    case 'github':
+      return new GitHubReader(token);
+    case 'gitlab':
+      return new GitLabReader(token);
+    case 'bitbucket':
+      return new BitbucketReader(token);
+    default: {
+      const _exhaustive: never = platform;
+      throw new ErodeError(
+        `Unsupported platform: ${String(_exhaustive)}`,
+        ErrorCode.INVALID_URL,
+        `Unsupported platform. Supported platforms: GitHub, GitLab, Bitbucket.`
+      );
+    }
   }
-  if (platform === 'bitbucket') {
-    return new BitbucketReader(token);
-  }
-  return new GitHubReader(token);
 }
 
 export function createPlatformWriter(
@@ -50,11 +59,20 @@ export function createPlatformWriter(
   targetRepo: string
 ): SourcePlatformWriter {
   const platform = detectPlatform(repositoryUrl);
-  if (platform === 'gitlab') {
-    return new GitLabWriter(targetOwner, targetRepo);
+  switch (platform) {
+    case 'github':
+      return new GitHubWriter(targetOwner, targetRepo);
+    case 'gitlab':
+      return new GitLabWriter(targetOwner, targetRepo);
+    case 'bitbucket':
+      return new BitbucketWriter(targetOwner, targetRepo);
+    default: {
+      const _exhaustive: never = platform;
+      throw new ErodeError(
+        `Unsupported platform: ${String(_exhaustive)}`,
+        ErrorCode.INVALID_URL,
+        `Unsupported platform. Supported platforms: GitHub, GitLab, Bitbucket.`
+      );
+    }
   }
-  if (platform === 'bitbucket') {
-    return new BitbucketWriter(targetOwner, targetRepo);
-  }
-  return new GitHubWriter(targetOwner, targetRepo);
 }

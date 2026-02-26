@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { Box, useApp } from 'ink';
 import { runConnections } from '@erode/core';
 import type { ConnectionsOptions, ComponentConnections } from '@erode/core';

@@ -27,7 +27,7 @@ function loadAdapterTemplate(adapterName: string, templateName: string): string 
   return readFileSync(templatePath, 'utf-8');
 }
 
-function replaceVariables(template: string, variables: Record<string, unknown>): string {
+function replaceVariables(template: string, variables: object): string {
   return template.replace(/\{\{([^}]+)\}\}/g, (match: string, path: string) => {
     const keys = path.trim().split('.');
     let value: unknown = variables;
@@ -65,21 +65,21 @@ function replaceVariables(template: string, variables: Record<string, unknown>):
 export const TemplateEngine = {
   loadDependencyExtractionPrompt(variables: DependencyExtractionPromptVars): string {
     const template = loadTemplate('dependency-extraction');
-    return replaceVariables(template, variables as unknown as Record<string, unknown>);
+    return replaceVariables(template, variables);
   },
   loadDriftAnalysisPrompt(variables: DriftAnalysisPromptVars): string {
     const template = loadTemplate('drift-analysis');
-    return replaceVariables(template, variables as unknown as Record<string, unknown>);
+    return replaceVariables(template, variables);
   },
   loadModelGenerationPrompt(
     variables: ModelGenerationPromptVars,
     adapterFormat = 'likec4'
   ): string {
     const template = loadAdapterTemplate(adapterFormat, 'model-generation');
-    return replaceVariables(template, variables as unknown as Record<string, unknown>);
+    return replaceVariables(template, variables);
   },
   loadComponentSelectionPrompt(variables: ComponentSelectionPromptVars): string {
     const template = loadTemplate('component-selection');
-    return replaceVariables(template, variables as unknown as Record<string, unknown>);
+    return replaceVariables(template, variables);
   },
 } as const;
