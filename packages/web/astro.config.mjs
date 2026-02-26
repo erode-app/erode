@@ -43,7 +43,14 @@ export default defineConfig({
           label: 'Start Here',
           items: [{ slug: 'docs/getting-started' }, { slug: 'docs/how-it-works' }],
         },
-        { label: 'CI Integration', autogenerate: { directory: 'docs/ci' } },
+        {
+          label: 'CI Integration',
+          items: [
+            { slug: 'docs/ci/github-actions' },
+            { slug: 'docs/ci/gitlab-ci' },
+            { slug: 'docs/ci/self-hosted' },
+          ],
+        },
         { label: 'Model Formats', autogenerate: { directory: 'docs/models' } },
         { label: 'Guides', autogenerate: { directory: 'docs/guides' } },
         { label: 'Reference', autogenerate: { directory: 'docs/reference' } },
