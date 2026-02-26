@@ -60,6 +60,6 @@ These control the maximum wait time for each API request. Increase them if you e
 
 ## Choosing a provider
 
-Gemini is the default provider and is generally cheaper per request. Anthropic may produce different analysis quality depending on the codebase and model complexity. Both providers support the full analysis pipeline.
+Gemini is the default provider and is generally cheaper per request. Anthropic may produce different analysis quality depending on the codebase and model complexity.
 
 Start with Gemini during evaluation and switch to Anthropic if you want to compare results.

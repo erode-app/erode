@@ -121,7 +121,6 @@ If no violations are found, the comment confirms that the PR aligns with the dec
 
 ## Tips
 
-- The basic workflow above skips dependabot PRs and draft PRs with an `if` guard. This avoids burning AI tokens on automated dependency bumps and work-in-progress PRs that rarely introduce architectural drift.
 - Start with the Gemini provider during evaluation — it is generally cheaper than Anthropic.
 - Keep your LikeC4 model up to date. erode can only detect drift against what is declared in the model.
 - Set `fail-on-violations: 'true'` to block PRs that introduce undeclared dependencies.

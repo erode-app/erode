@@ -7,7 +7,7 @@ head:
       src: /architecture/likec4-views.js
 ---
 
-erode uses a multi-stage AI pipeline to analyze pull requests for architecture drift. The pipeline is designed to be cost-effective: cheaper, faster models handle extraction and routing, while stronger models perform the deeper architectural analysis.
+erode uses a multi-stage AI pipeline to analyze pull requests for architecture drift. Cheaper, faster models handle extraction and routing, while stronger models handle the analysis.
 
 <div class="likec4-embed">
 <likec4-view view-id="pipeline-overview" browser="true"></likec4-view>
@@ -40,15 +40,15 @@ This stage is skipped entirely when the repository maps to a single component.
 
 The PR diff is fed to a fast model that extracts dependency changes and new integrations. The output is a structured list of added, removed, or modified dependencies found in the code changes.
 
-This extraction step isolates the dependency signal from the noise of a full diff, producing a clean input for the analysis stage.
+This keeps the analysis stage focused on dependency changes rather than the full diff.
 
 ## Stage 2 -- Analyze
 
-This is the core of erode. A stronger model (Sonnet for Anthropic, Flash for Gemini) compares the extracted dependency changes against the declared architecture model. It produces violation findings, each with:
+A stronger model (Sonnet for Anthropic, Flash for Gemini) compares the extracted dependency changes against the declared architecture model and produces violation findings, each with:
 
 - A **severity level** (high, medium, or low)
 - A description of the drift
-- **Actionable suggestions** for resolving the violation
+- **Suggestions** for resolving the violation
 
 ## Stage 3 -- Generate (optional)
 

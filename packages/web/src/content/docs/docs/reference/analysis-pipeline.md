@@ -7,8 +7,6 @@ head:
       src: /architecture/likec4-views.js
 ---
 
-This page provides a detailed reference for each stage of erode's analysis pipeline, including inputs, outputs, model tier, and behavior.
-
 <div class="likec4-embed">
 <likec4-view view-id="pipeline" browser="true" dynamic-variant="sequence"></likec4-view>
 </div>
@@ -37,7 +35,7 @@ This stage is **skipped entirely** when only one component matches the repositor
 
 The PR diff is analyzed to extract dependency changes. The fast model identifies new integrations, removed connections, and modified interactions between components. The output is a structured dependency list that serves as input to the analysis stage.
 
-This extraction step isolates dependency signals from the full diff, reducing noise and keeping the analysis focused.
+This keeps the analysis stage focused on dependency changes rather than the full diff.
 
 ## Stage 2 -- PR Analysis
 
@@ -47,11 +45,11 @@ This extraction step isolates dependency signals from the full diff, reducing no
 | **Input**      | Dependency list from Stage 1, full architecture model, component context |
 | **Output**     | Violation findings with severity, suggestions, and summary               |
 
-This is the core analysis stage. The advanced model compares the extracted dependency changes against the full declared architecture. For each undeclared or violating dependency, it produces a finding with:
+The advanced model compares the extracted dependency changes against the full declared architecture. For each undeclared or violating dependency, it produces a finding with:
 
 - **Severity**: `HIGH`, `MEDIUM`, or `LOW`
 - **Description**: What the violation is and why it matters
-- **Suggestion**: Actionable steps to resolve the drift (update the model, refactor the code, or accept the change)
+- **Suggestion**: How to resolve the drift (update the model, refactor the code, or accept the change)
 - **Summary**: An overall assessment of the PR's architectural impact
 
 ## Stage 3 -- LikeC4 Generation (optional)

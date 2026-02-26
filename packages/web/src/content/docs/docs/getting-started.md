@@ -43,7 +43,7 @@ Replace `your-org/architecture` with the repository that contains your LikeC4 mo
 
 ### 3. Open a pull request
 
-erode runs on every PR and posts a comment summarizing its findings: any undeclared dependencies, their severity, and actionable suggestions for resolving each violation. If no violations are found, it confirms the PR aligns with the declared architecture.
+erode runs on every PR and posts a comment listing any undeclared dependencies, their severity, and how to fix them. If no violations are found, it confirms the PR aligns with the declared architecture.
 
 ## What's next
 

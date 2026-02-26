@@ -85,4 +85,4 @@ During analysis, erode:
 3. Compares those changes against the declared relationships in the model
 4. Reports any dependencies that exist in the code but are missing from the model
 
-This comparison is what makes drift detection possible. The more complete your architecture model, the more accurate erode's analysis will be.
+A more complete architecture model gives erode more accurate results.
