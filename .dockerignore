@@ -9,3 +9,6 @@ dist
 coverage
 .vscode
 .idea
+packages/web/src
+packages/web/public
+packages/architecture/src
