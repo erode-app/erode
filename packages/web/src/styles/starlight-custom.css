@@ -38,15 +38,14 @@
   --sl-color-accent-high: #451a03;
 }
 
-/* Pull-quote blockquotes */
+/* Aside-style blockquotes (colored box, no title) */
 .sl-markdown-content blockquote {
   border-left: 3px solid var(--sl-color-accent);
-  padding: 0.75rem 0 0.75rem 1.25rem;
-  margin: 2rem 0;
-  font-size: 1.15em;
-  font-style: italic;
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  background: var(--sl-color-gray-6);
   color: var(--sl-color-gray-1);
-  background: none;
 }
 
 .sl-markdown-content blockquote p {
