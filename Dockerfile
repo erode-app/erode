@@ -21,7 +21,7 @@ COPY packages/core/scripts/ packages/core/scripts/
 RUN npm run build --workspace=packages/core
 
 # ── Stage 2: JRE ───────────────────────────────────────────────
-FROM eclipse-temurin:21-jre-noble AS jre
+FROM eclipse-temurin:25-jre-noble AS jre
 
 # ── Stage 3: Structurizr WAR (runs parallel with Stage 1) ──────
 FROM node:24-slim AS structurizr
