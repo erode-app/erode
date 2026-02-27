@@ -7,6 +7,7 @@ views {
     include geminiApi
     include githubApi
     include gitlabApi
+    include bitbucketApi
     include likec4Lib
     include structurizrCli
   }
@@ -92,8 +93,10 @@ views {
     include *
     include githubApi
     include gitlabApi
+    include bitbucketApi
     include erode.core.platforms.* -> githubApi
     include erode.core.platforms.* -> gitlabApi
+    include erode.core.platforms.* -> bitbucketApi
   }
 
 }

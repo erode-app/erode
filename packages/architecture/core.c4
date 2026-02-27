@@ -69,6 +69,11 @@ model {
         description 'GitLab REST API for merge requests and comments'
         technology 'REST API'
       }
+
+      bitbucket = platform 'Bitbucket' {
+        description 'Bitbucket REST API for pull requests and comments'
+        technology 'REST API'
+      }
     }
 
     analysis = module 'Analysis' {
@@ -113,6 +118,7 @@ model {
   // Platforms to external APIs
   erode.core.platforms.github -[async]-> githubApi 'fetches PRs and posts comments'
   erode.core.platforms.gitlab -[async]-> gitlabApi 'fetches MRs and posts comments'
+  erode.core.platforms.bitbucket -[async]-> bitbucketApi 'fetches PRs and posts comments'
 
   // Adapters to external tools
   erode.core.adapters.likec4Adapter -> likec4Lib 'parses .c4 files'
