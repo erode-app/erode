@@ -22,7 +22,7 @@ erode:
   variables:
     GITLAB_TOKEN: $GITLAB_API_TOKEN
     ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
-    LIKEC4_MODEL_REPO: 'group/architecture-model'
+    ERODE_MODEL_REPO: 'group/architecture-model'
 ```
 
 ### Environment variables
@@ -32,13 +32,14 @@ erode:
 | `GITLAB_TOKEN`                                             | Yes      |                      | GitLab API token with `api` scope                                                              |
 | `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY` | Yes      |                      | AI provider API key                                                                            |
 | `AI_PROVIDER`                                              | No       | `anthropic`          | `gemini`, `openai`, or `anthropic`                                                             |
-| `LIKEC4_MODEL_REPO`                                        | No       |                      | Model repository path (e.g. `group/architecture-model`). Omit if the model is in the same repo |
-| `LIKEC4_MODEL_PATH`                                        | No       | `.`                  | Path to model within the repository                                                            |
-| `LIKEC4_MODEL_REF`                                         | No       | `main`               | Git ref for the model repository                                                               |
-| `LIKEC4_MODEL_REPO_TOKEN`                                  | No       | `$GITLAB_TOKEN`      | Separate token for model repository access                                                     |
-| `LIKEC4_OPEN_PR`                                           | No       | `false`              | Create MR with suggested model updates                                                         |
-| `LIKEC4_FAIL_ON_VIOLATIONS`                                | No       | `false`              | Exit with code 1 when violations are found                                                     |
-| `LIKEC4_SKIP_FILE_FILTERING`                               | No       | `false`              | Analyze all changed files                                                                      |
+| `ERODE_MODEL_REPO`                                         | No       |                      | Model repository path (e.g. `group/architecture-model`). Omit if the model is in the same repo |
+| `ERODE_MODEL_PATH`                                         | No       | `.`                  | Path to model within the repository                                                            |
+| `ERODE_MODEL_REF`                                          | No       | `main`               | Git ref for the model repository                                                               |
+| `ERODE_MODEL_FORMAT`                                       | No       | `likec4`             | Architecture model format (`likec4` or `structurizr`)                                          |
+| `ERODE_MODEL_REPO_TOKEN`                                   | No       | `$GITLAB_TOKEN`      | Separate token for model repository access                                                     |
+| `ERODE_OPEN_PR`                                            | No       | `false`              | Create MR with suggested model updates                                                         |
+| `ERODE_FAIL_ON_VIOLATIONS`                                 | No       | `false`              | Exit with code 1 when violations are found                                                     |
+| `ERODE_SKIP_FILE_FILTERING`                                | No       | `false`              | Analyze all changed files                                                                      |
 | `GITLAB_BASE_URL`                                          | No       | `https://gitlab.com` | For self-hosted GitLab instances                                                               |
 
 ## Calling the CLI directly

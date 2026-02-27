@@ -115,7 +115,7 @@ PR comments are created through GitHub's Issues API (`issues.createComment`), so
 
 `GITLAB_TOKEN` is used for all operations on the source project — reading MR diffs, posting notes, and (with `--open-pr`) creating branches, commits, and merge requests. The `api` scope is required; `read_api` is **not** sufficient.
 
-For external model projects, the CI entrypoint accepts `LIKEC4_MODEL_REPO_TOKEN` (see [GitLab CI](/docs/ci/gitlab-ci/)).
+For external model projects, the CI entrypoint accepts `ERODE_MODEL_REPO_TOKEN` (see [GitLab CI](/docs/ci/gitlab-ci/)).
 
 | Type                  | Scope | Minimum role |
 | --------------------- | ----- | ------------ |

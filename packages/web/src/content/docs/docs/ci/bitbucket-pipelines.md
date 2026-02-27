@@ -25,7 +25,7 @@ pipelines:
           variables:
             BITBUCKET_TOKEN: $BITBUCKET_TOKEN
             ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
-            LIKEC4_MODEL_REPO: 'workspace/architecture-model'
+            ERODE_MODEL_REPO: 'workspace/architecture-model'
 ```
 
 :::note
@@ -39,13 +39,14 @@ Bitbucket Pipelines does **not** provide a built-in token like GitHub's `GITHUB_
 | `BITBUCKET_TOKEN`                                          | Yes      |                                 | App password or repository/workspace access token           |
 | `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY` | Yes      |                                 | AI provider API key                                         |
 | `AI_PROVIDER`                                              | No       | `anthropic`                     | `gemini`, `openai`, or `anthropic`                          |
-| `LIKEC4_MODEL_REPO`                                        | No       |                                 | Model repository path (e.g. `workspace/architecture-model`) |
-| `LIKEC4_MODEL_PATH`                                        | No       | `.`                             | Path to model within the repository                         |
-| `LIKEC4_MODEL_REF`                                         | No       | `main`                          | Git ref for the model repository                            |
-| `LIKEC4_MODEL_REPO_TOKEN`                                  | No       | `$BITBUCKET_TOKEN`              | Separate token for model repository access                  |
-| `LIKEC4_OPEN_PR`                                           | No       | `false`                         | Create PR with suggested model updates                      |
-| `LIKEC4_FAIL_ON_VIOLATIONS`                                | No       | `false`                         | Exit with code 1 when violations are found                  |
-| `LIKEC4_SKIP_FILE_FILTERING`                               | No       | `false`                         | Analyze all changed files                                   |
+| `ERODE_MODEL_REPO`                                         | No       |                                 | Model repository path (e.g. `workspace/architecture-model`) |
+| `ERODE_MODEL_PATH`                                         | No       | `.`                             | Path to model within the repository                         |
+| `ERODE_MODEL_REF`                                          | No       | `main`                          | Git ref for the model repository                            |
+| `ERODE_MODEL_FORMAT`                                       | No       | `likec4`                        | Architecture model format (`likec4` or `structurizr`)       |
+| `ERODE_MODEL_REPO_TOKEN`                                   | No       | `$BITBUCKET_TOKEN`              | Separate token for model repository access                  |
+| `ERODE_OPEN_PR`                                            | No       | `false`                         | Create PR with suggested model updates                      |
+| `ERODE_FAIL_ON_VIOLATIONS`                                 | No       | `false`                         | Exit with code 1 when violations are found                  |
+| `ERODE_SKIP_FILE_FILTERING`                                | No       | `false`                         | Analyze all changed files                                   |
 | `BITBUCKET_BASE_URL`                                       | No       | `https://api.bitbucket.org/2.0` | For self-hosted Bitbucket Data Center/Server instances      |
 
 ## Calling the CLI directly

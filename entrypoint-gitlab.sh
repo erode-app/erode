@@ -16,27 +16,28 @@ MR_URL="${CI_PROJECT_URL}/-/merge_requests/${CI_MERGE_REQUEST_IID}"
 # ── 2. Export env vars for the CLI ──
 
 export AI_PROVIDER="${AI_PROVIDER:-anthropic}"
+export MODEL_FORMAT="${ERODE_MODEL_FORMAT:-likec4}"
 # ANTHROPIC_API_KEY, GEMINI_API_KEY, GITLAB_TOKEN should be set as CI/CD variables
 
 # ── 3. Clone model repository (if separate from source) ──
 
-MODEL_DIR="${LIKEC4_MODEL_PATH:-.}"
+MODEL_DIR="${ERODE_MODEL_PATH:-.}"
 
-if [ -n "${LIKEC4_MODEL_REPO:-}" ]; then
+if [ -n "${ERODE_MODEL_REPO:-}" ]; then
   MODEL_CLONE_DIR="/tmp/model-repo"
-  CLONE_TOKEN="${LIKEC4_MODEL_REPO_TOKEN:-$GITLAB_TOKEN}"
+  CLONE_TOKEN="${ERODE_MODEL_REPO_TOKEN:-$GITLAB_TOKEN}"
 
   GIT_ASKPASS_SCRIPT="/tmp/git-askpass-$$"
   printf '#!/bin/sh\necho "%s"' "$CLONE_TOKEN" > "$GIT_ASKPASS_SCRIPT"
   chmod +x "$GIT_ASKPASS_SCRIPT"
 
-  GIT_ASKPASS="$GIT_ASKPASS_SCRIPT" git clone --depth 1 --branch "${LIKEC4_MODEL_REF:-main}" \
-    "https://gitlab-ci-token@${CI_SERVER_HOST:-gitlab.com}/${LIKEC4_MODEL_REPO}.git" \
+  GIT_ASKPASS="$GIT_ASKPASS_SCRIPT" git clone --depth 1 --branch "${ERODE_MODEL_REF:-main}" \
+    "https://gitlab-ci-token@${CI_SERVER_HOST:-gitlab.com}/${ERODE_MODEL_REPO}.git" \
     "$MODEL_CLONE_DIR"
 
   rm -f "$GIT_ASKPASS_SCRIPT"
 
-  MODEL_DIR="${MODEL_CLONE_DIR}/${LIKEC4_MODEL_PATH:-.}"
+  MODEL_DIR="${MODEL_CLONE_DIR}/${ERODE_MODEL_PATH:-.}"
 fi
 
 # ── 4. Build CLI args and exec ──
@@ -44,12 +45,13 @@ fi
 CORE_ARGS=(
   analyze "$MODEL_DIR"
   --url "$MR_URL"
+  --model-format "$MODEL_FORMAT"
   --format json
   --comment
 )
 
-[ "${LIKEC4_OPEN_PR:-false}" = "true" ] && CORE_ARGS+=(--generate-model --open-pr)
-[ "${LIKEC4_SKIP_FILE_FILTERING:-false}" = "true" ] && CORE_ARGS+=(--skip-file-filtering)
-[ "${LIKEC4_FAIL_ON_VIOLATIONS:-false}" = "true" ] && CORE_ARGS+=(--fail-on-violations)
+[ "${ERODE_OPEN_PR:-false}" = "true" ] && CORE_ARGS+=(--generate-model --open-pr)
+[ "${ERODE_SKIP_FILE_FILTERING:-false}" = "true" ] && CORE_ARGS+=(--skip-file-filtering)
+[ "${ERODE_FAIL_ON_VIOLATIONS:-false}" = "true" ] && CORE_ARGS+=(--fail-on-violations)
 
 exec node /app/packages/core/dist/ci-entry.js "${CORE_ARGS[@]}"
