@@ -35,7 +35,7 @@ For any CI platform, use the published container image:
 docker run --rm \
   -e GITHUB_TOKEN="$GITHUB_TOKEN" \
   -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
-  ghcr.io/erode-app/erode:latest \
+  ghcr.io/erode-app/erode:0 \
   analyze /model --url "$PR_URL" --comment --fail-on-violations
 ```
 
@@ -46,7 +46,7 @@ docker run --rm \
   -v ./architecture:/model \
   -e GITHUB_TOKEN="$GITHUB_TOKEN" \
   -e GEMINI_API_KEY="$GEMINI_API_KEY" \
-  ghcr.io/erode-app/erode:latest \
+  ghcr.io/erode-app/erode:0 \
   analyze /model --url "$PR_URL" --comment
 ```
 
@@ -54,7 +54,7 @@ docker run --rm \
 
 ```yaml
 analyze:
-  image: ghcr.io/erode-app/erode:latest
+  image: ghcr.io/erode-app/erode:0
   entrypoint: ['']
   script:
     - >

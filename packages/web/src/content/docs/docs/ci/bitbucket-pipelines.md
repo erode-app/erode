@@ -19,7 +19,7 @@ pipelines:
     '**':
       - step:
           name: erode
-          image: ghcr.io/erode-app/erode:latest
+          image: ghcr.io/erode-app/erode:0
           script:
             - /entrypoint-bitbucket.sh
           variables:
@@ -59,7 +59,7 @@ pipelines:
     '**':
       - step:
           name: erode
-          image: ghcr.io/erode-app/erode:latest
+          image: ghcr.io/erode-app/erode:0
           script:
             - >
               node /app/packages/core/dist/ci-entry.js analyze ./model
@@ -78,7 +78,7 @@ pipelines:
     '**':
       - step:
           name: erode
-          image: ghcr.io/erode-app/erode:latest
+          image: ghcr.io/erode-app/erode:0
           script:
             - git clone --depth 1 "https://x-token-auth:${BITBUCKET_TOKEN}@bitbucket.org/workspace/architecture-model.git" /tmp/model
             - >

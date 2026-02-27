@@ -63,5 +63,5 @@ outputs:
 
 runs:
   using: 'docker'
-  image: 'Dockerfile'
-  # image: 'docker://ghcr.io/erode-app/erode:1'
+  # image: 'Dockerfile'
+  image: 'docker://ghcr.io/erode-app/erode:0'

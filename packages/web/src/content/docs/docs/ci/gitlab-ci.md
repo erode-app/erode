@@ -15,7 +15,7 @@ The image includes `entrypoint-gitlab.sh`, which handles model cloning and MR UR
 
 ```yaml
 erode:
-  image: ghcr.io/erode-app/erode:latest
+  image: ghcr.io/erode-app/erode:0
   entrypoint: ['/entrypoint-gitlab.sh']
   rules:
     - if: $CI_MERGE_REQUEST_IID
@@ -48,7 +48,7 @@ If you prefer more control, disable the default entrypoint and call the CLI:
 
 ```yaml
 erode:
-  image: ghcr.io/erode-app/erode:latest
+  image: ghcr.io/erode-app/erode:0
   entrypoint: ['']
   script:
     - >
@@ -66,7 +66,7 @@ erode:
 
 ```yaml
 erode:
-  image: ghcr.io/erode-app/erode:latest
+  image: ghcr.io/erode-app/erode:0
   entrypoint: ['']
   script:
     - git clone --depth 1 "https://gitlab-ci-token:${GITLAB_TOKEN}@gitlab.com/group/architecture-model.git" /tmp/model
