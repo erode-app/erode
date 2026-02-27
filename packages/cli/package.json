@@ -20,6 +20,7 @@
     "test:watch": "vitest",
     "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\" \"npm:build\""
   },
+  "license": "MIT",
   "dependencies": {
     "@erode/core": "*",
     "chalk": "^5.3.0",

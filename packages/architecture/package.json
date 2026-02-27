@@ -1,6 +1,7 @@
 {
   "name": "@erode/architecture",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "dev": "likec4 dev .",
     "validate": "likec4 validate .",
