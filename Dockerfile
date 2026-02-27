@@ -11,7 +11,7 @@ COPY packages/architecture/package.json packages/architecture/
 COPY packages/eslint-config/package.json packages/eslint-config/
 COPY packages/web/package.json packages/web/
 
-RUN --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,target=/root/.npm,id=npm-${TARGETPLATFORM} \
     npm ci --workspace=packages/core
 
 COPY packages/core/tsconfig.json packages/core/
@@ -53,7 +53,7 @@ COPY packages/architecture/package.json packages/architecture/
 COPY packages/eslint-config/package.json packages/eslint-config/
 COPY packages/web/package.json packages/web/
 
-RUN --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,target=/root/.npm,id=npm-${TARGETPLATFORM} \
     npm ci --workspace=packages/core --omit=dev && \
     npm cache clean --force
 
