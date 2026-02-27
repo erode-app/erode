@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ── Stage 1: Build ──────────────────────────────────────────────
-FROM node:24-slim AS builder
+FROM node:25-slim AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -24,7 +24,7 @@ RUN npm run build --workspace=packages/core
 FROM eclipse-temurin:21-jre-noble AS jre
 
 # ── Stage 3: Structurizr WAR (runs parallel with Stage 1) ──────
-FROM node:24-slim AS structurizr
+FROM node:25-slim AS structurizr
 ARG STRUCTURIZR_VERSION=2026.02.01
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl ca-certificates && \
@@ -33,7 +33,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # ── Stage 4: Runtime ───────────────────────────────────────────
-FROM node:24-slim
+FROM node:25-slim
 WORKDIR /app
 
 COPY --from=jre /opt/java/openjdk /opt/java/openjdk
