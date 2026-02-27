@@ -29,6 +29,9 @@ const {
       rel="stylesheet"
     />
     <title>{title}</title>
+    {import.meta.env.PROD && (
+      <script is:inline defer src="https://cloud.umami.is/script.js" data-website-id="66f0c303-fba0-4095-8732-f6230c3d6209"></script>
+    )}
   </head>
   <body>
     <slot />

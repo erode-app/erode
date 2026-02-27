@@ -36,6 +36,18 @@ export default defineConfig({
             rel: 'stylesheet',
           },
         },
+        ...(process.env.NODE_ENV === 'production'
+          ? [
+              {
+                tag: 'script',
+                attrs: {
+                  defer: true,
+                  src: 'https://cloud.umami.is/script.js',
+                  'data-website-id': '66f0c303-fba0-4095-8732-f6230c3d6209',
+                },
+              },
+            ]
+          : []),
       ],
       customCss: ['./src/styles/starlight-custom.css'],
       sidebar: [
