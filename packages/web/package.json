@@ -19,7 +19,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
     "@erode/eslint-config": "*",
-    "eslint": "^9.39.1",
+    "eslint": "^10.0.2",
     "eslint-plugin-astro": "^1.6.0",
     "typescript": "^5.9.3"
   }
