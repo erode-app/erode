@@ -1,12 +1,12 @@
 ---
 title: LikeC4 Model
-description: Write the architecture model that erode reads.
+description: Write the architecture model that Erode reads.
 ---
 
 Erode reads a LikeC4 architecture model to understand your system's intended structure. It compares pull request changes against this model to detect drift.
 
 :::tip[See it in action]
-Check out the [playground example PR](https://github.com/erode-app/playground/pull/1) to see erode analyzing a LikeC4 model.
+Check out the [playground example PR](https://github.com/erode-app/playground/pull/1) to see Erode analyzing a LikeC4 model.
 :::
 
 ## What is LikeC4
@@ -41,7 +41,7 @@ model {
 
 Each component needs a `link` pointing to its GitHub repository. Erode uses this to match a pull request to the right component in the model. Components without a `link` are invisible to the analysis.
 
-This declares that the frontend depends on the backend through a REST API. If a pull request introduces a direct database call from the frontend, erode would flag this as an undeclared dependency.
+This declares that the frontend depends on the backend through a REST API. If a pull request introduces a direct database call from the frontend, Erode would flag this as an undeclared dependency.
 
 ## Where to put model files
 
@@ -84,16 +84,16 @@ Point the GitHub Action at this repository using `model-repo`:
 
 See [GitHub Actions](/docs/ci/github-actions/) for all model repository options including `model-path`, `model-ref`, and `model-repo-token`.
 
-## How erode uses the model
+## How Erode uses the model
 
-During analysis, erode:
+During analysis, Erode:
 
 1. Loads the architecture model and resolves the component(s) relevant to the repository
 2. Extracts dependency changes from the PR diff
 3. Compares those changes against the declared relationships in the model
 4. Reports any dependencies that exist in the code but are missing from the model
 
-A more complete architecture model gives erode more accurate results.
+The more accurately the model reflects the dependencies that matter, the better Erode can detect drift. You do not need to model every detail — focus on the relationships worth protecting.
 
 ## Version requirements
 

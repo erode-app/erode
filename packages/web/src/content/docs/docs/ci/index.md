@@ -1,13 +1,13 @@
 ---
 title: CI Integration
-description: Set up erode in your CI pipeline to detect architecture drift on every pull request.
+description: Set up Erode in your CI pipeline to detect architecture drift on every pull request.
 head:
   - tag: script
     attrs:
       src: /architecture/likec4-views.js
 ---
 
-Erode runs inside your CI pipeline and analyzes every pull request against your architecture model. When a PR introduces an undeclared dependency, erode flags the violation and comments directly on the pull request.
+Erode runs inside your CI pipeline and analyzes every pull request against your architecture model. When a PR introduces an undeclared dependency, Erode flags the violation and comments directly on the pull request.
 
 All platforms use the same Docker image and analysis engine — only the entrypoint and platform-specific environment variables differ.
 
@@ -25,7 +25,7 @@ All platforms use the same Docker image and analysis engine — only the entrypo
 | GitLab CI           | Experimental | [GitLab CI](/docs/ci/gitlab-ci/)                     |
 | Bitbucket Pipelines | Experimental | [Bitbucket Pipelines](/docs/ci/bitbucket-pipelines/) |
 
-You can also run erode on any infrastructure using the [self-hosted](/docs/ci/self-hosted/) guide.
+You can also run Erode on any infrastructure using the [self-hosted](/docs/ci/self-hosted/) guide.
 
 ## GitHub Actions
 
@@ -55,6 +55,6 @@ Erode provides an entrypoint script (`entrypoint-bitbucket.sh`) for Bitbucket Cl
 
 ## Self-hosted
 
-Run erode on any infrastructure — bare metal, Kubernetes, or other CI systems — using the Docker image or the CLI directly.
+Run Erode on any infrastructure — bare metal, Kubernetes, or other CI systems — using the Docker image or the CLI directly.
 
 [Self-hosted guide →](/docs/ci/self-hosted/)

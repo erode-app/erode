@@ -1,6 +1,6 @@
 ---
 title: How It Works
-description: Understand the multi-stage AI pipeline that powers erode.
+description: Understand the multi-stage AI pipeline that powers Erode.
 head:
   - tag: script
     attrs:
@@ -17,7 +17,7 @@ Erode uses a multi-stage AI pipeline to analyze pull requests for architecture d
 
 ## File filtering
 
-Before any AI stage runs, erode filters the PR diff to remove files that are irrelevant to architecture analysis. Tests, documentation, lock files, build config, CI config, and build output are all stripped out automatically. This reduces noise and saves API usage.
+Before any AI stage runs, Erode filters the PR diff to remove files that are irrelevant to architecture analysis. Tests, documentation, lock files, build config, CI config, and build output are all stripped out automatically. This reduces noise and saves API usage.
 
 The built-in skip patterns cover:
 
@@ -32,7 +32,7 @@ To analyze all files regardless of these patterns, set `skip-file-filtering: 'tr
 
 ## Stage 1 -- Resolve
 
-When a repository maps to multiple components in the architecture model, erode uses AI to determine which component is most relevant to the pull request. This stage uses a cheaper model (Haiku for Anthropic, Mini for OpenAI, Flash for Gemini) to keep costs low.
+When a repository maps to multiple components in the architecture model, Erode uses AI to determine which component is most relevant to the pull request. This stage uses a cheaper model (Haiku for Anthropic, Mini for OpenAI, Flash for Gemini) to keep costs low.
 
 This stage is skipped entirely when the repository maps to a single component.
 
@@ -52,7 +52,7 @@ A stronger model (Sonnet for Anthropic, GPT-4.1 for OpenAI, Flash for Gemini) co
 
 ## Stage 4 -- Generate (optional)
 
-When enabled, erode produces architecture model updates that bring the model back in sync with reality. This can be used to open a follow-up pull request that updates the model.
+When enabled, Erode produces architecture model updates that bring the model back in sync with reality. This can be used to open a follow-up pull request that updates the model.
 
 ## Prompt templates
 

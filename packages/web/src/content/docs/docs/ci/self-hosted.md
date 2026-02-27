@@ -1,9 +1,9 @@
 ---
 title: Self-Hosted
-description: Run erode outside the official GitHub Action.
+description: Run Erode outside the official GitHub Action.
 ---
 
-The [GitHub Action](/docs/ci/github-actions/) is the fastest way to get started, but you may want to run erode yourself if you:
+The [GitHub Action](/docs/ci/github-actions/) is the fastest way to get started, but you may want to run Erode yourself if you:
 
 - Need full control over the runtime environment
 - Use GitHub Enterprise Server, self-hosted GitLab, or Bitbucket Cloud
@@ -66,11 +66,11 @@ analyze:
     ANTHROPIC_API_KEY: $MY_ANTHROPIC_KEY
 ```
 
-Override the entrypoint to call the CI entry point directly. The image includes Node.js and the built erode package at `/app/packages/core/dist/ci-entry.js`.
+Override the entrypoint to call the CI entry point directly. The image includes Node.js and the built Erode package at `/app/packages/core/dist/ci-entry.js`.
 
 ## Option 3: CLI
 
-Clone the repository, build, and run erode as a regular Node.js CLI:
+Clone the repository, build, and run Erode as a regular Node.js CLI:
 
 ```bash
 git clone https://github.com/erode-app/erode.git

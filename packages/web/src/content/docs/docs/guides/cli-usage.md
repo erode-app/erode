@@ -1,6 +1,6 @@
 ---
 title: CLI Usage
-description: Run erode from the command line.
+description: Run Erode from the command line.
 ---
 
 Erode provides four commands for working with architecture models and analyzing change requests.
@@ -23,7 +23,7 @@ node packages/cli/dist/cli.js --help
 
 ## Interactive mode
 
-When run without arguments in an interactive terminal, erode starts an Ink-based wizard that guides you through command selection and option entry.
+When run without arguments in an interactive terminal, Erode starts an Ink-based wizard that guides you through command selection and option entry.
 
 ## Commands
 

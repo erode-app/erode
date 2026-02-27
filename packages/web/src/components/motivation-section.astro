@@ -1,0 +1,59 @@
+<section class="container">
+  <h2>Moving fast means staying aligned</h2>
+  <div class="prose">
+    <p>
+      The bottleneck in most growing teams is not engineering speed. It is shared
+      understanding. When people don't know how the system fits together, they make
+      decisions in isolation. Dependencies appear that nobody planned for. Architecture
+      reviews turn into archaeology.
+    </p>
+    <p>
+      A model that reflects reality fixes this. But models maintained by hand die the
+      moment the team gets busy, which is always. Erode keeps the model honest by
+      catching drift during code review, so the map stays useful without anyone
+      remembering to update it.
+    </p>
+    <a href="/docs/why-it-matters/" class="read-more">Read the full case &rarr;</a>
+  </div>
+</section>
+
+<style>
+  section {
+    padding-block: var(--space-2xl);
+    border-top: 1px solid var(--border);
+  }
+
+  h2 {
+    color: var(--text-primary);
+    text-align: center;
+  }
+
+  .prose {
+    max-width: 40rem;
+    margin-inline: auto;
+    margin-top: var(--space-lg);
+  }
+
+  .prose p {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  .prose p + p {
+    margin-top: var(--space-md);
+  }
+
+  .read-more {
+    display: inline-block;
+    margin-top: var(--space-lg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--accent);
+    transition: opacity 0.2s;
+  }
+
+  .read-more:hover {
+    opacity: 0.8;
+  }
+</style>

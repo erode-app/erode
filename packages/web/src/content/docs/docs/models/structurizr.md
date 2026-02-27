@@ -1,6 +1,6 @@
 ---
 title: Structurizr Model
-description: Use a Structurizr workspace as the architecture model that erode reads.
+description: Use a Structurizr workspace as the architecture model that Erode reads.
 sidebar:
   badge:
     text: Experimental
@@ -14,7 +14,7 @@ Structurizr support is new and under active development. If you are starting fre
 :::
 
 :::tip[See it in action]
-Check out the [playground example PR](https://github.com/erode-app/playground/pull/2) to see erode analyzing a Structurizr workspace.
+Check out the [playground example PR](https://github.com/erode-app/playground/pull/2) to see Erode analyzing a Structurizr workspace.
 :::
 
 ## What is Structurizr
@@ -49,7 +49,7 @@ workspace {
 
 Each element needs a `url` property pointing to its GitHub repository. Erode uses this to match a pull request to the right element in the model. Elements without a `url` are invisible to the analysis.
 
-This declares that the frontend depends on the backend through a REST API. If a pull request introduces a direct database call from the frontend, erode would flag this as an undeclared dependency.
+This declares that the frontend depends on the backend through a REST API. If a pull request introduces a direct database call from the frontend, Erode would flag this as an undeclared dependency.
 
 ## Prerequisites
 
@@ -58,10 +58,10 @@ Erode can load Structurizr models in two ways:
 - **`.json` files** — pre-exported workspace JSON. No extra tooling needed.
 - **`.dsl` files** — Structurizr DSL source. Requires the Structurizr CLI to export to JSON.
 
-The erode Docker image and GitHub Action bundle Java 21 and the Structurizr CLI, so `.dsl` files work out of the box. If running the CLI locally, you need one of:
+The Erode Docker image and GitHub Action bundle Java 21 and the Structurizr CLI, so `.dsl` files work out of the box. If running the CLI locally, you need one of:
 
 - **Java 21+** with `STRUCTURIZR_CLI_PATH` pointing to the Structurizr WAR file
-- **Docker** — erode falls back to `docker run structurizr/structurizr` automatically
+- **Docker** — Erode falls back to `docker run structurizr/structurizr` automatically
 
 To skip runtime dependencies entirely, pre-export your workspace:
 
@@ -69,7 +69,7 @@ To skip runtime dependencies entirely, pre-export your workspace:
 java -jar structurizr.war export -workspace workspace.dsl -format json
 ```
 
-Then point erode at the generated `.json` file.
+Then point Erode at the generated `.json` file.
 
 ## Where to put model files
 
@@ -111,16 +111,16 @@ Point the GitHub Action at this repository using `model-repo`:
 
 See [GitHub Actions](/docs/ci/github-actions/) for all model repository options including `model-path`, `model-ref`, and `model-repo-token`.
 
-## How erode uses the model
+## How Erode uses the model
 
-During analysis, erode:
+During analysis, Erode:
 
 1. Loads the Structurizr workspace and resolves the element(s) relevant to the repository
 2. Extracts dependency changes from the PR diff
 3. Compares those changes against the declared relationships in the model
 4. Reports any dependencies that exist in the code but are missing from the model
 
-A more complete architecture model gives erode more accurate results.
+The more accurately the model reflects the dependencies that matter, the better Erode can detect drift. You do not need to model every detail — focus on the relationships worth protecting.
 
 ## ID resolution
 
@@ -134,4 +134,4 @@ IDs are hierarchical: a container inside a software system gets a dotted path li
 
 ## Version requirements
 
-The erode Docker image and GitHub Action bundle Structurizr CLI v2026.02.01. If running locally with `.dsl` files, you need Java 21+ or Docker. Pre-exported `.json` files have no version dependency.
+The Erode Docker image and GitHub Action bundle Structurizr CLI v2026.02.01. If running locally with `.dsl` files, you need Java 21+ or Docker. Pre-exported `.json` files have no version dependency.

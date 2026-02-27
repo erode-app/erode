@@ -1,6 +1,6 @@
 ---
 title: Contributing
-description: How to contribute to the erode monorepo.
+description: How to contribute to the Erode monorepo.
 head:
   - tag: script
     attrs:

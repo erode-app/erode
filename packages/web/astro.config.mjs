@@ -41,7 +41,11 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Start Here',
-          items: [{ slug: 'docs/getting-started' }, { slug: 'docs/how-it-works' }],
+          items: [
+            { slug: 'docs/getting-started' },
+            { slug: 'docs/how-it-works' },
+            { slug: 'docs/why-it-matters' },
+          ],
         },
         {
           label: 'CI Integration',

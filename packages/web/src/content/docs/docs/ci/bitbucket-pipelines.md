@@ -1,6 +1,6 @@
 ---
 title: Bitbucket Pipelines
-description: Set up erode as a Bitbucket Pipelines step.
+description: Set up Erode as a Bitbucket Pipelines step.
 sidebar:
   badge:
     text: Experimental

@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Environment variables for tuning the erode analysis engine.
+description: Environment variables for tuning the Erode analysis engine.
 ---
 
 Erode is configured through environment variables. There are no configuration files.
@@ -33,7 +33,7 @@ For GitHub Actions-specific inputs (`model-repo`, `fail-on-violations`, etc.), s
 | `MAX_LINES_PER_DIFF` | Maximum number of lines to include in the diff | `5000`  |
 | `MAX_CONTEXT_CHARS`  | Maximum characters of architectural context    | `10000` |
 
-Large diffs are truncated to stay within these limits. If a PR exceeds them, erode processes the most relevant files first based on the architecture model context.
+Large diffs are truncated to stay within these limits. If a PR exceeds them, Erode processes the most relevant files first based on the architecture model context.
 
 ## Provider model overrides
 
@@ -132,7 +132,7 @@ For external model projects, the CI entrypoint accepts `ERODE_MODEL_REPO_TOKEN` 
 
 ### Token permissions
 
-`BITBUCKET_TOKEN` handles all operations — there is no separate model-repo token. If the token contains `:` (e.g. `username:app_password`), erode uses HTTP Basic auth; otherwise it uses Bearer auth.
+`BITBUCKET_TOKEN` handles all operations — there is no separate model-repo token. If the token contains `:` (e.g. `username:app_password`), Erode uses HTTP Basic auth; otherwise it uses Bearer auth.
 
 | Feature                              | App password scopes                       |
 | ------------------------------------ | ----------------------------------------- |

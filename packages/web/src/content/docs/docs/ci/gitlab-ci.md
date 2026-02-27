@@ -1,6 +1,6 @@
 ---
 title: GitLab CI
-description: Set up erode as a GitLab CI pipeline job.
+description: Set up Erode as a GitLab CI pipeline job.
 sidebar:
   badge:
     text: Experimental

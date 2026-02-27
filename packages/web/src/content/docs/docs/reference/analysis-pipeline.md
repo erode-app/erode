@@ -1,6 +1,6 @@
 ---
 title: Analysis Pipeline
-description: Detailed stage-by-stage reference for erode's analysis pipeline.
+description: Detailed stage-by-stage reference for Erode's analysis pipeline.
 head:
   - tag: script
     attrs:

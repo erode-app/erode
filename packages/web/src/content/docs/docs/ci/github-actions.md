@@ -1,9 +1,9 @@
 ---
 title: GitHub Actions
-description: Set up erode as a GitHub Actions workflow.
+description: Set up Erode as a GitHub Actions workflow.
 ---
 
-The recommended way to run erode is as a GitHub Actions workflow that checks every pull request automatically.
+The recommended way to run Erode is as a GitHub Actions workflow that checks every pull request automatically.
 
 ## Basic workflow
 
@@ -29,7 +29,7 @@ jobs:
 See the [playground repository](https://github.com/erode-app/playground) for a complete working setup with a LikeC4 model and GitHub Actions workflow you can fork.
 :::
 
-The `if` guard skips dependabot PRs and draft PRs. Since erode uses AI tokens on every run, this avoids spending them on automated dependency bumps and work-in-progress PRs that rarely introduce architectural drift. Remove the guard if you want erode to run on all PRs.
+The `if` guard skips dependabot PRs and draft PRs. Since Erode uses AI tokens on every run, this avoids spending them on automated dependency bumps and work-in-progress PRs that rarely introduce architectural drift. Remove the guard if you want Erode to run on all PRs.
 
 The action runs in a Docker container that clones the model repository directly — you do not need an `actions/checkout` step.
 
@@ -105,7 +105,7 @@ steps:
 
 ## PR comments
 
-After analysis, erode posts a comment on the pull request containing:
+After analysis, Erode posts a comment on the pull request containing:
 
 - A **summary** of the analysis result
 - A **violations table** listing each finding with its severity (high, medium, or low), the affected dependency, and a description
@@ -154,6 +154,6 @@ The `owner` field ensures the token covers all repositories the App is installed
 ## Tips
 
 - Start with the Gemini provider during evaluation — it is generally cheaper. OpenAI is another good option for production workflows.
-- Keep your architecture model up to date. erode can only detect drift against what is declared in the model.
+- Keep your architecture model up to date. Erode can only detect drift against what is declared in the model.
 - Set `fail-on-violations: 'true'` to block PRs that introduce undeclared dependencies.
 - See [Configuration](/docs/guides/configuration/) for tuning diff limits, timeouts, and model overrides.

@@ -1,9 +1,9 @@
 ---
 title: Getting Started
-description: Set up erode in your CI pipeline in under five minutes.
+description: Set up Erode in your CI pipeline in under five minutes.
 ---
 
-Erode detects architecture drift by comparing pull requests against your architecture model. When a PR introduces an undeclared dependency, erode flags it as a violation and comments directly on the pull request.
+Erode detects architecture drift by comparing pull requests against your architecture model. When a PR introduces an undeclared dependency, Erode flags it as a violation and comments directly on the pull request.
 
 ## Prerequisites
 
@@ -44,16 +44,16 @@ Erode runs on every PR and posts a comment listing any undeclared dependencies, 
 
 ## Try the example project
 
-The [playground repository](https://github.com/erode-app/playground) is a ready-made example you can fork and use to try erode. It contains a multi-service architecture (frontend, API gateway, microservices, database) with a LikeC4 model and a pre-configured GitHub Actions workflow.
+The [playground repository](https://github.com/erode-app/playground) is a ready-made example you can fork and use to try Erode. It contains a multi-service architecture (frontend, API gateway, microservices, database) with a LikeC4 model and a pre-configured GitHub Actions workflow.
 
 1. [Fork the repository](https://github.com/erode-app/playground/fork)
 2. Add your `GEMINI_API_KEY` (or another [AI provider](/docs/reference/ai-providers/) key) as a repository secret
 3. Open a PR that introduces an undeclared dependency — for example, make the frontend call `user-service` directly instead of going through `api-gateway`
-4. erode will comment on the PR with the detected violation
+4. Erode will comment on the PR with the detected violation
 
 ## What's next
 
 - [CI Integration overview](/docs/ci/) — supported platforms and setup options
 - [GitHub Actions reference](/docs/ci/github-actions/) — all action inputs, outputs, and advanced examples
-- [CLI usage](/docs/guides/cli-usage/) — run erode locally against any PR
+- [CLI usage](/docs/guides/cli-usage/) — run Erode locally against any PR
 - [Configuration](/docs/guides/configuration/) — environment variables for tuning the analysis engine
