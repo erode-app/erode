@@ -1,4 +1,4 @@
-name: 'Erode'
+name: 'Erode Architecture Drift'
 description: 'Detect architecture erosion by comparing GitHub pull requests against an architecture model'
 
 branding:
