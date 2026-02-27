@@ -1,0 +1,64 @@
+{
+  "name": "@erode/core",
+  "version": "0.0.1",
+  "description": "Architecture erosion detection",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "erode-ci": "./dist/ci-entry.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\"",
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "bash scripts/copy-assets.sh",
+    "dev": "tsx watch src/ci-entry.ts",
+    "start": "node dist/ci-entry.js",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --report-unused-disable-directives --max-warnings 0 --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "architecture",
+    "erode",
+    "c4-model"
+  ],
+  "author": "Anders Hassis",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "@gitbeaker/rest": "^43.8.0",
+    "@google/genai": "^1.43.0",
+    "@octokit/rest": "^22.0.1",
+    "dotenv": "^17.2.3",
+    "likec4": "^1.45.0",
+    "minimatch": "^10.2.4",
+    "openai": "^6.25.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@erode/eslint-config": "*",
+    "@types/node": "^24.10.14",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.1",
+    "prettier": "^3.7.3",
+    "rimraf": "^6.1.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.14"
+  }
+}

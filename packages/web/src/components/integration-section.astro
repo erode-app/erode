@@ -1,0 +1,102 @@
+<section class="integration">
+  <div class="container">
+    <h2>Get Started</h2>
+    <p class="subtitle">Add erode to your CI pipeline.</p>
+    <div class="code-wrapper">
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">GitHub Actions</span>
+        </div>
+        <pre><code><span class="comment"># .github/workflows/erode.yml</span>
+name: Architecture Drift Check
+on: [pull_request]
+
+jobs:
+  erode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: erode-app/erode@main
+        with:
+          model-repo: your-org/architecture
+          github-token: $&#123;&#123; secrets.GITHUB_TOKEN &#125;&#125;
+          gemini-api-key: $&#123;&#123; secrets.GEMINI_API_KEY &#125;&#125;</code></pre>
+      </div>
+      <a href="/docs/getting-started/" class="docs-link">View full setup guide &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .integration {
+    padding-block: var(--space-2xl);
+    border-top: 1px solid var(--border);
+  }
+
+  h2 {
+    text-align: center;
+  }
+
+  .subtitle {
+    max-width: 28rem;
+    margin: var(--space-md) auto 0;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .code-wrapper {
+    max-width: 38rem;
+    margin: var(--space-xl) auto 0;
+  }
+
+  .code-block {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg-secondary);
+  }
+
+  .code-header {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-lang {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  pre {
+    padding: var(--space-md) var(--space-lg);
+    overflow-x: auto;
+    margin: 0;
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+  }
+
+  .comment {
+    color: var(--text-tertiary);
+  }
+
+  .docs-link {
+    display: block;
+    text-align: center;
+    margin-top: var(--space-md);
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+  }
+
+  .docs-link:hover {
+    color: var(--text-primary);
+  }
+</style>

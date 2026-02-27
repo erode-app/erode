@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# Post-commit hook: Auto-generate ADR for architectural changes
+# Runs Claude Code headlessly in background to analyze commits
+
+COMMIT_MSG=$(git log -1 --pretty=%B)
+
+# Opt-out checks
+if echo "$COMMIT_MSG" | grep -qiE "\[(skip-adr|no-adr)\]"; then
+    exit 0
+fi
+[ "$SKIP_ADR" = "1" ] && exit 0
+
+# Check for Claude CLI
+command -v claude >/dev/null 2>&1 || exit 0
+
+# Check for architectural indicators
+if echo "$COMMIT_MSG" | grep -qiE "(refactor|architecture|migrate|introduce|domain layer|api version)"; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Architectural change detected"
+    echo "  Running ADR generation in background..."
+    echo "  Check .claude-adr.log for output"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    nohup "$(dirname "$0")/adr-generator.sh" >> .claude-adr.log 2>&1 &
+fi
+
+exit 0

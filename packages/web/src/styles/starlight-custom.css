@@ -1,0 +1,60 @@
+/* Map landing page dark theme onto Starlight CSS custom properties */
+
+:root {
+  --sl-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --sl-font-system-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Gray scale — dark theme (Starlight expects 1 = lightest, 6 = darkest) */
+  --sl-color-gray-1: #fafafa;
+  --sl-color-gray-2: #c8c8cc;
+  --sl-color-gray-3: #91919a;
+  --sl-color-gray-4: #55555e;
+  --sl-color-gray-5: #2a2a30;
+  --sl-color-gray-6: #111113;
+  --sl-color-black: #0a0a0b;
+  --sl-color-white: #fafafa;
+
+  /* Accent — amber */
+  --sl-color-accent-low: #2a1f00;
+  --sl-color-accent: #f59e0b;
+  --sl-color-accent-high: #fef3c7;
+
+  --sl-color-text-accent: var(--sl-color-accent);
+}
+
+/* Light mode fallback */
+:root[data-theme='light'] {
+  --sl-color-gray-1: #111113;
+  --sl-color-gray-2: #55555e;
+  --sl-color-gray-3: #91919a;
+  --sl-color-gray-4: #c8c8cc;
+  --sl-color-gray-5: #e8e8ea;
+  --sl-color-gray-6: #fafafa;
+  --sl-color-black: #fafafa;
+  --sl-color-white: #111113;
+
+  --sl-color-accent-low: #fef3c7;
+  --sl-color-accent: #d97706;
+  --sl-color-accent-high: #451a03;
+}
+
+/* LikeC4 diagram embeds */
+.likec4-embed {
+  margin-block: 1.5rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: var(--sl-color-black);
+}
+
+.likec4-embed likec4-view {
+  display: block;
+  width: 100%;
+  height: 450px;
+}
+
+@media (max-width: 768px) {
+  .likec4-embed likec4-view {
+    height: 300px;
+  }
+}

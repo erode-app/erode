@@ -1,0 +1,58 @@
+model {
+
+  anthropicApi = external 'Anthropic API' {
+    #ai
+    description 'Anthropic language models'
+    technology 'REST API'
+    link https://docs.anthropic.com
+  }
+
+  geminiApi = external 'Gemini API' {
+    #ai
+    description 'Gemini language models'
+    technology 'REST API'
+    link https://ai.google.dev
+  }
+
+  openaiApi = external 'OpenAI API' {
+    #ai
+    description 'OpenAI language models'
+    technology 'REST API'
+    link https://platform.openai.com/docs
+  }
+
+  githubApi = external 'GitHub API' {
+    #git-platform
+    description 'Pull requests, commits, and comments'
+    technology 'REST API'
+    icon tech:github
+    link https://docs.github.com/en/rest
+  }
+
+  gitlabApi = external 'GitLab API' {
+    #git-platform
+    description 'Merge requests, commits, and comments'
+    technology 'REST API'
+    icon tech:gitlab
+    link https://docs.gitlab.com/api/
+  }
+
+  bitbucketApi = external 'Bitbucket API' {
+    #git-platform
+    description 'Pull requests, commits, and comments'
+    technology 'REST API'
+    link https://developer.atlassian.com/cloud/bitbucket/rest/
+  }
+
+  likec4Lib = external 'LikeC4' {
+    description 'Parses and computes LikeC4 architecture models'
+    link https://likec4.dev
+  }
+
+  structurizrCli = external 'Structurizr CLI' {
+    description 'Exports Structurizr DSL workspaces to JSON'
+    technology 'Java WAR / Docker'
+    link https://docs.structurizr.com/cli
+  }
+
+}

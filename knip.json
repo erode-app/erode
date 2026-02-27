@@ -1,0 +1,17 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "ignoreBinaries": ["tsx"],
+  "workspaces": {
+    "packages/core": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/cli": {
+      "project": ["src/**/*.ts", "src/**/*.tsx"]
+    },
+    "packages/eslint-config": {
+      "project": ["*.js"]
+    },
+    "packages/web": {},
+    "packages/architecture": {}
+  }
+}

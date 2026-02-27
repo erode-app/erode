@@ -1,0 +1,26 @@
+{
+  "name": "@erode/web",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npm run prebuild:diagrams && astro dev",
+    "prebuild:diagrams": "cd ../architecture && npm run build && cd ../web && rm -rf public/architecture && cp -r ../architecture/dist public/architecture",
+    "build": "npm run prebuild:diagrams && astro check && astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check --minimumFailingSeverity hint",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.37.6",
+    "astro": "^5.18.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@erode/eslint-config": "*",
+    "eslint": "^9.39.1",
+    "eslint-plugin-astro": "^1.6.0",
+    "typescript": "^5.9.3"
+  }
+}

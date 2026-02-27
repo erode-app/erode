@@ -1,0 +1,52 @@
+{
+  "name": "@erode/cli",
+  "version": "0.0.1",
+  "description": "Interactive CLI for erode architecture drift detection",
+  "type": "module",
+  "main": "dist/cli.js",
+  "bin": {
+    "erode": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --report-unused-disable-directives --max-warnings 0 --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\" \"npm:build\""
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@erode/core": "*",
+    "chalk": "^5.3.0",
+    "commander": "^14.0.2",
+    "ink": "^6.8.0",
+    "ink-select-input": "^6.2.0",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "react": "^19.2.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@erode/eslint-config": "*",
+    "@types/node": "^24.10.14",
+    "@types/react": "^19.2.0",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-you-might-not-need-an-effect": "^0.9.1",
+    "prettier": "^3.7.3",
+    "rimraf": "^6.1.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.14"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

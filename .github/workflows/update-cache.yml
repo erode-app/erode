@@ -1,0 +1,31 @@
+name: Update Cache
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: update-cache
+  cancel-in-progress: true
+
+jobs:
+  update-cache:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - uses: actions/cache@v4
+        id: node-modules-cache
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: nm-${{ hashFiles('package-lock.json') }}
+
+      - run: npm ci
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'

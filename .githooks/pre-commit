@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# Pre-commit hook: runs linting and format check on staged files
+# Minimal output - shows progress, details all failures at end
+
+TMPDIR_BASE=$(mktemp -d)
+trap "rm -rf $TMPDIR_BASE" EXIT
+
+FAILED=""
+
+run_check() {
+  local name="$1"
+  local cmd="$2"
+  local outfile="$TMPDIR_BASE/$name"
+
+  printf "%s... " "$name"
+  if eval "$cmd" > "$outfile" 2>&1; then
+    echo "✓"
+  else
+    echo "✗"
+    FAILED="$FAILED $name"
+  fi
+}
+
+run_check "TypeScript" "npm run typecheck --workspace=packages/core"
+run_check "ESLint" "npm run lint"
+run_check "Prettier" "npm run format:check"
+run_check "Markdown" "npm run lint:md"
+run_check "Knip" "npm run knip"
+run_check "Tests" "npm run test --workspace=packages/core"
+
+if [ -n "$FAILED" ]; then
+  echo ""
+  for name in $FAILED; do
+    echo "$name errors:"
+    echo "----------------------------------------"
+    cat "$TMPDIR_BASE/$name"
+    echo "----------------------------------------"
+    case "$name" in
+      TypeScript) echo "Fix: Resolve type errors shown above" ;;
+      ESLint) echo "Fix: npm run lint:fix" ;;
+      Prettier) echo "Fix: npm run format" ;;
+      Markdown) echo "Fix: npm run lint:md:fix" ;;
+      Knip) echo "Fix: Remove unused dependencies/exports shown above" ;;
+      Tests) echo "Fix: Resolve failing tests shown above" ;;
+    esac
+    echo ""
+  done
+  exit 1
+fi
+
+exit 0

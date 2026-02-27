@@ -1,0 +1,33 @@
+{
+  "name": "erode-monorepo",
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "npm run build --workspace=packages/core && npm run build --workspace=packages/cli",
+    "build:ci": "npm run build --workspace=packages/core",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "knip": "knip",
+    "lint:md": "markdownlint-cli2 \"**/*.md\"",
+    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\"",
+    "check:ci": "npm run build:ci && npm run check:ci --workspaces --if-present && npm run lint:md && npm run knip",
+    "build:web": "npm run build --workspace=packages/architecture && npm run build --workspace=packages/web",
+    "cli": "tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/cli.ts",
+    "dev:web": "npm run dev --workspace=packages/web",
+    "dev:arch": "npm run dev --workspace=packages/architecture"
+  },
+  "devDependencies": {
+    "knip": "^5.85.0",
+    "markdownlint-cli2": "^0.21.0",
+    "prettier": "^3.7.3"
+  }
+}

@@ -1,0 +1,127 @@
+model {
+
+  extend erode.core {
+
+    pipelines = pipeline 'Pipelines' {
+      description 'Multi-stage AI analysis pipeline that orchestrates the full flow'
+
+      stage1 = stage 'Stage 1: Resolve' {
+        #fast-model
+        description 'Selects the most relevant component when a repo maps to multiple'
+      }
+
+      stage2 = stage 'Stage 2: Scan' {
+        #fast-model
+        description 'Extracts dependency changes from the PR diff'
+      }
+
+      stage3 = stage 'Stage 3: Analyze' {
+        #advanced-model
+        description 'Compares dependencies against the declared architecture model'
+      }
+
+      stage4 = stage 'Stage 4: Generate' {
+        #advanced-model
+        #optional
+        description 'Generates architecture model updates to bring the model in sync'
+      }
+    }
+
+    providers = module 'Providers' {
+      #ai
+      description 'Provider-agnostic AI interface with Gemini, OpenAI, and Anthropic implementations'
+
+      anthropic = provider 'Anthropic' {
+        description 'Anthropic models for fast and advanced tiers (experimental)'
+      }
+
+      gemini = provider 'Gemini' {
+        description 'Gemini models for fast and advanced tiers'
+      }
+
+      openai = provider 'OpenAI' {
+        description 'OpenAI models for fast and advanced tiers'
+      }
+    }
+
+    adapters = module 'Adapters' {
+      description 'Format-agnostic interface for loading and querying architecture models'
+
+      likec4Adapter = adapter 'LikeC4 Adapter' {
+        description 'Loads and queries LikeC4 architecture models'
+      }
+
+      structurizrAdapter = adapter 'Structurizr Adapter' {
+        description 'Loads and queries Structurizr workspace models (DSL and JSON)'
+      }
+    }
+
+    platforms = module 'Platforms' {
+      #git-platform
+      description 'Platform-agnostic interface for fetching PRs, commits, and posting comments'
+
+      github = platform 'GitHub' {
+        description 'GitHub REST API for pull requests and comments'
+        technology 'REST API'
+      }
+
+      gitlab = platform 'GitLab' {
+        description 'GitLab REST API for merge requests and comments'
+        technology 'REST API'
+      }
+
+      bitbucket = platform 'Bitbucket' {
+        description 'Bitbucket REST API for pull requests and comments'
+        technology 'REST API'
+      }
+    }
+
+    analysis = module 'Analysis' {
+      description 'Prompt templates and builder for assembling AI prompts from markdown templates'
+    }
+
+    output = module 'Output' {
+      description 'Formats analysis results as JSON, markdown comments, and GitHub Actions outputs'
+    }
+
+    analyze = module 'Analyze' {
+      description 'Orchestrates the analysis pipeline — invoked by CLI and CI'
+    }
+
+    config = module 'Config' {
+      description 'Environment-variable-driven configuration'
+    }
+
+  }
+
+  // Pipeline stage flow
+  erode.core.pipelines.stage1 -> erode.core.pipelines.stage2 'component resolved'
+  erode.core.pipelines.stage2 -> erode.core.pipelines.stage3 'dependencies extracted'
+  erode.core.pipelines.stage3 -> erode.core.pipelines.stage4 'violations found'
+
+  // Analyze delegates to pipeline stages and other modules
+  erode.core.analyze -> erode.core.pipelines 'runs pipeline stages'
+  erode.core.analyze -> erode.core.adapters 'loads architecture model'
+  erode.core.analyze -> erode.core.platforms 'fetches PR data'
+  erode.core.analyze -> erode.core.analysis 'builds prompts'
+  erode.core.analyze -> erode.core.output 'formats results'
+  erode.core.analyze -> erode.core.config 'reads configuration'
+
+  // Pipelines delegate AI calls to providers
+  erode.core.pipelines -> erode.core.providers 'delegates AI calls'
+
+  // Providers to external APIs
+  erode.core.providers.anthropic -[async]-> anthropicApi 'calls Anthropic models'
+  erode.core.providers.gemini -[async]-> geminiApi 'calls Gemini models'
+  erode.core.providers.openai -[async]-> openaiApi 'calls OpenAI models'
+
+  // Platforms to external APIs
+  erode.core.platforms.github -[async]-> githubApi 'fetches PRs and posts comments'
+  erode.core.platforms.gitlab -[async]-> gitlabApi 'fetches MRs and posts comments'
+  erode.core.platforms.bitbucket -[async]-> bitbucketApi 'fetches PRs and posts comments'
+
+  // Adapters to external tools
+  erode.core.adapters.likec4Adapter -> likec4Lib 'parses .c4 files'
+  erode.core.adapters.structurizrAdapter -> structurizrCli 'exports .dsl to JSON'
+
+}

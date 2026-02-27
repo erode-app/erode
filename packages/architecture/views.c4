@@ -1,0 +1,102 @@
+views {
+
+  view index of erode {
+    title 'erode — System Overview'
+    include *
+    include anthropicApi
+    include geminiApi
+    include githubApi
+    include gitlabApi
+    include bitbucketApi
+    include likec4Lib
+    include structurizrCli
+  }
+
+  view packages of erode {
+    title 'Package Structure'
+    include erode.*
+  }
+
+  view core-internals of erode.core {
+    title 'Core Package Internals'
+    include *
+  }
+
+  view pipeline-overview of erode.core.pipelines {
+    title 'Analysis Pipeline'
+    include *
+  }
+
+  dynamic view pipeline {
+    variant sequence
+    title 'Analysis Pipeline (detailed)'
+
+    // Prepare
+    erode.core.analyze -> erode.core.adapters 'load architecture model'
+    erode.core.analyze -> erode.core.platforms.github 'fetch PR and commits'
+
+    // Stage 1 — resolve component (conditional: multiple candidates)
+    erode.core.analyze -> erode.core.pipelines.stage1 'resolve component'
+    erode.core.pipelines.stage1 -> erode.core.providers.gemini 'select component'
+
+    // Stage 2 — extract dependencies from diff
+    erode.core.analyze -> erode.core.pipelines.stage2 'extract dependencies'
+    erode.core.pipelines.stage2 -> erode.core.providers.gemini 'scan diff'
+
+    // Query architectural context from loaded model
+    erode.core.analyze -> erode.core.adapters 'query relationships'
+
+    // Stage 3 — drift analysis
+    erode.core.analyze -> erode.core.pipelines.stage3 'analyze drift'
+    erode.core.pipelines.stage3 -> erode.core.providers.gemini 'evaluate drift'
+
+    // Stage 4 — generate model updates (optional)
+    erode.core.analyze -> erode.core.pipelines.stage4 'generate model'
+    erode.core.pipelines.stage4 -> erode.core.providers.gemini 'produce DSL'
+
+    // Output
+    erode.core.analyze -> erode.core.output 'format results'
+
+    // Participant ordering (left → right)
+    include
+      erode.core.analyze,
+      erode.core.adapters,
+      erode.core.platforms.github,
+      erode.core.pipelines.stage1,
+      erode.core.pipelines.stage2,
+      erode.core.pipelines.stage3,
+      erode.core.pipelines.stage4,
+      erode.core.providers.gemini,
+      erode.core.output
+  }
+
+  view adapters of erode.core.adapters {
+    title 'Model Format Adapters'
+    include *
+    include likec4Lib
+    include structurizrCli
+    include erode.core.adapters.* -> likec4Lib
+    include erode.core.adapters.* -> structurizrCli
+  }
+
+  view providers of erode.core.providers {
+    title 'AI Providers'
+    include *
+    include anthropicApi
+    include geminiApi
+    include erode.core.providers.* -> anthropicApi
+    include erode.core.providers.* -> geminiApi
+  }
+
+  view platforms of erode.core.platforms {
+    title 'Platform Integrations'
+    include *
+    include githubApi
+    include gitlabApi
+    include bitbucketApi
+    include erode.core.platforms.* -> githubApi
+    include erode.core.platforms.* -> gitlabApi
+    include erode.core.platforms.* -> bitbucketApi
+  }
+
+}

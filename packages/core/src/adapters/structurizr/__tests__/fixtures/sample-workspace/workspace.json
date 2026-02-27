@@ -1,0 +1,119 @@
+{
+  "id": 0,
+  "name": "Test Architecture",
+  "description": "Integration test workspace",
+  "model": {
+    "softwareSystems": [
+      {
+        "id": "1",
+        "name": "Web Frontend",
+        "description": "Customer-facing web application",
+        "technology": "React",
+        "tags": "Element,Software System,ui",
+        "url": "https://github.com/example/frontend",
+        "properties": {
+          "erode.id": "frontend"
+        },
+        "relationships": [
+          {
+            "id": "11",
+            "sourceId": "1",
+            "destinationId": "2",
+            "description": "makes requests",
+            "technology": "https",
+            "tags": "Relationship"
+          }
+        ]
+      },
+      {
+        "id": "2",
+        "name": "API Gateway",
+        "description": "Central entry point for all API requests",
+        "technology": "Node.js",
+        "tags": "Element,Software System,backend",
+        "url": "https://github.com/example/api-gateway",
+        "properties": {
+          "erode.id": "api_gateway"
+        },
+        "relationships": [
+          {
+            "id": "6",
+            "sourceId": "2",
+            "destinationId": "3",
+            "description": "calls REST API",
+            "technology": "https",
+            "tags": "Relationship"
+          },
+          {
+            "id": "7",
+            "sourceId": "2",
+            "destinationId": "3",
+            "description": "calls gRPC",
+            "technology": "grpc",
+            "tags": "Relationship"
+          },
+          {
+            "id": "8",
+            "sourceId": "2",
+            "destinationId": "4",
+            "description": "routes product requests",
+            "technology": "https",
+            "tags": "Relationship"
+          }
+        ]
+      },
+      {
+        "id": "3",
+        "name": "User Service",
+        "description": "Manages user accounts and authentication",
+        "technology": "Java",
+        "tags": "Element,Software System,backend,microservice",
+        "url": "https://github.com/example/user-service",
+        "properties": {
+          "erode.id": "user_service"
+        },
+        "relationships": [
+          {
+            "id": "9",
+            "sourceId": "3",
+            "destinationId": "5",
+            "description": "stores user data",
+            "technology": "database",
+            "tags": "Relationship"
+          }
+        ]
+      },
+      {
+        "id": "4",
+        "name": "Product Service",
+        "description": "Manages product catalog and inventory",
+        "technology": "Python",
+        "tags": "Element,Software System,backend,microservice",
+        "url": "https://github.com/example/product-service",
+        "properties": {
+          "erode.id": "product_service"
+        },
+        "relationships": [
+          {
+            "id": "10",
+            "sourceId": "4",
+            "destinationId": "5",
+            "description": "stores product data",
+            "technology": "database",
+            "tags": "Relationship"
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "name": "PostgreSQL Database",
+        "description": "Primary data store",
+        "technology": "PostgreSQL",
+        "tags": "Element,Software System,storage",
+        "properties": {
+          "erode.id": "database"
+        }
+      }
+    ]
+  }
+}

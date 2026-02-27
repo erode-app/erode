@@ -1,0 +1,88 @@
+<section class="container">
+  <h2>Why erode?</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Code moves faster than models</h3>
+      <p>
+        AI agents and developers ship features constantly. Architecture docs
+        fall behind within weeks.
+      </p>
+    </div>
+    <div class="card">
+      <h3>New dependencies sneak in</h3>
+      <p>
+        A service starts calling another service. Nobody updates the model.
+        Repeat until the diagram is fiction.
+      </p>
+    </div>
+    <div class="card">
+      <h3>Reviewers miss structural changes</h3>
+      <p>
+        Code reviewers catch bugs and logic errors, not whether a frontend now
+        bypasses the API gateway.
+      </p>
+    </div>
+    <div class="card">
+      <h3>Drift compounds over time</h3>
+      <p>
+        One undeclared dependency is easy to fix. Fifty, discovered six months
+        later, are not.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  section {
+    padding-block: var(--space-2xl);
+    border-top: 1px solid var(--border);
+  }
+
+  h2 {
+    text-align: center;
+    color: var(--text-primary);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+    margin-top: var(--space-xl);
+  }
+
+  .card {
+    padding: var(--space-lg);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .card h3 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+  }
+
+  .card p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 768px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

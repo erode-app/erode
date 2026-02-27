@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Pre-push hook: placeholder (tests moved to pre-commit)
+
+echo "Pre-push checks passed!"
+exit 0

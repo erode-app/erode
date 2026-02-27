@@ -1,0 +1,36 @@
+model {
+
+  erode = system 'erode' {
+    description 'Detects architecture drift by comparing pull requests against an architecture model'
+    technology 'TypeScript'
+    link https://github.com/erode-app/erode
+
+    core = package 'core' {
+      description 'Analysis engine with AI pipeline, providers, adapters, and platform integrations'
+      technology 'TypeScript'
+      link https://github.com/erode-app/erode
+    }
+
+    cli = package 'cli' {
+      description 'Interactive terminal interface'
+      technology 'TypeScript'
+      link https://github.com/erode-app/erode
+    }
+
+    web = package 'web' {
+      description 'Documentation and landing page'
+      link https://github.com/erode-app/erode
+    }
+
+    eslintConfig = package 'eslint-config' {
+      description 'Shared ESLint configuration for all packages'
+      link https://github.com/erode-app/erode
+    }
+  }
+
+  erode.cli -> erode.core.analyze 'runs analysis'
+  erode.cli -> erode.eslintConfig 'extends config'
+  erode.core -> erode.eslintConfig 'extends config'
+  erode.web -> erode.eslintConfig 'extends config'
+
+}

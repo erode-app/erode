@@ -1,0 +1,18 @@
+{
+  "name": "@erode/architecture",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "likec4 dev .",
+    "validate": "likec4 validate .",
+    "build": "likec4 build . -o dist --use-hash-history --base /architecture/ --title erode",
+    "lint": "likec4 validate .",
+    "check:ci": "likec4 validate ."
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.59.0"
+  },
+  "devDependencies": {
+    "likec4": "^1.45.0"
+  }
+}
