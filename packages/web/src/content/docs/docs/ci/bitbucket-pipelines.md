@@ -7,7 +7,7 @@ sidebar:
     variant: caution
 ---
 
-erode analyzes Bitbucket pull requests using the same Docker image published for the GitHub Action.
+Erode analyzes Bitbucket pull requests using the same Docker image published for the GitHub Action.
 
 ## Using the Docker image
 

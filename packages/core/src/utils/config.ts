@@ -17,6 +17,9 @@ const ConfigSchema = z.object({
       excludePaths: z.array(z.string()).default([]),
       excludeTags: z.array(z.string()).default([]),
     }),
+    structurizr: z.object({
+      cliPath: z.string().optional(),
+    }),
   }),
   github: z.object({
     token: z.string().optional(),
@@ -70,6 +73,7 @@ const ENV_MAPPINGS: Record<string, string[]> = {
   MODEL_FORMAT: ['adapter', 'format'],
   LIKEC4_EXCLUDE_PATHS: ['adapter', 'likec4', 'excludePaths'],
   LIKEC4_EXCLUDE_TAGS: ['adapter', 'likec4', 'excludeTags'],
+  STRUCTURIZR_CLI_PATH: ['adapter', 'structurizr', 'cliPath'],
   MODEL_REPO_PR_TOKEN: ['github', 'modelRepoPrToken'],
   DEBUG_MODE: ['debug', 'enabled'],
   VERBOSE: ['debug', 'verbose'],
@@ -95,7 +99,7 @@ function loadConfigFromEnv(): Record<string, Record<string, unknown>> {
   const config = {
     ai: {} as Record<string, unknown>,
     constraints: {} as Record<string, unknown>,
-    adapter: { likec4: {} } as Record<string, unknown>,
+    adapter: { likec4: {}, structurizr: {} } as Record<string, unknown>,
     github: {} as Record<string, unknown>,
     gitlab: {} as Record<string, unknown>,
     bitbucket: {} as Record<string, unknown>,

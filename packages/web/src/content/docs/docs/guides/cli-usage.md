@@ -3,11 +3,11 @@ title: CLI Usage
 description: Run erode from the command line.
 ---
 
-erode provides four commands for working with architecture models and analyzing change requests.
+Erode provides four commands for working with architecture models and analyzing change requests.
 
 ## Installation
 
-erode is not yet published as an npm package. Clone the repository and build from source:
+Erode is not yet published as an npm package. Clone the repository and build from source:
 
 ```bash
 git clone https://github.com/erode-app/core.git

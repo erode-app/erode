@@ -3,7 +3,7 @@ title: LikeC4 Model
 description: Write the architecture model that erode reads.
 ---
 
-erode reads a LikeC4 architecture model to understand your system's intended structure. It compares pull request changes against this model to detect drift.
+Erode reads a LikeC4 architecture model to understand your system's intended structure. It compares pull request changes against this model to detect drift.
 
 ## What is LikeC4
 
@@ -35,13 +35,13 @@ model {
 }
 ```
 
-Each component needs a `link` pointing to its GitHub repository. erode uses this to match a pull request to the right component in the model. Components without a `link` are invisible to the analysis.
+Each component needs a `link` pointing to its GitHub repository. Erode uses this to match a pull request to the right component in the model. Components without a `link` are invisible to the analysis.
 
 This declares that the frontend depends on the backend through a REST API. If a pull request introduces a direct database call from the frontend, erode would flag this as an undeclared dependency.
 
 ## Where to put model files
 
-erode loads all `.c4` files from the directory you point it at. There are two options:
+Erode loads all `.c4` files from the directory you point it at. There are two options:
 
 ### Same repository
 
@@ -90,3 +90,7 @@ During analysis, erode:
 4. Reports any dependencies that exist in the code but are missing from the model
 
 A more complete architecture model gives erode more accurate results.
+
+## Version requirements
+
+Erode uses the `likec4` npm package `^1.45.0`. The Docker image and GitHub Action bundle it automatically — no local installation needed.

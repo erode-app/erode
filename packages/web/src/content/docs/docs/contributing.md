@@ -7,7 +7,7 @@ head:
       src: /architecture/likec4-views.js
 ---
 
-erode is an npm workspace monorepo. The diagram below shows the package structure and their relationships.
+Erode is an npm workspace monorepo. The diagram below shows the package structure and their relationships.
 
 <div class="likec4-embed">
 <likec4-view view-id="packages" browser="true"></likec4-view>

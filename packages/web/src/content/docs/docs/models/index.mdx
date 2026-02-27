@@ -1,9 +1,13 @@
 ---
 title: Model Formats
 description: Architecture model formats supported by erode.
+head:
+  - tag: script
+    attrs:
+      src: /architecture/likec4-views.js
 ---
 
-erode needs an architecture model that describes your system as components with relationships between them. Each component must link to its GitHub repository so erode can match pull requests to the right part of the model.
+Erode needs an architecture model that describes your system as components with relationships between them. Each component must link to its GitHub repository so erode can match pull requests to the right part of the model.
 
 At a minimum, the model must provide:
 
@@ -11,10 +15,17 @@ At a minimum, the model must provide:
 - **Repository links** — a URL tying each component to its GitHub repository
 - **Relationships** — the declared dependencies between components
 
-erode loads the model, finds the component that owns the repository under review, and compares the PR's dependency changes against the declared relationships. Anything not in the model is flagged as drift.
+Erode loads the model, finds the component that owns the repository under review, and compares the PR's dependency changes against the declared relationships. Anything not in the model is flagged as drift.
 
 ## Supported formats
 
-| Format                         | Description                                              | Docs                             |
-| ------------------------------ | -------------------------------------------------------- | -------------------------------- |
-| [LikeC4](/docs/models/likec4/) | Architecture-as-code DSL with built-in diagram rendering | [likec4.dev](https://likec4.dev) |
+| Format                                   | Description                                              | Docs                                                              |
+| ---------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------- |
+| [LikeC4](/docs/models/likec4/)           | Architecture-as-code DSL with built-in diagram rendering | [likec4.dev](https://likec4.dev)                                  |
+| [Structurizr](/docs/models/structurizr/) | C4 model workspaces in DSL or JSON format                | [docs.structurizr.com](https://docs.structurizr.com/dsl/language) |
+
+<div class="likec4-embed">
+  <likec4-view view-id="adapters" browser="true"></likec4-view>
+</div>
+
+> [Open full interactive viewer →](/architecture/#/view/adapters/)

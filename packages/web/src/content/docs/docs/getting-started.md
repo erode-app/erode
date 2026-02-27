@@ -3,7 +3,7 @@ title: Getting Started
 description: Set up erode in your CI pipeline in under five minutes.
 ---
 
-erode detects architecture drift by comparing pull requests against your architecture model. When a PR introduces an undeclared dependency, erode flags it as a violation and comments directly on the pull request.
+Erode detects architecture drift by comparing pull requests against your architecture model. When a PR introduces an undeclared dependency, erode flags it as a violation and comments directly on the pull request.
 
 ## Prerequisites
 
@@ -40,7 +40,7 @@ Replace `your-org/architecture` with the repository that contains your architect
 
 ### 3. Open a pull request
 
-erode runs on every PR and posts a comment listing any undeclared dependencies, their severity, and how to fix them. If no violations are found, it confirms the PR aligns with the declared architecture.
+Erode runs on every PR and posts a comment listing any undeclared dependencies, their severity, and how to fix them. If no violations are found, it confirms the PR aligns with the declared architecture.
 
 ## Try the example project
 

@@ -2,35 +2,31 @@
   <h2>Why erode?</h2>
   <div class="grid">
     <div class="card">
-      <span class="card-icon">🤖</span>
-      <h3>AI is writing more code than ever</h3>
+      <h3>Code moves faster than models</h3>
       <p>
-        Agents and LLMs ship features fast — often faster than architecture
-        docs can keep up with.
+        AI agents and developers ship features constantly. Architecture docs
+        fall behind within weeks.
       </p>
     </div>
     <div class="card">
-      <span class="card-icon">🕸️</span>
-      <h3>Dependencies grow silently</h3>
+      <h3>New dependencies sneak in</h3>
       <p>
-        New integrations appear in the codebase without anyone updating the
-        architecture model. Over time, the model stops reflecting reality.
+        A service starts calling another service. Nobody updates the model.
+        Repeat until the diagram is fiction.
       </p>
     </div>
     <div class="card">
-      <span class="card-icon">👁️</span>
-      <h3>Manual reviews can't keep up</h3>
+      <h3>Reviewers miss structural changes</h3>
       <p>
-        Reviewers catch bugs, but rarely notice when a service starts calling
-        another. By the time drift is noticed, it's hard to untangle.
+        Code reviewers catch bugs and logic errors, not whether a frontend now
+        bypasses the API gateway.
       </p>
     </div>
     <div class="card">
-      <span class="card-icon">🏢</span>
-      <h3>Mature systems have more at stake</h3>
+      <h3>Drift compounds over time</h3>
       <p>
-        The larger the system, the harder it is to untangle an undeclared
-        dependency after it ships.
+        One undeclared dependency is easy to fix. Fifty, discovered six months
+        later, are not.
       </p>
     </div>
   </div>
@@ -65,12 +61,6 @@
   .card:hover {
     border-color: var(--accent);
     box-shadow: 0 0 20px var(--accent-glow);
-  }
-
-  .card-icon {
-    font-size: 1.75rem;
-    display: block;
-    margin-bottom: var(--space-md);
   }
 
   .card h3 {

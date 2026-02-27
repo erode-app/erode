@@ -42,4 +42,10 @@ model {
     link https://likec4.dev
   }
 
+  structurizrCli = external 'Structurizr CLI' {
+    description 'Exports Structurizr DSL workspaces to JSON'
+    technology 'Java WAR / Docker'
+    link https://docs.structurizr.com/cli
+  }
+
 }

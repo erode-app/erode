@@ -4,6 +4,7 @@ import { existsSync } from 'fs';
 import { resolve } from 'path';
 import { CONFIG } from '../../utils/config.js';
 import { validate } from '../../utils/validation.js';
+import { normalizeGitHubUrl } from '../url-utils.js';
 import { ErodeError, AdapterError, ErrorCode } from '../../errors.js';
 import type { ArchitectureModelAdapter, VersionCheckResult } from '../architecture-adapter.js';
 import { LIKEC4_METADATA } from './metadata.js';
@@ -169,24 +170,9 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     });
     if (githubLink) {
       const url = typeof githubLink === 'string' ? githubLink : githubLink.url;
-      return this.normalizeGitHubUrl(url);
+      return normalizeGitHubUrl(url);
     }
     return undefined;
-  }
-
-  private normalizeGitHubUrl(url: string): string {
-    try {
-      const urlObj = new URL(url);
-      const pathParts = urlObj.pathname.split('/').filter(Boolean);
-      if (pathParts.length >= 2 && pathParts[0] && pathParts[1]) {
-        const owner = pathParts[0].toLowerCase();
-        const repo = pathParts[1].replace('.git', '').toLowerCase();
-        return `https://github.com/${owner}/${repo}`;
-      }
-      return url;
-    } catch {
-      return url;
-    }
   }
 
   protected extractRelationships(): ModelRelationship[] {
@@ -240,7 +226,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     if (!this.componentIndex) {
       throw AdapterError.notLoaded('likec4');
     }
-    const normalizedUrl = this.normalizeGitHubUrl(repoUrl);
+    const normalizedUrl = normalizeGitHubUrl(repoUrl);
     return this.componentIndex.byRepository.get(normalizedUrl);
   }
 
@@ -248,7 +234,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     if (!this.componentIndex) {
       throw AdapterError.notLoaded('likec4');
     }
-    const normalizedUrl = this.normalizeGitHubUrl(repoUrl);
+    const normalizedUrl = normalizeGitHubUrl(repoUrl);
     const components: ArchitecturalComponent[] = [];
 
     for (const component of this.componentIndex.byId.values()) {

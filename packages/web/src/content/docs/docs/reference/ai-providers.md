@@ -7,7 +7,7 @@ head:
       src: /architecture/likec4-views.js
 ---
 
-erode supports three AI providers: **Gemini** (default), **OpenAI**, and **Anthropic** (experimental). Set the provider with the `AI_PROVIDER` environment variable.
+Erode supports three AI providers: **Gemini** (default), **OpenAI**, and **Anthropic** (experimental). Set the provider with the `AI_PROVIDER` environment variable.
 
 <div class="likec4-embed">
 <likec4-view view-id="providers" browser="true"></likec4-view>

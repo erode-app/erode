@@ -22,11 +22,25 @@ COPY packages/core/src/ packages/core/src/
 COPY packages/core/scripts/ packages/core/scripts/
 RUN npm run build --workspace=packages/core
 
-# Stage 2: Runtime
+# Stage 2: JRE
+FROM eclipse-temurin:21-jre-noble AS jre
+
+# Stage 3: Runtime
 FROM node:24-slim
+# Copy JRE from Temurin image
+COPY --from=jre /opt/java/openjdk /opt/java/openjdk
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git jq curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
+
+# Download Structurizr WAR
+ARG STRUCTURIZR_VERSION=2026.02.01
+RUN curl -L -o /opt/structurizr.war \
+    "https://download.structurizr.com/structurizr-${STRUCTURIZR_VERSION}.war"
+ENV STRUCTURIZR_CLI_PATH=/opt/structurizr.war
+
 WORKDIR /app
 
 COPY package.json package-lock.json ./

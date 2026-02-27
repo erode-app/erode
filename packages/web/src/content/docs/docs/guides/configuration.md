@@ -3,7 +3,7 @@ title: Configuration
 description: Environment variables for tuning the erode analysis engine.
 ---
 
-erode is configured through environment variables. There are no configuration files.
+Erode is configured through environment variables. There are no configuration files.
 
 For GitHub Actions-specific inputs (`model-repo`, `fail-on-violations`, etc.), see [GitHub Actions](/docs/ci/github-actions/).
 
@@ -18,11 +18,12 @@ For GitHub Actions-specific inputs (`model-repo`, `fail-on-violations`, etc.), s
 
 ## Architecture model
 
-| Variable               | Description                                         | Default  |
-| ---------------------- | --------------------------------------------------- | -------- |
-| `MODEL_FORMAT`         | Architecture model format                           | `likec4` |
-| `LIKEC4_EXCLUDE_PATHS` | Comma-separated paths to exclude from model loading | —        |
-| `LIKEC4_EXCLUDE_TAGS`  | Comma-separated tags to exclude from model loading  | —        |
+| Variable               | Description                                             | Default  |
+| ---------------------- | ------------------------------------------------------- | -------- |
+| `MODEL_FORMAT`         | Architecture model format (`likec4` or `structurizr`)   | `likec4` |
+| `STRUCTURIZR_CLI_PATH` | Path to the Structurizr CLI WAR file (for `.dsl` files) | —        |
+| `LIKEC4_EXCLUDE_PATHS` | Comma-separated paths to exclude from model loading     | —        |
+| `LIKEC4_EXCLUDE_TAGS`  | Comma-separated tags to exclude from model loading      | —        |
 
 ## Diff limits
 

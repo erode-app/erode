@@ -45,7 +45,7 @@ The action runs in a Docker container that clones the model repository directly 
 
 ## Remote model repository
 
-erode expects the architecture model to live in its own repository (or a subdirectory of one). The `model-repo` input tells the action where to find it.
+Erode expects the architecture model to live in its own repository (or a subdirectory of one). The `model-repo` input tells the action where to find it.
 
 ```yaml
 - uses: erode-app/core@main

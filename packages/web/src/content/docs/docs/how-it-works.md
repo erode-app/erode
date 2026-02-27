@@ -7,7 +7,7 @@ head:
       src: /architecture/likec4-views.js
 ---
 
-erode uses a multi-stage AI pipeline to analyze pull requests for architecture drift. Cheaper, faster models handle extraction and routing, while stronger models handle the analysis.
+Erode uses a multi-stage AI pipeline to analyze pull requests for architecture drift. Cheaper, faster models handle extraction and routing, while stronger models handle the analysis.
 
 <div class="likec4-embed">
 <likec4-view view-id="pipeline-overview" browser="true"></likec4-view>

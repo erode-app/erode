@@ -1,7 +1,7 @@
 model {
 
   erode = system 'erode' {
-    description 'Detects architecture drift by comparing pull requests against a LikeC4 model'
+    description 'Detects architecture drift by comparing pull requests against an architecture model'
     technology 'TypeScript'
     link https://github.com/erode-app/core
 

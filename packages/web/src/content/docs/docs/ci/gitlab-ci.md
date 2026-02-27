@@ -7,7 +7,7 @@ sidebar:
     variant: caution
 ---
 
-erode analyzes GitLab merge requests using the same Docker image published for the GitHub Action.
+Erode analyzes GitLab merge requests using the same Docker image published for the GitHub Action.
 
 ## Using the Docker image
 

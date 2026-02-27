@@ -7,7 +7,7 @@ branding:
 
 inputs:
   model-format:
-    description: 'Architecture model format'
+    description: 'Architecture model format (likec4 or structurizr)'
     required: false
     default: 'likec4'
   model-repo:

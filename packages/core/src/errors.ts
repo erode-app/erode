@@ -139,7 +139,7 @@ export class ApiError extends ErodeError {
     return new ApiError(String(error), undefined, { provider: 'openai' });
   }
 }
-type AdapterType = 'likec4';
+type AdapterType = 'likec4' | 'structurizr';
 export class AdapterError extends ErodeError {
   public readonly adapterType: AdapterType;
   public readonly suggestions?: string[];
@@ -190,5 +190,8 @@ export class AdapterError extends ErodeError {
   }
   static fromLikeC4Error(error: unknown): AdapterError {
     return AdapterError.fromAdapterError(error, 'likec4', 'LikeC4');
+  }
+  static fromStructurizrError(error: unknown): AdapterError {
+    return AdapterError.fromAdapterError(error, 'structurizr', 'Structurizr');
   }
 }

@@ -50,6 +50,10 @@ model {
       likec4Adapter = adapter 'LikeC4 Adapter' {
         description 'Loads and queries LikeC4 architecture models'
       }
+
+      structurizrAdapter = adapter 'Structurizr Adapter' {
+        description 'Loads and queries Structurizr workspace models (DSL and JSON)'
+      }
     }
 
     platforms = module 'Platforms' {
@@ -110,7 +114,8 @@ model {
   erode.core.platforms.github -[async]-> githubApi 'fetches PRs and posts comments'
   erode.core.platforms.gitlab -[async]-> gitlabApi 'fetches MRs and posts comments'
 
-  // Adapter to LikeC4 library
+  // Adapters to external tools
   erode.core.adapters.likec4Adapter -> likec4Lib 'parses .c4 files'
+  erode.core.adapters.structurizrAdapter -> structurizrCli 'exports .dsl to JSON'
 
 }
