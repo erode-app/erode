@@ -1,9 +1,21 @@
 ---
 title: Structurizr Model
 description: Use a Structurizr workspace as the architecture model that erode reads.
+sidebar:
+  badge:
+    text: Experimental
+    variant: caution
 ---
 
 Erode reads a Structurizr workspace to understand your system's intended structure. It compares pull request changes against this model to detect drift.
+
+:::caution[Experimental]
+Structurizr support is new and under active development. If you are starting fresh, [LikeC4](/docs/models/likec4/) is the recommended format. Please report issues on [GitHub](https://github.com/erode-app/core/issues).
+:::
+
+:::tip[See it in action]
+Check out the [playground example PR](https://github.com/erode-app/playground/pull/2) to see erode analyzing a Structurizr workspace.
+:::
 
 ## What is Structurizr
 

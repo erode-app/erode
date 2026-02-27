@@ -6,6 +6,7 @@ import { ApiError, ConfigurationError, ErrorCode } from './errors.js';
 /** Build a structured JSON output object from analysis results for CI/CD consumption. */
 export function buildStructuredOutput(
   result: DriftAnalysisResult,
+  modelFormat: string,
   extras?: {
     selectedComponentId?: string;
     candidateComponents?: { id: string; name: string; type: string }[];
@@ -63,6 +64,7 @@ export function buildStructuredOutput(
     })),
     selectedComponentId: extras?.selectedComponentId,
     candidateComponents: extras?.candidateComponents,
+    modelFormat,
     generatedChangeRequest: extras?.generatedChangeRequest,
   };
 }

@@ -44,10 +44,23 @@
     <div class="feature">
       <span class="feature-icon">🏗️</span>
       <h3>Architecture-as-Code</h3>
-      <p>
-        First-class support for LikeC4 and Structurizr architecture models,
-        with more formats on the roadmap.
-      </p>
+      <ul class="format-list">
+        <li>
+          <a href="https://likec4.dev" class="format-link">LikeC4</a>
+          <span class="format-desc">
+            &mdash; recommended &middot;
+            <a href="https://github.com/erode-app/playground/pull/1">See example</a>
+          </span>
+        </li>
+        <li>
+          <a href="https://docs.structurizr.com" class="format-link">Structurizr</a>
+          <span class="badge">Experimental</span>
+          <span class="format-desc">
+            &middot;
+            <a href="https://github.com/erode-app/playground/pull/2">See example</a>
+          </span>
+        </li>
+      </ul>
     </div>
   </div>
   <a href="/docs/getting-started/" class="docs-link">Explore the docs &rarr;</a>
@@ -111,6 +124,38 @@
     font-size: 0.875rem;
     color: var(--text-muted);
     line-height: 1.5;
+  }
+
+  .format-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.8;
+  }
+
+  .format-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .format-link:hover {
+    color: var(--text-primary);
+  }
+
+  .format-desc {
+    color: var(--text-muted);
+  }
+
+  .format-desc a {
+    color: var(--text-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .format-desc a:hover {
+    color: var(--accent);
   }
 
   .docs-link {

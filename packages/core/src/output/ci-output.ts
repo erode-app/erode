@@ -14,6 +14,7 @@ export function writeGitHubActionsOutputs(output: StructuredAnalysisOutput): voi
   const lines = [
     `has-violations=${String(output.analysis.hasViolations)}`,
     `violations-count=${String(output.analysis.violations.length)}`,
+    `model-format=${output.modelFormat}`,
     `analysis-summary<<${delimiter}`,
     output.analysis.summary,
     delimiter,
@@ -47,6 +48,7 @@ export function buildStepSummary(output: StructuredAnalysisOutput): string {
   const componentId = output.metadata.component?.id ?? 'unknown';
   const componentName = output.metadata.component?.name ?? 'N/A';
   lines.push(`**Inspected Component:** \`${componentId}\` (${componentName})`);
+  lines.push(`**Model Format:** ${output.modelFormat}`);
   lines.push(`**Status:** ${output.status}`);
   lines.push(`**Violations:** ${String(output.analysis.violations.length)}`);
   lines.push(`**Warnings:** ${String(output.analysis.warnings?.length ?? 0)}`);

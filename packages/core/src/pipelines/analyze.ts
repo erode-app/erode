@@ -256,7 +256,7 @@ export async function runAnalyze(
   const needsStructured =
     options.format === 'json' || !!options.outputFile || !!options.githubActions;
   const structured = needsStructured
-    ? buildStructuredOutput(analysisResult, {
+    ? buildStructuredOutput(analysisResult, adapter.metadata.displayName, {
         selectedComponentId,
         candidateComponents,
       })

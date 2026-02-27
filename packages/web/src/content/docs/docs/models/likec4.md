@@ -5,6 +5,10 @@ description: Write the architecture model that erode reads.
 
 Erode reads a LikeC4 architecture model to understand your system's intended structure. It compares pull request changes against this model to detect drift.
 
+:::tip[See it in action]
+Check out the [playground example PR](https://github.com/erode-app/playground/pull/1) to see erode analyzing a LikeC4 model.
+:::
+
 ## What is LikeC4
 
 LikeC4 is a DSL (domain-specific language) for describing software architecture as code. It lets you define components, their relationships, and how they are deployed in a structured, version-controlled format.

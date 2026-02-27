@@ -52,7 +52,7 @@ function makeAnalysisResult(overrides: Partial<DriftAnalysisResult> = {}): Drift
 
 describe('buildStructuredOutput', () => {
   it('should return success status when no violations', () => {
-    const result = buildStructuredOutput(makeAnalysisResult());
+    const result = buildStructuredOutput(makeAnalysisResult(), 'LikeC4');
 
     expect(result.status).toBe('success');
     expect(result.exitCode).toBe(0);
@@ -73,7 +73,8 @@ describe('buildStructuredOutput', () => {
             commit: 'abc123',
           },
         ],
-      })
+      }),
+      'LikeC4'
     );
 
     expect(result.status).toBe('violations');
@@ -83,7 +84,7 @@ describe('buildStructuredOutput', () => {
   });
 
   it('should include metadata about PR and component', () => {
-    const result = buildStructuredOutput(makeAnalysisResult());
+    const result = buildStructuredOutput(makeAnalysisResult(), 'LikeC4');
 
     expect(result.metadata.changeRequest?.number).toBe(42);
     expect(result.metadata.changeRequest?.title).toBe('Test PR');
@@ -91,7 +92,7 @@ describe('buildStructuredOutput', () => {
   });
 
   it('should include extras when provided', () => {
-    const result = buildStructuredOutput(makeAnalysisResult(), {
+    const result = buildStructuredOutput(makeAnalysisResult(), 'LikeC4', {
       selectedComponentId: 'comp.api',
       candidateComponents: [{ id: 'comp.api', name: 'API', type: 'service' }],
       generatedChangeRequest: {
@@ -105,6 +106,12 @@ describe('buildStructuredOutput', () => {
     expect(result.selectedComponentId).toBe('comp.api');
     expect(result.candidateComponents).toHaveLength(1);
     expect(result.generatedChangeRequest?.action).toBe('created');
+  });
+
+  it('should include modelFormat', () => {
+    const result = buildStructuredOutput(makeAnalysisResult(), 'Structurizr');
+
+    expect(result.modelFormat).toBe('Structurizr');
   });
 
   it('should include dependency changes', () => {
@@ -122,7 +129,8 @@ describe('buildStructuredOutput', () => {
           ],
           summary: 'Added Redis',
         },
-      })
+      }),
+      'LikeC4'
     );
 
     expect(result.dependencyChanges).toHaveLength(1);
@@ -204,7 +212,7 @@ describe('writeOutputToFile', () => {
   });
 
   it('should write JSON to the specified file', () => {
-    const output = buildStructuredOutput(makeAnalysisResult());
+    const output = buildStructuredOutput(makeAnalysisResult(), 'LikeC4');
     writeOutputToFile(output, '/tmp/output.json');
 
     expect(mockWriteFileSync).toHaveBeenCalledOnce();
@@ -216,7 +224,7 @@ describe('writeOutputToFile', () => {
   });
 
   it('should write pretty-printed JSON', () => {
-    const output = buildStructuredOutput(makeAnalysisResult());
+    const output = buildStructuredOutput(makeAnalysisResult(), 'LikeC4');
     writeOutputToFile(output, '/tmp/output.json');
 
     const call = mockWriteFileSync.mock.calls[0] as [string, string, string];

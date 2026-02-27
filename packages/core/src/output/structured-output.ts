@@ -71,6 +71,8 @@ export interface StructuredAnalysisOutput {
     name: string;
     type: string;
   }[];
+  /** Architecture model format used for analysis (e.g. "LikeC4", "Structurizr") */
+  modelFormat: string;
   generatedChangeRequest?: {
     url: string;
     number: number;

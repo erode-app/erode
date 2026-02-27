@@ -43,6 +43,7 @@ function makeOutput(overrides: Partial<StructuredAnalysisOutput> = {}): Structur
       violations: [],
       summary: 'No issues found',
     },
+    modelFormat: 'LikeC4',
     ...overrides,
   };
 }
@@ -127,6 +128,12 @@ describe('buildStepSummary', () => {
     expect(md).toContain('- memcached -> comp.api');
   });
 
+  it('renders model format', () => {
+    const md = buildStepSummary(makeOutput({ modelFormat: 'Structurizr' }));
+
+    expect(md).toContain('**Model Format:** Structurizr');
+  });
+
   it('renders error status', () => {
     const md = buildStepSummary(makeOutput({ status: 'error', exitCode: 2 }));
 
@@ -159,6 +166,22 @@ describe('writeGitHubActionsOutputs', () => {
     expect(content).toMatch(/analysis-summary<<SUMMARY_EOF_[a-f0-9]{32}/);
     expect(content).toContain('No issues found');
     expect(content).toMatch(/\nSUMMARY_EOF_[a-f0-9]{32}\n/);
+
+    if (original === undefined) {
+      delete process.env['GITHUB_OUTPUT'];
+    } else {
+      process.env['GITHUB_OUTPUT'] = original;
+    }
+  });
+
+  it('includes model-format output', () => {
+    const original = process.env['GITHUB_OUTPUT'];
+    process.env['GITHUB_OUTPUT'] = '/tmp/github-output';
+
+    writeGitHubActionsOutputs(makeOutput({ modelFormat: 'Structurizr' }));
+
+    const content = mockAppendFileSync.mock.calls[0]?.[1] as string;
+    expect(content).toContain('model-format=Structurizr');
 
     if (original === undefined) {
       delete process.env['GITHUB_OUTPUT'];
