@@ -87,6 +87,7 @@ If the model repo requires different credentials than the repository running the
 | `has-violations`   | Whether architectural violations were detected |
 | `violations-count` | Number of violations detected                  |
 | `analysis-summary` | Summary of the analysis results                |
+| `model-format`     | The architecture model format used             |
 
 Use outputs in subsequent workflow steps:
 

@@ -60,6 +60,8 @@ outputs:
     description: 'Number of violations detected'
   analysis-summary:
     description: 'Summary of the analysis results'
+  model-format:
+    description: 'The architecture model format used'
 
 runs:
   using: 'docker'
