@@ -68,6 +68,36 @@ npm run format         # Prettier format (all packages)
 npm run dev:web        # Start Astro dev server
 ```
 
+## Releasing
+
+[Release Please](https://github.com/googleapis/release-please) automates releases. It runs on every push to `main`, reads conventional commit messages, and maintains a release PR with the changelog.
+
+Merge the release PR to create a GitHub release, tag, and Docker image.
+
+### Version bumps
+
+The commit type determines the version bump:
+
+| Commit                                    | Bump  | Example       |
+| ----------------------------------------- | ----- | ------------- |
+| `fix: ...`                                | Patch | 0.1.1 → 0.1.2 |
+| `feat: ...`                               | Minor | 0.1.1 → 0.2.0 |
+| `feat!: ...` or `BREAKING CHANGE:` footer | Major | 0.1.1 → 1.0.0 |
+
+To force a major bump, add `!` after the commit type or include a `BREAKING CHANGE:` footer:
+
+```text
+feat!: remove deprecated config options
+
+BREAKING CHANGE: ERODE_MODEL_PATH no longer accepts relative paths.
+```
+
+Either the `!` or the footer is enough on its own.
+
+### What counts toward a release
+
+Only commits that touch `packages/core/` or `packages/cli/` trigger version bumps. Commits scoped to `packages/web/`, `packages/architecture/`, or `packages/eslint-config/` are excluded and will not appear in the changelog.
+
 ## License
 
 [Apache 2.0](LICENSE)

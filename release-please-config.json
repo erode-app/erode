@@ -4,6 +4,9 @@
   "include-v-in-tag": false,
   "pull-request-title-pattern": "chore(release): release ${version}",
   "packages": {
-    ".": {}
+    ".": {
+      "component": "",
+      "exclude-paths": ["packages/architecture", "packages/eslint-config", "packages/web"]
+    }
   }
 }
