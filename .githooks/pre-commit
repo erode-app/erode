@@ -26,6 +26,7 @@ run_check "TypeScript" "npm run typecheck --workspace=packages/core"
 run_check "ESLint" "npm run lint"
 run_check "Prettier" "npm run format:check"
 run_check "Markdown" "npm run lint:md"
+run_check "Docs" "npm run check:ci --workspace=packages/web"
 run_check "Knip" "npm run knip"
 run_check "Tests" "npm run test --workspace=packages/core"
 
@@ -41,6 +42,7 @@ if [ -n "$FAILED" ]; then
       ESLint) echo "Fix: npm run lint:fix" ;;
       Prettier) echo "Fix: npm run format" ;;
       Markdown) echo "Fix: npm run lint:md:fix" ;;
+      Docs) echo "Fix: Run 'npm run build --workspace=packages/web' to see broken links" ;;
       Knip) echo "Fix: Remove unused dependencies/exports shown above" ;;
       Tests) echo "Fix: Resolve failing tests shown above" ;;
     esac

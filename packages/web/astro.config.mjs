@@ -2,6 +2,7 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightLinksValidator from 'starlight-links-validator';
 
 // Resolve zod to Astro's bundled version to avoid conflicts with root zod@4
 const require = createRequire(import.meta.url);
@@ -17,6 +18,11 @@ export default defineConfig({
   },
   integrations: [
     starlight({
+      plugins: [
+        starlightLinksValidator({
+          exclude: ['/architecture/**'],
+        }),
+      ],
       title: 'erode',
       disable404Route: true,
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/erode-app/erode' }],

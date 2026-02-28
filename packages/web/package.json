@@ -10,11 +10,13 @@
     "build": "npm run prebuild:diagrams && astro check && astro build",
     "preview": "astro preview",
     "typecheck": "astro check --minimumFailingSeverity hint",
+    "check:ci": "astro check && astro build",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.37.6",
-    "astro": "^5.18.0"
+    "astro": "^5.18.0",
+    "starlight-links-validator": "^0.19.2"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
