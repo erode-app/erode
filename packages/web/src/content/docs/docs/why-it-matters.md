@@ -30,8 +30,9 @@ senior engineers or an architecture board that maintains the diagrams and review
 proposals. That creates a bottleneck. When only a few people can read or update the
 model, everyone else works around it. Treating the model as code, in a repository,
 with pull requests and review, makes it something the whole team can contribute to.
-The people closest to the code are often the first to know when the architecture
-shifts. Let them say so.
+
+> The people closest to the code are often the first to know when the architecture
+> shifts. Let them say so.
 
 ## The maintenance trap
 

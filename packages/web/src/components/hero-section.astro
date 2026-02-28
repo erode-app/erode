@@ -3,7 +3,7 @@
     <h1>Your software architecture is eroding.<br />Now you'll know where.</h1>
     <p class="subtitle">
       Erode analyzes code changes against your architecture model using AI,
-      catching undeclared dependencies and violations before they ship.
+      making undeclared dependencies and structural drift visible during code review.
     </p>
     <a href="https://github.com/erode-app/erode" class="cta">View on GitHub &rarr;</a>
 
@@ -22,7 +22,7 @@
 Summary:
   Frontend bypasses API Gateway with direct User Service call.
 
-Violations (1):
+Findings (1):
   <span class="severity-high">[HIGH]</span> Direct dependency on User Service bypasses API Gateway
     packages/frontend/src/index.ts
     <span class="suggestion">Suggestion: Route through API Gateway. Extend it to

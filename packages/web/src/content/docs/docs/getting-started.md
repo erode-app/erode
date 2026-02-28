@@ -3,7 +3,7 @@ title: Getting Started
 description: Set up Erode in your CI pipeline in under five minutes.
 ---
 
-Erode detects architecture drift by comparing pull requests against your architecture model. When a PR introduces an undeclared dependency, Erode flags it as a violation and comments directly on the pull request.
+Erode detects architecture drift by comparing pull requests against your architecture model. When a PR introduces an undeclared dependency, Erode surfaces it as a finding and comments directly on the pull request.
 
 ## Prerequisites
 
@@ -22,7 +22,7 @@ Go to your repository's **Settings > Secrets and variables > Actions** and add t
 Add `.github/workflows/erode.yml` to your repository:
 
 ```yaml
-name: Architecture Drift Check
+name: Architecture Drift Review
 on: [pull_request]
 
 jobs:
@@ -40,7 +40,7 @@ Replace `your-org/architecture` with the repository that contains your architect
 
 ### 3. Open a pull request
 
-Erode runs on every PR and posts a comment listing any undeclared dependencies, their severity, and how to fix them. If no violations are found, it confirms the PR aligns with the declared architecture.
+Erode runs on every PR and posts a comment listing any undeclared dependencies, their severity, and how to fix them. If no drift is found, it confirms the PR aligns with the declared architecture.
 
 ## Try the example project
 
@@ -49,7 +49,7 @@ The [playground repository](https://github.com/erode-app/playground) is a ready-
 1. [Fork the repository](https://github.com/erode-app/playground/fork)
 2. Add your `GEMINI_API_KEY` (or another [AI provider](/docs/reference/ai-providers/) key) as a repository secret
 3. Open a PR that introduces an undeclared dependency — for example, make the frontend call `user-service` directly instead of going through `api-gateway`
-4. Erode will comment on the PR with the detected violation
+4. Erode will comment on the PR with the detected finding
 
 ## What's next
 
