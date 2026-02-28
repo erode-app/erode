@@ -122,3 +122,9 @@ node packages/cli/dist/cli.js analyze ./architecture \
   --comment \
   --fail-on-violations
 ```
+
+## What's next
+
+- [Configuration](/docs/guides/configuration/) — environment variables for tuning diff limits, timeouts, and model overrides
+- [CI Integration](/docs/ci/) — run Erode automatically on every pull request
+- [AI Providers](/docs/reference/ai-providers/) — supported providers and model selection

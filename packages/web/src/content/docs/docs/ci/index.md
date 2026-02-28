@@ -55,6 +55,6 @@ Erode provides an entrypoint script (`entrypoint-bitbucket.sh`) for Bitbucket Cl
 
 ## Self-hosted
 
-Run Erode on any infrastructure — bare metal, Kubernetes, or other CI systems — using the Docker image or the CLI directly.
+Run Erode on any infrastructure using the Docker image or the CLI directly. This covers bare metal, Kubernetes, and other CI systems.
 
 [Self-hosted guide →](/docs/ci/self-hosted/)

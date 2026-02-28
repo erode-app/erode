@@ -115,9 +115,9 @@ After analysis, Erode posts a comment on the pull request containing:
 
 If no violations are found, the comment confirms that the PR aligns with the declared architecture.
 
-## GitHub App Token
+## GitHub App token
 
-For organizations, GitHub Apps are the recommended authentication method. Unlike personal access tokens, App tokens are short-lived, scoped to specific repositories, and not tied to individual user accounts — so they keep working when people leave the organization. Permissions are managed centrally through the App's installation settings.
+For organizations, GitHub Apps are the recommended authentication method. Unlike personal access tokens, App tokens are short-lived, scoped to specific repositories, and not tied to individual user accounts, so they keep working when people leave the organization. Permissions are managed centrally through the App's installation settings.
 
 Use the [`create-github-app-token`](https://github.com/actions/create-github-app-token) action to generate a token at the start of each workflow run:
 
@@ -154,7 +154,7 @@ The `owner` field ensures the token covers all repositories the App is installed
 
 ## Tips
 
-- Start with the Gemini provider during evaluation — it is generally cheaper. OpenAI is another good option for production workflows.
+- Start with the Gemini provider during evaluation. It is cheaper per request. OpenAI is another good option for production workflows.
 - Keep your architecture model up to date. Erode can only detect drift against what is declared in the model.
 - Set `fail-on-violations: 'true'` to block PRs that introduce undeclared dependencies.
 - See [Configuration](/docs/guides/configuration/) for tuning diff limits, timeouts, and model overrides.

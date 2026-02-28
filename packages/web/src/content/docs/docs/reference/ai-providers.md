@@ -74,6 +74,6 @@ These control the maximum wait time for each API request. Increase them if you e
 
 ## Choosing a provider
 
-Gemini is the default provider and is generally cheaper per request. OpenAI offers strong analysis quality with broad model availability. Anthropic support is experimental.
+Gemini is the default provider and is cheaper per request. OpenAI offers strong analysis quality with broad model availability. Anthropic support is experimental.
 
 Start with Gemini or OpenAI during evaluation.

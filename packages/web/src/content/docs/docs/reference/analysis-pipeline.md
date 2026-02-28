@@ -13,7 +13,7 @@ head:
 
 > [Open full interactive viewer →](/architecture/#/view/pipeline/)
 
-## Stage 1 -- Component Resolution
+## Stage 1 -- Component resolution
 
 |                |                                                                           |
 | -------------- | ------------------------------------------------------------------------- |
@@ -25,7 +25,7 @@ When a repository maps to multiple components in the architecture model, this st
 
 This stage is **skipped entirely** when only one component matches the repository.
 
-## Stage 2 -- Dependency Scan
+## Stage 2 -- Dependency scan
 
 |                |                                                              |
 | -------------- | ------------------------------------------------------------ |
@@ -37,7 +37,7 @@ The PR diff is analyzed to extract dependency changes. The fast model identifies
 
 This keeps the analysis stage focused on dependency changes rather than the full diff.
 
-## Stage 3 -- PR Analysis
+## Stage 3 -- PR analysis
 
 |                |                                                                          |
 | -------------- | ------------------------------------------------------------------------ |
@@ -52,7 +52,7 @@ The advanced model compares the extracted dependency changes against the full de
 - **Suggestion**: How to resolve the drift (update the model, refactor the code, or accept the change)
 - **Summary**: An overall assessment of the PR's architectural impact
 
-## Stage 4 -- Model Generation (optional)
+## Stage 4 -- Model generation (optional)
 
 |                |                                                             |
 | -------------- | ----------------------------------------------------------- |
@@ -71,7 +71,7 @@ Each stage loads a markdown prompt template from `src/analysis/prompts/` at runt
 API errors are detected automatically across all stages. The pipeline handles:
 
 - **Rate limiting**: Detected from provider response headers and status codes. Reported with retry guidance.
-- **Timeouts**: Controlled by `GEMINI_TIMEOUT` and `ANTHROPIC_TIMEOUT` environment variables.
+- **Timeouts**: Controlled by `GEMINI_TIMEOUT`, `OPENAI_TIMEOUT`, and `ANTHROPIC_TIMEOUT` environment variables.
 - **Acceleration limits**: Provider-specific quota errors are identified and reported with context.
 
 All errors are wrapped in structured error types that carry an error code, a user-facing message, and metadata about the failed request.

@@ -33,7 +33,7 @@ For GitHub Actions-specific inputs (`model-repo`, `fail-on-violations`, etc.), s
 | `MAX_LINES_PER_DIFF` | Maximum number of lines to include in the diff | `5000`  |
 | `MAX_CONTEXT_CHARS`  | Maximum characters of architectural context    | `10000` |
 
-Large diffs are truncated to stay within these limits. If a PR exceeds them, Erode processes the most relevant files first based on the architecture model context.
+Erode truncates large diffs to stay within these limits. If a PR exceeds them, Erode processes the most relevant files first based on the architecture model context.
 
 ## Provider model overrides
 
@@ -60,7 +60,7 @@ See [AI Providers](/docs/reference/ai-providers/) for default model names and gu
 
 ### Token permissions
 
-`GITHUB_TOKEN` is used to read the source PR and post analysis comments. `MODEL_REPO_PR_TOKEN` is used to create model update PRs (branches, commits, pull requests) on the model repository and falls back to `GITHUB_TOKEN` when not set.
+Erode uses `GITHUB_TOKEN` to read the source PR and post analysis comments. `MODEL_REPO_PR_TOKEN` is used to create model update PRs (branches, commits, pull requests) on the model repository and falls back to `GITHUB_TOKEN` when not set.
 
 **Same repository** — source code and architecture model live in one repo, so a single token covers everything:
 
@@ -113,7 +113,7 @@ PR comments are created through GitHub's Issues API (`issues.createComment`), so
 
 ### Token permissions
 
-`GITLAB_TOKEN` is used for all operations on the source project — reading MR diffs, posting notes, and (with `--open-pr`) creating branches, commits, and merge requests. The `api` scope is required; `read_api` is **not** sufficient.
+Erode uses `GITLAB_TOKEN` for all operations on the source project — reading MR diffs, posting notes, and (with `--open-pr`) creating branches, commits, and merge requests. The `api` scope is required; `read_api` is **not** sufficient.
 
 For external model projects, the CI entrypoint accepts `ERODE_MODEL_REPO_TOKEN` (see [GitLab CI](/docs/ci/gitlab-ci/)).
 
@@ -160,3 +160,9 @@ Repository access tokens and workspace access tokens use the same permission cat
 | ------------ | ---------------------- | ------- |
 | `DEBUG_MODE` | Enable debug output    | `false` |
 | `VERBOSE`    | Enable verbose logging | `false` |
+
+## What's next
+
+- [CLI usage](/docs/guides/cli-usage/) — run Erode locally against any pull request
+- [AI Providers](/docs/reference/ai-providers/) — supported providers, default models, and overrides
+- [Analysis pipeline](/docs/reference/analysis-pipeline/) — stage-by-stage reference for the analysis engine

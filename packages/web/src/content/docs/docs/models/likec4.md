@@ -93,7 +93,7 @@ During analysis, Erode:
 3. Compares those changes against the declared relationships in the model
 4. Reports any dependencies that exist in the code but are missing from the model
 
-The more accurately the model reflects the dependencies that matter, the better Erode can detect drift. You do not need to model every detail — focus on the relationships worth protecting.
+The more accurately the model reflects the dependencies that matter, the better Erode can detect drift. You do not need to model every detail. Focus on the relationships worth protecting.
 
 ## Version requirements
 
