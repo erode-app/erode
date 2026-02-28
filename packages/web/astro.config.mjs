@@ -10,6 +10,7 @@ const astroDir = dirname(require.resolve('astro/package.json'));
 const zodEntry = join(astroDir, 'node_modules', 'zod', 'index.js');
 
 export default defineConfig({
+  site: 'https://erode.dev',
   output: 'static',
   vite: {
     resolve: {

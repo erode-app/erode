@@ -6,24 +6,49 @@ on:
     paths:
       - 'packages/web/**'
       - 'packages/architecture/**'
-      - 'Dockerfile.web'
-      - 'fly.toml'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/deploy.yml'
 
+  # Allow manual trigger
+  workflow_dispatch:
+
 concurrency:
   group: deploy-web
-  cancel-in-progress: true
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
 
-      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
 
-      - run: flyctl deploy --remote-only
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - uses: actions/configure-pages@v5
+
+      - run: npm ci
+
+      - run: npm run build --workspace=packages/web
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: packages/web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
