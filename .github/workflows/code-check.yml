@@ -31,3 +31,8 @@ jobs:
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
 
       - run: npm run check:ci
+
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: echo "$PR_TITLE" | ./node_modules/.bin/commitlint

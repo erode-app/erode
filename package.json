@@ -1,5 +1,6 @@
 {
   "name": "erode-monorepo",
+  "version": "0.1.1",
   "private": true,
   "license": "MIT",
   "workspaces": [
@@ -26,6 +27,8 @@
     "dev:arch": "npm run dev --workspace=packages/architecture"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
     "knip": "^5.85.0",
     "markdownlint-cli2": "^0.21.0",
     "prettier": "^3.7.3"

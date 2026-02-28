@@ -1,3 +1,9 @@
 {
-  "ignores": ["**/node_modules", "**/dist", "packages/core/src/**/prompts/", ".claude/"],
+  "ignores": [
+    "**/node_modules",
+    "**/dist",
+    "packages/core/src/**/prompts/",
+    ".claude/",
+    "CHANGELOG.md",
+  ],
 }

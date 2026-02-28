@@ -9,7 +9,7 @@ allowed-tools: Bash, Glob, Grep, Read
 # Git Commit Standard
 
 All commits in this project follow the Conventional Commits spec, tailored
-for a monorepo with `packages/core/` and `packages/web/`.
+for a monorepo with `packages/core/`, `packages/cli/`, and `packages/web/`.
 
 ## Subject Line
 
@@ -38,9 +38,13 @@ type(scope): description
 
 ## Scopes
 
+- `core` — changes scoped to `packages/core/`
+- `cli` — changes scoped to `packages/cli/`
 - `web` — changes scoped to `packages/web/`
-- `core` — changes scoped to `packages/core/` (optional since it's the primary package)
+- `architecture` — changes scoped to `packages/architecture/`
+- `eslint-config` — changes scoped to `packages/eslint-config/`
 - `deps` / `deps-dev` — dependency bumps
+- `release` — release automation changes
 - Omit scope for repo-wide or cross-package changes
 
 ## Body
