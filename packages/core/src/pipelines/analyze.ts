@@ -1,23 +1,16 @@
+import { writeFile } from 'node:fs/promises';
 import type { ProgressReporter } from './progress.js';
 import { SilentProgress } from './progress.js';
-import { createModelPr, closeModelPr } from './pr-creation.js';
+import { publishResults } from './publish.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
-import { createPlatformReader, createPlatformWriter } from '../platforms/platform-factory.js';
+import { createPlatformReader } from '../platforms/platform-factory.js';
 import { createAIProvider } from '../providers/provider-factory.js';
-import {
-  buildStructuredOutput,
-  formatAnalysisAsComment,
-  formatPatchPrBody,
-  analysisHasFindings,
-  COMMENT_MARKER,
-  writeOutputToFile,
-} from '../output.js';
-import { writeGitHubActionsOutputs, writeGitHubStepSummary } from '../output/ci-output.js';
-import { CONFIG } from '../utils/config.js';
+import { buildStructuredOutput, writeOutputToFile } from '../output.js';
 import { validatePath } from '../utils/validation.js';
 import { ErodeError, ErrorCode } from '../errors.js';
 import { loadSkipPatterns, applySkipPatterns } from '../utils/skip-patterns.js';
 import { createModelPatcher } from '../adapters/model-patcher.js';
+import type { PatchResult } from '../adapters/model-patcher.js';
 import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
 import type { DriftAnalysisPromptData, DriftAnalysisResult } from '../analysis/analysis-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
@@ -29,6 +22,7 @@ interface PipelineContext {
   candidateComponents?: { id: string; name: string; type: string }[];
   extractedDeps?: DependencyExtractionResult;
   analysisResult?: DriftAnalysisResult;
+  patchResult?: PatchResult | null;
 }
 
 export interface AnalyzeOptions {
@@ -46,6 +40,7 @@ export interface AnalyzeOptions {
   format?: 'console' | 'json';
   /** Model repository in `owner/repo` format (or `group/subgroup/project` for GitLab). */
   modelRepo?: string;
+  patch?: boolean;
 }
 
 export interface AnalyzeResult {
@@ -276,134 +271,61 @@ export async function runAnalyze(
     p.succeed(`Structured output saved to ${options.outputFile}`);
   }
 
-  // ── Resolve model repo target ────────────────────────────────────────
-  const modelTarget = options.modelRepo
-    ? (() => {
-        const i = options.modelRepo.lastIndexOf('/');
-        return {
-          owner: options.modelRepo.substring(0, i),
-          repo: options.modelRepo.substring(i + 1),
-        };
-      })()
-    : ref.platformId;
-
-  // ── PR creation ──────────────────────────────────────────────────────
-  let generatedChangeRequest:
-    | { url: string; number: number; action: 'created' | 'updated'; branch: string }
-    | undefined;
-  if (options.openPr && !options.dryRun) {
-    if (ctx.analysisResult.modelUpdates?.relationships?.length) {
-      p.section('Patching Model');
-      p.start('Generating model patch from structured relationships');
-      const patcher = createModelPatcher(adapter.metadata.id);
-      const patchResult = await patcher.patch({
-        modelPath: options.modelPath,
-        relationships: ctx.analysisResult.modelUpdates.relationships,
-        existingRelationships: adapter.getAllRelationships(),
-        componentIndex: architectureModel.componentIndex,
-        provider,
-      });
-      if (patchResult) {
-        p.succeed(
-          `Patch ready: ${String(patchResult.insertedLines.length)} relationship(s) to add`
-        );
-        p.start('Opening PR with patched model');
-        const body = formatPatchPrBody({
-          prNumber: prData.number,
-          prTitle: prData.title,
-          prUrl: ref.url,
-          summary: ctx.analysisResult.summary,
-          insertedLines: patchResult.insertedLines,
-          skipped: patchResult.skipped,
-          removals: ctx.analysisResult.modelUpdates.remove,
-        });
-        const result = await createModelPr({
-          repositoryUrl: ref.repositoryUrl,
-          owner: modelTarget.owner,
-          repo: modelTarget.repo,
-          prNumber: prData.number,
-          prTitle: prData.title,
-          adapterMetadata: adapter.metadata,
-          fileChanges: [{ path: patchResult.filePath, content: patchResult.content }],
-          body,
-          draft: options.draft,
-        });
-        generatedChangeRequest = result;
-        if (structured) structured.generatedChangeRequest = generatedChangeRequest;
-        p.succeed(`PR ${result.action} successfully: ${result.url}`);
-      } else {
-        p.info('All relationships already exist or were invalid. No PR needed.');
+  // ── Stage 4: Model Patching ──────────────────────────────────────────
+  const shouldPatch = options.patch === true || options.openPr === true;
+  if (shouldPatch && ctx.analysisResult.modelUpdates?.relationships?.length) {
+    p.section('Stage 4: Model Patching');
+    p.start('Generating model patch');
+    const patcher = createModelPatcher(adapter.metadata.id);
+    ctx.patchResult = await patcher.patch({
+      modelPath: options.modelPath,
+      relationships: ctx.analysisResult.modelUpdates.relationships,
+      existingRelationships: adapter.getAllRelationships(),
+      componentIndex: architectureModel.componentIndex,
+      provider,
+    });
+    if (ctx.patchResult) {
+      p.succeed(`Patch: ${String(ctx.patchResult.insertedLines.length)} relationship(s)`);
+      // Write in-place when --patch without --open-pr
+      if (options.patch && !options.openPr && !options.dryRun) {
+        await writeFile(ctx.patchResult.filePath, ctx.patchResult.content, 'utf8');
+        p.succeed(`Model patched: ${ctx.patchResult.filePath}`);
+      } else if (options.dryRun) {
+        p.info('Dry run: skipped writing patched model');
       }
     } else {
-      p.warn('--open-pr requires structured relationships from analysis. Skipping PR creation.');
+      p.info('All relationships already exist or were invalid');
     }
-
-    // Auto-close stale model PR when re-analysis finds no violations
-    if (!ctx.analysisResult.hasViolations && !generatedChangeRequest) {
-      try {
-        await closeModelPr({
-          repositoryUrl: ref.repositoryUrl,
-          owner: modelTarget.owner,
-          repo: modelTarget.repo,
-          prNumber: prData.number,
-        });
-      } catch {
-        // Closing is best-effort; don't fail the pipeline
-      }
-    }
-  } else if (options.openPr && options.dryRun) {
-    p.info('Dry run: skipped PR creation');
+  } else if (shouldPatch) {
+    p.info('No model update relationships from analysis');
   }
 
-  // ── PR commenting ────────────────────────────────────────────────────
-  if (options.comment) {
-    try {
-      p.section('Publishing PR Comment');
-      const commentWriter = createPlatformWriter(
-        ref.repositoryUrl,
-        ref.platformId.owner,
-        ref.platformId.repo
-      );
-      if (analysisHasFindings(ctx.analysisResult)) {
-        p.start('Publishing analysis comment on PR');
-        const providerName = CONFIG.ai.provider;
-        const providerConfig = CONFIG[providerName];
-        const commentBody = formatAnalysisAsComment(ctx.analysisResult, {
-          selectedComponentId: ctx.selectedComponentId,
-          candidateComponents: ctx.candidateComponents,
-          generatedChangeRequest,
-          modelInfo: {
-            provider: providerName,
-            fastModel: providerConfig.fastModel,
-            advancedModel: providerConfig.advancedModel,
-          },
-        });
-        await commentWriter.commentOnChangeRequest(ref, commentBody, {
-          upsertMarker: COMMENT_MARKER,
-        });
-        p.succeed('Analysis comment published on PR');
-      } else {
-        p.start('Removing stale comment (no findings)');
-        await commentWriter.deleteComment(ref, COMMENT_MARKER);
-        p.succeed('No findings — old comment cleared (if any)');
-      }
-    } catch (error) {
-      p.warn(
-        `Could not publish PR comment: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  }
+  // ── Publish results ────────────────────────────────────────────────
+  const publishResult = await publishResults(
+    {
+      ref,
+      analysisResult: ctx.analysisResult,
+      patchResult: ctx.patchResult ?? null,
+      structured,
+      adapterMetadata: adapter.metadata,
+      options: {
+        openPr: options.openPr,
+        dryRun: options.dryRun,
+        draft: options.draft,
+        modelRepo: options.modelRepo,
+        comment: options.comment,
+        githubActions: options.githubActions,
+      },
+      context: {
+        selectedComponentId: ctx.selectedComponentId,
+        candidateComponents: ctx.candidateComponents,
+      },
+    },
+    p
+  );
 
-  // ── GitHub Actions outputs ───────────────────────────────────────────
-  if (options.githubActions && structured) {
-    try {
-      writeGitHubActionsOutputs(structured);
-      writeGitHubStepSummary(structured);
-    } catch (error) {
-      p.warn(
-        `Could not write GitHub Actions outputs: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
+  if (publishResult.generatedChangeRequest && structured) {
+    structured.generatedChangeRequest = publishResult.generatedChangeRequest;
   }
 
   return {

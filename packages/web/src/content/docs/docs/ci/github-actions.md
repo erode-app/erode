@@ -106,7 +106,7 @@ steps:
 
 ## Model update PRs
 
-When `open-pr` is enabled, Erode creates a pull request against the model repository with updated relationship declarations derived from the Stage 3 structured analysis data. A fast model call (Stage 4) places the new lines into the correct location in the DSL file, with a deterministic fallback if the LLM output fails validation.
+When `open-pr` is enabled, Erode runs Stage 4 (Model Patching) to generate a deterministic patch from the Stage 3 structured analysis data, then creates a pull request against the model repository with the updated relationship declarations.
 
 - PRs are created as drafts by default (GitHub/GitLab). Bitbucket has no draft support.
 - The PR body includes a link to the source analysis PR for traceability.

@@ -207,7 +207,7 @@ export function formatAnalysisAsComment(
     lines.push('|---|---|');
     lines.push(`| **AI Provider** | ${extras.modelInfo.provider} |`);
     lines.push(`| **Quick model** (Stages 1, 2) | \`${extras.modelInfo.fastModel}\` |`);
-    lines.push(`| **Deep model** (Stages 3, 4) | \`${extras.modelInfo.advancedModel}\` |`);
+    lines.push(`| **Deep model** (Stage 3) | \`${extras.modelInfo.advancedModel}\` |`);
     lines.push('');
     lines.push('</details>');
     lines.push('');

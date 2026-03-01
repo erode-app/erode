@@ -43,7 +43,8 @@ erode analyze ./model --url https://bitbucket.org/workspace/repo/pull-requests/4
 | `--model-format <fmt>`  | Architecture model format                                             | `likec4`  |
 | `--format <fmt>`        | Output format: `console`, `json`                                      | `console` |
 | `--open-pr`             | Create a PR with model updates (see below)                            |           |
-| `--dry-run`             | Preview without creating a PR                                         |           |
+| `--patch`               | Patch the architecture model in-place (see below)                     |           |
+| `--dry-run`             | Preview without creating a PR or writing patches                      |           |
 | `--draft`               | Create change request as draft                                        | `true`    |
 | `--output-file <path>`  | Write structured JSON output to a file                                |           |
 | `--skip-file-filtering` | Analyze all changed files (skip pattern-based filtering)              |           |
@@ -51,9 +52,13 @@ erode analyze ./model --url https://bitbucket.org/workspace/repo/pull-requests/4
 | `--github-actions`      | Write GitHub Actions outputs and step summary                         |           |
 | `--fail-on-violations`  | Exit with code 1 when violations are found                            |           |
 
+#### `--patch` behavior
+
+`--patch` runs Stage 4 (Model Patching) and writes the patched model file in-place. Combine with `--dry-run` to preview the patch without writing.
+
 #### `--open-pr` behavior
 
-`--open-pr` creates a pull request against the model repository with updated relationship declarations derived from the Stage 3 structured analysis data. A fast model call (Stage 4) places the new lines into the correct location in the DSL file, with a deterministic fallback if the LLM output fails validation.
+`--open-pr` implies `--patch`. After generating the patch (Stage 4), it creates a pull request against the model repository with the updated relationship declarations.
 
 - PRs are created as drafts by default (GitHub/GitLab). Bitbucket has no draft support.
 - The PR body includes a link to the source analysis PR for traceability.

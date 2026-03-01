@@ -33,6 +33,7 @@ function parseArgs(argv: string[]): AnalyzeOptions {
     comment: hasFlag('--comment'),
     githubActions: hasFlag('--github-actions'),
     openPr: hasFlag('--open-pr'),
+    patch: hasFlag('--patch'),
     failOnViolations: hasFlag('--fail-on-violations'),
     skipFileFiltering: hasFlag('--skip-file-filtering'),
     draft: !hasFlag('--no-draft'),

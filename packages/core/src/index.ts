@@ -91,6 +91,8 @@ export type { ProgressReporter } from './pipelines/progress.js';
 export { SilentProgress } from './pipelines/progress.js';
 export { createModelPr, closeModelPr, modelPrBranchName } from './pipelines/pr-creation.js';
 export type { CreateModelPrOptions, CreateModelPrResult } from './pipelines/pr-creation.js';
+export { publishResults } from './pipelines/publish.js';
+export type { PublishOptions, PublishResult } from './pipelines/publish.js';
 
 // Patching
 export { createModelPatcher, quickValidatePatch } from './adapters/model-patcher.js';

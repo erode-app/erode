@@ -202,7 +202,7 @@ describe('formatAnalysisAsComment', () => {
     expect(output).toContain('<summary>Analysis details</summary>');
     expect(output).toContain('| **AI Provider** | gemini |');
     expect(output).toContain('| **Quick model** (Stages 1, 2) | `gemini-2.5-flash` |');
-    expect(output).toContain('| **Deep model** (Stages 3, 4) | `gemini-2.5-pro` |');
+    expect(output).toContain('| **Deep model** (Stage 3) | `gemini-2.5-pro` |');
   });
 
   it('should not render model metadata when modelInfo is omitted', () => {
