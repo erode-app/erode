@@ -96,10 +96,26 @@ Respond with ONLY valid JSON:
   "modelUpdates": {
     "add": ["Dependencies to ADD to model"],
     "remove": ["Dependencies to REMOVE from model"],
-    "notes": "Additional context about model updates"
+    "notes": "Additional context about model updates",
+    "relationships": [
+      {
+        "source": "exact.component.id.from.model",
+        "target": "exact.component.id.from.model",
+        "kind": "optional relationship kind",
+        "description": "What this dependency is for"
+      }
+    ]
   },
   "summary": "2-3 sentence summary of the architectural impact"
 }
 ```
 
 Concentrate on architectural drift — whether the code aligns with the documented architecture.
+
+**IMPORTANT for modelUpdates.relationships:**
+
+- Use EXACT component IDs from the architecture model (the COMPONENT CONTEXT and ALLOWED DEPENDENCIES sections)
+- Only include relationships that should be ADDED to the model
+- The `source` should be the component being analyzed ({{component.id}})
+- The `kind` field is optional and should describe the type of relationship (e.g., "HTTP", "gRPC", "event", "database")
+- The `description` should briefly explain what this dependency is used for

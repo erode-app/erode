@@ -42,8 +42,7 @@ erode analyze ./model --url https://bitbucket.org/workspace/repo/pull-requests/4
 | `--url <url>`           | Change request URL (GitHub PR, GitLab MR, or Bitbucket PR). Required. |           |
 | `--model-format <fmt>`  | Architecture model format                                             | `likec4`  |
 | `--format <fmt>`        | Output format: `console`, `json`                                      | `console` |
-| `--generate-model`      | Generate architecture model code from the analysis                    |           |
-| `--open-pr`             | Create a PR with suggested model updates                              |           |
+| `--open-pr`             | Create a PR with model updates (see below)                            |           |
 | `--dry-run`             | Preview without creating a PR                                         |           |
 | `--draft`               | Create change request as draft                                        | `true`    |
 | `--output-file <path>`  | Write structured JSON output to a file                                |           |
@@ -51,6 +50,14 @@ erode analyze ./model --url https://bitbucket.org/workspace/repo/pull-requests/4
 | `--comment`             | Post analysis results as a PR/MR comment                              |           |
 | `--github-actions`      | Write GitHub Actions outputs and step summary                         |           |
 | `--fail-on-violations`  | Exit with code 1 when violations are found                            |           |
+
+#### `--open-pr` behavior
+
+`--open-pr` creates a pull request against the model repository with updated relationship declarations derived from the Stage 3 structured analysis data. No additional AI call is needed.
+
+:::note
+Relationship removals are informational only. The PR body lists relationships that may need removal, but the reviewer must remove them manually.
+:::
 
 ### `components <model-path>`
 

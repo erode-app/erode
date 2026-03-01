@@ -76,7 +76,7 @@ If the model repo requires different credentials than the repository running the
 | `anthropic-api-key`   | Anthropic API key (experimental)                            | When using Anthropic | —                   |
 | `github-token`        | GitHub token for reading PRs and posting comments           | Yes                  | —                   |
 | `model-repo-token`    | Separate GitHub token for cloning the model repository      | No                   | Uses `github-token` |
-| `open-pr`             | Open a PR with suggested model updates                      | No                   | `false`             |
+| `open-pr`             | Open a PR with model updates (see below)                    | No                   | `false`             |
 | `fail-on-violations`  | Fail the workflow if violations are detected                | No                   | `false`             |
 | `skip-file-filtering` | Analyze all changed files instead of filtering by relevance | No                   | `false`             |
 
@@ -103,6 +103,14 @@ steps:
   - if: steps.erode.outputs.has-violations == 'true'
     run: echo "Found ${{ steps.erode.outputs.violations-count }} violations"
 ```
+
+## Model update PRs
+
+When `open-pr` is enabled, Erode creates a pull request against the model repository with updated relationship declarations derived from the Stage 3 structured analysis data. No additional AI call is needed.
+
+:::note
+Relationship removals are informational only. The PR body lists relationships that may need removal, but the reviewer must remove them manually.
+:::
 
 ## PR comments
 

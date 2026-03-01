@@ -94,10 +94,21 @@ export abstract class BaseProvider implements AIProvider {
     };
   }
 
-  async generateArchitectureCode(analysisResult: DriftAnalysisResult): Promise<string> {
-    const prompt = PromptBuilder.buildModelGenerationPrompt(analysisResult);
+  async patchModel(
+    fileContent: string,
+    linesToInsert: string[],
+    modelFormat: string
+  ): Promise<string> {
+    const prompt = PromptBuilder.buildModelPatchPrompt({
+      fileContent,
+      linesToInsert,
+      modelFormat,
+    });
+    // Estimate tokens: ~4 chars per token, add 20% headroom for inserted lines
+    const estimatedTokens = Math.ceil(fileContent.length / 4) + linesToInsert.length * 50;
+    const maxTokens = Math.max(4096, Math.ceil(estimatedTokens * 1.2));
     return withRetry(
-      () => this.callModel(this.advancedModel, prompt, AnalysisPhase.MODEL_GENERATION, 8192),
+      () => this.callModel(this.fastModel, prompt, AnalysisPhase.MODEL_PATCHING, maxTokens),
       {
         retries: 2,
         shouldRetry: (error) => this.isRetryableError(error),

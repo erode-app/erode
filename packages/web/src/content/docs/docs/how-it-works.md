@@ -50,10 +50,6 @@ A stronger model (Sonnet for Anthropic, GPT-4.1 for OpenAI, Flash for Gemini) co
 - A description of the drift
 - **Suggestions** for resolving the violation
 
-## Stage 4 -- Generate (optional)
-
-When enabled, Erode produces architecture model updates that bring the model back in sync with reality. This can be used to open a follow-up pull request that updates the model.
-
 ## Prompt templates
 
 Each stage's behavior is defined by a markdown prompt template with `{{variable}}` substitution. These templates are maintained alongside the source code and are assembled at runtime by the prompt builder.

@@ -1,11 +1,13 @@
 import type { ProgressReporter } from './progress.js';
 import { SilentProgress } from './progress.js';
+import { createModelPr } from './pr-creation.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
 import { createPlatformReader, createPlatformWriter } from '../platforms/platform-factory.js';
 import { createAIProvider } from '../providers/provider-factory.js';
 import {
   buildStructuredOutput,
   formatAnalysisAsComment,
+  formatPatchPrBody,
   analysisHasFindings,
   COMMENT_MARKER,
   writeOutputToFile,
@@ -15,6 +17,7 @@ import { CONFIG } from '../utils/config.js';
 import { validatePath } from '../utils/validation.js';
 import { ErodeError, ErrorCode } from '../errors.js';
 import { loadSkipPatterns, applySkipPatterns } from '../utils/skip-patterns.js';
+import { createModelPatcher } from '../patching/index.js';
 import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
 import type { DriftAnalysisPromptData, DriftAnalysisResult } from '../analysis/analysis-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
@@ -26,14 +29,12 @@ interface PipelineContext {
   candidateComponents?: { id: string; name: string; type: string }[];
   extractedDeps?: DependencyExtractionResult;
   analysisResult?: DriftAnalysisResult;
-  generatedCode?: string;
 }
 
 export interface AnalyzeOptions {
   modelPath: string;
   url: string;
   modelFormat?: string;
-  generateModel?: boolean;
   outputFile?: string;
   openPr?: boolean;
   dryRun?: boolean;
@@ -48,7 +49,6 @@ export interface AnalyzeOptions {
 export interface AnalyzeResult {
   analysisResult: DriftAnalysisResult;
   structured?: StructuredAnalysisOutput;
-  generatedCode?: string;
   hasViolations: boolean;
 }
 
@@ -63,7 +63,7 @@ export async function runAnalyze(
   p.section(`Preparing ${adapter.metadata.displayName} Architecture Model`);
   validatePath(options.modelPath, 'directory');
   p.start('Reading architecture model');
-  await adapter.loadFromPath(options.modelPath);
+  const architectureModel = await adapter.loadFromPath(options.modelPath);
   p.succeed('Architecture model ready');
 
   // ── Initialise AI provider ───────────────────────────────────────────
@@ -257,21 +257,6 @@ export async function runAnalyze(
   ctx.analysisResult = await provider.analyzeDrift(promptData);
   p.succeed('Drift analysis finished');
 
-  // ── Stage 4 (optional): Model generation ─────────────────────────────
-  if (options.generateModel) {
-    p.section(`Stage 4: Generate ${adapter.metadata.displayName} Model`);
-    if (!provider.generateArchitectureCode) {
-      p.warn(`Provider lacks ${adapter.metadata.displayName} model generation support`);
-    } else {
-      p.start(`Producing ${adapter.metadata.displayName} model code`);
-      // Pass all components for context
-      ctx.analysisResult.allComponents = adapter.getAllComponents();
-      ctx.analysisResult.modelFormat = adapter.metadata.id;
-      ctx.generatedCode = await provider.generateArchitectureCode(ctx.analysisResult);
-      p.succeed(`${adapter.metadata.displayName} model code produced`);
-    }
-  }
-
   // ── Build structured output ──────────────────────────────────────────
   p.section('Output');
   const needsStructured =
@@ -294,43 +279,49 @@ export async function runAnalyze(
     | { url: string; number: number; action: 'created' | 'updated'; branch: string }
     | undefined;
   if (options.openPr && !options.dryRun) {
-    if (!ctx.generatedCode) {
-      p.warn('--open-pr needs --generate-model to generate code. Skipping PR creation.');
-    } else {
-      p.section('Opening Pull Request');
-      p.start('Opening PR with model changes');
-      const writer = createPlatformWriter(
-        ref.repositoryUrl,
-        ref.platformId.owner,
-        ref.platformId.repo
-      );
-      const branchName = `erode/pr-${String(prData.number)}`;
-      const prTitle = adapter.metadata.prTitleTemplate.replace(
-        '{{prNumber}}',
-        String(prData.number)
-      );
-      const prResult = await writer.createOrUpdateChangeRequest({
-        branchName,
-        title: prTitle,
-        body: [
-          `## Model Update`,
-          '',
-          `Auto-generated from erode analysis of PR #${String(prData.number)}: ${prData.title}`,
-          '',
-          `### Summary`,
-          ctx.analysisResult.summary,
-        ].join('\n'),
-        fileChanges: [
-          {
-            path: `model-updates/pr-${String(prData.number)}${adapter.metadata.generatedFileExtension}`,
-            content: ctx.generatedCode,
-          },
-        ],
-        draft: options.draft,
+    if (ctx.analysisResult.modelUpdates?.relationships?.length) {
+      p.section('Patching Model');
+      p.start('Generating model patch from structured relationships');
+      const patcher = createModelPatcher(adapter.metadata.id);
+      const patchResult = await patcher.patch({
+        modelPath: options.modelPath,
+        relationships: ctx.analysisResult.modelUpdates.relationships,
+        existingRelationships: adapter.getAllRelationships(),
+        componentIndex: architectureModel.componentIndex,
+        provider,
       });
-      generatedChangeRequest = { ...prResult, branch: branchName };
-      if (structured) structured.generatedChangeRequest = generatedChangeRequest;
-      p.succeed(`PR ${prResult.action} successfully: ${prResult.url}`);
+      if (patchResult) {
+        p.succeed(
+          `Patch ready: ${String(patchResult.insertedLines.length)} relationship(s) to add`
+        );
+        p.start('Opening PR with patched model');
+        const body = formatPatchPrBody({
+          prNumber: prData.number,
+          prTitle: prData.title,
+          summary: ctx.analysisResult.summary,
+          insertedLines: patchResult.insertedLines,
+          skipped: patchResult.skipped,
+          removals: ctx.analysisResult.modelUpdates.remove,
+        });
+        const result = await createModelPr({
+          repositoryUrl: ref.repositoryUrl,
+          owner: ref.platformId.owner,
+          repo: ref.platformId.repo,
+          prNumber: prData.number,
+          prTitle: prData.title,
+          adapterMetadata: adapter.metadata,
+          fileChanges: [{ path: patchResult.filePath, content: patchResult.content }],
+          body,
+          draft: options.draft,
+        });
+        generatedChangeRequest = result;
+        if (structured) structured.generatedChangeRequest = generatedChangeRequest;
+        p.succeed(`PR ${result.action} successfully: ${result.url}`);
+      } else {
+        p.info('All relationships already exist or were invalid. No PR needed.');
+      }
+    } else {
+      p.warn('--open-pr requires structured relationships from analysis. Skipping PR creation.');
     }
   } else if (options.openPr && options.dryRun) {
     p.info('Dry run: skipped PR creation');
@@ -390,7 +381,6 @@ export async function runAnalyze(
   return {
     analysisResult: ctx.analysisResult,
     structured,
-    generatedCode: ctx.generatedCode,
     hasViolations: ctx.analysisResult.hasViolations,
   };
 }

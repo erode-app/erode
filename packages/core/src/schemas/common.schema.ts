@@ -18,8 +18,16 @@ export const ViolationSchema = z
     }
   });
 
+export const StructuredRelationshipSchema = z.object({
+  source: z.string(),
+  target: z.string(),
+  kind: z.string().optional(),
+  description: z.string(),
+});
+
 export const ModelChangeSchema = z.object({
   add: z.array(z.string()).optional(),
   remove: z.array(z.string()).optional(),
   notes: z.string().optional(),
+  relationships: z.array(StructuredRelationshipSchema).optional(),
 });

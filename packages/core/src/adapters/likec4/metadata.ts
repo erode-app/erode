@@ -7,7 +7,6 @@ export const LIKEC4_METADATA: AdapterMetadata = {
   documentationUrl: 'https://likec4.dev/dsl/links/',
   fileExtensions: ['.c4'],
   pathDescription: 'Directory containing LikeC4 model files',
-  generatedFileExtension: '.c4',
   prTitleTemplate: 'chore: refresh LikeC4 model from PR #{{prNumber}}',
   errorSuggestions: {
     [ErrorCode.MODEL_LOAD_FAILED]: [

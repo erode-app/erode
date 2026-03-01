@@ -56,7 +56,7 @@ CORE_ARGS=(
   --github-actions
 )
 
-[ "${INPUT_OPEN_PR:-false}" = "true" ] && CORE_ARGS+=(--generate-model --open-pr)
+[ "${INPUT_OPEN_PR:-false}" = "true" ] && CORE_ARGS+=(--open-pr)
 [ "${INPUT_SKIP_FILE_FILTERING:-false}" = "true" ] && CORE_ARGS+=(--skip-file-filtering)
 [ "${INPUT_FAIL_ON_VIOLATIONS:-false}" = "true" ] && CORE_ARGS+=(--fail-on-violations)
 

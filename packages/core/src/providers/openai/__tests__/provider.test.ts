@@ -203,29 +203,6 @@ describe('OpenAIProvider', () => {
     });
   });
 
-  describe('generateArchitectureCode', () => {
-    it('should return generated code text', async () => {
-      const analysisJson = {
-        hasViolations: false,
-        violations: [],
-        summary: 'No violations',
-      };
-
-      mockCreate.mockResolvedValueOnce(makeOpenAIResponse(JSON.stringify(analysisJson)));
-
-      // First call for analyzeDrift to get a result
-      const provider = createProvider();
-      const data = makePrAnalysisData();
-      const analysisResult = await provider.analyzeDrift(data);
-
-      const likec4Code = 'specification { element component }';
-      mockCreate.mockResolvedValueOnce(makeOpenAIResponse(likec4Code));
-
-      const result = await provider.generateArchitectureCode(analysisResult);
-      expect(result).toBe(likec4Code);
-    });
-  });
-
   describe('safety filter handling', () => {
     it('should throw PROVIDER_SAFETY_BLOCK on content_filter', async () => {
       mockCreate.mockResolvedValueOnce(makeOpenAIResponse('blocked', 'content_filter'));

@@ -40,6 +40,7 @@ export function buildStructuredOutput(
       action: 'created' | 'updated';
       branch: string;
     };
+    modelFormat?: string;
   }
 ): StructuredAnalysisOutput {
   return {
@@ -88,20 +89,24 @@ export function buildStructuredOutput(
 
 const COMMENT_MARKER = '<!-- erode -->';
 
+/** Extras for formatting analysis results as a PR comment. */
+export interface CommentExtras {
+  selectedComponentId?: string;
+  candidateComponents?: { id: string; name: string; type: string }[];
+  generatedChangeRequest?: {
+    url: string;
+    number: number;
+    action: 'created' | 'updated';
+    branch: string;
+  };
+  modelInfo?: { provider: string; fastModel: string; advancedModel: string };
+  modelFormat?: string;
+}
+
 /** Format analysis results as a markdown PR comment matching the entrypoint.sh format. */
 export function formatAnalysisAsComment(
   result: DriftAnalysisResult,
-  extras?: {
-    selectedComponentId?: string;
-    candidateComponents?: { id: string; name: string; type: string }[];
-    generatedChangeRequest?: {
-      url: string;
-      number: number;
-      action: 'created' | 'updated';
-      branch: string;
-    };
-    modelInfo?: { provider: string; fastModel: string; advancedModel: string };
-  }
+  extras?: CommentExtras
 ): string {
   const lines: string[] = [];
 
@@ -163,7 +168,7 @@ export function formatAnalysisAsComment(
   const hasAdd = result.modelUpdates?.add && result.modelUpdates.add.length > 0;
   const hasRemove = result.modelUpdates?.remove && result.modelUpdates.remove.length > 0;
   if (hasAdd || hasRemove) {
-    lines.push('### Suggested LikeC4 Changes');
+    lines.push(`### Suggested ${extras?.modelFormat ?? 'Model'} Changes`);
     lines.push('');
     if (hasAdd && result.modelUpdates?.add) {
       lines.push('**Add:**');
@@ -220,6 +225,72 @@ export function analysisHasFindings(result: DriftAnalysisResult): boolean {
   const hasAdd = result.modelUpdates?.add && result.modelUpdates.add.length > 0;
   const hasRemove = result.modelUpdates?.remove && result.modelUpdates.remove.length > 0;
   return !!(hasAdd ?? hasRemove);
+}
+
+/** Format a PR body for a deterministic model-patch PR. */
+export function formatPatchPrBody(options: {
+  prNumber: number;
+  prTitle: string;
+  summary: string;
+  insertedLines: string[];
+  skipped: { source: string; target: string; reason: string }[];
+  removals?: string[];
+}): string {
+  const lines: string[] = [];
+
+  lines.push('## Model Update');
+  lines.push('');
+  lines.push(
+    `Auto-generated from erode analysis of PR #${String(options.prNumber)}: ${options.prTitle}`
+  );
+  lines.push('');
+
+  // Applied relationships table
+  if (options.insertedLines.length > 0) {
+    lines.push('### Applied Relationships');
+    lines.push('');
+    lines.push('| Relationship |');
+    lines.push('|---|');
+    for (const line of options.insertedLines) {
+      lines.push(`| \`${line.trim()}\` |`);
+    }
+    lines.push('');
+  }
+
+  // Skipped relationships
+  if (options.skipped.length > 0) {
+    lines.push('### Skipped Relationships');
+    lines.push('');
+    lines.push('| Source | Target | Reason |');
+    lines.push('|---|---|---|');
+    for (const s of options.skipped) {
+      lines.push(`| \`${s.source}\` | \`${s.target}\` | ${s.reason} |`);
+    }
+    lines.push('');
+  }
+
+  // Removals (informational only)
+  if (options.removals && options.removals.length > 0) {
+    lines.push('### Relationships to Review for Removal');
+    lines.push('');
+    lines.push(
+      '> These relationships were flagged for removal but must be reviewed and removed manually.'
+    );
+    lines.push('');
+    for (const r of options.removals) {
+      lines.push(`- ${r}`);
+    }
+    lines.push('');
+  }
+
+  if (options.summary) {
+    lines.push('### Summary');
+    lines.push('');
+    lines.push(options.summary);
+    lines.push('');
+  }
+
+  return lines.join('\n');
 }
 
 /** Format an error as a markdown PR comment so CI failures are visible on the PR. */

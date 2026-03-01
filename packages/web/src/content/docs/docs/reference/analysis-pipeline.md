@@ -52,16 +52,6 @@ The advanced model compares the extracted dependency changes against the full de
 - **Suggestion**: How to resolve the drift (update the model, refactor the code, or accept the change)
 - **Summary**: An overall assessment of the PR's architectural impact
 
-## Stage 4 -- Model generation (optional)
-
-|                |                                                             |
-| -------------- | ----------------------------------------------------------- |
-| **Model tier** | Advanced                                                    |
-| **Input**      | Violation findings from Stage 3, current architecture model |
-| **Output**     | Architecture model code patches                             |
-
-When enabled, this stage generates architecture model updates that would bring the model in sync with the changes found in the PR. The output can be used to open a follow-up pull request that updates the model.
-
 ## Prompt templates
 
 Each stage loads a markdown prompt template from `src/analysis/prompts/` at runtime. Templates use `{{variable}}` substitution to inject context such as the PR diff, component metadata, and architecture model content. The prompt builder assembles the final prompt from these templates before sending it to the AI provider.

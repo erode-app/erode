@@ -1,6 +1,4 @@
-import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
-import type { DriftViolation } from './analysis-types.js';
 
 export function formatAllowedDependencies(architectural: {
   relationships?: { target: { id: string; name: string }; kind?: string; title?: string }[];
@@ -107,57 +105,4 @@ export function formatCommits(commits: { sha: string; message: string; author: s
     .join('\n');
   const note = commits.length > 10 ? `\n  ... and ${String(commits.length - 10)} more commits` : '';
   return { section, note };
-}
-
-export function formatViolations(violations: DriftViolation[]): string {
-  if (violations.length === 0) return 'No violations detected';
-  return violations.map((v) => `- [${v.severity.toUpperCase()}] ${v.description}`).join('\n');
-}
-
-export function formatDependencyChangesSummary(dependencies: DependencyExtractionResult): string {
-  return dependencies.dependencies.length > 0
-    ? dependencies.dependencies
-        .map(
-          (d) =>
-            `- ${d.type === 'added' ? '+' : d.type === 'removed' ? '-' : '~'} ${d.dependency}: ${d.description}`
-        )
-        .join('\n')
-    : 'No dependency changes detected';
-}
-
-export function formatModelUpdates(modelUpdates?: {
-  add?: string[];
-  remove?: string[];
-  notes?: string;
-}): string {
-  if (!modelUpdates) return 'No model updates recommended';
-  const addSection = modelUpdates.add?.map((dep) => `- ${dep}`).join('\n') ?? 'None';
-  const removeSection = modelUpdates.remove?.map((dep) => `- ${dep}`).join('\n') ?? 'None';
-  return [
-    'ADD TO MODEL:',
-    addSection,
-    'REMOVE FROM MODEL:',
-    removeSection,
-    'NOTES:',
-    modelUpdates.notes ?? 'None',
-  ].join('\n');
-}
-
-export function formatExistingComponents(allComponents?: ArchitecturalComponent[]): string {
-  if (!allComponents || allComponents.length === 0) return '';
-  const lines = allComponents.map(
-    (c: ArchitecturalComponent) =>
-      `- ${c.id}: "${c.name}" (${c.type}${c.repository ? `, repo: ${c.repository}` : ''})`
-  );
-  return [
-    '',
-    'EXISTING COMPONENTS IN THE MODEL:',
-    ...lines,
-    '⚠️ CRITICAL: Before creating a NEW component, search this list for existing components that match.',
-    '- Look for components with similar names (e.g., "userservice", "user-api", "user_api")',
-    '- Check repository URLs to match services',
-    '- Prefer using existing component IDs over creating new ones',
-    '- If you find a match, use the existing component ID exactly as shown above',
-    '',
-  ].join('\n');
 }

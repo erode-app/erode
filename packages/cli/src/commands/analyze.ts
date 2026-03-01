@@ -10,7 +10,6 @@ export function createAnalyzeCommand(): Command {
     .argument('<model-path>', 'Directory containing architecture model files')
     .requiredOption('--url <url>', 'Pull request or merge request URL to inspect')
     .option('--model-format <format>', 'Format of the architecture model', 'likec4')
-    .option('--generate-model', 'Produce architecture model code based on findings')
     .option('--output-file <path>', 'Save structured JSON results to a file')
     .option('--format <format>', 'Result format (console, json)', 'console')
     .option('--open-pr', 'Open a pull request with model changes')

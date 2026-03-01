@@ -32,7 +32,6 @@ function parseArgs(argv: string[]): AnalyzeOptions {
     format: (getFlag('--format') as 'console' | 'json' | undefined) ?? 'json',
     comment: hasFlag('--comment'),
     githubActions: hasFlag('--github-actions'),
-    generateModel: hasFlag('--generate-model'),
     openPr: hasFlag('--open-pr'),
     failOnViolations: hasFlag('--fail-on-violations'),
     skipFileFiltering: hasFlag('--skip-file-filtering'),
