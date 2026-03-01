@@ -15,6 +15,14 @@ import {
 import { writeGitHubActionsOutputs, writeGitHubStepSummary } from '../output/ci-output.js';
 import { CONFIG } from '../utils/config.js';
 
+function parseOwnerRepo(modelRepo: string): { owner: string; repo: string } {
+  const i = modelRepo.lastIndexOf('/');
+  return {
+    owner: modelRepo.substring(0, i),
+    repo: modelRepo.substring(i + 1),
+  };
+}
+
 export interface PublishOptions {
   ref: ChangeRequestRef;
   analysisResult: DriftAnalysisResult;
@@ -52,15 +60,7 @@ export async function publishResults(
     publish;
 
   // ── Resolve model repo target ────────────────────────────────────────
-  const modelTarget = options.modelRepo
-    ? (() => {
-        const i = options.modelRepo.lastIndexOf('/');
-        return {
-          owner: options.modelRepo.substring(0, i),
-          repo: options.modelRepo.substring(i + 1),
-        };
-      })()
-    : ref.platformId;
+  const modelTarget = options.modelRepo ? parseOwnerRepo(options.modelRepo) : ref.platformId;
 
   // ── PR creation ──────────────────────────────────────────────────────
   let generatedChangeRequest:

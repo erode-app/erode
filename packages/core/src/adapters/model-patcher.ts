@@ -4,7 +4,7 @@ import type { AIProvider } from '../providers/ai-provider.js';
 import { LikeC4Patcher } from './likec4/patcher.js';
 import { StructurizrPatcher } from './structurizr/patcher.js';
 import { ErodeError, ErrorCode } from '../errors.js';
-import { CONFIG } from '../utils/config.js';
+export { quickValidatePatch } from './base-patcher.js';
 
 export interface PatchResult {
   /** Repo-relative path to the patched file */
@@ -32,49 +32,6 @@ export interface ModelPatcher {
     componentIndex: ComponentIndex;
     provider: AIProvider;
   }): Promise<PatchResult | null>;
-}
-
-/** Quick structural validation shared by both patchers. */
-export function quickValidatePatch(
-  original: string,
-  patched: string,
-  insertedLines: string[]
-): boolean {
-  // Check all original non-empty lines are preserved
-  const originalLines = original.split('\n').filter((l) => l.trim().length > 0);
-  for (const line of originalLines) {
-    if (!patched.includes(line)) {
-      if (CONFIG.debug.verbose) {
-        console.error('[quickValidatePatch] Failed: original line missing', JSON.stringify(line));
-      }
-      return false;
-    }
-  }
-
-  // Check inserted lines are present
-  for (const line of insertedLines) {
-    if (!patched.includes(line.trim())) {
-      if (CONFIG.debug.verbose) {
-        console.error('[quickValidatePatch] Failed: inserted line missing', JSON.stringify(line));
-      }
-      return false;
-    }
-  }
-
-  // Check brace balance
-  const openBraces = (patched.match(/\{/g) ?? []).length;
-  const closeBraces = (patched.match(/\}/g) ?? []).length;
-  if (openBraces !== closeBraces) {
-    if (CONFIG.debug.verbose) {
-      console.error(
-        '[quickValidatePatch] Failed: brace imbalance',
-        JSON.stringify({ open: openBraces, close: closeBraces })
-      );
-    }
-    return false;
-  }
-
-  return true;
 }
 
 export function createModelPatcher(format: string): ModelPatcher {

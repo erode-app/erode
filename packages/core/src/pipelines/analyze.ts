@@ -4,6 +4,7 @@ import { SilentProgress } from './progress.js';
 import { publishResults } from './publish.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
 import { createPlatformReader } from '../platforms/platform-factory.js';
+import type { ChangeRequestFile } from '../platforms/source-platform.js';
 import { createAIProvider } from '../providers/provider-factory.js';
 import { buildStructuredOutput, writeOutputToFile } from '../output.js';
 import { validatePath } from '../utils/validation.js';
@@ -16,6 +17,13 @@ import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
 import type { DriftAnalysisPromptData, DriftAnalysisResult } from '../analysis/analysis-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import type { StructuredAnalysisOutput } from '../output/structured-output.js';
+
+function buildDiffFromFiles(files: ChangeRequestFile[]): string {
+  return files
+    .map((f) => (f.patch ? `diff --git a/${f.filename} b/${f.filename}\n${f.patch}` : ''))
+    .filter(Boolean)
+    .join('\n\n');
+}
 
 interface PipelineContext {
   selectedComponent?: ArchitecturalComponent;
@@ -86,10 +94,7 @@ export async function runAnalyze(
     const { included, excluded } = applySkipPatterns(prData.files, patterns);
     if (excluded > 0) {
       prData.files = included;
-      prData.diff = included
-        .map((f) => (f.patch ? `diff --git a/${f.filename} b/${f.filename}\n${f.patch}` : ''))
-        .filter(Boolean)
-        .join('\n\n');
+      prData.diff = buildDiffFromFiles(included);
       prData.changed_files = included.length;
       prData.additions = included.reduce((sum, f) => sum + f.additions, 0);
       prData.deletions = included.reduce((sum, f) => sum + f.deletions, 0);
@@ -179,10 +184,7 @@ export async function runAnalyze(
 
   // ── Stage 2: Dependency extraction ───────────────────────────────────
   p.section('Stage 2: Extract Dependencies');
-  const fullDiff = prData.files
-    .map((f) => (f.patch ? `diff --git a/${f.filename} b/${f.filename}\n${f.patch}` : ''))
-    .filter(Boolean)
-    .join('\n\n');
+  const fullDiff = buildDiffFromFiles(prData.files);
 
   const selectedComponent = ctx.selectedComponent;
   if (!selectedComponent) {
@@ -323,7 +325,7 @@ export async function runAnalyze(
   }
 
   // ── Publish results ────────────────────────────────────────────────
-  const publishResult = await publishResults(
+  await publishResults(
     {
       ref,
       analysisResult: ctx.analysisResult,
@@ -345,10 +347,6 @@ export async function runAnalyze(
     },
     p
   );
-
-  if (publishResult.generatedChangeRequest && structured) {
-    structured.generatedChangeRequest = publishResult.generatedChangeRequest;
-  }
 
   return {
     analysisResult: ctx.analysisResult,

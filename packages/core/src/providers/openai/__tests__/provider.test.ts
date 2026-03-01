@@ -304,4 +304,42 @@ describe('OpenAIProvider', () => {
       }
     });
   });
+
+  describe('patchModel', () => {
+    it('should use fast model for patching', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockCreate.mockResolvedValueOnce(makeOpenAIResponse(patchedContent));
+
+      const provider = createProvider();
+      await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(mockCreate).toHaveBeenCalled();
+      const callArg = mockCreate.mock.calls[0]?.[0] as { model?: string } | undefined;
+      expect(callArg?.model).toBe('gpt-4.1-mini');
+    });
+
+    it('should return patched content', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockCreate.mockResolvedValueOnce(makeOpenAIResponse(patchedContent));
+
+      const provider = createProvider();
+      const result = await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(result).toBe(patchedContent);
+    });
+
+    it('should retry on rate limit', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      const rateLimitError = new ApiError('Rate limited', 429);
+      mockCreate
+        .mockRejectedValueOnce(rateLimitError)
+        .mockResolvedValueOnce(makeOpenAIResponse(patchedContent));
+
+      const provider = createProvider();
+      const result = await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(result).toBe(patchedContent);
+      expect(mockCreate).toHaveBeenCalledTimes(2);
+    });
+  });
 });

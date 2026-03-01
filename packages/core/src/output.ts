@@ -222,9 +222,9 @@ export function formatAnalysisAsComment(
 /** Returns true if the analysis result has violations or model updates worth commenting about. */
 export function analysisHasFindings(result: DriftAnalysisResult): boolean {
   if (result.hasViolations) return true;
-  const hasAdd = result.modelUpdates?.add && result.modelUpdates.add.length > 0;
-  const hasRemove = result.modelUpdates?.remove && result.modelUpdates.remove.length > 0;
-  return !!(hasAdd ?? hasRemove);
+  if ((result.modelUpdates?.add?.length ?? 0) > 0) return true;
+  if ((result.modelUpdates?.remove?.length ?? 0) > 0) return true;
+  return false;
 }
 
 /** Format a PR body for a deterministic model-patch PR. */

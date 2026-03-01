@@ -23,6 +23,7 @@ import {
   formatErrorAsComment,
   COMMENT_MARKER,
   writeOutputToFile,
+  analysisHasFindings,
 } from '../output.js';
 import { ApiError, ConfigurationError } from '../errors.js';
 
@@ -289,5 +290,64 @@ describe('formatErrorAsComment', () => {
     const output = formatErrorAsComment(error);
 
     expect(output).toContain('*Automated by [erode]');
+  });
+});
+
+describe('analysisHasFindings', () => {
+  it('should return true when violations are present', () => {
+    const result = makeAnalysisResult({
+      hasViolations: true,
+      violations: [{ severity: 'high', description: 'test' }],
+    });
+
+    expect(analysisHasFindings(result)).toBe(true);
+  });
+
+  it('should return true when model updates have add-only changes', () => {
+    const result = makeAnalysisResult({
+      modelUpdates: { add: ['comp.a -> comp.b'], relationships: [] },
+    });
+
+    expect(analysisHasFindings(result)).toBe(true);
+  });
+
+  it('should return true when model updates have remove-only changes', () => {
+    const result = makeAnalysisResult({
+      modelUpdates: { remove: ['comp.x -> comp.y'], relationships: [] },
+    });
+
+    expect(analysisHasFindings(result)).toBe(true);
+  });
+
+  it('should return true when model updates have both add and remove changes', () => {
+    const result = makeAnalysisResult({
+      modelUpdates: {
+        add: ['comp.a -> comp.b'],
+        remove: ['comp.x -> comp.y'],
+        relationships: [],
+      },
+    });
+
+    expect(analysisHasFindings(result)).toBe(true);
+  });
+
+  it('should return false when no findings are present', () => {
+    const result = makeAnalysisResult();
+
+    expect(analysisHasFindings(result)).toBe(false);
+  });
+
+  it('should return false when modelUpdates is undefined', () => {
+    const result = makeAnalysisResult({ modelUpdates: undefined });
+
+    expect(analysisHasFindings(result)).toBe(false);
+  });
+
+  it('should return false when model updates have empty arrays', () => {
+    const result = makeAnalysisResult({
+      modelUpdates: { add: [], remove: [], relationships: [] },
+    });
+
+    expect(analysisHasFindings(result)).toBe(false);
   });
 });
