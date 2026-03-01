@@ -13,6 +13,10 @@ export function createAnalyzeCommand(): Command {
     .option('--output-file <path>', 'Save structured JSON results to a file')
     .option('--format <format>', 'Result format (console, json)', 'console')
     .option('--open-pr', 'Open a pull request with model changes')
+    .option(
+      '--model-repo <owner/repo>',
+      'Target repository for model PRs (defaults to the analyzed repo)'
+    )
     .option('--patch-local', 'Patch the architecture model in-place')
     .option('--dry-run', 'Preview results without creating a PR')
     .option('--draft', 'Mark the generated pull request as draft', true)

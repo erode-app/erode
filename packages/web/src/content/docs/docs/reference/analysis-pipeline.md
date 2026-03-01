@@ -64,6 +64,19 @@ When `--patch-local` or `--open-pr` is passed and Stage 3 produces structured re
 
 This stage is **skipped** when neither `--patch-local` nor `--open-pr` is set, or when Stage 3 produces no relationship updates.
 
+## Publish
+
+After the analysis stages complete, the publish phase handles all external side effects.
+
+| Action                 | Triggered by                | Description                                                                                                       |
+| ---------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **PR creation**        | `--open-pr`                 | Creates or updates a PR on the model repository with patched relationship declarations                            |
+| **Stale PR close**     | `--open-pr` (no violations) | Closes a previously opened model PR when re-analysis finds no violations                                          |
+| **PR comment**         | `--comment`                 | Upserts an analysis summary on the source PR, or removes a stale comment when there are no findings               |
+| **GH Actions outputs** | `--github-actions`          | Writes `has-violations`, `violations-count`, `analysis-summary`, and a step summary for downstream workflow steps |
+
+When `--model-repo` is set, PR creation and stale-PR closing target that repository instead of the analyzed one. All publish actions are skipped during `--dry-run`. The sequence diagram above shows the GitHub case; GitLab and Bitbucket follow the same flow through their respective platform adapters.
+
 ## Prompt templates
 
 Each stage loads a markdown prompt template from `src/analysis/prompts/` at runtime. Templates use `{{variable}}` substitution to inject context such as the PR diff, component metadata, and architecture model content. The prompt builder assembles the final prompt from these templates before sending it to the AI provider.

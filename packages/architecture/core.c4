@@ -25,6 +25,11 @@ model {
         #optional
         description 'Updates the architecture model deterministically from Stage 3 relationships'
       }
+
+      publish = stage 'Publish' {
+        #optional
+        description 'Creates model PRs, posts comments, and writes CI outputs'
+      }
     }
 
     providers = module 'Providers' {
@@ -97,7 +102,10 @@ model {
   // Pipeline stage flow
   erode.core.pipelines.stage1 -> erode.core.pipelines.stage2 'component resolved'
   erode.core.pipelines.stage2 -> erode.core.pipelines.stage3 'dependencies extracted'
-  erode.core.pipelines.stage3 -> erode.core.pipelines.stage4 'violations found'
+  erode.core.pipelines.stage3 -> erode.core.pipelines.stage4 'relationships to add'
+  erode.core.pipelines.stage4 -> erode.core.pipelines.publish 'patch ready'
+  erode.core.pipelines.publish -> erode.core.platforms 'creates PRs and posts comments'
+  erode.core.pipelines.publish -> erode.core.output 'formats PR body and comments'
 
   // Analyze delegates to pipeline stages and other modules
   erode.core.analyze -> erode.core.pipelines 'runs pipeline stages'

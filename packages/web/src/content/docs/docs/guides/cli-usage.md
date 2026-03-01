@@ -37,20 +37,21 @@ erode analyze ./model --url https://gitlab.com/group/project/-/merge_requests/42
 erode analyze ./model --url https://bitbucket.org/workspace/repo/pull-requests/42
 ```
 
-| Flag                    | Description                                                           | Default   |
-| ----------------------- | --------------------------------------------------------------------- | --------- |
-| `--url <url>`           | Change request URL (GitHub PR, GitLab MR, or Bitbucket PR). Required. |           |
-| `--model-format <fmt>`  | Architecture model format                                             | `likec4`  |
-| `--format <fmt>`        | Output format: `console`, `json`                                      | `console` |
-| `--open-pr`             | Create a PR with model updates (see below)                            |           |
-| `--patch-local`         | Patch the architecture model in-place (see below)                     |           |
-| `--dry-run`             | Preview without creating a PR or writing patches                      |           |
-| `--draft`               | Create change request as draft                                        | `true`    |
-| `--output-file <path>`  | Write structured JSON output to a file                                |           |
-| `--skip-file-filtering` | Analyze all changed files (skip pattern-based filtering)              |           |
-| `--comment`             | Post analysis results as a PR/MR comment                              |           |
-| `--github-actions`      | Write GitHub Actions outputs and step summary                         |           |
-| `--fail-on-violations`  | Exit with code 1 when violations are found                            |           |
+| Flag                        | Description                                                           | Default   |
+| --------------------------- | --------------------------------------------------------------------- | --------- |
+| `--url <url>`               | Change request URL (GitHub PR, GitLab MR, or Bitbucket PR). Required. |           |
+| `--model-format <fmt>`      | Architecture model format                                             | `likec4`  |
+| `--format <fmt>`            | Output format: `console`, `json`                                      | `console` |
+| `--open-pr`                 | Create a PR with model updates (see below)                            |           |
+| `--model-repo <owner/repo>` | Target repository for model PRs (defaults to the analyzed repo)       |           |
+| `--patch-local`             | Patch the architecture model in-place (see below)                     |           |
+| `--dry-run`                 | Preview without creating a PR or writing patches                      |           |
+| `--draft`                   | Create change request as draft                                        | `true`    |
+| `--output-file <path>`      | Write structured JSON output to a file                                |           |
+| `--skip-file-filtering`     | Analyze all changed files (skip pattern-based filtering)              |           |
+| `--comment`                 | Post analysis results as a PR/MR comment                              |           |
+| `--github-actions`          | Write GitHub Actions outputs and step summary                         |           |
+| `--fail-on-violations`      | Exit with code 1 when violations are found                            |           |
 
 #### `--patch-local` behavior
 
