@@ -231,6 +231,7 @@ export function analysisHasFindings(result: DriftAnalysisResult): boolean {
 export function formatPatchPrBody(options: {
   prNumber: number;
   prTitle: string;
+  prUrl: string;
   summary: string;
   insertedLines: string[];
   skipped: { source: string; target: string; reason: string }[];
@@ -241,7 +242,7 @@ export function formatPatchPrBody(options: {
   lines.push('## Model Update');
   lines.push('');
   lines.push(
-    `Auto-generated from erode analysis of PR #${String(options.prNumber)}: ${options.prTitle}`
+    `Auto-generated from erode analysis of [PR #${String(options.prNumber)}: ${options.prTitle}](${options.prUrl})`
   );
   lines.push('');
 

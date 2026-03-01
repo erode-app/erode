@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { LikeC4Patcher } from '../likec4-patcher.js';
-import type { StructuredRelationship } from '../../analysis/analysis-types.js';
+import { LikeC4Patcher } from '../patcher.js';
+import type { StructuredRelationship } from '../../../analysis/analysis-types.js';
 import type {
   ModelRelationship,
   ComponentIndex,
   ArchitecturalComponent,
-} from '../../adapters/architecture-types.js';
-import type { AIProvider } from '../../providers/ai-provider.js';
+} from '../../architecture-types.js';
+import type { AIProvider } from '../../../providers/ai-provider.js';
 
 // Mock fs and child_process
 vi.mock('fs', () => ({
@@ -16,12 +16,19 @@ vi.mock('fs', () => ({
 
 vi.mock('child_process', () => ({
   execSync: vi.fn(() => '/repo'),
+  execFile: vi.fn(),
+}));
+
+vi.mock('../dsl-validator.js', () => ({
+  validateLikeC4Dsl: vi.fn().mockResolvedValue({ valid: true }),
 }));
 
 import { readFileSync, readdirSync } from 'fs';
+import { validateLikeC4Dsl } from '../dsl-validator.js';
 
 const mockReadFileSync = vi.mocked(readFileSync);
 const mockReaddirSync = vi.mocked(readdirSync);
+const mockValidateLikeC4Dsl = vi.mocked(validateLikeC4Dsl);
 
 function makeComponent(id: string): ArchitecturalComponent {
   return { id, name: id, tags: [], type: 'service' };
@@ -58,6 +65,7 @@ describe('LikeC4Patcher', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     patcher = new LikeC4Patcher();
+    mockValidateLikeC4Dsl.mockResolvedValue({ valid: true });
   });
 
   it('should return null when no relationships provided', async () => {
@@ -248,5 +256,50 @@ describe('LikeC4Patcher', () => {
     expect(result).not.toBeNull();
     if (!result) return;
     expect(result.filePath).toContain('model.c4');
+  });
+
+  it('should return null when DSL validation fails for deterministic output', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+    mockValidateLikeC4Dsl.mockResolvedValue({
+      valid: false,
+      errors: ['Invalid DSL'],
+    });
+
+    const rels: StructuredRelationship[] = [
+      { source: 'customer', target: 'backend', description: 'New dep' },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: [],
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('should accept output when DSL validation is skipped (tooling unavailable)', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+    mockValidateLikeC4Dsl.mockResolvedValue({ valid: false, skipped: true });
+
+    const rels: StructuredRelationship[] = [
+      { source: 'customer', target: 'backend', description: 'New dep' },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: [],
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    expect(result.content).toContain("customer -> backend 'New dep'");
   });
 });

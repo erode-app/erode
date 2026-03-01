@@ -89,9 +89,9 @@ export { runConnections } from './pipelines/connections.js';
 export type { ConnectionsOptions, ComponentConnections } from './pipelines/connections.js';
 export type { ProgressReporter } from './pipelines/progress.js';
 export { SilentProgress } from './pipelines/progress.js';
-export { createModelPr } from './pipelines/pr-creation.js';
+export { createModelPr, closeModelPr, modelPrBranchName } from './pipelines/pr-creation.js';
 export type { CreateModelPrOptions, CreateModelPrResult } from './pipelines/pr-creation.js';
 
 // Patching
-export { createModelPatcher } from './patching/index.js';
-export type { ModelPatcher, PatchResult } from './patching/index.js';
+export { createModelPatcher, quickValidatePatch } from './adapters/model-patcher.js';
+export type { ModelPatcher, PatchResult, DslValidationResult } from './adapters/model-patcher.js';

@@ -1,6 +1,6 @@
 import type { ProgressReporter } from './progress.js';
 import { SilentProgress } from './progress.js';
-import { createModelPr } from './pr-creation.js';
+import { createModelPr, closeModelPr } from './pr-creation.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
 import { createPlatformReader, createPlatformWriter } from '../platforms/platform-factory.js';
 import { createAIProvider } from '../providers/provider-factory.js';
@@ -17,7 +17,7 @@ import { CONFIG } from '../utils/config.js';
 import { validatePath } from '../utils/validation.js';
 import { ErodeError, ErrorCode } from '../errors.js';
 import { loadSkipPatterns, applySkipPatterns } from '../utils/skip-patterns.js';
-import { createModelPatcher } from '../patching/index.js';
+import { createModelPatcher } from '../adapters/model-patcher.js';
 import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
 import type { DriftAnalysisPromptData, DriftAnalysisResult } from '../analysis/analysis-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
@@ -44,6 +44,8 @@ export interface AnalyzeOptions {
   githubActions?: boolean;
   failOnViolations?: boolean;
   format?: 'console' | 'json';
+  /** Model repository in `owner/repo` format (or `group/subgroup/project` for GitLab). */
+  modelRepo?: string;
 }
 
 export interface AnalyzeResult {
@@ -274,6 +276,17 @@ export async function runAnalyze(
     p.succeed(`Structured output saved to ${options.outputFile}`);
   }
 
+  // ── Resolve model repo target ────────────────────────────────────────
+  const modelTarget = options.modelRepo
+    ? (() => {
+        const i = options.modelRepo.lastIndexOf('/');
+        return {
+          owner: options.modelRepo.substring(0, i),
+          repo: options.modelRepo.substring(i + 1),
+        };
+      })()
+    : ref.platformId;
+
   // ── PR creation ──────────────────────────────────────────────────────
   let generatedChangeRequest:
     | { url: string; number: number; action: 'created' | 'updated'; branch: string }
@@ -298,6 +311,7 @@ export async function runAnalyze(
         const body = formatPatchPrBody({
           prNumber: prData.number,
           prTitle: prData.title,
+          prUrl: ref.url,
           summary: ctx.analysisResult.summary,
           insertedLines: patchResult.insertedLines,
           skipped: patchResult.skipped,
@@ -305,8 +319,8 @@ export async function runAnalyze(
         });
         const result = await createModelPr({
           repositoryUrl: ref.repositoryUrl,
-          owner: ref.platformId.owner,
-          repo: ref.platformId.repo,
+          owner: modelTarget.owner,
+          repo: modelTarget.repo,
           prNumber: prData.number,
           prTitle: prData.title,
           adapterMetadata: adapter.metadata,
@@ -322,6 +336,20 @@ export async function runAnalyze(
       }
     } else {
       p.warn('--open-pr requires structured relationships from analysis. Skipping PR creation.');
+    }
+
+    // Auto-close stale model PR when re-analysis finds no violations
+    if (!ctx.analysisResult.hasViolations && !generatedChangeRequest) {
+      try {
+        await closeModelPr({
+          repositoryUrl: ref.repositoryUrl,
+          owner: modelTarget.owner,
+          repo: modelTarget.repo,
+          prNumber: prData.number,
+        });
+      } catch {
+        // Closing is best-effort; don't fail the pipeline
+      }
     }
   } else if (options.openPr && options.dryRun) {
     p.info('Dry run: skipped PR creation');

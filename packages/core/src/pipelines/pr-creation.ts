@@ -2,6 +2,10 @@ import { createPlatformWriter } from '../platforms/platform-factory.js';
 import type { ChangeRequestFileWrite } from '../platforms/source-platform.js';
 import type { AdapterMetadata } from '../adapters/adapter-metadata.js';
 
+export function modelPrBranchName(prNumber: number): string {
+  return `erode/pr-${String(prNumber)}`;
+}
+
 export interface CreateModelPrOptions {
   repositoryUrl: string;
   owner: string;
@@ -23,7 +27,7 @@ export interface CreateModelPrResult {
 
 export async function createModelPr(options: CreateModelPrOptions): Promise<CreateModelPrResult> {
   const writer = createPlatformWriter(options.repositoryUrl, options.owner, options.repo);
-  const branchName = `erode/pr-${String(options.prNumber)}`;
+  const branchName = modelPrBranchName(options.prNumber);
   const prTitle = options.adapterMetadata.prTitleTemplate.replace(
     '{{prNumber}}',
     String(options.prNumber)
@@ -36,4 +40,14 @@ export async function createModelPr(options: CreateModelPrOptions): Promise<Crea
     draft: options.draft,
   });
   return { ...prResult, branch: branchName };
+}
+
+export async function closeModelPr(options: {
+  repositoryUrl: string;
+  owner: string;
+  repo: string;
+  prNumber: number;
+}): Promise<void> {
+  const writer = createPlatformWriter(options.repositoryUrl, options.owner, options.repo);
+  await writer.closeChangeRequest(modelPrBranchName(options.prNumber));
 }

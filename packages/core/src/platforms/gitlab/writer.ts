@@ -147,6 +147,25 @@ export class GitLabWriter implements SourcePlatformWriter {
     }
   }
 
+  async closeChangeRequest(branchName: string): Promise<void> {
+    try {
+      const mrs = (await this.api.MergeRequests.all({
+        projectId: this.projectPath,
+        sourceBranch: branchName,
+        state: 'opened',
+      })) as unknown as GitLabMrResponse[];
+
+      const mr = mrs[0];
+      if (!mr) return;
+
+      await this.api.MergeRequests.edit(this.projectPath, mr.iid, {
+        stateEvent: 'close',
+      });
+    } catch (error) {
+      wrapPlatformError(error, 'gitlab', 'Could not close merge request');
+    }
+  }
+
   private async findNoteByMarker(
     projectPath: string,
     mrIid: number,

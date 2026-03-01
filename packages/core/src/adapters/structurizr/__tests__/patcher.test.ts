@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { StructurizrPatcher } from '../structurizr-patcher.js';
-import type { StructuredRelationship } from '../../analysis/analysis-types.js';
+import { StructurizrPatcher } from '../patcher.js';
+import type { StructuredRelationship } from '../../../analysis/analysis-types.js';
 import type {
   ModelRelationship,
   ComponentIndex,
   ArchitecturalComponent,
-} from '../../adapters/architecture-types.js';
-import type { AIProvider } from '../../providers/ai-provider.js';
+} from '../../architecture-types.js';
+import type { AIProvider } from '../../../providers/ai-provider.js';
 
 vi.mock('fs', () => ({
   readFileSync: vi.fn(),
@@ -18,10 +18,16 @@ vi.mock('child_process', () => ({
   execSync: vi.fn(() => '/repo'),
 }));
 
+vi.mock('../dsl-validator.js', () => ({
+  validateStructurizrDsl: vi.fn().mockResolvedValue({ valid: true }),
+}));
+
 import { readFileSync, readdirSync } from 'fs';
+import { validateStructurizrDsl } from '../dsl-validator.js';
 
 const mockReadFileSync = vi.mocked(readFileSync);
 const mockReaddirSync = vi.mocked(readdirSync);
+const mockValidateStructurizrDsl = vi.mocked(validateStructurizrDsl);
 
 function makeComponent(id: string): ArchitecturalComponent {
   return { id, name: id, tags: [], type: 'service' };
@@ -56,6 +62,7 @@ describe('StructurizrPatcher', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     patcher = new StructurizrPatcher();
+    mockValidateStructurizrDsl.mockResolvedValue({ valid: true });
   });
 
   it('should return null when no relationships provided', async () => {
@@ -187,5 +194,50 @@ describe('StructurizrPatcher', () => {
     expect(result).not.toBeNull();
     if (!result) return;
     expect(result.filePath).toContain('workspace.dsl');
+  });
+
+  it('should return null when DSL validation fails for deterministic output', async () => {
+    mockReaddirSync.mockReturnValue(['workspace.dsl'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_DSL);
+    mockValidateStructurizrDsl.mockResolvedValue({
+      valid: false,
+      errors: ['Invalid DSL syntax'],
+    });
+
+    const rels: StructuredRelationship[] = [
+      { source: 'user', target: 'system', description: 'New dep' },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: [],
+      componentIndex: makeIndex(['user', 'system']),
+      provider: makeProvider(),
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('should accept output when DSL validation is skipped (tooling unavailable)', async () => {
+    mockReaddirSync.mockReturnValue(['workspace.dsl'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_DSL);
+    mockValidateStructurizrDsl.mockResolvedValue({ valid: false, skipped: true });
+
+    const rels: StructuredRelationship[] = [
+      { source: 'user', target: 'system', description: 'New dep' },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: [],
+      componentIndex: makeIndex(['user', 'system']),
+      provider: makeProvider(),
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    expect(result.content).toContain('user -> system "New dep"');
   });
 });

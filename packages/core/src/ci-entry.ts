@@ -36,6 +36,7 @@ function parseArgs(argv: string[]): AnalyzeOptions {
     failOnViolations: hasFlag('--fail-on-violations'),
     skipFileFiltering: hasFlag('--skip-file-filtering'),
     draft: !hasFlag('--no-draft'),
+    modelRepo: getFlag('--model-repo'),
   };
 }
 

@@ -50,6 +50,7 @@ CORE_ARGS=(
   --comment
 )
 
+[ -n "${ERODE_MODEL_REPO:-}" ] && CORE_ARGS+=(--model-repo "$ERODE_MODEL_REPO")
 [ "${ERODE_OPEN_PR:-false}" = "true" ] && CORE_ARGS+=(--open-pr)
 [ "${ERODE_SKIP_FILE_FILTERING:-false}" = "true" ] && CORE_ARGS+=(--skip-file-filtering)
 [ "${ERODE_FAIL_ON_VIOLATIONS:-false}" = "true" ] && CORE_ARGS+=(--fail-on-violations)

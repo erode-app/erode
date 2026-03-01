@@ -1,12 +1,14 @@
-import { readFileSync, readdirSync, statSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { join, relative, resolve } from 'path';
 import { execSync } from 'child_process';
-import type { ModelPatcher, PatchResult } from './model-patcher.js';
-import type { StructuredRelationship } from '../analysis/analysis-types.js';
-import type { ModelRelationship, ComponentIndex } from '../adapters/architecture-types.js';
-import type { AIProvider } from '../providers/ai-provider.js';
+import type { ModelPatcher, PatchResult } from '../model-patcher.js';
+import { quickValidatePatch } from '../model-patcher.js';
+import { validateLikeC4Dsl } from './dsl-validator.js';
+import type { StructuredRelationship } from '../../analysis/analysis-types.js';
+import type { ModelRelationship, ComponentIndex } from '../architecture-types.js';
+import type { AIProvider } from '../../providers/ai-provider.js';
 
-export class StructurizrPatcher implements ModelPatcher {
+export class LikeC4Patcher implements ModelPatcher {
   async patch(options: {
     modelPath: string;
     relationships: StructuredRelationship[];
@@ -17,7 +19,7 @@ export class StructurizrPatcher implements ModelPatcher {
     const { modelPath, relationships, existingRelationships, componentIndex, provider } = options;
     const skipped: PatchResult['skipped'] = [];
 
-    // 1. Validate
+    // 1. Validate and filter relationships
     const valid = relationships.filter((rel) => {
       if (!componentIndex.byId.has(rel.source)) {
         skipped.push({
@@ -38,7 +40,7 @@ export class StructurizrPatcher implements ModelPatcher {
       return true;
     });
 
-    // 2. Deduplicate
+    // 2. Deduplicate against existing relationships
     const unique = valid.filter((rel) => {
       const isDuplicate = existingRelationships.some(
         (existing) => existing.source === rel.source && existing.target === rel.target
@@ -68,21 +70,34 @@ export class StructurizrPatcher implements ModelPatcher {
 
     const originalContent = readFileSync(targetFile, 'utf-8');
 
-    // 5. Try LLM-based patching
+    // 5. Try LLM-based patching with DSL validation
     let patchedContent: string | null = null;
     if (provider.patchModel) {
       try {
-        const result = await provider.patchModel(originalContent, insertedLines, 'structurizr');
-        if (this.validatePatchedContent(originalContent, result, insertedLines)) {
-          patchedContent = result;
+        const result = await provider.patchModel(originalContent, insertedLines, 'likec4');
+        if (quickValidatePatch(originalContent, result, insertedLines)) {
+          const dslResult = await validateLikeC4Dsl(modelPath, targetFile, result);
+          if (dslResult.valid || dslResult.skipped) {
+            patchedContent = result;
+          }
         }
       } catch {
         // Fall through to deterministic fallback
       }
     }
 
-    // 6. Deterministic fallback
-    patchedContent ??= this.deterministicInsert(originalContent, insertedLines);
+    // 6. Deterministic fallback with DSL validation
+    if (!patchedContent) {
+      const deterministic = this.deterministicInsert(originalContent, insertedLines);
+      const dslResult = await validateLikeC4Dsl(modelPath, targetFile, deterministic);
+      if (dslResult.valid || dslResult.skipped) {
+        patchedContent = deterministic;
+      }
+    }
+
+    if (!patchedContent) {
+      return null;
+    }
 
     // 7. Compute repo-relative path
     const repoRelativePath = this.getRepoRelativePath(targetFile);
@@ -96,71 +111,51 @@ export class StructurizrPatcher implements ModelPatcher {
   }
 
   private generateDslLine(rel: StructuredRelationship): string {
-    const technology = rel.kind ? ` "${rel.kind}"` : '';
-    return `        ${rel.source} -> ${rel.target} "${rel.description}"${technology}`;
+    if (rel.kind) {
+      return `  ${rel.source} -[${rel.kind}]-> ${rel.target} '${rel.description}'`;
+    }
+    return `  ${rel.source} -> ${rel.target} '${rel.description}'`;
   }
 
   private findTargetFile(modelPath: string): string | null {
     const resolvedPath = resolve(modelPath);
-
-    // If it's a file, use it directly
-    try {
-      if (!statSync(resolvedPath).isDirectory()) {
-        return resolvedPath;
-      }
-    } catch {
-      return null;
-    }
-
-    // Look for .dsl files in the directory
-    const dslFiles = readdirSync(resolvedPath)
-      .filter((f) => f.endsWith('.dsl'))
+    const c4Files = readdirSync(resolvedPath)
+      .filter((f) => f.endsWith('.c4'))
       .map((f) => join(resolvedPath, f));
 
-    // Prefer workspace.dsl
-    const workspaceDsl = dslFiles.find((f) => f.endsWith('workspace.dsl'));
-    if (workspaceDsl) return workspaceDsl;
+    if (c4Files.length === 0) return null;
 
-    return dslFiles[0] ?? null;
-  }
-
-  private validatePatchedContent(
-    original: string,
-    patched: string,
-    insertedLines: string[]
-  ): boolean {
-    const originalLines = original.split('\n').filter((l) => l.trim().length > 0);
-    for (const line of originalLines) {
-      if (!patched.includes(line)) {
-        return false;
+    // Prefer files with model blocks and existing relationships
+    for (const file of c4Files) {
+      const content = readFileSync(file, 'utf-8');
+      if (content.includes('model {') && content.includes('->')) {
+        return file;
       }
     }
 
-    for (const line of insertedLines) {
-      if (!patched.includes(line.trim())) {
-        return false;
+    // Fall back to any file with a model block
+    for (const file of c4Files) {
+      const content = readFileSync(file, 'utf-8');
+      if (content.includes('model {')) {
+        return file;
       }
     }
 
-    const openBraces = (patched.match(/\{/g) ?? []).length;
-    const closeBraces = (patched.match(/\}/g) ?? []).length;
-    if (openBraces !== closeBraces) {
-      return false;
-    }
-
-    return true;
+    // Last resort: first .c4 file
+    return c4Files[0] ?? null;
   }
 
   private deterministicInsert(content: string, lines: string[]): string {
+    // Find the last closing brace of the model block
     const contentLines = content.split('\n');
     let insertIndex = -1;
 
-    // Find the model block closing brace
+    // Find the model block and its closing brace
     let inModel = false;
     let braceDepth = 0;
     for (let i = 0; i < contentLines.length; i++) {
       const line = contentLines[i] ?? '';
-      if (/\bmodel\s*\{/.test(line)) {
+      if (line.includes('model {') || line.includes('model{')) {
         inModel = true;
         braceDepth = 1;
         continue;
@@ -180,6 +175,7 @@ export class StructurizrPatcher implements ModelPatcher {
       }
     }
 
+    // If no model block found, insert before the last } in the file
     if (insertIndex === -1) {
       for (let i = contentLines.length - 1; i >= 0; i--) {
         if ((contentLines[i] ?? '').includes('}')) {
@@ -190,18 +186,22 @@ export class StructurizrPatcher implements ModelPatcher {
     }
 
     if (insertIndex === -1) {
+      // No closing brace found, just append
       return content + '\n' + lines.join('\n') + '\n';
     }
 
+    // Detect indentation from the line above the closing brace
     const lineAbove = contentLines[insertIndex - 1] ?? '';
     const match = /^(\s*)/.exec(lineAbove);
-    const indent = match?.[1] ?? '        ';
+    const indent = match?.[1] ?? '  ';
 
+    // Re-indent lines to match
     const indentedLines = lines.map((line) => {
       const trimmed = line.trimStart();
       return indent + trimmed;
     });
 
+    // Insert lines before the closing brace
     contentLines.splice(insertIndex, 0, '', ...indentedLines);
 
     return contentLines.join('\n');
