@@ -19,8 +19,8 @@ describe('section-formatters', () => {
         ],
         dependencies: [],
       });
-      expect(result).toContain('Database [via: uses, reads]');
-      expect(result).toContain('Cache [via: uses]');
+      expect(result).toContain('Database (db) [via: uses, reads]');
+      expect(result).toContain('Cache (cache) [via: uses]');
     });
 
     it('should fall back to flat dependency list when no relationships', () => {
@@ -48,7 +48,7 @@ describe('section-formatters', () => {
         relationships: [{ target: { id: 'svc', name: 'Service' } }],
         dependencies: [],
       });
-      expect(result).toContain('Service [via: unknown]');
+      expect(result).toContain('Service (svc) [via: unknown]');
     });
   });
 

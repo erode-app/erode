@@ -3,6 +3,8 @@ import type { ModelRelationship, ComponentIndex } from './architecture-types.js'
 import type { AIProvider } from '../providers/ai-provider.js';
 import { LikeC4Patcher } from './likec4/patcher.js';
 import { StructurizrPatcher } from './structurizr/patcher.js';
+import { ErodeError, ErrorCode } from '../errors.js';
+import { CONFIG } from '../utils/config.js';
 
 export interface PatchResult {
   /** Repo-relative path to the patched file */
@@ -42,6 +44,9 @@ export function quickValidatePatch(
   const originalLines = original.split('\n').filter((l) => l.trim().length > 0);
   for (const line of originalLines) {
     if (!patched.includes(line)) {
+      if (CONFIG.debug.verbose) {
+        console.error('[quickValidatePatch] Failed: original line missing', JSON.stringify(line));
+      }
       return false;
     }
   }
@@ -49,6 +54,9 @@ export function quickValidatePatch(
   // Check inserted lines are present
   for (const line of insertedLines) {
     if (!patched.includes(line.trim())) {
+      if (CONFIG.debug.verbose) {
+        console.error('[quickValidatePatch] Failed: inserted line missing', JSON.stringify(line));
+      }
       return false;
     }
   }
@@ -57,6 +65,12 @@ export function quickValidatePatch(
   const openBraces = (patched.match(/\{/g) ?? []).length;
   const closeBraces = (patched.match(/\}/g) ?? []).length;
   if (openBraces !== closeBraces) {
+    if (CONFIG.debug.verbose) {
+      console.error(
+        '[quickValidatePatch] Failed: brace imbalance',
+        JSON.stringify({ open: openBraces, close: closeBraces })
+      );
+    }
     return false;
   }
 
@@ -70,6 +84,10 @@ export function createModelPatcher(format: string): ModelPatcher {
     case 'structurizr':
       return new StructurizrPatcher();
     default:
-      throw new Error(`Unsupported model format for patching: ${format}`);
+      throw new ErodeError(
+        `Unsupported model format: ${format}`,
+        ErrorCode.INPUT_INVALID,
+        `Model format "${format}" is not supported for patching`
+      );
   }
 }

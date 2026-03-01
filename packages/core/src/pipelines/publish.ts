@@ -108,8 +108,10 @@ export async function publishResults(
           repo: modelTarget.repo,
           prNumber: analysisResult.metadata.number,
         });
-      } catch {
-        // Closing is best-effort; don't fail the pipeline
+      } catch (error) {
+        p.warn(
+          `Could not close stale model PR: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     }
   } else if (options.openPr && options.dryRun) {

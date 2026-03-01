@@ -7,6 +7,13 @@ import { validateLikeC4Dsl } from './dsl-validator.js';
 import type { StructuredRelationship } from '../../analysis/analysis-types.js';
 import type { ModelRelationship, ComponentIndex } from '../architecture-types.js';
 import type { AIProvider } from '../../providers/ai-provider.js';
+import { CONFIG } from '../../utils/config.js';
+
+function debugLog(msg: string, data?: unknown): void {
+  if (CONFIG.debug.verbose) {
+    console.error(`[LikeC4Patcher] ${msg}`, data !== undefined ? JSON.stringify(data) : '');
+  }
+}
 
 export class LikeC4Patcher implements ModelPatcher {
   async patch(options: {
@@ -18,6 +25,8 @@ export class LikeC4Patcher implements ModelPatcher {
   }): Promise<PatchResult | null> {
     const { modelPath, relationships, existingRelationships, componentIndex, provider } = options;
     const skipped: PatchResult['skipped'] = [];
+
+    debugLog('Input relationships', relationships);
 
     // 1. Validate and filter relationships
     const valid = relationships.filter((rel) => {
@@ -40,7 +49,12 @@ export class LikeC4Patcher implements ModelPatcher {
       return true;
     });
 
+    if (skipped.length > 0) {
+      debugLog('Skipped after component validation', skipped);
+    }
+
     // 2. Deduplicate against existing relationships
+    const prevSkipped = skipped.length;
     const unique = valid.filter((rel) => {
       const isDuplicate = existingRelationships.some(
         (existing) => existing.source === rel.source && existing.target === rel.target
@@ -55,18 +69,30 @@ export class LikeC4Patcher implements ModelPatcher {
       return !isDuplicate;
     });
 
+    if (skipped.length > prevSkipped) {
+      debugLog('Skipped as duplicates', skipped.slice(prevSkipped));
+    }
+    debugLog(`After filtering: ${String(unique.length)} unique, ${String(skipped.length)} skipped`);
+
     if (unique.length === 0) {
       return null;
     }
 
-    // 3. Generate DSL lines
-    const insertedLines = unique.map((rel) => this.generateDslLine(rel));
+    // 3. Generate DSL lines (only emit kinds that exist in the model)
+    const validKinds = new Set(
+      existingRelationships.map((r) => r.kind).filter((k): k is string => Boolean(k))
+    );
+    const insertedLines = unique.map((rel) => this.generateDslLine(rel, validKinds));
+    debugLog('Valid relationship kinds in model', [...validKinds]);
+    debugLog('Generated DSL lines', insertedLines);
 
     // 4. Find target file
     const targetFile = this.findTargetFile(modelPath);
     if (!targetFile) {
+      debugLog('No suitable .c4 target file found in', modelPath);
       return null;
     }
+    debugLog('Target file', targetFile);
 
     const originalContent = readFileSync(targetFile, 'utf-8');
 
@@ -74,24 +100,38 @@ export class LikeC4Patcher implements ModelPatcher {
     let patchedContent: string | null = null;
     if (provider.patchModel) {
       try {
+        debugLog('Attempting LLM-based patching');
         const result = await provider.patchModel(originalContent, insertedLines, 'likec4');
         if (quickValidatePatch(originalContent, result, insertedLines)) {
           const dslResult = await validateLikeC4Dsl(modelPath, targetFile, result);
           if (dslResult.valid || dslResult.skipped) {
+            debugLog('LLM patch accepted', { valid: dslResult.valid, skipped: dslResult.skipped });
             patchedContent = result;
+          } else {
+            debugLog('LLM patch failed DSL validation', dslResult.errors);
           }
+        } else {
+          debugLog('LLM patch failed quick validation');
         }
-      } catch {
+      } catch (err) {
+        debugLog('LLM patching threw', String(err));
         // Fall through to deterministic fallback
       }
     }
 
     // 6. Deterministic fallback with DSL validation
     if (!patchedContent) {
+      debugLog('Using deterministic fallback');
       const deterministic = this.deterministicInsert(originalContent, insertedLines);
       const dslResult = await validateLikeC4Dsl(modelPath, targetFile, deterministic);
       if (dslResult.valid || dslResult.skipped) {
+        debugLog('Deterministic patch accepted', {
+          valid: dslResult.valid,
+          skipped: dslResult.skipped,
+        });
         patchedContent = deterministic;
+      } else {
+        debugLog('Deterministic patch failed DSL validation', dslResult.errors);
       }
     }
 
@@ -110,8 +150,8 @@ export class LikeC4Patcher implements ModelPatcher {
     };
   }
 
-  private generateDslLine(rel: StructuredRelationship): string {
-    if (rel.kind) {
+  private generateDslLine(rel: StructuredRelationship, validKinds: Set<string>): string {
+    if (rel.kind && validKinds.has(rel.kind)) {
       return `  ${rel.source} -[${rel.kind}]-> ${rel.target} '${rel.description}'`;
     }
     return `  ${rel.source} -> ${rel.target} '${rel.description}'`;

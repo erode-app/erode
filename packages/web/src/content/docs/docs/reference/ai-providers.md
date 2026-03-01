@@ -19,7 +19,7 @@ Erode supports three AI providers: **Gemini** (default), **OpenAI**, and **Anthr
 
 Each provider uses two model tiers to balance cost and quality:
 
-- **Fast model**: Used for Stage 1 (component resolution), Stage 2 (dependency scan), and model patching. These are cheaper, faster models suited for extraction tasks.
+- **Fast model**: Used for Stage 1 (component resolution), Stage 2 (dependency scan), and model updates. These are cheaper, faster models suited for extraction tasks.
 - **Advanced model**: Used for Stage 3 (PR analysis). These are stronger models that handle the deeper architectural reasoning.
 
 ## Default models
@@ -53,14 +53,14 @@ Anthropic support is experimental and may not produce consistent results across 
 
 You can override the default models with environment variables:
 
-| Variable                   | Description                                 |
-| -------------------------- | ------------------------------------------- |
-| `GEMINI_FAST_MODEL`        | Gemini model for fast tier (Stages 1–2)     |
-| `GEMINI_ADVANCED_MODEL`    | Gemini model for advanced tier (Stage 3)    |
-| `OPENAI_FAST_MODEL`        | OpenAI model for fast tier (Stages 1–2)     |
-| `OPENAI_ADVANCED_MODEL`    | OpenAI model for advanced tier (Stage 3)    |
-| `ANTHROPIC_FAST_MODEL`     | Anthropic model for fast tier (Stages 1–2)  |
-| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for advanced tier (Stage 3) |
+| Variable                   | Description                                                  |
+| -------------------------- | ------------------------------------------------------------ |
+| `GEMINI_FAST_MODEL`        | Gemini model for fast tier (Stages 1–2 and model updates)    |
+| `GEMINI_ADVANCED_MODEL`    | Gemini model for advanced tier (Stage 3)                     |
+| `OPENAI_FAST_MODEL`        | OpenAI model for fast tier (Stages 1–2 and model updates)    |
+| `OPENAI_ADVANCED_MODEL`    | OpenAI model for advanced tier (Stage 3)                     |
+| `ANTHROPIC_FAST_MODEL`     | Anthropic model for fast tier (Stages 1–2 and model updates) |
+| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for advanced tier (Stage 3)                  |
 
 ## Timeout configuration
 

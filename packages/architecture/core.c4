@@ -20,10 +20,10 @@ model {
         description 'Compares dependencies against the declared architecture model'
       }
 
-      stage4 = stage 'Stage 4: Generate' {
-        #advanced-model
+      stage4 = stage 'Stage 4: Update' {
+        #fast-model
         #optional
-        description 'Generates architecture model updates to bring the model in sync'
+        description 'Updates the architecture model deterministically from Stage 3 relationships'
       }
     }
 

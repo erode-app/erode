@@ -1,4 +1,13 @@
 import { ErodeError } from '../errors.js';
+import { CONFIG } from './config.js';
+
+function isVerbose(): boolean {
+  try {
+    return CONFIG.debug.verbose;
+  } catch {
+    return false;
+  }
+}
 
 export interface RetryPolicy {
   retries: number;
@@ -45,6 +54,13 @@ export async function withRetry<T>(
         : policy.initialDelay;
       const delay = rawDelay * (0.5 + Math.random() * 0.5);
       attempt++;
+
+      if (isVerbose()) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        console.error(
+          `[Retry] Attempt ${String(attempt)}/${String(policy.retries)} after ${String(Math.round(delay))}ms: ${errMsg}`
+        );
+      }
 
       await new Promise((resolve) => setTimeout(resolve, delay));
     }

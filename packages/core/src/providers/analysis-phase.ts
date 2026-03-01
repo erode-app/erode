@@ -9,5 +9,5 @@ export enum AnalysisPhase {
   COMPONENT_RESOLUTION = 'component-resolution',
   DEPENDENCY_SCAN = 'dependency-scan',
   CHANGE_ANALYSIS = 'change-analysis',
-  MODEL_PATCHING = 'model-patching',
+  MODEL_UPDATE = 'model-update',
 }

@@ -8,6 +8,7 @@ import { createAIProvider } from '../providers/provider-factory.js';
 import { buildStructuredOutput, writeOutputToFile } from '../output.js';
 import { validatePath } from '../utils/validation.js';
 import { ErodeError, ErrorCode } from '../errors.js';
+import { CONFIG } from '../utils/config.js';
 import { loadSkipPatterns, applySkipPatterns } from '../utils/skip-patterns.js';
 import { createModelPatcher } from '../adapters/model-patcher.js';
 import type { PatchResult } from '../adapters/model-patcher.js';
@@ -40,7 +41,7 @@ export interface AnalyzeOptions {
   format?: 'console' | 'json';
   /** Model repository in `owner/repo` format (or `group/subgroup/project` for GitLab). */
   modelRepo?: string;
-  patch?: boolean;
+  patchLocal?: boolean;
 }
 
 export interface AnalyzeResult {
@@ -209,6 +210,10 @@ export async function runAnalyze(
   });
   p.succeed(`Found ${String(ctx.extractedDeps.dependencies.length)} dependency change(s)`);
 
+  if (CONFIG.debug.verbose) {
+    console.error('[Stage 2] Extracted dependencies:', JSON.stringify(ctx.extractedDeps));
+  }
+
   // ── Build prompt data for drift analysis ─────────────────────────────
   const dependencies = adapter.getComponentDependencies(selectedComponent.id);
   const dependents = adapter.getComponentDependents(selectedComponent.id);
@@ -254,6 +259,16 @@ export async function runAnalyze(
   ctx.analysisResult = await provider.analyzeDrift(promptData);
   p.succeed('Drift analysis finished');
 
+  if (CONFIG.debug.verbose) {
+    console.error(
+      '[Stage 3] Drift analysis:',
+      JSON.stringify({
+        violations: ctx.analysisResult.violations.length,
+        hasModelUpdates: !!ctx.analysisResult.modelUpdates?.relationships?.length,
+      })
+    );
+  }
+
   // ── Build structured output ──────────────────────────────────────────
   p.section('Output');
   const needsStructured =
@@ -271,10 +286,16 @@ export async function runAnalyze(
     p.succeed(`Structured output saved to ${options.outputFile}`);
   }
 
-  // ── Stage 4: Model Patching ──────────────────────────────────────────
-  const shouldPatch = options.patch === true || options.openPr === true;
+  // ── Stage 4: Model Update ────────────────────────────────────────────
+  const shouldPatch = options.patchLocal === true || options.openPr === true;
   if (shouldPatch && ctx.analysisResult.modelUpdates?.relationships?.length) {
-    p.section('Stage 4: Model Patching');
+    p.section('Stage 4: Model Update');
+    if (CONFIG.debug.verbose) {
+      console.error(
+        '[Stage 4] Relationships from AI:',
+        JSON.stringify(ctx.analysisResult.modelUpdates.relationships, null, 2)
+      );
+    }
     p.start('Generating model patch');
     const patcher = createModelPatcher(adapter.metadata.id);
     ctx.patchResult = await patcher.patch({
@@ -287,14 +308,15 @@ export async function runAnalyze(
     if (ctx.patchResult) {
       p.succeed(`Patch: ${String(ctx.patchResult.insertedLines.length)} relationship(s)`);
       // Write in-place when --patch without --open-pr
-      if (options.patch && !options.openPr && !options.dryRun) {
+      if (options.patchLocal && !options.openPr && !options.dryRun) {
         await writeFile(ctx.patchResult.filePath, ctx.patchResult.content, 'utf8');
         p.succeed(`Model patched: ${ctx.patchResult.filePath}`);
       } else if (options.dryRun) {
         p.info('Dry run: skipped writing patched model');
       }
     } else {
-      p.info('All relationships already exist or were invalid');
+      const rels = ctx.analysisResult.modelUpdates.relationships;
+      p.info(`All ${String(rels.length)} relationship(s) already exist or were invalid`);
     }
   } else if (shouldPatch) {
     p.info('No model update relationships from analysis');

@@ -52,7 +52,7 @@ The advanced model compares the extracted dependency changes against the full de
 - **Suggestion**: How to resolve the drift (update the model, refactor the code, or accept the change)
 - **Summary**: An overall assessment of the PR's architectural impact
 
-## Stage 4 -- Model patching
+## Stage 4 -- Model update
 
 |                |                                                                   |
 | -------------- | ----------------------------------------------------------------- |
@@ -60,9 +60,9 @@ The advanced model compares the extracted dependency changes against the full de
 | **Input**      | Structured relationships from Stage 3, current architecture model |
 | **Output**     | Patched model file with new relationship declarations             |
 
-When `--patch` or `--open-pr` is passed and Stage 3 produces structured relationship data, the pipeline generates a deterministic patch. New relationship lines are inserted into the correct location in the DSL file. A fast model call assists with placement, with a deterministic fallback if validation fails.
+When `--patch-local` or `--open-pr` is passed and Stage 3 produces structured relationship data, the pipeline generates a deterministic patch. New relationship lines are inserted into the correct location in the DSL file. A fast model call assists with placement, with a deterministic fallback if validation fails.
 
-This stage is **skipped** when neither `--patch` nor `--open-pr` is set, or when Stage 3 produces no relationship updates.
+This stage is **skipped** when neither `--patch-local` nor `--open-pr` is set, or when Stage 3 produces no relationship updates.
 
 ## Prompt templates
 

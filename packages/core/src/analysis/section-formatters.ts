@@ -6,15 +6,19 @@ export function formatAllowedDependencies(architectural: {
 }): string {
   if (architectural.relationships && architectural.relationships.length > 0) {
     const grouped = architectural.relationships.reduce<
-      Map<string, { name: string; kinds: string[] }>
+      Map<string, { id: string; name: string; kinds: string[] }>
     >((acc, rel) => {
-      const entry = acc.get(rel.target.id) ?? { name: rel.target.name, kinds: [] };
+      const entry = acc.get(rel.target.id) ?? {
+        id: rel.target.id,
+        name: rel.target.name,
+        kinds: [],
+      };
       entry.kinds.push(rel.kind ?? 'unknown');
       acc.set(rel.target.id, entry);
       return acc;
     }, new Map());
     return Array.from(grouped.values())
-      .map(({ name, kinds }) => `  - ${name} [via: ${kinds.join(', ')}]`)
+      .map(({ id, name, kinds }) => `  - ${name} (${id}) [via: ${kinds.join(', ')}]`)
       .join('\n');
   }
   if (architectural.dependencies.length > 0) {

@@ -117,5 +117,5 @@ Concentrate on architectural drift — whether the code aligns with the document
 - Use EXACT component IDs from the architecture model (the COMPONENT CONTEXT and ALLOWED DEPENDENCIES sections)
 - Only include relationships that should be ADDED to the model
 - The `source` should be the component being analyzed ({{component.id}})
-- The `kind` field is optional and should describe the type of relationship (e.g., "HTTP", "gRPC", "event", "database")
+- The `kind` field is optional. If provided, use EXACT kinds from the ALLOWED DEPENDENCIES section (the values inside `[via: ...]`). If unsure, omit the `kind` field entirely
 - The `description` should briefly explain what this dependency is used for

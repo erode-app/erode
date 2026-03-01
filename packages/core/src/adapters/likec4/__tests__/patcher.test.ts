@@ -161,25 +161,48 @@ describe('LikeC4Patcher', () => {
     expect(result.insertedLines[0]).toBe("  customer -> backend 'Sends data'");
   });
 
-  it('should generate correct DSL line with kind', async () => {
+  it('should generate correct DSL line with valid kind', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+
+    const rels: StructuredRelationship[] = [
+      { source: 'customer', target: 'backend', kind: 'https', description: 'REST API' },
+    ];
+    const existing: ModelRelationship[] = [{ source: 'a', target: 'b', kind: 'https' }];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: existing,
+      componentIndex: makeIndex(['customer', 'backend', 'a', 'b']),
+      provider: makeProvider(),
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    expect(result.insertedLines[0]).toBe("  customer -[https]-> backend 'REST API'");
+  });
+
+  it('should strip unknown kind and generate line without kind', async () => {
     mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const rels: StructuredRelationship[] = [
       { source: 'customer', target: 'backend', kind: 'HTTP', description: 'REST API' },
     ];
+    const existing: ModelRelationship[] = [{ source: 'a', target: 'b', kind: 'https' }];
 
     const result = await patcher.patch({
       modelPath: '/model',
       relationships: rels,
-      existingRelationships: [],
-      componentIndex: makeIndex(['customer', 'backend']),
+      existingRelationships: existing,
+      componentIndex: makeIndex(['customer', 'backend', 'a', 'b']),
       provider: makeProvider(),
     });
 
     expect(result).not.toBeNull();
     if (!result) return;
-    expect(result.insertedLines[0]).toBe("  customer -[HTTP]-> backend 'REST API'");
+    expect(result.insertedLines[0]).toBe("  customer -> backend 'REST API'");
   });
 
   it('should use deterministic fallback when provider has no patchModel', async () => {
