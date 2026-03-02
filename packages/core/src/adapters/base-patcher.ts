@@ -107,7 +107,8 @@ export abstract class BasePatcher implements ModelPatcher {
     const originalContent = readFileSync(targetFile, 'utf-8');
 
     // 5. Try LLM-based patching with DSL validation
-    const patchedContent = await this.tryLlmPatching(
+    let validationSkipped = false;
+    const llmResult = await this.tryLlmPatching(
       provider,
       originalContent,
       insertedLines,
@@ -115,10 +116,25 @@ export abstract class BasePatcher implements ModelPatcher {
       targetFile
     ).catch(() => null);
 
+    let finalContent: string | null = null;
+    if (llmResult) {
+      finalContent = llmResult.content;
+      validationSkipped = llmResult.validationSkipped;
+    }
+
     // 6. Deterministic fallback with DSL validation
-    const finalContent =
-      patchedContent ??
-      (await this.tryDeterministicFallback(originalContent, insertedLines, modelPath, targetFile));
+    if (!finalContent) {
+      const fallbackResult = await this.tryDeterministicFallback(
+        originalContent,
+        insertedLines,
+        modelPath,
+        targetFile
+      );
+      if (fallbackResult) {
+        finalContent = fallbackResult.content;
+        validationSkipped = fallbackResult.validationSkipped;
+      }
+    }
 
     if (!finalContent) {
       return null;
@@ -142,6 +158,7 @@ export abstract class BasePatcher implements ModelPatcher {
               insertedLines: componentDslLines.filter((line) => line.includes(c.id)),
             }))
           : undefined,
+      validationSkipped: validationSkipped || undefined,
     };
   }
 
@@ -198,7 +215,7 @@ export abstract class BasePatcher implements ModelPatcher {
     insertedLines: string[],
     modelPath: string,
     targetFile: string
-  ): Promise<string | null> {
+  ): Promise<{ content: string; validationSkipped: boolean } | null> {
     if (!provider.patchModel) {
       return null;
     }
@@ -212,7 +229,7 @@ export abstract class BasePatcher implements ModelPatcher {
             valid: dslResult.valid,
             skipped: dslResult.skipped,
           });
-          return result;
+          return { content: result, validationSkipped: !!dslResult.skipped };
         } else {
           this.debugLog('LLM patch failed DSL validation', dslResult.errors);
         }
@@ -230,7 +247,7 @@ export abstract class BasePatcher implements ModelPatcher {
     insertedLines: string[],
     modelPath: string,
     targetFile: string
-  ): Promise<string | null> {
+  ): Promise<{ content: string; validationSkipped: boolean } | null> {
     this.debugLog('Using deterministic fallback');
     const deterministic = this.deterministicInsert(originalContent, insertedLines);
     const dslResult = await this.validateDsl(modelPath, targetFile, deterministic);
@@ -239,7 +256,7 @@ export abstract class BasePatcher implements ModelPatcher {
         valid: dslResult.valid,
         skipped: dslResult.skipped,
       });
-      return deterministic;
+      return { content: deterministic, validationSkipped: !!dslResult.skipped };
     } else {
       this.debugLog('Deterministic patch failed DSL validation', dslResult.errors);
       return null;

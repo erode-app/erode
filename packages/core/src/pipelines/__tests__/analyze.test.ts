@@ -325,9 +325,10 @@ describe('runAnalyze', () => {
 
     expect(mockAnalyzeDrift).toHaveBeenCalledOnce();
     const callArgs = mockAnalyzeDrift.mock.calls[0]?.[0] as
-      | { component: ArchitecturalComponent }
+      | { component: ArchitecturalComponent; allRelationships: unknown[] }
       | undefined;
     expect(callArgs?.component).toMatchObject({ id: 'comp.api', name: 'API Service' });
+    expect(callArgs?.allRelationships).toEqual([]);
   });
 
   it('patches model when openPr is set and modelUpdates has relationships', async () => {

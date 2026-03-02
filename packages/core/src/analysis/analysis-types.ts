@@ -1,9 +1,10 @@
-import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
+import type { ArchitecturalComponent, ModelRelationship } from '../adapters/architecture-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
-import type { StructuredRelationshipSchema } from '../schemas/common.schema.js';
+import type { StructuredRelationshipSchema, NewComponentSchema } from '../schemas/common.schema.js';
 import type { z } from 'zod';
 
 export type StructuredRelationship = z.infer<typeof StructuredRelationshipSchema>;
+export type NewComponent = z.infer<typeof NewComponentSchema>;
 
 /**
  * Stage 1: Component selection from monorepo
@@ -104,6 +105,7 @@ export interface DriftAnalysisResult {
     remove?: string[];
     notes?: string;
     relationships?: StructuredRelationship[];
+    newComponents?: NewComponent[];
   };
   /** Change request metadata */
   metadata: ChangeRequestMetadata;
@@ -135,4 +137,8 @@ export interface DriftAnalysisPromptData {
       title?: string;
     }[];
   };
+  /** All component IDs in the architecture model */
+  allComponentIds?: string[];
+  /** All relationships in the architecture model */
+  allRelationships?: ModelRelationship[];
 }

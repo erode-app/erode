@@ -99,6 +99,21 @@ ${String(idx + 1)}. **${c.id}**
     .join('\n');
 }
 
+export function formatAllRelationships(
+  relationships: { source: string; target: string; kind?: string; title?: string }[]
+): string {
+  if (relationships.length === 0) {
+    return '  - No relationships defined';
+  }
+  return relationships
+    .map((r) => {
+      const kind = r.kind ? ` [${r.kind}]` : '';
+      const title = r.title ? ` "${r.title}"` : '';
+      return `  - ${r.source} -> ${r.target}${kind}${title}`;
+    })
+    .join('\n');
+}
+
 export function formatCommits(commits: { sha: string; message: string; author: string }[]): {
   section: string;
   note: string;

@@ -44,6 +44,8 @@ export interface DriftAnalysisPromptVars {
   commitsNote: string;
   allowedDeps: string;
   dependents: string;
+  allComponentIds: string;
+  allRelationships: string;
   dependencyChangesSection: string;
 }
 

@@ -78,8 +78,10 @@ export async function publishResults(
         prUrl: ref.url,
         summary: analysisResult.summary,
         insertedLines: patchResult.insertedLines,
+        relationshipLines: patchResult.relationshipLines,
         skipped: patchResult.skipped,
         removals: analysisResult.modelUpdates?.remove,
+        newComponents: patchResult.newComponents,
       });
       const result = await createModelPr({
         repositoryUrl: ref.repositoryUrl,

@@ -276,6 +276,8 @@ export async function runAnalyze(
           title: r.title,
         })),
       },
+      allComponentIds: Array.from(architectureModel.componentIndex.byId.keys()),
+      allRelationships: adapter.getAllRelationships(),
     };
 
     // ── Stage 3: Drift analysis ──────────────────────────────────────────
@@ -313,25 +315,42 @@ export async function runAnalyze(
 
     // ── Stage 4: Model Update ────────────────────────────────────────────
     const shouldPatch = options.patchLocal === true || options.openPr === true;
-    if (shouldPatch && ctx.analysisResult.modelUpdates?.relationships?.length) {
+    const hasRelationships = !!ctx.analysisResult.modelUpdates?.relationships?.length;
+    const hasNewComponents = !!ctx.analysisResult.modelUpdates?.newComponents?.length;
+    if (shouldPatch && (hasRelationships || hasNewComponents)) {
       p.section('Stage 4: Model Update');
       if (CONFIG.debug.verbose) {
         console.error(
           '[Stage 4] Relationships from AI:',
-          JSON.stringify(ctx.analysisResult.modelUpdates.relationships, null, 2)
+          JSON.stringify(ctx.analysisResult.modelUpdates?.relationships ?? [], null, 2)
         );
+        if (hasNewComponents) {
+          console.error(
+            '[Stage 4] New components from AI:',
+            JSON.stringify(ctx.analysisResult.modelUpdates?.newComponents ?? [], null, 2)
+          );
+        }
       }
       p.start('Generating model patch');
       const patcher = createModelPatcher(adapter.metadata.id);
       ctx.patchResult = await patcher.patch({
         modelPath: effectiveModelPath,
-        relationships: ctx.analysisResult.modelUpdates.relationships,
+        relationships: ctx.analysisResult.modelUpdates?.relationships ?? [],
         existingRelationships: adapter.getAllRelationships(),
         componentIndex: architectureModel.componentIndex,
         provider,
+        newComponents: ctx.analysisResult.modelUpdates?.newComponents,
       });
       if (ctx.patchResult) {
-        p.succeed(`Patch: ${String(ctx.patchResult.insertedLines.length)} relationship(s)`);
+        const relCount = ctx.patchResult.insertedLines.length;
+        const compCount = ctx.patchResult.newComponents?.length ?? 0;
+        const parts: string[] = [];
+        if (compCount > 0) parts.push(`${String(compCount)} component(s)`);
+        if (relCount > 0) parts.push(`${String(relCount)} line(s)`);
+        p.succeed(`Patch: ${parts.join(', ')}`);
+        if (ctx.patchResult.validationSkipped) {
+          p.warn('DSL validation skipped: validation tooling unavailable');
+        }
         // Write in-place when --patch without --open-pr
         if (options.patchLocal && !options.openPr && !options.dryRun) {
           await writeFile(ctx.patchResult.filePath, ctx.patchResult.content, 'utf8');
@@ -340,11 +359,10 @@ export async function runAnalyze(
           p.info('Dry run: skipped writing patched model');
         }
       } else {
-        const rels = ctx.analysisResult.modelUpdates.relationships;
-        p.info(`All ${String(rels.length)} relationship(s) already exist or were invalid`);
+        p.info('All relationships already exist or were invalid, no new components to add');
       }
     } else if (shouldPatch) {
-      p.info('No model update relationships from analysis');
+      p.info('No model update relationships or new components from analysis');
     }
 
     // ── Publish results ────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import type { StructuredRelationship } from '../analysis/analysis-types.js';
+import type { StructuredRelationship, NewComponent } from '../analysis/analysis-types.js';
 import type { ModelRelationship, ComponentIndex } from './architecture-types.js';
 import type { AIProvider } from '../providers/ai-provider.js';
 import { LikeC4Patcher } from './likec4/patcher.js';
@@ -13,8 +13,14 @@ export interface PatchResult {
   content: string;
   /** Lines that were inserted */
   insertedLines: string[];
+  /** Only the relationship DSL lines (subset of insertedLines, excludes component DSL) */
+  relationshipLines?: string[];
   /** Relationships skipped (unknown IDs, duplicates) */
   skipped: { source: string; target: string; reason: string }[];
+  /** New components that were added to the model */
+  newComponents?: { id: string; kind: string; name: string; insertedLines: string[] }[];
+  /** true when DSL validation tooling was unavailable and validation was skipped */
+  validationSkipped?: boolean;
 }
 
 export interface DslValidationResult {
@@ -31,6 +37,7 @@ export interface ModelPatcher {
     existingRelationships: ModelRelationship[];
     componentIndex: ComponentIndex;
     provider: AIProvider;
+    newComponents?: NewComponent[];
   }): Promise<PatchResult | null>;
 }
 

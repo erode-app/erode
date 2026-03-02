@@ -146,6 +146,22 @@ export function formatAnalysisAsComment(
     : ':white_check_mark: No drift found';
   lines.push(`**Status**: ${status}`);
 
+  if (result.modelUpdates?.newComponents && result.modelUpdates.newComponents.length > 0) {
+    lines.push('');
+    lines.push('### :new: New Components Detected');
+    lines.push('');
+    lines.push('| Component | Kind | Name |');
+    lines.push('|---|---|---|');
+    for (const comp of result.modelUpdates.newComponents) {
+      lines.push(`| \`${comp.id}\` | ${comp.kind} | ${comp.name} |`);
+    }
+    lines.push('');
+    lines.push(
+      '> These components were auto-detected from the PR and will be proposed for the architecture model.'
+    );
+    lines.push('');
+  }
+
   if (result.hasViolations) {
     lines.push('');
     lines.push(`### Detected Issues (${String(result.violations.length)})`);
@@ -234,6 +250,7 @@ export function analysisHasFindings(result: DriftAnalysisResult): boolean {
   if (result.hasViolations) return true;
   if ((result.modelUpdates?.add?.length ?? 0) > 0) return true;
   if ((result.modelUpdates?.remove?.length ?? 0) > 0) return true;
+  if ((result.modelUpdates?.newComponents?.length ?? 0) > 0) return true;
   return false;
 }
 
@@ -244,8 +261,10 @@ export function formatPatchPrBody(options: {
   prUrl: string;
   summary: string;
   insertedLines: string[];
+  relationshipLines?: string[];
   skipped: { source: string; target: string; reason: string }[];
   removals?: string[];
+  newComponents?: { id: string; kind: string; name: string; insertedLines: string[] }[];
 }): string {
   const lines: string[] = [];
 
@@ -257,13 +276,30 @@ export function formatPatchPrBody(options: {
   );
   lines.push('');
 
-  // Applied relationships table
-  if (options.insertedLines.length > 0) {
+  // New components section (prominent, at the top)
+  if (options.newComponents && options.newComponents.length > 0) {
+    lines.push('### :new: New Components');
+    lines.push('');
+    lines.push('| Component | Kind | Name |');
+    lines.push('|---|---|---|');
+    for (const comp of options.newComponents) {
+      lines.push(`| \`${comp.id}\` | ${comp.kind} | ${comp.name} |`);
+    }
+    lines.push('');
+    lines.push(
+      '> **Review carefully**: These components were auto-detected and added to the architecture model.'
+    );
+    lines.push('');
+  }
+
+  // Applied relationships table — use relationshipLines when available to exclude component DSL
+  const relationshipTableLines = options.relationshipLines ?? options.insertedLines;
+  if (relationshipTableLines.length > 0) {
     lines.push('### Applied Relationships');
     lines.push('');
     lines.push('| Relationship |');
     lines.push('|---|');
-    for (const line of options.insertedLines) {
+    for (const line of relationshipTableLines) {
       lines.push(`| \`${line.trim()}\` |`);
     }
     lines.push('');

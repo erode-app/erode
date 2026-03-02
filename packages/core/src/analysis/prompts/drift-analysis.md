@@ -31,6 +31,16 @@ According to the architecture model, this component is allowed to depend on:
 These components depend on this component:
 {{dependents}}
 
+## ALL KNOWN COMPONENTS
+
+These are ALL component IDs currently in the architecture model:
+{{allComponentIds}}
+
+## ALL MODEL RELATIONSHIPS
+
+These are ALL relationships currently declared in the architecture model:
+{{allRelationships}}
+
 ## DEPENDENCY CHANGES DETECTED
 
 {{dependencyChangesSection}}
@@ -104,6 +114,16 @@ Respond with ONLY valid JSON:
         "kind": "optional relationship kind",
         "description": "What this dependency is for"
       }
+    ],
+    "newComponents": [
+      {
+        "id": "snake_case_component_id",
+        "kind": "service|webapp|database|library|system",
+        "name": "Human-Readable Name",
+        "description": "What this component does",
+        "tags": ["backend", "microservice"],
+        "technology": "TypeScript"
+      }
     ]
   },
   "summary": "2-3 sentence summary of the architectural impact"
@@ -114,8 +134,19 @@ Concentrate on architectural drift — whether the code aligns with the document
 
 **IMPORTANT for modelUpdates.relationships:**
 
-- Use EXACT component IDs from the architecture model (the COMPONENT CONTEXT and ALLOWED DEPENDENCIES sections)
+- Use EXACT component IDs from the ALL KNOWN COMPONENTS list or from `newComponents` you are proposing
 - Only include relationships that should be ADDED to the model
-- The `source` should be the component being analyzed ({{component.id}})
-- The `kind` field is optional. If provided, use EXACT kinds from the ALLOWED DEPENDENCIES section (the values inside `[via: ...]`). If unsure, omit the `kind` field entirely
+- The `source` can be ANY component visible in this PR's changes — not only {{component.id}}. If the PR introduces a new service that calls an existing one, the new service should be the `source`
+- Prefer relationships that are evidenced by the PR diff and dependency changes above
+- The `kind` field is optional. If provided, use EXACT kinds from the ALL MODEL RELATIONSHIPS section (the values inside `[...]`). If unsure, omit the `kind` field entirely
 - The `description` should briefly explain what this dependency is used for
+
+**IMPORTANT for modelUpdates.newComponents:**
+
+- Carefully scan the PR diff for brand-new services, applications, or systems that are NOT in the ALL KNOWN COMPONENTS list above
+- Look for: new directories/packages for a service, new server/application entry points, new Dockerfiles, new service configuration
+- The `id` must use snake_case (e.g., `order_service`, `payment_gateway`)
+- The `kind` must be one of the element types from the architecture specification
+- If a relationship references a component not in the model, you MUST add it to `newComponents` AND include the relationship in `relationships`
+- Do NOT create new components for external third-party services
+- When in doubt, do NOT propose a new component — flag it in `notes` instead

@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'fs';
 import { join, resolve } from 'path';
 import { BasePatcher } from '../base-patcher.js';
 import { validateLikeC4Dsl } from './dsl-validator.js';
-import type { StructuredRelationship } from '../../analysis/analysis-types.js';
+import type { StructuredRelationship, NewComponent } from '../../analysis/analysis-types.js';
 import type { ModelRelationship } from '../architecture-types.js';
 import type { DslValidationResult } from '../model-patcher.js';
 
@@ -27,6 +27,25 @@ export class LikeC4Patcher extends BasePatcher {
         return `  ${rel.source} -[${rel.kind}]-> ${rel.target} '${desc}'`;
       }
       return `  ${rel.source} -> ${rel.target} '${desc}'`;
+    });
+  }
+
+  protected generateComponentDslLines(components: NewComponent[]): string[] {
+    return components.map((comp) => {
+      const lines: string[] = [];
+      const name = comp.name.replace(/'/g, '');
+      lines.push(`  ${comp.id} = ${comp.kind} '${name}' {`);
+      if (comp.tags && comp.tags.length > 0) {
+        lines.push(`    ${comp.tags.map((t) => `#${t}`).join(' ')}`);
+      }
+      if (comp.description) {
+        lines.push(`    description '${comp.description.replace(/'/g, '')}'`);
+      }
+      if (comp.technology) {
+        lines.push(`    technology '${comp.technology.replace(/'/g, '')}'`);
+      }
+      lines.push('  }');
+      return lines.join('\n');
     });
   }
 

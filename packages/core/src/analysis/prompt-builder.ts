@@ -9,6 +9,7 @@ import {
   formatAllowedDependencies,
   formatDependents,
   formatDependencyChanges,
+  formatAllRelationships,
   formatComponentContext,
   formatComponentList,
   formatCommits,
@@ -104,6 +105,11 @@ export const PromptBuilder = {
     const dependents = formatDependents(architectural.dependents);
     const dependencyChangesSection = formatDependencyChanges(dependencies);
     const { section: commitsSection, note: commitsNote } = formatCommits(changeRequest.commits);
+    const allComponentIds =
+      (data.allComponentIds ?? []).map((id) => `- \`${id}\``).join('\n') || '(none)';
+    const allRelationships = data.allRelationships?.length
+      ? formatAllRelationships(data.allRelationships)
+      : '(none)';
 
     return TemplateEngine.loadDriftAnalysisPrompt({
       changeRequest: {
@@ -128,6 +134,8 @@ export const PromptBuilder = {
       commitsNote,
       allowedDeps,
       dependents,
+      allComponentIds,
+      allRelationships,
       dependencyChangesSection,
     });
   },
