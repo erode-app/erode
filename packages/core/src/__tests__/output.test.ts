@@ -252,6 +252,32 @@ describe('formatAnalysisAsComment', () => {
 
     expect(output).not.toContain('Reply `/erode update-model`');
   });
+
+  it('should render new components section when newComponents are present', () => {
+    const output = formatAnalysisAsComment(
+      makeAnalysisResult({
+        modelUpdates: {
+          newComponents: [{ id: 'order_service', kind: 'service', name: 'Order Service' }],
+        },
+      })
+    );
+
+    expect(output).toContain(':new: New Components Detected');
+    expect(output).toContain('`order_service`');
+    expect(output).toContain('service');
+    expect(output).toContain('Order Service');
+    expect(output).toContain('auto-detected');
+  });
+
+  it('should not render new components section when newComponents is empty', () => {
+    const output = formatAnalysisAsComment(
+      makeAnalysisResult({
+        modelUpdates: { newComponents: [] },
+      })
+    );
+
+    expect(output).not.toContain('New Components Detected');
+  });
 });
 
 describe('writeOutputToFile', () => {
@@ -391,6 +417,16 @@ describe('analysisHasFindings', () => {
 
     expect(analysisHasFindings(result)).toBe(false);
   });
+
+  it('should return true when model updates have newComponents', () => {
+    const result = makeAnalysisResult({
+      modelUpdates: {
+        newComponents: [{ id: 'order_service', kind: 'service', name: 'Order Service' }],
+      },
+    });
+
+    expect(analysisHasFindings(result)).toBe(true);
+  });
 });
 
 describe('formatPatchPrBody', () => {
@@ -423,5 +459,87 @@ describe('formatPatchPrBody', () => {
     });
 
     expect(body).toContain('[PR #10: Add user auth](https://github.com/org/repo/pull/10)');
+  });
+
+  it('should render new components section in PR body', () => {
+    const body = formatPatchPrBody({
+      prNumber: 42,
+      prTitle: 'Add order service',
+      prUrl: 'https://github.com/org/repo/pull/42',
+      summary: 'Added order service',
+      insertedLines: ['  customer -> order_service'],
+      skipped: [],
+      newComponents: [
+        {
+          id: 'order_service',
+          kind: 'service',
+          name: 'Order Service',
+          insertedLines: ["  order_service = service 'Order Service' {", '  }'],
+        },
+      ],
+    });
+
+    expect(body).toContain(':new: New Components');
+    expect(body).toContain('`order_service`');
+    expect(body).toContain('service');
+    expect(body).toContain('Order Service');
+    expect(body).toContain('Review carefully');
+  });
+
+  it('should only show relationship lines in Applied Relationships when relationshipLines is provided', () => {
+    const body = formatPatchPrBody({
+      prNumber: 42,
+      prTitle: 'Add order service',
+      prUrl: 'https://github.com/org/repo/pull/42',
+      summary: 'Added order service',
+      insertedLines: [
+        "  order_service = service 'Order Service' {",
+        '  }',
+        '  customer -> order_service',
+      ],
+      relationshipLines: ['  customer -> order_service'],
+      skipped: [],
+      newComponents: [
+        {
+          id: 'order_service',
+          kind: 'service',
+          name: 'Order Service',
+          insertedLines: ["  order_service = service 'Order Service' {", '  }'],
+        },
+      ],
+    });
+
+    // The relationship table should only contain the relationship line
+    expect(body).toContain('| `customer -> order_service` |');
+    // Component DSL should NOT appear in the Applied Relationships table
+    expect(body).not.toContain("| `order_service = service 'Order Service' {` |");
+  });
+
+  it('should fall back to insertedLines when relationshipLines is not provided', () => {
+    const body = formatPatchPrBody({
+      prNumber: 10,
+      prTitle: 'Add deps',
+      prUrl: 'https://github.com/org/repo/pull/10',
+      summary: 'Added deps',
+      insertedLines: ['  a -> b', '  c -> d'],
+      skipped: [],
+    });
+
+    expect(body).toContain('| `a -> b` |');
+    expect(body).toContain('| `c -> d` |');
+  });
+
+  it('should not render new components section when empty', () => {
+    const body = formatPatchPrBody({
+      prNumber: 10,
+      prTitle: 'Update deps',
+      prUrl: 'https://github.com/org/repo/pull/10',
+      summary: 'Updated dependencies',
+      insertedLines: ['  a -> b'],
+      skipped: [],
+      newComponents: [],
+    });
+
+    expect(body).not.toContain('New Components');
   });
 });

@@ -2,7 +2,7 @@ import { readFileSync, realpathSync } from 'fs';
 import { dirname, relative } from 'path';
 import { execSync } from 'child_process';
 import type { ModelPatcher, PatchResult, DslValidationResult } from './model-patcher.js';
-import type { StructuredRelationship } from '../analysis/analysis-types.js';
+import type { StructuredRelationship, NewComponent } from '../analysis/analysis-types.js';
 import type { ModelRelationship, ComponentIndex } from './architecture-types.js';
 import type { AIProvider } from '../providers/ai-provider.js';
 import { CONFIG } from '../utils/config.js';
@@ -18,6 +18,8 @@ export abstract class BasePatcher implements ModelPatcher {
     unique: StructuredRelationship[],
     existing: ModelRelationship[]
   ): string[];
+
+  protected abstract generateComponentDslLines(components: NewComponent[]): string[];
 
   protected abstract findTargetFile(modelPath: string): string | null;
 
@@ -39,14 +41,33 @@ export abstract class BasePatcher implements ModelPatcher {
     existingRelationships: ModelRelationship[];
     componentIndex: ComponentIndex;
     provider: AIProvider;
+    newComponents?: NewComponent[];
   }): Promise<PatchResult | null> {
     const { modelPath, relationships, existingRelationships, componentIndex, provider } = options;
     const skipped: PatchResult['skipped'] = [];
 
     this.debugLog('Input relationships', relationships);
 
-    // 1. Validate and filter relationships
-    const valid = this.validateRelationships(relationships, componentIndex, skipped);
+    // 0. Filter new components — skip any that already exist in the model
+    const genuinelyNew = (options.newComponents ?? []).filter(
+      (c) => !componentIndex.byId.has(c.id)
+    );
+    const pendingComponentIds = new Set(genuinelyNew.map((c) => c.id));
+
+    if (genuinelyNew.length > 0) {
+      this.debugLog(
+        'Genuinely new components',
+        genuinelyNew.map((c) => c.id)
+      );
+    }
+
+    // 1. Validate and filter relationships (pending component IDs are accepted)
+    const valid = this.validateRelationships(
+      relationships,
+      componentIndex,
+      skipped,
+      pendingComponentIds
+    );
 
     if (skipped.length > 0) {
       this.debugLog('Skipped after component validation', skipped);
@@ -63,12 +84,16 @@ export abstract class BasePatcher implements ModelPatcher {
       `After filtering: ${String(unique.length)} unique, ${String(skipped.length)} skipped`
     );
 
-    if (unique.length === 0) {
+    if (unique.length === 0 && genuinelyNew.length === 0) {
       return null;
     }
 
-    // 3. Generate DSL lines
-    const insertedLines = this.generateDslLines(unique, existingRelationships);
+    // 3. Generate DSL lines — components first, then relationships
+    const componentDslLines =
+      genuinelyNew.length > 0 ? this.generateComponentDslLines(genuinelyNew) : [];
+    const relationshipDslLines =
+      unique.length > 0 ? this.generateDslLines(unique, existingRelationships) : [];
+    const insertedLines = [...componentDslLines, ...relationshipDslLines];
     this.debugLog('Generated DSL lines', insertedLines);
 
     // 4. Find target file
@@ -106,17 +131,28 @@ export abstract class BasePatcher implements ModelPatcher {
       filePath: repoRelativePath,
       content: finalContent,
       insertedLines,
+      relationshipLines: relationshipDslLines,
       skipped,
+      newComponents:
+        genuinelyNew.length > 0
+          ? genuinelyNew.map((c) => ({
+              id: c.id,
+              kind: c.kind,
+              name: c.name,
+              insertedLines: componentDslLines.filter((line) => line.includes(c.id)),
+            }))
+          : undefined,
     };
   }
 
   protected validateRelationships(
     relationships: StructuredRelationship[],
     componentIndex: ComponentIndex,
-    skipped: PatchResult['skipped']
+    skipped: PatchResult['skipped'],
+    pendingComponentIds?: Set<string>
   ): StructuredRelationship[] {
     return relationships.filter((rel) => {
-      if (!componentIndex.byId.has(rel.source)) {
+      if (!componentIndex.byId.has(rel.source) && !pendingComponentIds?.has(rel.source)) {
         skipped.push({
           source: rel.source,
           target: rel.target,
@@ -124,7 +160,7 @@ export abstract class BasePatcher implements ModelPatcher {
         });
         return false;
       }
-      if (!componentIndex.byId.has(rel.target)) {
+      if (!componentIndex.byId.has(rel.target) && !pendingComponentIds?.has(rel.target)) {
         skipped.push({
           source: rel.source,
           target: rel.target,

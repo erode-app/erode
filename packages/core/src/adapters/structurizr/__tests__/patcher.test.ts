@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { StructurizrPatcher } from '../patcher.js';
-import type { StructuredRelationship } from '../../../analysis/analysis-types.js';
+import type { StructuredRelationship, NewComponent } from '../../../analysis/analysis-types.js';
 import type {
   ModelRelationship,
   ComponentIndex,
@@ -261,5 +261,87 @@ describe('StructurizrPatcher', () => {
     if (!result) return;
     // Verify the line does not contain unescaped quotes that could break DSL
     expect(result.insertedLines[0]).toBe('        user -> system "Calls the API endpoint"');
+  });
+
+  it('should generate valid Structurizr DSL for new component', async () => {
+    mockReaddirSync.mockReturnValue(['workspace.dsl'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_DSL);
+
+    const newComps: NewComponent[] = [
+      {
+        id: 'order_service',
+        kind: 'softwareSystem',
+        name: 'Order Service',
+        description: 'Handles order processing',
+        technology: 'TypeScript',
+      },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: [],
+      existingRelationships: [],
+      componentIndex: makeIndex(['user', 'system']),
+      provider: makeProvider(),
+      newComponents: newComps,
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    expect(result.newComponents).toHaveLength(1);
+    expect(result.newComponents?.[0]?.id).toBe('order_service');
+    expect(result.content).toContain('order_service = softwareSystem "Order Service"');
+    expect(result.content).toContain('"Handles order processing"');
+    expect(result.content).toContain('"TypeScript"');
+  });
+
+  it('should not skip relationship referencing a new component', async () => {
+    mockReaddirSync.mockReturnValue(['workspace.dsl'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_DSL);
+
+    const rels: StructuredRelationship[] = [
+      { source: 'user', target: 'order_service', description: 'Places orders' },
+    ];
+    const newComps: NewComponent[] = [
+      { id: 'order_service', kind: 'softwareSystem', name: 'Order Service' },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: [],
+      componentIndex: makeIndex(['user', 'system']),
+      provider: makeProvider(),
+      newComponents: newComps,
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    expect(result.skipped).toHaveLength(0);
+    expect(result.content).toContain('user -> order_service "Places orders"');
+  });
+
+  it('should filter out component already in componentIndex', async () => {
+    mockReaddirSync.mockReturnValue(['workspace.dsl'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_DSL);
+
+    const rels: StructuredRelationship[] = [
+      { source: 'user', target: 'system', description: 'New call' },
+    ];
+    const newComps: NewComponent[] = [{ id: 'system', kind: 'softwareSystem', name: 'System' }];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: [],
+      componentIndex: makeIndex(['user', 'system']),
+      provider: makeProvider(),
+      newComponents: newComps,
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    expect(result.newComponents).toBeUndefined();
+    expect(result.content).toContain('user -> system "New call"');
   });
 });

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   formatAllowedDependencies,
+  formatAllRelationships,
   formatDependents,
   formatDependencyChanges,
   formatComponentContext,
@@ -181,6 +182,31 @@ describe('section-formatters', () => {
       expect(result).toContain('Technology: Express');
       expect(result).toContain('Description: REST API');
       expect(result).toContain('2. **comp.web**');
+    });
+  });
+
+  describe('formatAllRelationships', () => {
+    it('should format relationships with kind and title', () => {
+      const result = formatAllRelationships([
+        {
+          source: 'api_gateway',
+          target: 'product_service',
+          kind: 'uses',
+          title: 'routes requests',
+        },
+        { source: 'product_service', target: 'user_service', kind: 'calls' },
+      ]);
+      expect(result).toContain('api_gateway -> product_service [uses] "routes requests"');
+      expect(result).toContain('product_service -> user_service [calls]');
+    });
+
+    it('should format relationships without kind', () => {
+      const result = formatAllRelationships([{ source: 'api_gateway', target: 'product_service' }]);
+      expect(result).toBe('  - api_gateway -> product_service');
+    });
+
+    it('should return "No relationships defined" for empty array', () => {
+      expect(formatAllRelationships([])).toBe('  - No relationships defined');
     });
   });
 

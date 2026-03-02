@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LikeC4Patcher } from '../patcher.js';
-import type { StructuredRelationship } from '../../../analysis/analysis-types.js';
+import type { StructuredRelationship, NewComponent } from '../../../analysis/analysis-types.js';
 import type {
   ModelRelationship,
   ComponentIndex,
@@ -347,5 +347,131 @@ describe('LikeC4Patcher', () => {
     // Verify the line does not contain unescaped quotes that could break DSL
     expect(result.insertedLines[0]).not.toContain("''");
     expect(result.insertedLines[0]).toContain("'Calls API via users endpoint'");
+  });
+
+  it('should generate valid LikeC4 DSL block for new component', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+
+    const newComps: NewComponent[] = [
+      {
+        id: 'order_service',
+        kind: 'service',
+        name: 'Order Service',
+        description: 'Handles order processing',
+        tags: ['backend', 'microservice'],
+        technology: 'TypeScript',
+      },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: [],
+      existingRelationships: [],
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+      newComponents: newComps,
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    expect(result.newComponents).toHaveLength(1);
+    expect(result.newComponents?.[0]?.id).toBe('order_service');
+    expect(result.content).toContain("order_service = service 'Order Service'");
+    expect(result.content).toContain("description 'Handles order processing'");
+    expect(result.content).toContain("technology 'TypeScript'");
+    expect(result.content).toContain('#backend #microservice');
+  });
+
+  it('should not skip relationship referencing a new component', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+
+    const rels: StructuredRelationship[] = [
+      { source: 'customer', target: 'order_service', description: 'Places orders' },
+    ];
+    const newComps: NewComponent[] = [
+      { id: 'order_service', kind: 'service', name: 'Order Service' },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: [],
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+      newComponents: newComps,
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    expect(result.skipped).toHaveLength(0);
+    expect(result.content).toContain("customer -> order_service 'Places orders'");
+    expect(result.content).toContain("order_service = service 'Order Service'");
+  });
+
+  it('should filter out component already in componentIndex', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+
+    const rels: StructuredRelationship[] = [
+      { source: 'customer', target: 'backend', description: 'New call' },
+    ];
+    const newComps: NewComponent[] = [{ id: 'backend', kind: 'service', name: 'Backend' }];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: [],
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+      newComponents: newComps,
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    // Component already exists, should not be re-added
+    expect(result.newComponents).toBeUndefined();
+    // Relationship should still be applied
+    expect(result.content).toContain("customer -> backend 'New call'");
+  });
+
+  it('should produce correct combined output with new component and relationship', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+
+    const rels: StructuredRelationship[] = [
+      { source: 'customer', target: 'order_service', description: 'Places orders' },
+    ];
+    const newComps: NewComponent[] = [
+      {
+        id: 'order_service',
+        kind: 'service',
+        name: 'Order Service',
+        description: 'Handles orders',
+      },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: [],
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+      newComponents: newComps,
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    // Both component and relationship should be in insertedLines
+    expect(result.insertedLines.length).toBeGreaterThanOrEqual(2);
+    // Component block should appear before relationship
+    const compLineIndex = result.insertedLines.findIndex((l) =>
+      l.includes('order_service = service')
+    );
+    const relLineIndex = result.insertedLines.findIndex((l) =>
+      l.includes('customer -> order_service')
+    );
+    expect(compLineIndex).toBeLessThan(relLineIndex);
   });
 });

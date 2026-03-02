@@ -63,6 +63,8 @@ The goal is to detect when this component begins or ceases to depend on EXTERNAL
 - New controllers or route handlers
 - Internal API refactoring
 
+**⚠️ EXCEPTION:** When new or modified route handlers/controllers contain outbound HTTP calls, gRPC calls, or message queue connections to OTHER services, those outbound calls ARE external dependencies and MUST be extracted. Ignore the handler definition itself — extract the outbound call.
+
 ### ❌ Internal Code Structure
 
 - New classes, interfaces, services
@@ -97,6 +99,7 @@ The goal is to detect when this component begins or ceases to depend on EXTERNAL
 - "messageBroker.subscribe('accounting-plan-out-v1', ...)" - NEW Service Bus topic subscription
 - "KafkaConsumer.subscribe('order-events')" - NEW Kafka topic subscription
 - "@JmsListener(destination = 'invoice-queue')" - NEW message queue listener
+- "Order Service" - NEW external service via HTTP proxy route (e.g., gateway route handler calling `fetch("http://order-service:3005/orders")`)
 
 ### ❌ DON'T EXTRACT THIS (Internal Changes)
 
