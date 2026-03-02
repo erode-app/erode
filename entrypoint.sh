@@ -31,9 +31,8 @@ export GITHUB_TOKEN="${INPUT_GITHUB_TOKEN:?github-token input is required}"
 export MODEL_FORMAT="${INPUT_MODEL_FORMAT:-likec4}"
 export MODEL_REPO_PR_TOKEN="${INPUT_MODEL_REPO_TOKEN:-$GITHUB_TOKEN}"
 
-# ── 3. Clone model repository ──
+# ── 3. Auth setup for model-repo access ──
 
-MODEL_CLONE_DIR="/tmp/model-repo"
 CLONE_TOKEN="${INPUT_MODEL_REPO_TOKEN:-$GITHUB_TOKEN}"
 
 GIT_ASKPASS_SCRIPT="/tmp/git-askpass-$$"
@@ -41,14 +40,10 @@ ESCAPED_TOKEN=$(printf '%s' "$CLONE_TOKEN" | sed "s/'/'\\\\''/g")
 printf "#!/bin/sh\necho '%s'" "$ESCAPED_TOKEN" > "$GIT_ASKPASS_SCRIPT"
 chmod +x "$GIT_ASKPASS_SCRIPT"
 
-GIT_ASKPASS="$GIT_ASKPASS_SCRIPT" git clone --depth 1 --branch "${INPUT_MODEL_REF:-main}" \
-  "https://x-access-token@github.com/${INPUT_MODEL_REPO:?model-repo input is required}.git" \
-  "$MODEL_CLONE_DIR"
-
 # ── 4. Build CLI args and exec ──
 
 CORE_ARGS=(
-  analyze "${MODEL_CLONE_DIR}/${INPUT_MODEL_PATH:-.}"
+  analyze "${INPUT_MODEL_PATH:-.}"
   --url "$PR_URL"
   --model-format "$MODEL_FORMAT"
   --format json
@@ -57,6 +52,7 @@ CORE_ARGS=(
 )
 
 CORE_ARGS+=(--model-repo "$INPUT_MODEL_REPO")
+CORE_ARGS+=(--model-ref "${INPUT_MODEL_REF:-main}")
 
 OPEN_PR="${INPUT_OPEN_PR:-false}"
 if [ "$OPEN_PR" = "true" ]; then

@@ -38,6 +38,7 @@ function parseArgs(argv: string[]): AnalyzeOptions {
     skipFileFiltering: hasFlag('--skip-file-filtering'),
     draft: !hasFlag('--no-draft'),
     modelRepo: getFlag('--model-repo'),
+    modelRef: getFlag('--model-ref'),
   };
 }
 
