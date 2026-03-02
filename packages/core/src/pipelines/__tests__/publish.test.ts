@@ -167,7 +167,7 @@ describe('publishResults', () => {
       url: 'https://github.com/org/model/pull/1',
       number: 1,
       action: 'created' as const,
-      branch: 'erode/pr-42',
+      branch: 'erode/org-repo/pr-42',
     });
     mockCloseModelPr.mockResolvedValue(undefined);
     mockCommentOnChangeRequest.mockResolvedValue(undefined);
@@ -223,7 +223,9 @@ describe('publishResults', () => {
     );
 
     expect(mockCloseModelPr).toHaveBeenCalledOnce();
-    expect(mockCloseModelPr).toHaveBeenCalledWith(expect.objectContaining({ prNumber: 42 }));
+    expect(mockCloseModelPr).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceRepo: 'org/repo', prNumber: 42 })
+    );
   });
 
   it('comments on PR when comment is true and analysisHasFindings returns true', async () => {

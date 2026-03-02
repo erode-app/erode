@@ -119,6 +119,17 @@ export class BitbucketApiClient {
       const json = await response.json();
       const page = pageSchema.parse(json);
       items.push(...page.values);
+      if (page.next) {
+        const nextOrigin = new URL(page.next).origin;
+        const baseOrigin = new URL(this.baseUrl).origin;
+        if (nextOrigin !== baseOrigin) {
+          throw new ApiError(
+            `Pagination URL origin mismatch: expected ${baseOrigin}, got ${nextOrigin}`,
+            0,
+            { provider: 'bitbucket' }
+          );
+        }
+      }
       url = page.next;
     }
 

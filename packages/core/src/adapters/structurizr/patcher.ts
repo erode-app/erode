@@ -20,8 +20,9 @@ export class StructurizrPatcher extends BasePatcher {
     _existing: ModelRelationship[]
   ): string[] {
     return unique.map((rel) => {
-      const technology = rel.kind ? ` "${rel.kind}"` : '';
-      return `        ${rel.source} -> ${rel.target} "${rel.description}"${technology}`;
+      const desc = rel.description.replace(/"/g, '');
+      const technology = rel.kind ? ` "${rel.kind.replace(/"/g, '')}"` : '';
+      return `        ${rel.source} -> ${rel.target} "${desc}"${technology}`;
     });
   }
 

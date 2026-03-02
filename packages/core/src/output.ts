@@ -89,6 +89,10 @@ export function buildStructuredOutput(
 
 const COMMENT_MARKER = '<!-- erode -->';
 
+function escapeMarkdownLink(text: string): string {
+  return text.replace(/[[\]()]/g, '\\$&');
+}
+
 /** Extras for formatting analysis results as a PR comment. */
 export interface CommentExtras {
   selectedComponentId?: string;
@@ -99,6 +103,7 @@ export interface CommentExtras {
     action: 'created' | 'updated';
     branch: string;
   };
+  githubActions?: boolean;
   modelInfo?: { provider: string; fastModel: string; advancedModel: string };
   modelFormat?: string;
 }
@@ -182,6 +187,11 @@ export function formatAnalysisAsComment(
     }
   }
 
+  if ((hasAdd || hasRemove) && !extras?.generatedChangeRequest && extras?.githubActions) {
+    lines.push('> Reply `/erode update-model` on this PR to open a model update PR.');
+    lines.push('');
+  }
+
   if (extras?.generatedChangeRequest) {
     const cr = extras.generatedChangeRequest;
     const actionCapitalized = cr.action.charAt(0).toUpperCase() + cr.action.slice(1);
@@ -241,8 +251,9 @@ export function formatPatchPrBody(options: {
 
   lines.push('## Model Update');
   lines.push('');
+  const safeTitle = escapeMarkdownLink(options.prTitle);
   lines.push(
-    `Auto-generated from erode analysis of [PR #${String(options.prNumber)}: ${options.prTitle}](${options.prUrl})`
+    `Auto-generated from erode analysis of [PR #${String(options.prNumber)}: ${safeTitle}](${options.prUrl})`
   );
   lines.push('');
 

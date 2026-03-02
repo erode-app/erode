@@ -16,10 +16,10 @@ import { modelPrBranchName, createModelPr, closeModelPr } from '../pr-creation.j
 import { createPlatformWriter } from '../../platforms/platform-factory.js';
 
 describe('modelPrBranchName', () => {
-  it('returns branch name in erode/pr-<number> format', () => {
-    expect(modelPrBranchName(42)).toBe('erode/pr-42');
-    expect(modelPrBranchName(1)).toBe('erode/pr-1');
-    expect(modelPrBranchName(999)).toBe('erode/pr-999');
+  it('returns branch name including source repo slug', () => {
+    expect(modelPrBranchName('org/repo', 42)).toBe('erode/org-repo/pr-42');
+    expect(modelPrBranchName('org/repo', 1)).toBe('erode/org-repo/pr-1');
+    expect(modelPrBranchName('my-org/my-app', 999)).toBe('erode/my-org-my-app/pr-999');
   });
 });
 
@@ -30,7 +30,7 @@ describe('createModelPr', () => {
       url: 'https://github.com/org/model-repo/pull/10',
       number: 10,
       action: 'created' as const,
-      branch: 'erode/pr-42',
+      branch: 'erode/org-repo/pr-42',
     });
   });
 
@@ -58,14 +58,14 @@ describe('createModelPr', () => {
     });
 
     expect(mockCreateOrUpdateChangeRequest).toHaveBeenCalledWith({
-      branchName: 'erode/pr-42',
+      branchName: 'erode/org-repo/pr-42',
       title: 'erode: update model (PR #42)',
       body: 'PR body text',
       fileChanges: [{ path: 'model.c4', content: 'new content' }],
       draft: undefined,
     });
 
-    expect(result.branch).toBe('erode/pr-42');
+    expect(result.branch).toBe('erode/org-repo/pr-42');
     expect(result.url).toBe('https://github.com/org/model-repo/pull/10');
     expect(result.action).toBe('created');
   });
@@ -173,10 +173,11 @@ describe('closeModelPr', () => {
       repositoryUrl: 'https://github.com/org/repo',
       owner: 'org',
       repo: 'model-repo',
+      sourceRepo: 'org/repo',
       prNumber: 42,
     });
 
-    expect(mockCloseChangeRequest).toHaveBeenCalledWith('erode/pr-42');
+    expect(mockCloseChangeRequest).toHaveBeenCalledWith('erode/org-repo/pr-42');
   });
 
   it('constructs the branch name using modelPrBranchName', async () => {
@@ -184,9 +185,10 @@ describe('closeModelPr', () => {
       repositoryUrl: 'https://github.com/org/repo',
       owner: 'org',
       repo: 'model-repo',
+      sourceRepo: 'org/repo',
       prNumber: 100,
     });
 
-    expect(mockCloseChangeRequest).toHaveBeenCalledWith('erode/pr-100');
+    expect(mockCloseChangeRequest).toHaveBeenCalledWith('erode/org-repo/pr-100');
   });
 });

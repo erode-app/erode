@@ -2,8 +2,9 @@ import { createPlatformWriter } from '../platforms/platform-factory.js';
 import type { ChangeRequestFileWrite } from '../platforms/source-platform.js';
 import type { AdapterMetadata } from '../adapters/adapter-metadata.js';
 
-export function modelPrBranchName(prNumber: number): string {
-  return `erode/pr-${String(prNumber)}`;
+export function modelPrBranchName(sourceRepo: string, prNumber: number): string {
+  const slug = sourceRepo.replace(/\//g, '-').replace(/[^a-zA-Z0-9._-]/g, '');
+  return `erode/${slug}/pr-${String(prNumber)}`;
 }
 
 export interface CreateModelPrOptions {
@@ -28,7 +29,7 @@ export interface CreateModelPrResult {
 
 export async function createModelPr(options: CreateModelPrOptions): Promise<CreateModelPrResult> {
   const writer = createPlatformWriter(options.repositoryUrl, options.owner, options.repo);
-  const branchName = modelPrBranchName(options.prNumber);
+  const branchName = modelPrBranchName(options.sourceRepo, options.prNumber);
   const prTitle = options.adapterMetadata.prTitleTemplate
     .replace('{{prNumber}}', String(options.prNumber))
     .replace('{{prTitle}}', options.prTitle)
@@ -47,8 +48,9 @@ export async function closeModelPr(options: {
   repositoryUrl: string;
   owner: string;
   repo: string;
+  sourceRepo: string;
   prNumber: number;
 }): Promise<void> {
   const writer = createPlatformWriter(options.repositoryUrl, options.owner, options.repo);
-  await writer.closeChangeRequest(modelPrBranchName(options.prNumber));
+  await writer.closeChangeRequest(modelPrBranchName(options.sourceRepo, options.prNumber));
 }

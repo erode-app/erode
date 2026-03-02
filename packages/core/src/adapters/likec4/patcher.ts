@@ -22,10 +22,11 @@ export class LikeC4Patcher extends BasePatcher {
     const validKinds = new Set(existing.map((r) => r.kind).filter((k): k is string => Boolean(k)));
     this.debugLog('Valid relationship kinds in model', [...validKinds]);
     return unique.map((rel) => {
+      const desc = rel.description.replace(/'/g, '');
       if (rel.kind && validKinds.has(rel.kind)) {
-        return `  ${rel.source} -[${rel.kind}]-> ${rel.target} '${rel.description}'`;
+        return `  ${rel.source} -[${rel.kind}]-> ${rel.target} '${desc}'`;
       }
-      return `  ${rel.source} -> ${rel.target} '${rel.description}'`;
+      return `  ${rel.source} -> ${rel.target} '${desc}'`;
     });
   }
 

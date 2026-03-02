@@ -107,6 +107,7 @@ export async function publishResults(
           repositoryUrl: ref.repositoryUrl,
           owner: modelTarget.owner,
           repo: modelTarget.repo,
+          sourceRepo: `${ref.platformId.owner}/${ref.platformId.repo}`,
           prNumber: analysisResult.metadata.number,
         });
       } catch (error) {
@@ -136,6 +137,7 @@ export async function publishResults(
           selectedComponentId: context.selectedComponentId,
           candidateComponents: context.candidateComponents,
           generatedChangeRequest,
+          githubActions: options.githubActions,
           modelInfo: {
             provider: providerName,
             fastModel: providerConfig.fastModel,

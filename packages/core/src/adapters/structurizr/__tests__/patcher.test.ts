@@ -240,4 +240,26 @@ describe('StructurizrPatcher', () => {
     if (!result) return;
     expect(result.content).toContain('user -> system "New dep"');
   });
+
+  it('should strip double quotes from description in DSL output', async () => {
+    mockReaddirSync.mockReturnValue(['workspace.dsl'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_DSL);
+
+    const rels: StructuredRelationship[] = [
+      { source: 'user', target: 'system', description: 'Calls the API endpoint' },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: [],
+      componentIndex: makeIndex(['user', 'system']),
+      provider: makeProvider(),
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    // Verify the line does not contain unescaped quotes that could break DSL
+    expect(result.insertedLines[0]).toBe('        user -> system "Calls the API endpoint"');
+  });
 });

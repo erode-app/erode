@@ -325,4 +325,27 @@ describe('LikeC4Patcher', () => {
     if (!result) return;
     expect(result.content).toContain("customer -> backend 'New dep'");
   });
+
+  it('should strip single quotes from description in DSL output', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+
+    const rels: StructuredRelationship[] = [
+      { source: 'customer', target: 'backend', description: 'Calls API via users endpoint' },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: [],
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    // Verify the line does not contain unescaped quotes that could break DSL
+    expect(result.insertedLines[0]).not.toContain("''");
+    expect(result.insertedLines[0]).toContain("'Calls API via users endpoint'");
+  });
 });

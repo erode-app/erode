@@ -21,6 +21,7 @@ import {
   buildStructuredOutput,
   formatAnalysisAsComment,
   formatErrorAsComment,
+  formatPatchPrBody,
   COMMENT_MARKER,
   writeOutputToFile,
   analysisHasFindings,
@@ -211,6 +212,46 @@ describe('formatAnalysisAsComment', () => {
 
     expect(output).not.toContain('Analysis details');
   });
+
+  it('should show CTA when model updates exist, githubActions is true, and no generatedChangeRequest', () => {
+    const output = formatAnalysisAsComment(
+      makeAnalysisResult({
+        modelUpdates: { add: ['comp.a -> comp.b'], relationships: [] },
+      }),
+      { githubActions: true }
+    );
+
+    expect(output).toContain('Reply `/erode update-model` on this PR to open a model update PR.');
+  });
+
+  it('should not show CTA when generatedChangeRequest is present', () => {
+    const output = formatAnalysisAsComment(
+      makeAnalysisResult({
+        modelUpdates: { add: ['comp.a -> comp.b'], relationships: [] },
+      }),
+      {
+        githubActions: true,
+        generatedChangeRequest: {
+          url: 'https://github.com/org/model/pull/1',
+          number: 1,
+          action: 'created',
+          branch: 'erode/org-repo/pr-42',
+        },
+      }
+    );
+
+    expect(output).not.toContain('Reply `/erode update-model`');
+  });
+
+  it('should not show CTA when githubActions is not set', () => {
+    const output = formatAnalysisAsComment(
+      makeAnalysisResult({
+        modelUpdates: { add: ['comp.a -> comp.b'], relationships: [] },
+      })
+    );
+
+    expect(output).not.toContain('Reply `/erode update-model`');
+  });
 });
 
 describe('writeOutputToFile', () => {
@@ -349,5 +390,38 @@ describe('analysisHasFindings', () => {
     });
 
     expect(analysisHasFindings(result)).toBe(false);
+  });
+});
+
+describe('formatPatchPrBody', () => {
+  it('should escape markdown link characters in prTitle', () => {
+    const body = formatPatchPrBody({
+      prNumber: 42,
+      prTitle: 'Fix](evil) [Click here](https://evil.com/phish',
+      prUrl: 'https://github.com/org/repo/pull/42',
+      summary: 'Summary',
+      insertedLines: ['  a -> b'],
+      skipped: [],
+    });
+
+    // The title should have brackets/parens escaped
+    expect(body).not.toContain('](evil)');
+    expect(body).toContain('\\]');
+    expect(body).toContain('\\(');
+    // The actual link to the PR should still work
+    expect(body).toContain('https://github.com/org/repo/pull/42');
+  });
+
+  it('should render normally with safe titles', () => {
+    const body = formatPatchPrBody({
+      prNumber: 10,
+      prTitle: 'Add user auth',
+      prUrl: 'https://github.com/org/repo/pull/10',
+      summary: 'Added auth',
+      insertedLines: ['  a -> b'],
+      skipped: [],
+    });
+
+    expect(body).toContain('[PR #10: Add user auth](https://github.com/org/repo/pull/10)');
   });
 });

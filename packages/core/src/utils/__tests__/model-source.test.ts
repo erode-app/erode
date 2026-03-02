@@ -189,4 +189,106 @@ describe('resolveModelSource', () => {
     // Temp dir should be cleaned up on failure
     expect(rm).toHaveBeenCalledWith(tmpDir, { recursive: true, force: true });
   });
+
+  it('rejects path traversal in modelPath', async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const { execFile } = await import('child_process');
+
+    vi.mocked(mkdtemp).mockResolvedValue('/tmp/erode-model-traversal');
+    vi.mocked(execFile).mockImplementation((...args: unknown[]) => {
+      const cb = args[args.length - 1] as ExecFileCallback | undefined;
+      if (cb) cb(null, '', '');
+      return undefined as never;
+    });
+
+    await expect(resolveModelSource('../../etc/passwd', 'owner/repo')).rejects.toThrow(
+      'Model path must be within the cloned repository'
+    );
+  });
+
+  it('rejects invalid git ref with special characters', async () => {
+    await expect(
+      resolveModelSource('.', 'owner/repo', { ref: '--upload-pack=evil' })
+    ).rejects.toThrow('Invalid model ref');
+  });
+
+  it('rejects empty git ref', async () => {
+    await expect(resolveModelSource('.', 'owner/repo', { ref: '' })).rejects.toThrow(
+      'Invalid model ref'
+    );
+  });
+
+  it('rejects git ref with shell metacharacters', async () => {
+    await expect(resolveModelSource('.', 'owner/repo', { ref: 'main; rm -rf /' })).rejects.toThrow(
+      'Invalid model ref'
+    );
+  });
+
+  it('accepts valid git refs', async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const { execFile } = await import('child_process');
+
+    vi.mocked(mkdtemp).mockResolvedValue('/tmp/erode-model-valid-ref');
+    vi.mocked(execFile).mockImplementation((...args: unknown[]) => {
+      const cb = args[args.length - 1] as ExecFileCallback | undefined;
+      if (cb) cb(null, '', '');
+      return undefined as never;
+    });
+
+    // These should all pass ref validation
+    for (const ref of ['main', 'v1.0.0', 'feature/foo', 'release-1.2']) {
+      await expect(resolveModelSource('.', 'owner/repo', { ref })).resolves.toBeDefined();
+    }
+  });
+
+  it('uses single-quoted askpass script for tokens with shell metacharacters', async () => {
+    const { mkdtemp, writeFile } = await import('node:fs/promises');
+    const { execFile } = await import('child_process');
+
+    vi.mocked(mkdtemp).mockResolvedValue('/tmp/erode-model-askpass');
+    vi.mocked(execFile).mockImplementation((...args: unknown[]) => {
+      const cb = args[args.length - 1] as ExecFileCallback | undefined;
+      if (cb) cb(null, '', '');
+      return undefined as never;
+    });
+
+    await resolveModelSource('.', 'owner/repo');
+
+    // Verify writeFile was called with single-quoted echo
+    const writeCall = vi.mocked(writeFile).mock.calls[0];
+    if (writeCall) {
+      const content = writeCall[1] as string;
+      expect(content).toContain("echo '");
+      expect(content).not.toContain('echo "');
+    }
+  });
+
+  it('strips URL credentials from clone error messages', async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const { execFile } = await import('child_process');
+
+    vi.mocked(mkdtemp).mockResolvedValue('/tmp/erode-model-err');
+    vi.mocked(execFile).mockImplementation((...args: unknown[]) => {
+      const cb = args[args.length - 1] as ExecFileCallback | undefined;
+      if (cb) {
+        cb(
+          new Error(
+            'fatal: could not read from https://x-access-token@github.com/bad/repo.git'
+          ) as ExecFileException,
+          '',
+          ''
+        );
+      }
+      return undefined as never;
+    });
+
+    try {
+      await resolveModelSource('.', 'bad/repo');
+      expect.fail('Expected error');
+    } catch (error) {
+      const message = (error as Error).message;
+      expect(message).not.toContain('x-access-token@');
+      expect(message).toContain('https://github.com/bad/repo.git');
+    }
+  });
 });

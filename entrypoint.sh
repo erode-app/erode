@@ -15,9 +15,9 @@ done < <(env | grep '^INPUT_')
 
 # ── 1. Extract PR URL from event payload ──
 
-PR_URL=$(jq -r '.pull_request.html_url // empty' "$GITHUB_EVENT_PATH")
+PR_URL=$(jq -r '.pull_request.html_url // .issue.pull_request.html_url // empty' "$GITHUB_EVENT_PATH")
 if [ -z "$PR_URL" ]; then
-  echo "::error::Not a pull_request event. This action only runs on pull_request triggers."
+  echo "::error::Could not extract PR URL. This action runs on pull_request or issue_comment (on a PR) triggers."
   exit 1
 fi
 
@@ -37,14 +37,13 @@ MODEL_CLONE_DIR="/tmp/model-repo"
 CLONE_TOKEN="${INPUT_MODEL_REPO_TOKEN:-$GITHUB_TOKEN}"
 
 GIT_ASKPASS_SCRIPT="/tmp/git-askpass-$$"
-printf '#!/bin/sh\necho "%s"' "$CLONE_TOKEN" > "$GIT_ASKPASS_SCRIPT"
+ESCAPED_TOKEN=$(printf '%s' "$CLONE_TOKEN" | sed "s/'/'\\\\''/g")
+printf "#!/bin/sh\necho '%s'" "$ESCAPED_TOKEN" > "$GIT_ASKPASS_SCRIPT"
 chmod +x "$GIT_ASKPASS_SCRIPT"
 
 GIT_ASKPASS="$GIT_ASKPASS_SCRIPT" git clone --depth 1 --branch "${INPUT_MODEL_REF:-main}" \
   "https://x-access-token@github.com/${INPUT_MODEL_REPO:?model-repo input is required}.git" \
   "$MODEL_CLONE_DIR"
-
-rm -f "$GIT_ASKPASS_SCRIPT"
 
 # ── 4. Build CLI args and exec ──
 
@@ -58,7 +57,26 @@ CORE_ARGS=(
 )
 
 CORE_ARGS+=(--model-repo "$INPUT_MODEL_REPO")
-[ "${INPUT_OPEN_PR:-false}" = "true" ] && CORE_ARGS+=(--open-pr)
+
+OPEN_PR="${INPUT_OPEN_PR:-false}"
+if [ "$OPEN_PR" = "true" ]; then
+  CORE_ARGS+=(--open-pr)
+elif [ "$OPEN_PR" = "auto" ]; then
+  PR_NUMBER=$(jq -r '.pull_request.number // .issue.number // empty' "$GITHUB_EVENT_PATH")
+  SOURCE_REPO=$(jq -r '.repository.full_name // empty' "$GITHUB_EVENT_PATH")
+  if [ -n "$PR_NUMBER" ] && [ -n "$SOURCE_REPO" ]; then
+    SLUG=$(echo "$SOURCE_REPO" | tr '/' '-')
+    BRANCH="erode/${SLUG}/pr-${PR_NUMBER}"
+    if GIT_ASKPASS="$GIT_ASKPASS_SCRIPT" git ls-remote --exit-code --heads \
+      "https://x-access-token@github.com/${INPUT_MODEL_REPO}.git" \
+      "$BRANCH" >/dev/null 2>&1; then
+      CORE_ARGS+=(--open-pr)
+    fi
+  fi
+fi
+
+rm -f "$GIT_ASKPASS_SCRIPT"
+
 [ "${INPUT_SKIP_FILE_FILTERING:-false}" = "true" ] && CORE_ARGS+=(--skip-file-filtering)
 [ "${INPUT_FAIL_ON_VIOLATIONS:-false}" = "true" ] && CORE_ARGS+=(--fail-on-violations)
 

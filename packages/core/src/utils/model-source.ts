@@ -1,9 +1,9 @@
 import { execFile } from 'child_process';
 import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { tmpdir } from 'node:os';
 import { promisify } from 'node:util';
-import { ErodeError, ErrorCode } from '../errors.js';
+import { ConfigurationError, ErodeError, ErrorCode } from '../errors.js';
 import { CONFIG } from './config.js';
 import { detectPlatform } from '../platforms/platform-factory.js';
 
@@ -41,6 +41,7 @@ export async function resolveModelSource(
 
   const { cloneUrl, slug } = parseModelRepo(modelRepo);
   const ref = options.ref ?? 'main';
+  validateRef(ref);
   const token = resolveToken(cloneUrl);
 
   const tmpDir = await mkdtemp(join(tmpdir(), 'erode-model-'));
@@ -53,6 +54,7 @@ export async function resolveModelSource(
   }
 
   const localPath = join(tmpDir, modelPath);
+  assertPathContainment(localPath, tmpDir);
 
   return {
     localPath,
@@ -144,10 +146,12 @@ async function cloneRepo(
   const args = ['clone', '--depth', '1', '--branch', ref, effectiveUrl, targetDir];
   const env: Record<string, string> = { ...process.env } as Record<string, string>;
 
-  let askpassPath: string | undefined;
+  let askpassDir: string | undefined;
   if (token) {
-    askpassPath = join(tmpdir(), `erode-git-askpass-${String(process.pid)}`);
-    await writeFile(askpassPath, `#!/bin/sh\necho "${token}"`, { mode: 0o700 });
+    askpassDir = await mkdtemp(join(tmpdir(), 'erode-askpass-'));
+    const askpassPath = join(askpassDir, 'askpass');
+    const escaped = token.replace(/'/g, "'\\''");
+    await writeFile(askpassPath, `#!/bin/sh\necho '${escaped}'`, { mode: 0o700 });
     await chmod(askpassPath, 0o700);
     env['GIT_ASKPASS'] = askpassPath;
   }
@@ -155,7 +159,8 @@ async function cloneRepo(
   try {
     await execFileAsync('git', args, { env });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const rawMessage = error instanceof Error ? error.message : String(error);
+    const message = stripUrlCredentials(rawMessage);
     throw new ErodeError(
       `Failed to clone model repository: ${message}`,
       ErrorCode.IO_CLONE_FAILED,
@@ -163,8 +168,30 @@ async function cloneRepo(
       { cloneUrl, ref }
     );
   } finally {
-    if (askpassPath) {
-      await rm(askpassPath, { force: true });
+    if (askpassDir) {
+      await rm(askpassDir, { recursive: true, force: true });
     }
   }
+}
+
+const GIT_REF_PATTERN = /^[a-zA-Z0-9._/-]+$/;
+
+function validateRef(ref: string): void {
+  if (!GIT_REF_PATTERN.test(ref)) {
+    throw new ConfigurationError(
+      'Invalid model ref: must contain only alphanumeric, dots, slashes, underscores, and hyphens'
+    );
+  }
+}
+
+function assertPathContainment(localPath: string, baseDir: string): void {
+  const resolved = resolve(localPath);
+  const resolvedBase = resolve(baseDir);
+  if (resolved !== resolvedBase && !resolved.startsWith(resolvedBase + sep)) {
+    throw new ConfigurationError('Model path must be within the cloned repository');
+  }
+}
+
+function stripUrlCredentials(message: string): string {
+  return message.replace(/https:\/\/[^@]+@/g, 'https://');
 }
