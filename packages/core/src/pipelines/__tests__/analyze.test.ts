@@ -23,6 +23,7 @@ const {
   mockPublishResults,
   mockPatcherPatch,
   mockWriteFile,
+  mockResolveModelSource,
 } = vi.hoisted(() => ({
   mockLoadFromPath: vi.fn(),
   mockFindAllComponentsByRepository: vi.fn(),
@@ -45,6 +46,7 @@ const {
   mockPublishResults: vi.fn(),
   mockPatcherPatch: vi.fn(),
   mockWriteFile: vi.fn(),
+  mockResolveModelSource: vi.fn(),
 }));
 
 // ── Module mocks ──────────────────────────────────────────────────────────
@@ -117,6 +119,10 @@ vi.mock('../../utils/skip-patterns.js', () => ({
 
 vi.mock('node:fs/promises', () => ({
   writeFile: mockWriteFile,
+}));
+
+vi.mock('../../utils/model-source.js', () => ({
+  resolveModelSource: mockResolveModelSource,
 }));
 
 vi.mock('../../utils/config.js', () => ({
@@ -220,6 +226,11 @@ function makeOptions(overrides: Partial<AnalyzeOptions> = {}): AnalyzeOptions {
 // ── Test setup ────────────────────────────────────────────────────────────
 
 function setupDefaultMocks() {
+  mockResolveModelSource.mockResolvedValue({
+    localPath: '/path/to/model',
+    repoSlug: undefined,
+    cleanup: vi.fn().mockResolvedValue(undefined),
+  });
   mockValidatePath.mockReturnValue(undefined);
   mockLoadFromPath.mockResolvedValue({
     components: [makeComponent()],
@@ -238,7 +249,9 @@ function setupDefaultMocks() {
   mockGetAllRelationships.mockReturnValue([]);
   mockExtractDependencies.mockResolvedValue({ dependencies: [], summary: 'no deps' });
   mockAnalyzeDrift.mockResolvedValue(makeDriftResult());
-  mockPublishResults.mockResolvedValue({});
+  mockPublishResults.mockResolvedValue({
+    generatedChangeRequest: undefined,
+  });
   mockBuildStructuredOutput.mockReturnValue({ analysis: { hasViolations: false } });
 }
 
@@ -346,6 +359,20 @@ describe('runAnalyze', () => {
     await runAnalyze(makeOptions({ openPr: true }));
 
     expect(mockPatcherPatch).not.toHaveBeenCalled();
+  });
+
+  it('surfaces generatedChangeRequest from publishResults in the return value', async () => {
+    const cr = {
+      url: 'https://github.com/org/model/pull/1',
+      number: 1,
+      action: 'created' as const,
+      branch: 'erode/pr-42',
+    };
+    mockPublishResults.mockResolvedValue({ generatedChangeRequest: cr });
+
+    const result = await runAnalyze(makeOptions({ openPr: true }));
+
+    expect(result.generatedChangeRequest).toEqual(cr);
   });
 
   it('calls publishResults with the correct arguments', async () => {

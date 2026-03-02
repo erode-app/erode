@@ -87,6 +87,7 @@ export async function publishResults(
         repo: modelTarget.repo,
         prNumber,
         prTitle,
+        sourceRepo: `${ref.platformId.owner}/${ref.platformId.repo}`,
         adapterMetadata,
         fileChanges: [{ path: patchResult.filePath, content: patchResult.content }],
         body,

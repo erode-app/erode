@@ -7,16 +7,14 @@ import { OutputFormatter } from '../utils/cli-helpers.js';
 export function createAnalyzeCommand(): Command {
   return new Command('analyze')
     .description('Inspect a pull request for architectural deviations')
-    .argument('<model-path>', 'Directory containing architecture model files')
+    .argument('<model-path>', 'Local directory or path within --model-repo containing model files')
     .requiredOption('--url <url>', 'Pull request or merge request URL to inspect')
     .option('--model-format <format>', 'Format of the architecture model', 'likec4')
     .option('--output-file <path>', 'Save structured JSON results to a file')
     .option('--format <format>', 'Result format (console, json)', 'console')
     .option('--open-pr', 'Open a pull request with model changes')
-    .option(
-      '--model-repo <owner/repo>',
-      'Target repository for model PRs (defaults to the analyzed repo)'
-    )
+    .option('--model-repo <repo>', 'Repository URL or owner/repo containing the architecture model')
+    .option('--model-ref <ref>', 'Branch or tag to clone from --model-repo', 'main')
     .option('--patch-local', 'Patch the architecture model in-place')
     .option('--dry-run', 'Preview results without creating a PR')
     .option('--draft', 'Mark the generated pull request as draft', true)

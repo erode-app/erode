@@ -27,6 +27,7 @@ export const AnalyzeOptionsSchema = z.object({
   format: z.enum(['console', 'json']).optional().default('console'),
   openPr: z.boolean().optional(),
   modelRepo: z.string().optional(),
+  modelRef: z.string().optional().default('main'),
   patchLocal: z.boolean().optional(),
   dryRun: z.boolean().optional(),
   draft: BooleanStringSchema.optional().default(true),

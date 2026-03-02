@@ -97,3 +97,7 @@ export type { PublishOptions, PublishResult } from './pipelines/publish.js';
 // Patching
 export { createModelPatcher, quickValidatePatch } from './adapters/model-patcher.js';
 export type { ModelPatcher, PatchResult, DslValidationResult } from './adapters/model-patcher.js';
+
+// Model source resolution
+export { resolveModelSource } from './utils/model-source.js';
+export type { ResolvedModelSource } from './utils/model-source.js';

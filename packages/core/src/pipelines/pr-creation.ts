@@ -12,6 +12,7 @@ export interface CreateModelPrOptions {
   repo: string;
   prNumber: number;
   prTitle: string;
+  sourceRepo: string;
   adapterMetadata: AdapterMetadata;
   fileChanges: ChangeRequestFileWrite[];
   body: string;
@@ -28,10 +29,10 @@ export interface CreateModelPrResult {
 export async function createModelPr(options: CreateModelPrOptions): Promise<CreateModelPrResult> {
   const writer = createPlatformWriter(options.repositoryUrl, options.owner, options.repo);
   const branchName = modelPrBranchName(options.prNumber);
-  const prTitle = options.adapterMetadata.prTitleTemplate.replace(
-    '{{prNumber}}',
-    String(options.prNumber)
-  );
+  const prTitle = options.adapterMetadata.prTitleTemplate
+    .replace('{{prNumber}}', String(options.prNumber))
+    .replace('{{prTitle}}', options.prTitle)
+    .replace('{{sourceRepo}}', options.sourceRepo);
   const prResult = await writer.createOrUpdateChangeRequest({
     branchName,
     title: prTitle,

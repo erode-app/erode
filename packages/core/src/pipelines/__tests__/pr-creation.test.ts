@@ -41,6 +41,7 @@ describe('createModelPr', () => {
       repo: 'model-repo',
       prNumber: 42,
       prTitle: 'My feature',
+      sourceRepo: 'org/repo',
       adapterMetadata: {
         id: 'likec4',
         displayName: 'LikeC4',
@@ -76,6 +77,7 @@ describe('createModelPr', () => {
       repo: 'model-repo',
       prNumber: 7,
       prTitle: 'Another PR',
+      sourceRepo: 'org/repo',
       adapterMetadata: {
         id: 'structurizr',
         displayName: 'Structurizr',
@@ -98,6 +100,37 @@ describe('createModelPr', () => {
     );
   });
 
+  it('substitutes {{sourceRepo}} and {{prTitle}} in the title template', async () => {
+    await createModelPr({
+      repositoryUrl: 'https://github.com/org/repo',
+      owner: 'org',
+      repo: 'model-repo',
+      prNumber: 3,
+      prTitle: 'feat: enrich products with creator info',
+      sourceRepo: 'erode-app/playground',
+      adapterMetadata: {
+        id: 'likec4',
+        displayName: 'LikeC4',
+        documentationUrl: 'https://example.com',
+        fileExtensions: ['.c4'],
+        pathDescription: 'path',
+        prTitleTemplate: 'chore: update LikeC4 model for {{sourceRepo}}#{{prNumber}} — {{prTitle}}',
+        errorSuggestions: {},
+        noComponentHelpLines: [],
+        missingLinksHelpLines: [],
+      },
+      fileChanges: [],
+      body: 'body',
+    });
+
+    expect(mockCreateOrUpdateChangeRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title:
+          'chore: update LikeC4 model for erode-app/playground#3 — feat: enrich products with creator info',
+      })
+    );
+  });
+
   it('creates the writer with the provided repositoryUrl, owner and repo', async () => {
     await createModelPr({
       repositoryUrl: 'https://github.com/myorg/source-repo',
@@ -105,6 +138,7 @@ describe('createModelPr', () => {
       repo: 'model-repo',
       prNumber: 5,
       prTitle: 'Fix',
+      sourceRepo: 'myorg/source-repo',
       adapterMetadata: {
         id: 'likec4',
         displayName: 'LikeC4',

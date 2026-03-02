@@ -298,7 +298,7 @@ describe('publishResults', () => {
     );
 
     expect(mockCreateModelPr).toHaveBeenCalledWith(
-      expect.objectContaining({ owner: 'org', repo: 'model-repo' })
+      expect.objectContaining({ owner: 'org', repo: 'model-repo', sourceRepo: 'org/repo' })
     );
   });
 });

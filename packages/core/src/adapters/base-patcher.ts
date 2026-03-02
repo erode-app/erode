@@ -1,5 +1,5 @@
-import { readFileSync } from 'fs';
-import { relative } from 'path';
+import { readFileSync, realpathSync } from 'fs';
+import { dirname, relative } from 'path';
 import { execSync } from 'child_process';
 import type { ModelPatcher, PatchResult, DslValidationResult } from './model-patcher.js';
 import type { StructuredRelationship } from '../analysis/analysis-types.js';
@@ -275,8 +275,9 @@ export abstract class BasePatcher implements ModelPatcher {
     try {
       const repoRoot = execSync('git rev-parse --show-toplevel', {
         encoding: 'utf-8',
+        cwd: dirname(filePath),
       }).trim();
-      return relative(repoRoot, filePath);
+      return relative(realpathSync(repoRoot), realpathSync(filePath));
     } catch {
       return filePath;
     }
