@@ -129,4 +129,7 @@ export interface SourcePlatformWriter {
 
   /** Delete a comment containing the given marker string. No-op if no matching comment exists. */
   deleteComment(ref: ChangeRequestRef, marker: string): Promise<void>;
+
+  /** Close an open change request by its source branch name. No-op if none exists. */
+  closeChangeRequest(branchName: string): Promise<void>;
 }

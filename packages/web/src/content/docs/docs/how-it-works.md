@@ -50,9 +50,15 @@ A stronger model (Sonnet for Anthropic, GPT-4.1 for OpenAI, Flash for Gemini) co
 - A description of the drift
 - **Suggestions** for resolving the violation
 
-## Stage 4 -- Generate (optional)
+## Stage 4 -- Update
 
-When enabled, Erode produces architecture model updates that bring the model back in sync with reality. This can be used to open a follow-up pull request that updates the model.
+When `--patch-local` or `--open-pr` is passed, Erode generates a deterministic patch that inserts new relationship declarations into the architecture model file. A fast model assists with placement, with a deterministic fallback if DSL validation fails.
+
+This stage is skipped when neither flag is set or when Stage 3 produces no relationship updates.
+
+## Publish
+
+After analysis, the pipeline publishes results: creating a PR with model updates (`--open-pr`), posting a comment on the source PR (`--comment`), or writing GitHub Actions outputs (`--github-actions`). See [Analysis Pipeline](/docs/reference/analysis-pipeline/) for details.
 
 ## Prompt templates
 

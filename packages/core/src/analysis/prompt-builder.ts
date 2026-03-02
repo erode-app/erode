@@ -2,7 +2,6 @@ import type {
   DependencyExtractionPromptData,
   ComponentSelectionPromptData,
   DriftAnalysisPromptData,
-  DriftAnalysisResult,
 } from './analysis-types.js';
 import { TemplateEngine } from './template-engine.js';
 import { ErodeError, ErrorCode } from '../errors.js';
@@ -13,10 +12,6 @@ import {
   formatComponentContext,
   formatComponentList,
   formatCommits,
-  formatViolations,
-  formatDependencyChangesSummary,
-  formatModelUpdates,
-  formatExistingComponents,
 } from './section-formatters.js';
 
 export const PromptBuilder = {
@@ -137,36 +132,17 @@ export const PromptBuilder = {
     });
   },
   /**
-   * Build a prompt for generating architecture model code from analysis results
+   * Build a prompt for inserting relationship lines into an existing model file
    */
-  buildModelGenerationPrompt(analysisResult: DriftAnalysisResult): string {
-    const { component, modelUpdates, metadata, violations, dependencyChanges, allComponents } =
-      analysisResult;
-    const violationsSection = formatViolations(violations);
-    const dependencyChangesSection = formatDependencyChangesSummary(dependencyChanges);
-    const modelUpdatesSection = formatModelUpdates(modelUpdates);
-    const existingComponentsSection = formatExistingComponents(allComponents);
-    const modelFormat = analysisResult.modelFormat ?? 'likec4';
-
-    return TemplateEngine.loadModelGenerationPrompt(
-      {
-        metadata: {
-          number: metadata.number,
-          title: metadata.title,
-        },
-        component: {
-          id: component.id,
-          name: component.name,
-          type: component.type,
-          repository: component.repository ?? 'Not specified',
-        },
-        existingComponentsSection,
-        violationsSection,
-        dependencyChangesSection,
-        modelUpdatesSection,
-        date: new Date().toISOString().split('T')[0] ?? '',
-      },
-      modelFormat
-    );
+  buildModelPatchPrompt(data: {
+    fileContent: string;
+    linesToInsert: string[];
+    modelFormat: string;
+  }): string {
+    return TemplateEngine.loadModelPatchPrompt({
+      fileContent: data.fileContent,
+      linesToInsert: data.linesToInsert.join('\n'),
+      modelFormat: data.modelFormat,
+    });
   },
 } as const;

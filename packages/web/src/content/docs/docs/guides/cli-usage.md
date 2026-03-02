@@ -37,20 +37,37 @@ erode analyze ./model --url https://gitlab.com/group/project/-/merge_requests/42
 erode analyze ./model --url https://bitbucket.org/workspace/repo/pull-requests/42
 ```
 
-| Flag                    | Description                                                           | Default   |
-| ----------------------- | --------------------------------------------------------------------- | --------- |
-| `--url <url>`           | Change request URL (GitHub PR, GitLab MR, or Bitbucket PR). Required. |           |
-| `--model-format <fmt>`  | Architecture model format                                             | `likec4`  |
-| `--format <fmt>`        | Output format: `console`, `json`                                      | `console` |
-| `--generate-model`      | Generate architecture model code from the analysis                    |           |
-| `--open-pr`             | Create a PR with suggested model updates                              |           |
-| `--dry-run`             | Preview without creating a PR                                         |           |
-| `--draft`               | Create change request as draft                                        | `true`    |
-| `--output-file <path>`  | Write structured JSON output to a file                                |           |
-| `--skip-file-filtering` | Analyze all changed files (skip pattern-based filtering)              |           |
-| `--comment`             | Post analysis results as a PR/MR comment                              |           |
-| `--github-actions`      | Write GitHub Actions outputs and step summary                         |           |
-| `--fail-on-violations`  | Exit with code 1 when violations are found                            |           |
+| Flag                        | Description                                                           | Default   |
+| --------------------------- | --------------------------------------------------------------------- | --------- |
+| `--url <url>`               | Change request URL (GitHub PR, GitLab MR, or Bitbucket PR). Required. |           |
+| `--model-format <fmt>`      | Architecture model format                                             | `likec4`  |
+| `--format <fmt>`            | Output format: `console`, `json`                                      | `console` |
+| `--open-pr`                 | Create a PR with model updates (see below)                            |           |
+| `--model-repo <owner/repo>` | Target repository for model PRs (defaults to the analyzed repo)       |           |
+| `--patch-local`             | Patch the architecture model in-place (see below)                     |           |
+| `--dry-run`                 | Preview without creating a PR or writing patches                      |           |
+| `--draft`                   | Create change request as draft                                        | `true`    |
+| `--output-file <path>`      | Write structured JSON output to a file                                |           |
+| `--skip-file-filtering`     | Analyze all changed files (skip pattern-based filtering)              |           |
+| `--comment`                 | Post analysis results as a PR/MR comment                              |           |
+| `--github-actions`          | Write GitHub Actions outputs and step summary                         |           |
+| `--fail-on-violations`      | Exit with code 1 when violations are found                            |           |
+
+#### `--patch-local` behavior
+
+`--patch-local` runs Stage 4 (Model Update) and writes the patched model file in-place. Combine with `--dry-run` to preview the patch without writing.
+
+#### `--open-pr` behavior
+
+`--open-pr` implies `--patch-local`. After generating the patch (Stage 4), it creates a pull request against the model repository with the updated relationship declarations.
+
+- PRs are created as drafts by default (GitHub/GitLab). Bitbucket has no draft support.
+- The PR body includes a link to the source analysis PR for traceability.
+- If a subsequent analysis finds no violations, any existing model PR for that source PR is automatically closed.
+
+:::note
+Relationship removals are informational only. The PR body lists relationships that may need removal, but the reviewer must remove them manually.
+:::
 
 ### `components <model-path>`
 

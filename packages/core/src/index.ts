@@ -33,6 +33,7 @@ export type {
   DriftAnalysisPromptData,
   DependencyExtractionPromptData,
   ComponentSelectionPromptData,
+  StructuredRelationship,
 } from './analysis/analysis-types.js';
 
 // Schemas
@@ -43,11 +44,13 @@ export {
   buildStructuredOutput,
   formatAnalysisAsComment,
   formatErrorAsComment,
+  formatPatchPrBody,
   analysisHasFindings,
   COMMENT_MARKER,
   writeOutputToFile,
 } from './output.js';
 export type { StructuredAnalysisOutput } from './output/structured-output.js';
+export type { CommentExtras } from './output.js';
 
 // CI output
 export {
@@ -86,3 +89,15 @@ export { runConnections } from './pipelines/connections.js';
 export type { ConnectionsOptions, ComponentConnections } from './pipelines/connections.js';
 export type { ProgressReporter } from './pipelines/progress.js';
 export { SilentProgress } from './pipelines/progress.js';
+export { createModelPr, closeModelPr, modelPrBranchName } from './pipelines/pr-creation.js';
+export type { CreateModelPrOptions, CreateModelPrResult } from './pipelines/pr-creation.js';
+export { publishResults } from './pipelines/publish.js';
+export type { PublishOptions, PublishResult } from './pipelines/publish.js';
+
+// Patching
+export { createModelPatcher, quickValidatePatch } from './adapters/model-patcher.js';
+export type { ModelPatcher, PatchResult, DslValidationResult } from './adapters/model-patcher.js';
+
+// Model source resolution
+export { resolveModelSource } from './utils/model-source.js';
+export type { ResolvedModelSource } from './utils/model-source.js';

@@ -14,6 +14,13 @@ import { validate } from '../utils/validation.js';
 import { ErodeError, ErrorCode, ApiError } from '../errors.js';
 import { withRetry } from '../utils/retry.js';
 import { AnalysisPhase } from './analysis-phase.js';
+import { CONFIG } from '../utils/config.js';
+
+function debugLog(msg: string, data?: unknown): void {
+  if (CONFIG.debug.verbose) {
+    console.error(`[AI] ${msg}`, data !== undefined ? JSON.stringify(data) : '');
+  }
+}
 
 /**
  * Abstract base class for AI providers.
@@ -60,7 +67,11 @@ export abstract class BaseProvider implements AIProvider {
       return null;
     }
 
-    return data.components.map((c) => c.id).find((id) => responseText.includes(id)) ?? null;
+    debugLog('selectComponent raw response', responseText);
+    const matchedId =
+      data.components.map((c) => c.id).find((id) => responseText.includes(id)) ?? null;
+    debugLog('selectComponent matched', matchedId);
+    return matchedId;
   }
 
   async extractDependencies(
@@ -94,10 +105,22 @@ export abstract class BaseProvider implements AIProvider {
     };
   }
 
-  async generateArchitectureCode(analysisResult: DriftAnalysisResult): Promise<string> {
-    const prompt = PromptBuilder.buildModelGenerationPrompt(analysisResult);
+  async patchModel(
+    fileContent: string,
+    linesToInsert: string[],
+    modelFormat: string
+  ): Promise<string> {
+    const prompt = PromptBuilder.buildModelPatchPrompt({
+      fileContent,
+      linesToInsert,
+      modelFormat,
+    });
+    // Estimate tokens: ~4 chars per token, add 20% headroom for inserted lines
+    const estimatedTokens = Math.ceil(fileContent.length / 4) + linesToInsert.length * 50;
+    const maxTokens = Math.max(4096, Math.ceil(estimatedTokens * 1.2));
+    debugLog('patchModel using model', this.fastModel);
     return withRetry(
-      () => this.callModel(this.advancedModel, prompt, AnalysisPhase.MODEL_GENERATION, 8192),
+      () => this.callModel(this.fastModel, prompt, AnalysisPhase.MODEL_UPDATE, maxTokens),
       {
         retries: 2,
         shouldRetry: (error) => this.isRetryableError(error),
@@ -113,6 +136,7 @@ export abstract class BaseProvider implements AIProvider {
     schemaName: string;
     maxTokens: number;
   }): Promise<T> {
+    debugLog(`executeStage ${config.phase} using model`, config.model);
     const responseText = await withRetry(
       () => this.callModel(config.model, config.prompt, config.phase, config.maxTokens),
       {
@@ -123,6 +147,10 @@ export abstract class BaseProvider implements AIProvider {
 
     const jsonStr = PromptBuilder.extractJson(responseText);
     if (!jsonStr) {
+      debugLog(
+        `extractJson returned null for ${config.phase}, raw response (first 500 chars)`,
+        responseText.slice(0, 500)
+      );
       throw new ErodeError(
         'Response contained no parseable JSON',
         ErrorCode.PROVIDER_INVALID_RESPONSE,

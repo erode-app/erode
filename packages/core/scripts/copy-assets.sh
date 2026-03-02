@@ -8,13 +8,5 @@ set -euo pipefail
 mkdir -p dist/analysis/prompts
 cp src/analysis/prompts/*.md dist/analysis/prompts/
 
-# LikeC4 adapter prompt templates
-mkdir -p dist/adapters/likec4/prompts
-cp src/adapters/likec4/prompts/*.md dist/adapters/likec4/prompts/
-
-# Structurizr adapter prompt templates
-mkdir -p dist/adapters/structurizr/prompts
-cp src/adapters/structurizr/prompts/*.md dist/adapters/structurizr/prompts/
-
 # Skip patterns file
 cp src/skip-patterns dist/skip-patterns

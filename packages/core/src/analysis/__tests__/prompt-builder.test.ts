@@ -4,7 +4,6 @@ import type {
   DependencyExtractionPromptVars,
   ComponentSelectionPromptVars,
   DriftAnalysisPromptVars,
-  ModelGenerationPromptVars,
 } from '../prompt-variables.js';
 
 // Mock the TemplateEngine to avoid filesystem reads
@@ -17,7 +16,6 @@ vi.mock('../template-engine.js', () => ({
       JSON.stringify(vars)
     ),
     loadDriftAnalysisPrompt: vi.fn((vars: DriftAnalysisPromptVars) => JSON.stringify(vars)),
-    loadModelGenerationPrompt: vi.fn((vars: ModelGenerationPromptVars) => JSON.stringify(vars)),
   },
 }));
 

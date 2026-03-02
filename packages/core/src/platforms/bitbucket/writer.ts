@@ -189,6 +189,28 @@ export class BitbucketWriter implements SourcePlatformWriter {
     }
   }
 
+  async closeChangeRequest(branchName: string): Promise<void> {
+    const repoPath = `/repositories/${this.workspace}/${this.repoSlug}`;
+
+    try {
+      const existingPrs = await this.api.request(
+        `${repoPath}/pullrequests?q=${encodeURIComponent(`source.branch.name="${branchName}" AND state="OPEN"`)}`,
+        BitbucketPrListResponseSchema
+      );
+
+      const pr = existingPrs.values[0];
+      if (!pr) return;
+
+      await this.api.requestVoid(`${repoPath}/pullrequests/${String(pr.id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: 'DECLINED' }),
+      });
+    } catch (error) {
+      wrapPlatformError(error, 'bitbucket', 'Could not close pull request');
+    }
+  }
+
   private async findCommentByMarker(basePath: string, marker: string): Promise<number | undefined> {
     const comments = await this.api.paginate(`${basePath}/comments`, BitbucketCommentSchema);
     const match = comments.find((c) => c.content.raw.includes(marker));

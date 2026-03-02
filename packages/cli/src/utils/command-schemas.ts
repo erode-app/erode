@@ -23,10 +23,12 @@ const BooleanStringSchema = z
 export const AnalyzeOptionsSchema = z.object({
   url: z.url(),
   modelFormat: z.string().default('likec4'),
-  generateModel: z.boolean().optional(),
   outputFile: z.string().optional(),
   format: z.enum(['console', 'json']).optional().default('console'),
   openPr: z.boolean().optional(),
+  modelRepo: z.string().optional(),
+  modelRef: z.string().optional().default('main'),
+  patchLocal: z.boolean().optional(),
   dryRun: z.boolean().optional(),
   draft: BooleanStringSchema.optional().default(true),
   skipFileFiltering: z.boolean().optional().default(false),

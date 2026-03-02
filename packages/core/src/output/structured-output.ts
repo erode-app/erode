@@ -55,6 +55,12 @@ export interface StructuredAnalysisOutput {
       add?: string[];
       remove?: string[];
       notes?: string;
+      relationships?: {
+        source: string;
+        target: string;
+        kind?: string;
+        description: string;
+      }[];
     };
   };
   dependencyChanges?: {

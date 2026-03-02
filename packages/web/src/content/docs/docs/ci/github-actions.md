@@ -76,7 +76,7 @@ If the model repo requires different credentials than the repository running the
 | `anthropic-api-key`   | Anthropic API key (experimental)                            | When using Anthropic | —                   |
 | `github-token`        | GitHub token for reading PRs and posting comments           | Yes                  | —                   |
 | `model-repo-token`    | Separate GitHub token for cloning the model repository      | No                   | Uses `github-token` |
-| `open-pr`             | Open a PR with suggested model updates                      | No                   | `false`             |
+| `open-pr`             | Open a PR with model updates (`true`, `false`, or `auto`)   | No                   | `false`             |
 | `fail-on-violations`  | Fail the workflow if violations are detected                | No                   | `false`             |
 | `skip-file-filtering` | Analyze all changed files instead of filtering by relevance | No                   | `false`             |
 
@@ -103,6 +103,73 @@ steps:
   - if: steps.erode.outputs.has-violations == 'true'
     run: echo "Found ${{ steps.erode.outputs.violations-count }} violations"
 ```
+
+## Model update PRs
+
+The `open-pr` input controls whether Erode creates a pull request against the model repository with updated relationship declarations. It accepts three values:
+
+| Value   | Behavior                                                                                |
+| ------- | --------------------------------------------------------------------------------------- |
+| `false` | Never create a model PR (default)                                                       |
+| `true`  | Always create or update a model PR when model updates are found                         |
+| `auto`  | Only update a model PR if one was previously created for this source PR (sticky opt-in) |
+
+When `open-pr` is `true` or `auto` (with an existing branch), Erode runs Stage 4 (Model Update) to generate a deterministic patch from the Stage 3 structured analysis data, then creates or updates a pull request against the model repository.
+
+- PRs are created as drafts by default (GitHub/GitLab). Bitbucket has no draft support.
+- The PR body includes a link to the source analysis PR for traceability.
+- If a subsequent analysis finds no violations, any existing model PR for that source PR is automatically closed.
+
+:::note
+Relationship removals are informational only. The PR body lists relationships that may need removal, but the reviewer must remove them manually.
+:::
+
+### On-demand updates with `/erode update-model`
+
+With `open-pr: 'auto'`, Erode skips PR creation on regular analysis runs. Instead, when model updates are detected, the analysis comment includes a call-to-action:
+
+> Reply `/erode update-model` on this PR to open a model update PR.
+
+To handle that comment, add the `issue_comment` trigger to your workflow. Use `open-pr: 'true'` for comment-triggered runs so the initial model PR is created, and `'auto'` for regular `pull_request` runs so subsequent pushes keep it updated:
+
+```yaml
+name: Architecture Drift Check
+on:
+  pull_request:
+  issue_comment:
+    types: [created]
+
+jobs:
+  erode:
+    if: >-
+      (github.event_name == 'pull_request' &&
+       github.actor != 'dependabot[bot]' &&
+       !github.event.pull_request.draft)
+      ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       contains(github.event.comment.body, '/erode update-model'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: erode-app/erode@main
+        with:
+          model-repo: your-org/architecture
+          open-pr: ${{ github.event_name == 'issue_comment' && 'true' || 'auto' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+```
+
+The flow:
+
+1. A `pull_request` run with `auto` finds no existing branch, so it skips PR creation and shows the CTA.
+2. A reviewer comments `/erode update-model`. The `issue_comment` trigger fires with `open-pr: 'true'`, creating the model PR.
+3. Further pushes to the source PR trigger `pull_request` with `auto`. The branch now exists, so the model PR is updated automatically.
+
+The `issue_comment` trigger fires for all PR comments. The `if` guard ensures the job only runs when the comment contains `/erode update-model` and the issue is actually a pull request.
+
+:::tip
+Use `open-pr: 'true'` if you want a model PR on every analysis run. Use `open-pr: 'auto'` with the workflow above if you prefer on-demand creation.
+:::
 
 ## PR comments
 

@@ -57,6 +57,12 @@ views {
     // Output
     erode.core.analyze -> erode.core.output 'format results'
 
+    // Publish — create model PR and comment on source PR (optional)
+    // (shown with GitHub; GitLab and Bitbucket follow the same flow)
+    erode.core.analyze -> erode.core.pipelines.publish 'publish results'
+    erode.core.pipelines.publish -> erode.core.platforms.github 'create model PR'
+    erode.core.pipelines.publish -> erode.core.platforms.github 'comment on source PR'
+
     // Participant ordering (left → right)
     include
       erode.core.analyze,
@@ -66,6 +72,7 @@ views {
       erode.core.pipelines.stage2,
       erode.core.pipelines.stage3,
       erode.core.pipelines.stage4,
+      erode.core.pipelines.publish,
       erode.core.providers.gemini,
       erode.core.output
   }

@@ -28,7 +28,8 @@ if [ -n "${ERODE_MODEL_REPO:-}" ]; then
   CLONE_TOKEN="${ERODE_MODEL_REPO_TOKEN:-$GITLAB_TOKEN}"
 
   GIT_ASKPASS_SCRIPT="/tmp/git-askpass-$$"
-  printf '#!/bin/sh\necho "%s"' "$CLONE_TOKEN" > "$GIT_ASKPASS_SCRIPT"
+  ESCAPED_TOKEN=$(printf '%s' "$CLONE_TOKEN" | sed "s/'/'\\\\''/g")
+  printf "#!/bin/sh\necho '%s'" "$ESCAPED_TOKEN" > "$GIT_ASKPASS_SCRIPT"
   chmod +x "$GIT_ASKPASS_SCRIPT"
 
   GIT_ASKPASS="$GIT_ASKPASS_SCRIPT" git clone --depth 1 --branch "${ERODE_MODEL_REF:-main}" \
@@ -50,7 +51,8 @@ CORE_ARGS=(
   --comment
 )
 
-[ "${ERODE_OPEN_PR:-false}" = "true" ] && CORE_ARGS+=(--generate-model --open-pr)
+[ -n "${ERODE_MODEL_REPO:-}" ] && CORE_ARGS+=(--model-repo "$ERODE_MODEL_REPO")
+[ "${ERODE_OPEN_PR:-false}" = "true" ] && CORE_ARGS+=(--open-pr)
 [ "${ERODE_SKIP_FILE_FILTERING:-false}" = "true" ] && CORE_ARGS+=(--skip-file-filtering)
 [ "${ERODE_FAIL_ON_VIOLATIONS:-false}" = "true" ] && CORE_ARGS+=(--fail-on-violations)
 

@@ -41,7 +41,10 @@ inputs:
     description: 'GitHub token for accessing the model repository (if different from github-token)'
     required: false
   open-pr:
-    description: 'Open a PR with suggested model updates'
+    description: >-
+      Open a PR with suggested model updates.
+      Set to "true" to always open/update, "auto" to only update if
+      a model PR was previously created, or "false" to never open.
     required: false
     default: 'false'
   fail-on-violations:
@@ -65,5 +68,5 @@ outputs:
 
 runs:
   using: 'docker'
-  # image: 'Dockerfile'
-  image: 'docker://ghcr.io/erode-app/erode:0'
+  image: 'Dockerfile'
+  # image: 'docker://ghcr.io/erode-app/erode:0'

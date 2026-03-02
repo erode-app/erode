@@ -39,14 +39,14 @@ Erode truncates large diffs to stay within these limits. If a PR exceeds them, E
 
 Each AI provider uses two model tiers: a fast model for extraction stages and an advanced model for analysis. Override the defaults with these variables:
 
-| Variable                   | Description                                 |
-| -------------------------- | ------------------------------------------- |
-| `GEMINI_FAST_MODEL`        | Gemini model for Stages 1–2 (extraction)    |
-| `GEMINI_ADVANCED_MODEL`    | Gemini model for Stages 3–4 (analysis)      |
-| `OPENAI_FAST_MODEL`        | OpenAI model for Stages 1–2 (extraction)    |
-| `OPENAI_ADVANCED_MODEL`    | OpenAI model for Stages 3–4 (analysis)      |
-| `ANTHROPIC_FAST_MODEL`     | Anthropic model for Stages 1–2 (extraction) |
-| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for Stages 3–4 (analysis)   |
+| Variable                   | Description                                      |
+| -------------------------- | ------------------------------------------------ |
+| `GEMINI_FAST_MODEL`        | Gemini model for Stages 1–2 and model updates    |
+| `GEMINI_ADVANCED_MODEL`    | Gemini model for Stage 3 (analysis)              |
+| `OPENAI_FAST_MODEL`        | OpenAI model for Stages 1–2 and model updates    |
+| `OPENAI_ADVANCED_MODEL`    | OpenAI model for Stage 3 (analysis)              |
+| `ANTHROPIC_FAST_MODEL`     | Anthropic model for Stages 1–2 and model updates |
+| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for Stage 3 (analysis)           |
 
 See [AI Providers](/docs/reference/ai-providers/) for default model names and guidance on choosing a provider.
 

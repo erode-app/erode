@@ -216,31 +216,6 @@ describe('AnthropicProvider', () => {
     });
   });
 
-  describe('generateArchitectureCode', () => {
-    it('should return generated code text', async () => {
-      const analysisJson = {
-        hasViolations: false,
-        violations: [],
-        summary: 'No violations',
-      };
-
-      mockCreate.mockResolvedValueOnce(
-        makeAnthropicResponse(JSON.stringify(analysisJson), 'end_turn', 1000, 200)
-      );
-
-      // First call for analyzeDrift to get a result
-      const provider = createProvider();
-      const data = makePrAnalysisData();
-      const analysisResult = await provider.analyzeDrift(data);
-
-      const likec4Code = 'specification { element component }';
-      mockCreate.mockResolvedValueOnce(makeAnthropicResponse(likec4Code));
-
-      const result = await provider.generateArchitectureCode(analysisResult);
-      expect(result).toBe(likec4Code);
-    });
-  });
-
   describe('safety filter handling', () => {
     it('should throw PROVIDER_SAFETY_BLOCK on refusal', async () => {
       mockCreate.mockResolvedValueOnce({
@@ -329,6 +304,44 @@ describe('AnthropicProvider', () => {
         expect((error as ApiError).statusCode).toBe(429);
         expect((error as ApiError).isRateLimited).toBe(true);
       }
+    });
+  });
+
+  describe('patchModel', () => {
+    it('should use fast model for patching', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockCreate.mockResolvedValueOnce(makeAnthropicResponse(patchedContent));
+
+      const provider = createProvider();
+      await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(mockCreate).toHaveBeenCalled();
+      const callArg = mockCreate.mock.calls[0]?.[0] as { model?: string } | undefined;
+      expect(callArg?.model).toBe('claude-haiku-4-5-20251001');
+    });
+
+    it('should return patched content', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockCreate.mockResolvedValueOnce(makeAnthropicResponse(patchedContent));
+
+      const provider = createProvider();
+      const result = await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(result).toBe(patchedContent);
+    });
+
+    it('should retry on rate limit', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      const rateLimitError = new ApiError('Rate limited', 429);
+      mockCreate
+        .mockRejectedValueOnce(rateLimitError)
+        .mockResolvedValueOnce(makeAnthropicResponse(patchedContent));
+
+      const provider = createProvider();
+      const result = await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(result).toBe(patchedContent);
+      expect(mockCreate).toHaveBeenCalledTimes(2);
     });
   });
 });

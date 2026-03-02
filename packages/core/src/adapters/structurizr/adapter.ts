@@ -289,6 +289,13 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
     return Array.from(this.componentIndex.byId.values());
   }
 
+  getAllRelationships(): ModelRelationship[] {
+    if (!this.relationships) {
+      throw AdapterError.notLoaded('structurizr');
+    }
+    return this.relationships;
+  }
+
   isAllowedDependency(fromId: string, toId: string): boolean {
     if (!this.relationships) {
       throw AdapterError.notLoaded('structurizr');

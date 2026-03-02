@@ -27,17 +27,27 @@ if [ -n "${ERODE_MODEL_REPO:-}" ]; then
   MODEL_CLONE_DIR="/tmp/model-repo"
   CLONE_TOKEN="${ERODE_MODEL_REPO_TOKEN:-$BITBUCKET_TOKEN}"
 
-  # App passwords use username:app_password format — use directly in URL.
+  # Build the askpass token value.
+  # App passwords use username:app_password format (Basic auth).
   # Repository/workspace access tokens use x-token-auth:{token} format.
   if echo "$CLONE_TOKEN" | grep -q ':'; then
-    CLONE_AUTH="$CLONE_TOKEN"
+    ASKPASS_VALUE="$CLONE_TOKEN"
+    CLONE_USER="${CLONE_TOKEN%%:*}"
   else
-    CLONE_AUTH="x-token-auth:${CLONE_TOKEN}"
+    ASKPASS_VALUE="$CLONE_TOKEN"
+    CLONE_USER="x-token-auth"
   fi
 
-  git clone --depth 1 --branch "${ERODE_MODEL_REF:-main}" \
-    "https://${CLONE_AUTH}@bitbucket.org/${ERODE_MODEL_REPO}.git" \
+  GIT_ASKPASS_SCRIPT="/tmp/git-askpass-$$"
+  ESCAPED_TOKEN=$(printf '%s' "$ASKPASS_VALUE" | sed "s/'/'\\\\''/g")
+  printf "#!/bin/sh\necho '%s'" "$ESCAPED_TOKEN" > "$GIT_ASKPASS_SCRIPT"
+  chmod +x "$GIT_ASKPASS_SCRIPT"
+
+  GIT_ASKPASS="$GIT_ASKPASS_SCRIPT" git clone --depth 1 --branch "${ERODE_MODEL_REF:-main}" \
+    "https://${CLONE_USER}@bitbucket.org/${ERODE_MODEL_REPO}.git" \
     "$MODEL_CLONE_DIR"
+
+  rm -f "$GIT_ASKPASS_SCRIPT"
 
   MODEL_DIR="${MODEL_CLONE_DIR}/${ERODE_MODEL_PATH:-.}"
 fi
@@ -52,7 +62,8 @@ CORE_ARGS=(
   --comment
 )
 
-[ "${ERODE_OPEN_PR:-false}" = "true" ] && CORE_ARGS+=(--generate-model --open-pr)
+[ -n "${ERODE_MODEL_REPO:-}" ] && CORE_ARGS+=(--model-repo "$ERODE_MODEL_REPO")
+[ "${ERODE_OPEN_PR:-false}" = "true" ] && CORE_ARGS+=(--open-pr)
 [ "${ERODE_SKIP_FILE_FILTERING:-false}" = "true" ] && CORE_ARGS+=(--skip-file-filtering)
 [ "${ERODE_FAIL_ON_VIOLATIONS:-false}" = "true" ] && CORE_ARGS+=(--fail-on-violations)
 

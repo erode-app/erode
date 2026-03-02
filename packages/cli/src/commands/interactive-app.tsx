@@ -6,13 +6,23 @@ import { WizardInput } from '../ui/components/wizard-input.js';
 import { WizardPathInput } from '../ui/components/wizard-path-input.js';
 import { renderApp } from '../ui/app.js';
 
-type WizardStep = 'select-command' | 'model-path' | 'extra-args' | 'done';
+type WizardStep =
+  | 'select-command'
+  | 'model-repo'
+  | 'model-path'
+  | 'extra-args'
+  | 'post-action'
+  | 'done';
 
 interface WizardState {
   command?: string;
+  modelRepo?: string;
   modelPath?: string;
   url?: string;
   repo?: string;
+  openPr?: boolean;
+  patchLocal?: boolean;
+  dryRun?: boolean;
 }
 
 const COMMANDS = [
@@ -21,6 +31,13 @@ const COMMANDS = [
   { label: 'components — Display all model components', value: 'components' },
   { label: 'connections — Display component relationships', value: 'connections' },
   { label: 'quit       — Close erode', value: 'quit' },
+];
+
+const POST_ACTIONS = [
+  { label: 'Analyze only', value: 'none' },
+  { label: 'Open pull request', value: 'open-pr' },
+  { label: 'Patch model files locally', value: 'patch-local' },
+  { label: 'Dry run (preview only)', value: 'dry-run' },
 ];
 
 function needsExtraArgs(command: string): boolean {
@@ -47,8 +64,20 @@ export async function runInteractiveWizard(): Promise<string[] | undefined> {
       if (finalState.command === 'analyze' && finalState.url) {
         args.push('--url', finalState.url);
       }
+      if (finalState.command === 'analyze' && finalState.modelRepo) {
+        args.push('--model-repo', finalState.modelRepo);
+      }
       if (finalState.command === 'connections' && finalState.repo) {
         args.push('--repo', finalState.repo);
+      }
+      if (finalState.openPr) {
+        args.push('--open-pr');
+      }
+      if (finalState.patchLocal) {
+        args.push('--patch-local');
+      }
+      if (finalState.dryRun) {
+        args.push('--dry-run');
       }
       resolveArgs(args);
       exit();
@@ -69,21 +98,40 @@ export async function runInteractiveWizard(): Promise<string[] | undefined> {
                 return;
               }
               setState((s) => ({ ...s, command: value }));
-              setStep('model-path');
+              setStep(value === 'analyze' ? 'model-repo' : 'model-path');
             }}
           />
         </Box>
       );
     }
 
+    if (step === 'model-repo') {
+      return (
+        <WizardInput
+          key="model-repo"
+          label="Model repository URL (leave empty for local):"
+          placeholder="https://github.com/owner/model-repo"
+          onSubmit={(value) => {
+            setState((s) => ({ ...s, modelRepo: value || undefined }));
+            setStep('model-path');
+          }}
+        />
+      );
+    }
+
     if (step === 'model-path') {
+      const isRemote = !!state.modelRepo;
       return (
         <WizardPathInput
           key="model-path"
-          label="Directory containing architecture model files:"
-          placeholder="./models"
+          label={
+            isRemote
+              ? 'Path within the model repository:'
+              : 'Directory containing architecture model files:'
+          }
+          placeholder={isRemote ? '.' : './models'}
           onSubmit={(value) => {
-            const modelPath = value || './models';
+            const modelPath = value || (isRemote ? '.' : './models');
             const next = { ...state, modelPath };
             setState(next);
             if (state.command && needsExtraArgs(state.command)) {
@@ -104,7 +152,8 @@ export async function runInteractiveWizard(): Promise<string[] | undefined> {
             label="Pull request or merge request URL:"
             placeholder="https://github.com/owner/repo/pull/123"
             onSubmit={(value) => {
-              finish({ ...state, url: value });
+              setState((s) => ({ ...s, url: value }));
+              setStep('post-action');
             }}
           />
         );
@@ -122,6 +171,23 @@ export async function runInteractiveWizard(): Promise<string[] | undefined> {
           />
         );
       }
+    }
+
+    if (step === 'post-action') {
+      return (
+        <WizardSelect
+          label="What should erode do with detected changes?"
+          items={POST_ACTIONS}
+          onSelect={(value) => {
+            finish({
+              ...state,
+              openPr: value === 'open-pr',
+              patchLocal: value === 'patch-local',
+              dryRun: value === 'dry-run',
+            });
+          }}
+        />
+      );
     }
 
     // Fallback — shouldn't reach here

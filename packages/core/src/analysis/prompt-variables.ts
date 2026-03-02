@@ -47,20 +47,8 @@ export interface DriftAnalysisPromptVars {
   dependencyChangesSection: string;
 }
 
-export interface ModelGenerationPromptVars {
-  metadata: {
-    number: number;
-    title: string;
-  };
-  component: {
-    id: string;
-    name: string;
-    type: string;
-    repository: string;
-  };
-  existingComponentsSection: string;
-  violationsSection: string;
-  dependencyChangesSection: string;
-  modelUpdatesSection: string;
-  date: string;
+export interface ModelPatchPromptVars {
+  fileContent: string;
+  linesToInsert: string;
+  modelFormat: string;
 }

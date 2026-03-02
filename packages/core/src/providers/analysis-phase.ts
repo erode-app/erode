@@ -8,7 +8,6 @@
 export enum AnalysisPhase {
   COMPONENT_RESOLUTION = 'component-resolution',
   DEPENDENCY_SCAN = 'dependency-scan',
-  ERODE_ANALYSIS = 'erode-analysis',
   CHANGE_ANALYSIS = 'change-analysis',
-  MODEL_GENERATION = 'model-generation',
+  MODEL_UPDATE = 'model-update',
 }

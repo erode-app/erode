@@ -7,8 +7,7 @@ export const STRUCTURIZR_METADATA: AdapterMetadata = {
   documentationUrl: 'https://docs.structurizr.com/dsl/language',
   fileExtensions: ['.dsl', '.json'],
   pathDescription: 'Path to a Structurizr workspace directory or file (.dsl or pre-exported .json)',
-  generatedFileExtension: '.dsl',
-  prTitleTemplate: 'chore: refresh Structurizr model from PR #{{prNumber}}',
+  prTitleTemplate: 'chore: update Structurizr model for {{sourceRepo}}#{{prNumber}} — {{prTitle}}',
   errorSuggestions: {
     [ErrorCode.MODEL_LOAD_FAILED]: [
       'For .dsl files: ensure Structurizr is available (STRUCTURIZR_CLI_PATH or Docker)',

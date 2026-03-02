@@ -1,5 +1,9 @@
 import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
+import type { StructuredRelationshipSchema } from '../schemas/common.schema.js';
+import type { z } from 'zod';
+
+export type StructuredRelationship = z.infer<typeof StructuredRelationshipSchema>;
 
 /**
  * Stage 1: Component selection from monorepo
@@ -99,6 +103,7 @@ export interface DriftAnalysisResult {
     add?: string[];
     remove?: string[];
     notes?: string;
+    relationships?: StructuredRelationship[];
   };
   /** Change request metadata */
   metadata: ChangeRequestMetadata;
@@ -106,10 +111,6 @@ export interface DriftAnalysisResult {
   component: ArchitecturalComponent;
   /** Aggregated dependency changes across all commits */
   dependencyChanges: DependencyExtractionResult;
-  /** All components in the model (for model generation context) */
-  allComponents?: ArchitecturalComponent[];
-  /** Architecture model format used for analysis */
-  modelFormat?: string;
 }
 /**
  * Input data for change request analysis prompt
