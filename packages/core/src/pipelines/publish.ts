@@ -156,9 +156,11 @@ export async function publishResults(
         p.succeed('No findings — old comment cleared (if any)');
       }
     } catch (error) {
-      p.warn(
-        `Could not publish PR comment: ${error instanceof Error ? error.message : String(error)}`
-      );
+      const message = error instanceof Error ? error.message : String(error);
+      p.warn(`Could not publish PR comment: ${message}`);
+      if (options.githubActions) {
+        console.warn(`::warning::Could not publish PR comment: ${message}`);
+      }
     }
   }
 

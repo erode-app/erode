@@ -228,6 +228,30 @@ describe('GitHubWriter', () => {
       expect(err).toBeInstanceOf(ApiError);
       expect((err as ApiError).statusCode).toBe(502);
     });
+
+    it('should throw ErodeError with IO_PERMISSION_DENIED on 403', async () => {
+      const error403 = Object.assign(new Error('Resource not accessible by integration'), {
+        status: 403,
+      });
+      mockIssuesCreateComment.mockRejectedValue(error403);
+      const ref = makeRef();
+
+      const err = await writer.commentOnChangeRequest(ref, 'test').catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ErodeError);
+      expect((err as ErodeError).code).toBe(ErrorCode.IO_PERMISSION_DENIED);
+    });
+
+    it('should not retry on 403 error', async () => {
+      const error403 = Object.assign(new Error('Resource not accessible by integration'), {
+        status: 403,
+      });
+      mockIssuesCreateComment.mockRejectedValue(error403);
+      const ref = makeRef();
+
+      await writer.commentOnChangeRequest(ref, 'test').catch((_e: unknown) => _e);
+
+      expect(mockIssuesCreateComment).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('deleteComment', () => {
@@ -247,6 +271,21 @@ describe('GitHubWriter', () => {
         repo: 'repo',
         comment_id: 5,
       });
+    });
+
+    it('should throw ErodeError with IO_PERMISSION_DENIED on 403', async () => {
+      const error403 = Object.assign(new Error('Resource not accessible by integration'), {
+        status: 403,
+      });
+      mockIssuesListComments.mockResolvedValue({
+        data: [{ id: 5, body: '<!-- marker -->' }],
+      });
+      mockIssuesDeleteComment.mockRejectedValue(error403);
+      const ref = makeRef();
+
+      const err = await writer.deleteComment(ref, '<!-- marker -->').catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ErodeError);
+      expect((err as ErodeError).code).toBe(ErrorCode.IO_PERMISSION_DENIED);
     });
   });
 });
