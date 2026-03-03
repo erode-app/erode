@@ -32,11 +32,13 @@ function parseArgs(argv: string[]): AnalyzeOptions {
     format: (getFlag('--format') as 'console' | 'json' | undefined) ?? 'json',
     comment: hasFlag('--comment'),
     githubActions: hasFlag('--github-actions'),
-    generateModel: hasFlag('--generate-model'),
     openPr: hasFlag('--open-pr'),
+    patchLocal: hasFlag('--patch-local'),
     failOnViolations: hasFlag('--fail-on-violations'),
     skipFileFiltering: hasFlag('--skip-file-filtering'),
     draft: !hasFlag('--no-draft'),
+    modelRepo: getFlag('--model-repo'),
+    modelRef: getFlag('--model-ref'),
   };
 }
 

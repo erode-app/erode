@@ -3,7 +3,7 @@ import type {
   DependencyExtractionPromptVars,
   ComponentSelectionPromptVars,
   DriftAnalysisPromptVars,
-  ModelGenerationPromptVars,
+  ModelPatchPromptVars,
 } from './prompt-variables.js';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -12,18 +12,6 @@ const __dirname = dirname(__filename);
 
 function loadTemplate(templateName: string): string {
   const templatePath = join(__dirname, 'prompts', `${templateName}.md`);
-  return readFileSync(templatePath, 'utf-8');
-}
-
-function loadAdapterTemplate(adapterName: string, templateName: string): string {
-  const templatePath = join(
-    __dirname,
-    '..',
-    'adapters',
-    adapterName,
-    'prompts',
-    `${templateName}.md`
-  );
   return readFileSync(templatePath, 'utf-8');
 }
 
@@ -79,15 +67,12 @@ export const TemplateEngine = {
     const template = loadTemplate('drift-analysis');
     return replaceVariables(template, variables);
   },
-  loadModelGenerationPrompt(
-    variables: ModelGenerationPromptVars,
-    adapterFormat = 'likec4'
-  ): string {
-    const template = loadAdapterTemplate(adapterFormat, 'model-generation');
-    return replaceVariables(template, variables);
-  },
   loadComponentSelectionPrompt(variables: ComponentSelectionPromptVars): string {
     const template = loadTemplate('component-selection');
+    return replaceVariables(template, variables);
+  },
+  loadModelPatchPrompt(variables: ModelPatchPromptVars): string {
+    const template = loadTemplate('model-patch');
     return replaceVariables(template, variables);
   },
 } as const;

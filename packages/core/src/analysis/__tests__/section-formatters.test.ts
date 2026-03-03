@@ -1,15 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import {
   formatAllowedDependencies,
+  formatAllRelationships,
+  formatChangedFiles,
   formatDependents,
   formatDependencyChanges,
   formatComponentContext,
   formatComponentList,
   formatCommits,
-  formatViolations,
-  formatDependencyChangesSummary,
-  formatModelUpdates,
-  formatExistingComponents,
 } from '../section-formatters.js';
 
 describe('section-formatters', () => {
@@ -23,8 +21,8 @@ describe('section-formatters', () => {
         ],
         dependencies: [],
       });
-      expect(result).toContain('Database [via: uses, reads]');
-      expect(result).toContain('Cache [via: uses]');
+      expect(result).toContain('Database (db) [via: uses, reads]');
+      expect(result).toContain('Cache (cache) [via: uses]');
     });
 
     it('should fall back to flat dependency list when no relationships', () => {
@@ -52,7 +50,7 @@ describe('section-formatters', () => {
         relationships: [{ target: { id: 'svc', name: 'Service' } }],
         dependencies: [],
       });
-      expect(result).toContain('Service [via: unknown]');
+      expect(result).toContain('Service (svc) [via: unknown]');
     });
   });
 
@@ -188,6 +186,46 @@ describe('section-formatters', () => {
     });
   });
 
+  describe('formatAllRelationships', () => {
+    it('should format relationships with kind and title', () => {
+      const result = formatAllRelationships([
+        {
+          source: 'api_gateway',
+          target: 'product_service',
+          kind: 'uses',
+          title: 'routes requests',
+        },
+        { source: 'product_service', target: 'user_service', kind: 'calls' },
+      ]);
+      expect(result).toContain('api_gateway -> product_service [uses] "routes requests"');
+      expect(result).toContain('product_service -> user_service [calls]');
+    });
+
+    it('should format relationships without kind', () => {
+      const result = formatAllRelationships([{ source: 'api_gateway', target: 'product_service' }]);
+      expect(result).toBe('  - api_gateway -> product_service');
+    });
+
+    it('should return "No relationships defined" for empty array', () => {
+      expect(formatAllRelationships([])).toBe('  - No relationships defined');
+    });
+  });
+
+  describe('formatChangedFiles', () => {
+    it('should format files with status', () => {
+      const result = formatChangedFiles([
+        { filename: 'packages/order-service/package.json', status: 'added' },
+        { filename: 'packages/api-gateway/src/index.ts', status: 'modified' },
+      ]);
+      expect(result).toContain('- packages/order-service/package.json (added)');
+      expect(result).toContain('- packages/api-gateway/src/index.ts (modified)');
+    });
+
+    it('should return "No changed files." for empty array', () => {
+      expect(formatChangedFiles([])).toBe('No changed files.');
+    });
+  });
+
   describe('formatCommits', () => {
     it('should format commits under 10', () => {
       const commits = [
@@ -220,91 +258,6 @@ describe('section-formatters', () => {
       const { section, note } = formatCommits(commits);
       expect(section.split('\n')).toHaveLength(10);
       expect(note).toBe('');
-    });
-  });
-
-  describe('formatViolations', () => {
-    it('should format violations with severity', () => {
-      const result = formatViolations([
-        { severity: 'high', description: 'Missing dep', file: null, line: null, commit: null },
-        { severity: 'low', description: 'Minor issue', file: null, line: null, commit: null },
-      ]);
-      expect(result).toContain('[HIGH] Missing dep');
-      expect(result).toContain('[LOW] Minor issue');
-    });
-
-    it('should return "No violations" when empty', () => {
-      expect(formatViolations([])).toBe('No violations detected');
-    });
-  });
-
-  describe('formatDependencyChangesSummary', () => {
-    it('should format with +/-/~ prefixes', () => {
-      const result = formatDependencyChangesSummary({
-        dependencies: [
-          { type: 'added', dependency: 'redis', description: 'new cache', file: '', code: '' },
-          { type: 'removed', dependency: 'mysql', description: 'dropped', file: '', code: '' },
-          { type: 'modified', dependency: 'pg', description: 'updated', file: '', code: '' },
-        ],
-        summary: '',
-      });
-      expect(result).toContain('+ redis: new cache');
-      expect(result).toContain('- mysql: dropped');
-      expect(result).toContain('~ pg: updated');
-    });
-
-    it('should return "No dependency changes" when empty', () => {
-      expect(formatDependencyChangesSummary({ dependencies: [], summary: '' })).toBe(
-        'No dependency changes detected'
-      );
-    });
-  });
-
-  describe('formatModelUpdates', () => {
-    it('should format full model updates', () => {
-      const result = formatModelUpdates({
-        add: ['redis', 'kafka'],
-        remove: ['mysql'],
-        notes: 'Migrating to Redis',
-      });
-      expect(result).toContain('ADD TO MODEL:');
-      expect(result).toContain('- redis');
-      expect(result).toContain('- kafka');
-      expect(result).toContain('REMOVE FROM MODEL:');
-      expect(result).toContain('- mysql');
-      expect(result).toContain('Migrating to Redis');
-    });
-
-    it('should return "No model updates recommended" when undefined', () => {
-      expect(formatModelUpdates(undefined)).toBe('No model updates recommended');
-    });
-
-    it('should handle empty arrays and missing notes', () => {
-      const result = formatModelUpdates({ add: [], remove: [] });
-      expect(result).toContain('ADD TO MODEL:');
-      expect(result).toContain('REMOVE FROM MODEL:');
-      expect(result).toContain('NOTES:\nNone');
-    });
-  });
-
-  describe('formatExistingComponents', () => {
-    it('should format components with CRITICAL warning', () => {
-      const result = formatExistingComponents([
-        { id: 'comp.api', name: 'API', type: 'service', tags: [], repository: 'org/api' },
-        { id: 'comp.web', name: 'Web', type: 'webapp', tags: [] },
-      ]);
-      expect(result).toContain('EXISTING COMPONENTS IN THE MODEL:');
-      expect(result).toContain('comp.api: "API" (service, repo: org/api)');
-      expect(result).toContain('comp.web: "Web" (webapp)');
-      expect(result).toContain('CRITICAL');
-    });
-
-    it('should return empty string when undefined', () => {
-      expect(formatExistingComponents(undefined)).toBe('');
-    });
-
-    it('should return empty string when empty array', () => {
-      expect(formatExistingComponents([])).toBe('');
     });
   });
 });

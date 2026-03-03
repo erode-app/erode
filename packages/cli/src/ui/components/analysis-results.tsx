@@ -4,6 +4,12 @@ import type { DriftAnalysisResult } from '@erode/core';
 
 interface Props {
   result: DriftAnalysisResult;
+  generatedChangeRequest?: {
+    url: string;
+    number: number;
+    action: 'created' | 'updated';
+    branch: string;
+  };
 }
 
 function severityColor(severity: string): string {
@@ -12,7 +18,7 @@ function severityColor(severity: string): string {
   return 'blue';
 }
 
-export function AnalysisResults({ result }: Props): React.ReactElement {
+export function AnalysisResults({ result, generatedChangeRequest }: Props): React.ReactElement {
   return (
     <Box flexDirection="column" marginTop={1}>
       <Text bold color="cyan">
@@ -107,6 +113,14 @@ export function AnalysisResults({ result }: Props): React.ReactElement {
             </Box>
           )}
           {result.modelUpdates.notes && <Text dimColor> Remarks: {result.modelUpdates.notes}</Text>}
+        </Box>
+      )}
+
+      {generatedChangeRequest && (
+        <Box marginTop={1}>
+          <Text bold color="cyan">
+            Model PR {generatedChangeRequest.action}: {generatedChangeRequest.url}
+          </Text>
         </Box>
       )}
     </Box>

@@ -21,8 +21,10 @@ import {
   buildStructuredOutput,
   formatAnalysisAsComment,
   formatErrorAsComment,
+  formatPatchPrBody,
   COMMENT_MARKER,
   writeOutputToFile,
+  analysisHasFindings,
 } from '../output.js';
 import { ApiError, ConfigurationError } from '../errors.js';
 
@@ -202,13 +204,79 @@ describe('formatAnalysisAsComment', () => {
     expect(output).toContain('<summary>Analysis details</summary>');
     expect(output).toContain('| **AI Provider** | gemini |');
     expect(output).toContain('| **Quick model** (Stages 1, 2) | `gemini-2.5-flash` |');
-    expect(output).toContain('| **Deep model** (Stages 3, 4) | `gemini-2.5-pro` |');
+    expect(output).toContain('| **Deep model** (Stage 3) | `gemini-2.5-pro` |');
   });
 
   it('should not render model metadata when modelInfo is omitted', () => {
     const output = formatAnalysisAsComment(makeAnalysisResult());
 
     expect(output).not.toContain('Analysis details');
+  });
+
+  it('should show CTA when model updates exist, githubActions is true, and no generatedChangeRequest', () => {
+    const output = formatAnalysisAsComment(
+      makeAnalysisResult({
+        modelUpdates: { add: ['comp.a -> comp.b'], relationships: [] },
+      }),
+      { githubActions: true }
+    );
+
+    expect(output).toContain('Reply `/erode update-model` on this PR to open a model update PR.');
+  });
+
+  it('should not show CTA when generatedChangeRequest is present', () => {
+    const output = formatAnalysisAsComment(
+      makeAnalysisResult({
+        modelUpdates: { add: ['comp.a -> comp.b'], relationships: [] },
+      }),
+      {
+        githubActions: true,
+        generatedChangeRequest: {
+          url: 'https://github.com/org/model/pull/1',
+          number: 1,
+          action: 'created',
+          branch: 'erode/org-repo/pr-42',
+        },
+      }
+    );
+
+    expect(output).not.toContain('Reply `/erode update-model`');
+  });
+
+  it('should not show CTA when githubActions is not set', () => {
+    const output = formatAnalysisAsComment(
+      makeAnalysisResult({
+        modelUpdates: { add: ['comp.a -> comp.b'], relationships: [] },
+      })
+    );
+
+    expect(output).not.toContain('Reply `/erode update-model`');
+  });
+
+  it('should render new components section when newComponents are present', () => {
+    const output = formatAnalysisAsComment(
+      makeAnalysisResult({
+        modelUpdates: {
+          newComponents: [{ id: 'order_service', kind: 'service', name: 'Order Service' }],
+        },
+      })
+    );
+
+    expect(output).toContain(':new: New Components Detected');
+    expect(output).toContain('`order_service`');
+    expect(output).toContain('service');
+    expect(output).toContain('Order Service');
+    expect(output).toContain('auto-detected');
+  });
+
+  it('should not render new components section when newComponents is empty', () => {
+    const output = formatAnalysisAsComment(
+      makeAnalysisResult({
+        modelUpdates: { newComponents: [] },
+      })
+    );
+
+    expect(output).not.toContain('New Components Detected');
   });
 });
 
@@ -289,5 +357,189 @@ describe('formatErrorAsComment', () => {
     const output = formatErrorAsComment(error);
 
     expect(output).toContain('*Automated by [erode]');
+  });
+});
+
+describe('analysisHasFindings', () => {
+  it('should return true when violations are present', () => {
+    const result = makeAnalysisResult({
+      hasViolations: true,
+      violations: [{ severity: 'high', description: 'test' }],
+    });
+
+    expect(analysisHasFindings(result)).toBe(true);
+  });
+
+  it('should return true when model updates have add-only changes', () => {
+    const result = makeAnalysisResult({
+      modelUpdates: { add: ['comp.a -> comp.b'], relationships: [] },
+    });
+
+    expect(analysisHasFindings(result)).toBe(true);
+  });
+
+  it('should return true when model updates have remove-only changes', () => {
+    const result = makeAnalysisResult({
+      modelUpdates: { remove: ['comp.x -> comp.y'], relationships: [] },
+    });
+
+    expect(analysisHasFindings(result)).toBe(true);
+  });
+
+  it('should return true when model updates have both add and remove changes', () => {
+    const result = makeAnalysisResult({
+      modelUpdates: {
+        add: ['comp.a -> comp.b'],
+        remove: ['comp.x -> comp.y'],
+        relationships: [],
+      },
+    });
+
+    expect(analysisHasFindings(result)).toBe(true);
+  });
+
+  it('should return false when no findings are present', () => {
+    const result = makeAnalysisResult();
+
+    expect(analysisHasFindings(result)).toBe(false);
+  });
+
+  it('should return false when modelUpdates is undefined', () => {
+    const result = makeAnalysisResult({ modelUpdates: undefined });
+
+    expect(analysisHasFindings(result)).toBe(false);
+  });
+
+  it('should return false when model updates have empty arrays', () => {
+    const result = makeAnalysisResult({
+      modelUpdates: { add: [], remove: [], relationships: [] },
+    });
+
+    expect(analysisHasFindings(result)).toBe(false);
+  });
+
+  it('should return true when model updates have newComponents', () => {
+    const result = makeAnalysisResult({
+      modelUpdates: {
+        newComponents: [{ id: 'order_service', kind: 'service', name: 'Order Service' }],
+      },
+    });
+
+    expect(analysisHasFindings(result)).toBe(true);
+  });
+});
+
+describe('formatPatchPrBody', () => {
+  it('should escape markdown link characters in prTitle', () => {
+    const body = formatPatchPrBody({
+      prNumber: 42,
+      prTitle: 'Fix](evil) [Click here](https://evil.com/phish',
+      prUrl: 'https://github.com/org/repo/pull/42',
+      summary: 'Summary',
+      insertedLines: ['  a -> b'],
+      skipped: [],
+    });
+
+    // The title should have brackets/parens escaped
+    expect(body).not.toContain('](evil)');
+    expect(body).toContain('\\]');
+    expect(body).toContain('\\(');
+    // The actual link to the PR should still work
+    expect(body).toContain('https://github.com/org/repo/pull/42');
+  });
+
+  it('should render normally with safe titles', () => {
+    const body = formatPatchPrBody({
+      prNumber: 10,
+      prTitle: 'Add user auth',
+      prUrl: 'https://github.com/org/repo/pull/10',
+      summary: 'Added auth',
+      insertedLines: ['  a -> b'],
+      skipped: [],
+    });
+
+    expect(body).toContain('[PR #10: Add user auth](https://github.com/org/repo/pull/10)');
+  });
+
+  it('should render new components section in PR body', () => {
+    const body = formatPatchPrBody({
+      prNumber: 42,
+      prTitle: 'Add order service',
+      prUrl: 'https://github.com/org/repo/pull/42',
+      summary: 'Added order service',
+      insertedLines: ['  customer -> order_service'],
+      skipped: [],
+      newComponents: [
+        {
+          id: 'order_service',
+          kind: 'service',
+          name: 'Order Service',
+          insertedLines: ["  order_service = service 'Order Service' {", '  }'],
+        },
+      ],
+    });
+
+    expect(body).toContain(':new: New Components');
+    expect(body).toContain('`order_service`');
+    expect(body).toContain('service');
+    expect(body).toContain('Order Service');
+    expect(body).toContain('Review carefully');
+  });
+
+  it('should only show relationship lines in Applied Relationships when relationshipLines is provided', () => {
+    const body = formatPatchPrBody({
+      prNumber: 42,
+      prTitle: 'Add order service',
+      prUrl: 'https://github.com/org/repo/pull/42',
+      summary: 'Added order service',
+      insertedLines: [
+        "  order_service = service 'Order Service' {",
+        '  }',
+        '  customer -> order_service',
+      ],
+      relationshipLines: ['  customer -> order_service'],
+      skipped: [],
+      newComponents: [
+        {
+          id: 'order_service',
+          kind: 'service',
+          name: 'Order Service',
+          insertedLines: ["  order_service = service 'Order Service' {", '  }'],
+        },
+      ],
+    });
+
+    // The relationship table should only contain the relationship line
+    expect(body).toContain('| `customer -> order_service` |');
+    // Component DSL should NOT appear in the Applied Relationships table
+    expect(body).not.toContain("| `order_service = service 'Order Service' {` |");
+  });
+
+  it('should fall back to insertedLines when relationshipLines is not provided', () => {
+    const body = formatPatchPrBody({
+      prNumber: 10,
+      prTitle: 'Add deps',
+      prUrl: 'https://github.com/org/repo/pull/10',
+      summary: 'Added deps',
+      insertedLines: ['  a -> b', '  c -> d'],
+      skipped: [],
+    });
+
+    expect(body).toContain('| `a -> b` |');
+    expect(body).toContain('| `c -> d` |');
+  });
+
+  it('should not render new components section when empty', () => {
+    const body = formatPatchPrBody({
+      prNumber: 10,
+      prTitle: 'Update deps',
+      prUrl: 'https://github.com/org/repo/pull/10',
+      summary: 'Updated dependencies',
+      insertedLines: ['  a -> b'],
+      skipped: [],
+      newComponents: [],
+    });
+
+    expect(body).not.toContain('New Components');
   });
 });

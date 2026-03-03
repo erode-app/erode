@@ -1,10 +1,12 @@
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { describe, it, expect, vi } from 'vitest';
 import { ErodeError, ErrorCode } from '../../errors.js';
 import type {
   DependencyExtractionPromptVars,
   ComponentSelectionPromptVars,
   DriftAnalysisPromptVars,
-  ModelGenerationPromptVars,
 } from '../prompt-variables.js';
 
 // Mock the TemplateEngine to avoid filesystem reads
@@ -17,7 +19,6 @@ vi.mock('../template-engine.js', () => ({
       JSON.stringify(vars)
     ),
     loadDriftAnalysisPrompt: vi.fn((vars: DriftAnalysisPromptVars) => JSON.stringify(vars)),
-    loadModelGenerationPrompt: vi.fn((vars: ModelGenerationPromptVars) => JSON.stringify(vars)),
   },
 }));
 
@@ -162,6 +163,15 @@ describe('PromptBuilder', () => {
     });
   });
 
+  describe('dependency-extraction template content', () => {
+    it('should include route handler outbound call exception in ignore section', () => {
+      const templateDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'prompts');
+      const template = readFileSync(join(templateDir, 'dependency-extraction.md'), 'utf-8');
+      expect(template).toContain('EXCEPTION');
+      expect(template).toContain('outbound HTTP calls');
+    });
+  });
+
   describe('buildDependencyChangesSection', () => {
     // buildDependencyChangesSection is private, so we test it indirectly through buildDriftAnalysisPrompt
     // We can still verify its behavior by checking the output of buildDriftAnalysisPrompt
@@ -182,6 +192,7 @@ describe('PromptBuilder', () => {
         component: { id: 'comp.api', name: 'API', type: 'service', tags: [] },
         dependencies: { dependencies: [], summary: 'No changes' },
         architectural: { dependencies: [], dependents: [], relationships: [] },
+        allRelationships: [{ source: 'comp.api', target: 'comp.db', kind: 'uses' }],
       });
 
       expect(result).toContain('No architectural dependency changes');
@@ -221,6 +232,7 @@ describe('PromptBuilder', () => {
           summary: 'Replaced memcached with redis',
         },
         architectural: { dependencies: [], dependents: [], relationships: [] },
+        allRelationships: [],
       });
 
       expect(result).toContain('ADDED');

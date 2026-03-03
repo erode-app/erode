@@ -114,6 +114,39 @@ describe('BitbucketApiClient', () => {
 
       await expect(client.paginate('/test', itemSchema)).rejects.toThrow(ApiError);
     });
+
+    it('should reject pagination with cross-origin next URL', async () => {
+      const itemSchema = z.object({ id: z.number() });
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        mockFetchResponse({
+          values: [{ id: 1 }],
+          next: 'https://evil.example.com/steal-token?page=2',
+        })
+      );
+
+      await expect(client.paginate('/test', itemSchema)).rejects.toThrow(/origin mismatch/);
+    });
+
+    it('should accept pagination with same-origin next URL', async () => {
+      const itemSchema = z.object({ id: z.number() });
+      const fetchSpy = vi.spyOn(globalThis, 'fetch') as Mock;
+
+      fetchSpy
+        .mockResolvedValueOnce(
+          mockFetchResponse({
+            values: [{ id: 1 }],
+            next: 'https://api.bitbucket.org/2.0/other-path?page=2',
+          })
+        )
+        .mockResolvedValueOnce(
+          mockFetchResponse({
+            values: [{ id: 2 }],
+          })
+        );
+
+      const items = await client.paginate('/test', itemSchema);
+      expect(items).toEqual([{ id: 1 }, { id: 2 }]);
+    });
   });
 
   describe('error sanitization', () => {

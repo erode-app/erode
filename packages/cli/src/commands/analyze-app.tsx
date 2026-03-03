@@ -48,7 +48,12 @@ function AnalyzeInkApp({
   return (
     <Box flexDirection="column">
       <StagePipeline steps={steps} />
-      {result && <AnalysisResults result={result.analysisResult} />}
+      {result && (
+        <AnalysisResults
+          result={result.analysisResult}
+          generatedChangeRequest={result.generatedChangeRequest}
+        />
+      )}
       {error ? <ErrorDisplay error={error} /> : null}
     </Box>
   );

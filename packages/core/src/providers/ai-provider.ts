@@ -21,8 +21,11 @@ export interface AIProvider {
   analyzeDrift(data: DriftAnalysisPromptData): Promise<DriftAnalysisResult>;
 
   /**
-   * Generate architecture model code from analysis results.
-   * @returns The generated architecture model code.
+   * Insert lines into an existing model file using a fast model.
+   * @param fileContent - The current content of the model file
+   * @param linesToInsert - DSL lines to insert into the file
+   * @param modelFormat - The model format (e.g., "likec4", "structurizr")
+   * @returns The complete modified file content
    */
-  generateArchitectureCode?(analysisResult: DriftAnalysisResult): Promise<string>;
+  patchModel?(fileContent: string, linesToInsert: string[], modelFormat: string): Promise<string>;
 }

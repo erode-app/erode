@@ -376,6 +376,13 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     return Array.from(this.componentIndex.byId.values());
   }
 
+  getAllRelationships(): ModelRelationship[] {
+    if (!this.relationships) {
+      throw AdapterError.notLoaded('likec4');
+    }
+    return this.relationships;
+  }
+
   checkVersion(path: string): VersionCheckResult {
     return checkLikeC4Version(path);
   }

@@ -213,6 +213,42 @@ export class GitHubWriter implements SourcePlatformWriter {
     }
   }
 
+  async closeChangeRequest(branchName: string): Promise<void> {
+    const owner = this.targetOwner;
+    const repo = this.targetRepo;
+
+    try {
+      const { data: prs } = await this.octokit.rest.pulls.list({
+        owner,
+        repo,
+        head: `${owner}:${branchName}`,
+        state: 'open',
+      });
+
+      const pr = prs[0];
+      if (!pr) return;
+
+      await this.octokit.rest.pulls.update({
+        owner,
+        repo,
+        pull_number: pr.number,
+        state: 'closed',
+      });
+
+      try {
+        await this.octokit.rest.git.deleteRef({
+          owner,
+          repo,
+          ref: `heads/${branchName}`,
+        });
+      } catch {
+        // Branch may already be deleted
+      }
+    } catch (error) {
+      wrapPlatformError(error, 'github', 'Could not close pull request');
+    }
+  }
+
   private async findCommentByMarker(
     owner: string,
     repo: string,

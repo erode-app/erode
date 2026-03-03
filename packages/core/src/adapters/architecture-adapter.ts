@@ -1,9 +1,9 @@
 import type {
   ArchitectureModel,
   ArchitecturalComponent,
+  ModelRelationship,
   SimpleComponent,
 } from './architecture-types.js';
-import type { DriftAnalysisResult } from '../analysis/analysis-types.js';
 import type { AdapterMetadata } from './adapter-metadata.js';
 
 export interface VersionCheckResult {
@@ -47,11 +47,11 @@ export interface ArchitectureModelAdapter {
   /** Get all components in the loaded model. */
   getAllComponents(): ArchitecturalComponent[];
 
+  /** Get all relationships in the loaded model. */
+  getAllRelationships(): ModelRelationship[];
+
   /** Check whether a dependency from one component to another is declared in the model. */
   isAllowedDependency(fromId: string, toId: string): boolean;
-
-  /** Generate architecture model code from analysis results. */
-  generateArchitectureCode?(analysisResult: DriftAnalysisResult): Promise<string>;
 
   /** Optional: check version compatibility for the model format. */
   checkVersion?(path: string): VersionCheckResult;

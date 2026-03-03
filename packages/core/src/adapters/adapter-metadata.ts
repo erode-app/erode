@@ -4,7 +4,6 @@ export interface AdapterMetadata {
   documentationUrl: string;
   fileExtensions: string[];
   pathDescription: string;
-  generatedFileExtension: string;
   prTitleTemplate: string;
   errorSuggestions: Partial<Record<string, string[]>>;
   noComponentHelpLines: string[];
