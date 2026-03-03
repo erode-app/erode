@@ -9,6 +9,18 @@ import type {
   CreateOrUpdateChangeRequestOptions,
 } from '../source-platform.js';
 import { wrapPlatformError, isTransientError } from '../platform-utils.js';
+import { extractStatusCode } from '../../utils/error-utils.js';
+
+function throw403AsPermissionError(error: unknown, prNumber: number): void {
+  if (error instanceof Error && extractStatusCode(error) === 403) {
+    throw new ErodeError(
+      'Cannot comment on PR: the conversation may be locked or the token lacks write access',
+      ErrorCode.IO_PERMISSION_DENIED,
+      'Cannot comment on PR. Check if the conversation is locked or if the token has issues:write permission.',
+      { prNumber }
+    );
+  }
+}
 
 export class GitHubWriter implements SourcePlatformWriter {
   private readonly octokit: Octokit;
@@ -190,6 +202,7 @@ export class GitHubWriter implements SourcePlatformWriter {
         { retries: 1, initialDelay: 2000, shouldRetry: isTransientError }
       );
     } catch (error) {
+      throw403AsPermissionError(error, ref.number);
       wrapPlatformError(error, 'github', 'Could not comment on pull request');
     }
   }
@@ -209,6 +222,7 @@ export class GitHubWriter implements SourcePlatformWriter {
         { retries: 1, initialDelay: 2000, shouldRetry: isTransientError }
       );
     } catch (error) {
+      throw403AsPermissionError(error, ref.number);
       wrapPlatformError(error, 'github', 'Could not remove comment from pull request');
     }
   }
