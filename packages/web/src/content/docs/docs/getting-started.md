@@ -44,12 +44,27 @@ Erode runs on every PR and posts a comment listing any undeclared dependencies, 
 
 ## Try the example project
 
-The [playground repository](https://github.com/erode-app/playground) is a ready-made example you can fork and use to try Erode. It contains a multi-service architecture (frontend, API gateway, microservices, database) with a LikeC4 model and a pre-configured GitHub Actions workflow.
+The [playground repository](https://github.com/erode-app/playground) is a ready-made example you can fork and use to try Erode. It contains a multi-service architecture (frontend, API gateway, microservices, database) with pre-configured GitHub Actions workflows for both LikeC4 and Structurizr models.
+
+To try it yourself:
 
 1. [Fork the repository](https://github.com/erode-app/playground/fork)
 2. Add your `GEMINI_API_KEY` (or another [AI provider](/docs/reference/ai-providers/) key) as a repository secret
-3. Open a PR that introduces an undeclared dependency. For example, make the frontend call `user-service` directly instead of going through `api-gateway`
-4. Erode will comment on the PR with the detected finding
+3. Open a PR that introduces an undeclared dependency
+
+Or browse the existing example PRs to see Erode's output without any setup:
+
+### Undeclared dependency (LikeC4)
+
+[PR #1: feat: add admin users page](https://github.com/erode-app/playground/pull/1) adds a frontend page that calls `user_service` directly, bypassing the `api_gateway`. The architecture model declares that the frontend depends on the gateway, not the service behind it. Erode detects this undeclared dependency and reports the violation on the PR.
+
+### Undeclared dependency (Structurizr)
+
+[PR #2: feat: add admin users page](https://github.com/erode-app/playground/pull/2) introduces the same violation as PR #1, but the analysis runs against a Structurizr workspace instead of a LikeC4 model. The result is the same finding, showing that Erode works across model formats.
+
+### New component and model update
+
+[PR #3: feat: enrich products with creator info](https://github.com/erode-app/playground/pull/3) adds a `product_service → user_service` dependency and introduces a new `order_service`. Erode detects the undeclared dependency, auto-detects the new component, and after a reviewer replies `/erode update-model`, creates a [model update PR](https://github.com/erode-app/playground-models-only/pull/2) with the proposed changes.
 
 ## What's next
 
