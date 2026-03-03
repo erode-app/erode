@@ -114,6 +114,13 @@ export function formatAllRelationships(
     .join('\n');
 }
 
+export function formatChangedFiles(files: { filename: string; status: string }[]): string {
+  if (files.length === 0) {
+    return 'No changed files.';
+  }
+  return files.map((f) => `- ${f.filename} (${f.status})`).join('\n');
+}
+
 export function formatCommits(commits: { sha: string; message: string; author: string }[]): {
   section: string;
   note: string;

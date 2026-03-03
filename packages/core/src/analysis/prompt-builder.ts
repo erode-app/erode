@@ -10,6 +10,7 @@ import {
   formatDependents,
   formatDependencyChanges,
   formatAllRelationships,
+  formatChangedFiles,
   formatComponentContext,
   formatComponentList,
   formatCommits,
@@ -110,6 +111,9 @@ export const PromptBuilder = {
     const allRelationships = data.allRelationships?.length
       ? formatAllRelationships(data.allRelationships)
       : '(none)';
+    const filesSection = data.files?.length
+      ? formatChangedFiles(data.files)
+      : 'No file list available.';
 
     return TemplateEngine.loadDriftAnalysisPrompt({
       changeRequest: {
@@ -136,6 +140,7 @@ export const PromptBuilder = {
       dependents,
       allComponentIds,
       allRelationships,
+      filesSection,
       dependencyChangesSection,
     });
   },

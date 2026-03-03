@@ -267,6 +267,7 @@ export async function runAnalyze(
       },
       component: selectedComponent,
       dependencies: ctx.extractedDeps,
+      files: prData.files.map((f) => ({ filename: f.filename, status: f.status })),
       architectural: {
         dependencies: dependencies.map((d) => ({ ...d, repository: d.repository })),
         dependents: dependents.map((d) => ({ ...d, repository: d.repository })),

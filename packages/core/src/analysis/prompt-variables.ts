@@ -46,6 +46,7 @@ export interface DriftAnalysisPromptVars {
   dependents: string;
   allComponentIds: string;
   allRelationships: string;
+  filesSection: string;
   dependencyChangesSection: string;
 }
 

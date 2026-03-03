@@ -331,6 +331,18 @@ describe('runAnalyze', () => {
     expect(callArgs?.allRelationships).toEqual([]);
   });
 
+  it('passes changed files to drift analysis prompt data', async () => {
+    mockFindAllComponentsByRepository.mockReturnValue([makeComponent()]);
+
+    await runAnalyze(makeOptions());
+
+    expect(mockAnalyzeDrift).toHaveBeenCalledOnce();
+    const callArgs = mockAnalyzeDrift.mock.calls[0]?.[0] as
+      | { files: { filename: string; status: string }[] }
+      | undefined;
+    expect(callArgs?.files).toEqual([{ filename: 'src/middleware/auth.ts', status: 'added' }]);
+  });
+
   it('patches model when openPr is set and modelUpdates has relationships', async () => {
     const driftResult = makeDriftResult({
       modelUpdates: {

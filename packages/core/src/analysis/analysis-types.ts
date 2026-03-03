@@ -137,6 +137,8 @@ export interface DriftAnalysisPromptData {
       title?: string;
     }[];
   };
+  /** Changed files in the PR with their status */
+  files?: { filename: string; status: string }[];
   /** All component IDs in the architecture model */
   allComponentIds?: string[];
   /** All relationships in the architecture model */

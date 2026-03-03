@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   formatAllowedDependencies,
   formatAllRelationships,
+  formatChangedFiles,
   formatDependents,
   formatDependencyChanges,
   formatComponentContext,
@@ -207,6 +208,21 @@ describe('section-formatters', () => {
 
     it('should return "No relationships defined" for empty array', () => {
       expect(formatAllRelationships([])).toBe('  - No relationships defined');
+    });
+  });
+
+  describe('formatChangedFiles', () => {
+    it('should format files with status', () => {
+      const result = formatChangedFiles([
+        { filename: 'packages/order-service/package.json', status: 'added' },
+        { filename: 'packages/api-gateway/src/index.ts', status: 'modified' },
+      ]);
+      expect(result).toContain('- packages/order-service/package.json (added)');
+      expect(result).toContain('- packages/api-gateway/src/index.ts (modified)');
+    });
+
+    it('should return "No changed files." for empty array', () => {
+      expect(formatChangedFiles([])).toBe('No changed files.');
     });
   });
 

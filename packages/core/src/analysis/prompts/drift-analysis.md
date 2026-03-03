@@ -41,6 +41,10 @@ These are ALL component IDs currently in the architecture model:
 These are ALL relationships currently declared in the architecture model:
 {{allRelationships}}
 
+## CHANGED FILES IN THIS PR
+
+{{filesSection}}
+
 ## DEPENDENCY CHANGES DETECTED
 
 {{dependencyChangesSection}}
@@ -143,8 +147,8 @@ Concentrate on architectural drift — whether the code aligns with the document
 
 **IMPORTANT for modelUpdates.newComponents:**
 
-- Carefully scan the PR diff for brand-new services, applications, or systems that are NOT in the ALL KNOWN COMPONENTS list above
-- Look for: new directories/packages for a service, new server/application entry points, new Dockerfiles, new service configuration
+- Review the CHANGED FILES section above for brand-new services, applications, or systems that are NOT in the ALL KNOWN COMPONENTS list
+- Look for: new directories/packages (e.g., a new `packages/order-service/`), new entry points (`src/index.ts` in a new directory), new Dockerfiles, new service configuration
 - The `id` must use snake_case (e.g., `order_service`, `payment_gateway`)
 - The `kind` must be one of the element types from the architecture specification
 - If a relationship references a component not in the model, you MUST add it to `newComponents` AND include the relationship in `relationships`
