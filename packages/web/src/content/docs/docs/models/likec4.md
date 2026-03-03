@@ -6,7 +6,7 @@ description: Write the architecture model that Erode reads.
 Erode reads a LikeC4 architecture model to understand your system's intended structure. It compares pull request changes against this model to detect drift.
 
 :::tip[See it in action]
-Check out the [playground example PR](https://github.com/erode-app/playground/pull/1) to see Erode analyzing a LikeC4 model.
+[Playground PR #1](https://github.com/erode-app/playground/pull/1) adds a frontend page that calls `user_service` directly, bypassing the `api_gateway`. Erode analyzes the PR against the LikeC4 model, detects the undeclared dependency, and posts the finding as a PR comment.
 :::
 
 ## What is LikeC4

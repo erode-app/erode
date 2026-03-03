@@ -14,7 +14,7 @@ Structurizr support is new and under active development. If you are starting fre
 :::
 
 :::tip[See it in action]
-Check out the [playground example PR](https://github.com/erode-app/playground/pull/2) to see Erode analyzing a Structurizr workspace.
+[Playground PR #2](https://github.com/erode-app/playground/pull/2) introduces the same violation as the [LikeC4 example](/docs/models/likec4/), but analyzed against a Structurizr workspace. The frontend calls `user_service` directly instead of going through `api_gateway`, and Erode detects the undeclared dependency the same way.
 :::
 
 ## What is Structurizr
