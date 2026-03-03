@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, initial-scale=1" />
+    <title>feat: add admin users page #12 - Drift Detected</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+        background: #0d1117;
+        color: #e6edf3;
+        width: 1920px;
+        min-height: 1080px;
+        overflow: hidden;
+      }
+
+      /* Top nav bar */
+      .topbar {
+        background: #010409;
+        border-bottom: 1px solid #30363d;
+        height: 62px;
+        display: flex;
+        align-items: center;
+        padding: 0 32px;
+        gap: 16px;
+      }
+      .topbar .logo svg {
+        fill: #e6edf3;
+      }
+      .topbar .repo-path {
+        font-size: 16px;
+        color: #79c0ff;
+      }
+      .topbar .repo-path span {
+        color: #8b949e;
+      }
+      .topbar .search {
+        margin-left: auto;
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 5px 12px;
+        color: #8b949e;
+        font-size: 14px;
+        width: 280px;
+      }
+      .topbar .avatar-small {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #30363d;
+        margin-left: 8px;
+      }
+
+      /* Repo tabs */
+      .repo-tabs {
+        background: #010409;
+        border-bottom: 1px solid #30363d;
+        display: flex;
+        padding: 0 32px;
+        gap: 0;
+      }
+      .repo-tabs .tab {
+        padding: 12px 16px;
+        font-size: 14px;
+        color: #8b949e;
+        border-bottom: 2px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .repo-tabs .tab.active {
+        color: #e6edf3;
+        border-bottom-color: #f78166;
+      }
+      .repo-tabs .tab .count {
+        background: #30363d;
+        border-radius: 10px;
+        padding: 0 6px;
+        font-size: 12px;
+      }
+      .repo-tabs .tab svg {
+        fill: #8b949e;
+        width: 16px;
+        height: 16px;
+      }
+      .repo-tabs .tab.active svg {
+        fill: #e6edf3;
+      }
+
+      /* PR header - compact */
+      .pr-header {
+        padding: 20px 64px 12px;
+        border-bottom: 1px solid #30363d;
+      }
+      .pr-title {
+        font-size: 28px;
+        font-weight: 400;
+        line-height: 1.3;
+      }
+      .pr-title .number {
+        color: #8b949e;
+        font-weight: 300;
+      }
+      .pr-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+        font-size: 14px;
+        color: #8b949e;
+      }
+      .badge-open {
+        background: #238636;
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .badge-open svg {
+        fill: #fff;
+        width: 16px;
+        height: 16px;
+      }
+      .branch-label {
+        background: #1f3148;
+        color: #79c0ff;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      }
+
+      /* PR sub-tabs */
+      .pr-tabs {
+        display: flex;
+        padding: 0 64px;
+        gap: 0;
+        border-bottom: 1px solid #30363d;
+      }
+      .pr-tabs .tab {
+        padding: 12px 16px;
+        font-size: 14px;
+        color: #8b949e;
+        border-bottom: 2px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .pr-tabs .tab.active {
+        color: #e6edf3;
+        border-bottom-color: #f78166;
+      }
+      .pr-tabs .tab .count {
+        background: #30363d;
+        border-radius: 10px;
+        padding: 0 6px;
+        font-size: 12px;
+        color: #e6edf3;
+      }
+
+      /* Main content */
+      .main {
+        display: flex;
+        padding: 24px 64px;
+        gap: 24px;
+      }
+      .timeline {
+        flex: 1;
+        min-width: 0;
+      }
+      .sidebar {
+        width: 280px;
+        flex-shrink: 0;
+      }
+
+      /* Bot comment box */
+      .comment-box {
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        margin-bottom: 16px;
+      }
+      .comment-header {
+        background: #161b22;
+        border-bottom: 1px solid #30363d;
+        padding: 12px 16px;
+        font-size: 14px;
+        color: #8b949e;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 6px 6px 0 0;
+      }
+      .comment-header .author {
+        color: #e6edf3;
+        font-weight: 600;
+      }
+      .comment-header .bot-badge {
+        background: #1c2128;
+        border: 1px solid #30363d;
+        border-radius: 16px;
+        padding: 1px 8px;
+        font-size: 12px;
+        color: #8b949e;
+        font-weight: 500;
+      }
+      .comment-body {
+        padding: 20px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #e6edf3;
+      }
+
+      /* Avatar */
+      .avatar-timeline {
+        display: flex;
+        gap: 12px;
+      }
+      .bot-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8a5cf6 0%, #6d28d9 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        position: relative;
+      }
+      .bot-avatar::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #0d1117;
+        border: 2px solid #0d1117;
+      }
+      .bot-avatar svg {
+        fill: #fff;
+      }
+
+      /* Erode analysis content */
+      .analysis-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: #e6edf3;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .analysis-title svg {
+        flex-shrink: 0;
+      }
+
+      .meta-row {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+      .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .meta-label {
+        color: #8b949e;
+      }
+      .meta-value {
+        color: #e6edf3;
+        font-weight: 500;
+      }
+      .status-issues {
+        color: #f85149;
+        font-weight: 600;
+      }
+
+      /* Collapsed section */
+      .collapsed-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        font-size: 13px;
+        color: #8b949e;
+        cursor: pointer;
+      }
+      .collapsed-row svg {
+        fill: #8b949e;
+        width: 12px;
+        height: 12px;
+      }
+
+      /* Violation block */
+      .violation {
+        border-left: 3px solid #f85149;
+        background: rgba(248, 81, 73, 0.06);
+        border-radius: 0 6px 6px 0;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .violation-severity {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(248, 81, 73, 0.15);
+        color: #f85149;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+      .violation p {
+        margin-bottom: 10px;
+        color: #e6edf3;
+        line-height: 1.6;
+      }
+      .violation p:last-child {
+        margin-bottom: 0;
+      }
+      .violation-detail {
+        font-size: 13px;
+        color: #8b949e;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 4px;
+      }
+      .violation-detail strong {
+        color: #e6edf3;
+        font-weight: 500;
+      }
+      .violation code {
+        background: #1c2128;
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 13px;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        color: #e6edf3;
+      }
+
+      /* Recommendation */
+      .recommendation {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 14px 16px;
+        margin-top: 10px;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #8b949e;
+      }
+      .recommendation strong {
+        color: #e6edf3;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      /* Resolve + overview */
+      .section-heading {
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 20px;
+        margin-bottom: 8px;
+        color: #e6edf3;
+      }
+      .resolve-list {
+        font-size: 14px;
+        color: #8b949e;
+        line-height: 1.6;
+        margin-bottom: 12px;
+      }
+      .overview-text {
+        font-size: 14px;
+        color: #8b949e;
+        line-height: 1.7;
+        margin-bottom: 16px;
+      }
+
+      /* Footer */
+      .erode-footer {
+        font-size: 12px;
+        color: #484f58;
+        border-top: 1px solid #21262d;
+        padding-top: 12px;
+        margin-top: 4px;
+      }
+
+      /* Divider */
+      .divider {
+        height: 1px;
+        background: #21262d;
+        margin: 16px 0;
+      }
+
+      /* Sidebar */
+      .sidebar-section {
+        padding-bottom: 16px;
+        margin-bottom: 16px;
+        border-bottom: 1px solid #30363d;
+      }
+      .sidebar-section:last-child {
+        border-bottom: none;
+      }
+      .sidebar-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #8b949e;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .sidebar-value {
+        font-size: 14px;
+        color: #e6edf3;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .label-tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 500;
+        border: 1px solid;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top navbar -->
+    <div class="topbar">
+      <div class="logo">
+        <svg height="32" viewBox="0 0 16 16" width="32">
+          <path
+            d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"
+          />
+        </svg>
+      </div>
+      <div class="repo-path"><span>erode-app</span> / <strong>playground</strong></div>
+      <input class="search" placeholder="Type / to search" readonly />
+      <div class="avatar-small"></div>
+    </div>
+
+    <!-- Repo tabs -->
+    <div class="repo-tabs">
+      <div class="tab">
+        <svg viewBox="0 0 16 16">
+          <path
+            d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0 1 1.994.574ZM8.755 4.75l-.004 7.322a3.752 3.752 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0 0-2.25 2.25Z"
+          />
+        </svg>
+        Code
+      </div>
+      <div class="tab">
+        <svg viewBox="0 0 16 16">
+          <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+          <path
+            d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z"
+          />
+        </svg>
+        Issues
+      </div>
+      <div class="tab active">
+        <svg viewBox="0 0 16 16">
+          <path
+            d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z"
+          />
+        </svg>
+        Pull requests <span class="count">2</span>
+      </div>
+      <div class="tab">
+        <svg viewBox="0 0 16 16">
+          <path
+            d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"
+          />
+        </svg>
+        Actions
+      </div>
+    </div>
+
+    <!-- PR header - compact -->
+    <div class="pr-header">
+      <div class="pr-title">feat: add admin users page <span class="number">#12</span></div>
+      <div class="pr-meta">
+        <span class="badge-open">
+          <svg viewBox="0 0 16 16">
+            <path
+              d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354Z"
+            />
+          </svg>
+          Open
+        </span>
+        <span><strong style="color: #e6edf3">parse</strong> wants to merge 3 commits into</span>
+        <span class="branch-label">main</span>
+        <span>from</span>
+        <span class="branch-label">feature/admin-users</span>
+      </div>
+    </div>
+
+    <!-- PR sub-tabs -->
+    <div class="pr-tabs">
+      <div class="tab active">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="#e6edf3">
+          <path
+            d="M1.75 1h8.5c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0 1 10.25 10H7.061l-2.574 2.573A1.458 1.458 0 0 1 2 11.543V10h-.25A1.75 1.75 0 0 1 0 8.25v-5.5C0 1.784.784 1 1.75 1ZM1.5 2.75v5.5c0 .138.112.25.25.25h1a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h3.5a.25.25 0 0 0 .25-.25v-5.5a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25Zm13 2a.25.25 0 0 0-.25-.25h-.5a.75.75 0 0 1 0-1.5h.5c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0 1 14.25 12H14v1.543a1.458 1.458 0 0 1-2.487 1.03L9.22 12.28a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215l2.22 2.22V11.25a.75.75 0 0 1 .75-.75h1a.25.25 0 0 0 .25-.25Z"
+          />
+        </svg>
+        Conversation <span class="count">2</span>
+      </div>
+      <div class="tab">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="#8b949e">
+          <path
+            d="M1 2.5A2.5 2.5 0 0 1 3.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 1 11.5Zm1.5 0v7.228A2.507 2.507 0 0 1 3.5 9.5h8V1.5H3.5a1 1 0 0 0-1 1Z"
+          />
+        </svg>
+        Commits <span class="count">3</span>
+      </div>
+      <div class="tab">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="#8b949e">
+          <path
+            d="M2.75 1h10.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25V2.75C1 1.784 1.784 1 2.75 1Zm10.5 1.5H2.75a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25V2.75a.25.25 0 0 0-.25-.25ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z"
+          />
+        </svg>
+        Files changed <span class="count">2</span>
+      </div>
+    </div>
+
+    <!-- Main content area -->
+    <div class="main">
+      <div class="timeline">
+        <div class="avatar-timeline">
+          <!-- Erode bot avatar -->
+          <div class="bot-avatar">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#fff"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
+          </div>
+          <div class="comment-box" style="flex: 1">
+            <div class="comment-header">
+              <span class="author">erode-app</span>
+              <span class="bot-badge">bot</span>
+              commented 1 minute ago
+            </div>
+            <div class="comment-body">
+              <div class="analysis-title">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#f85149"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"
+                  />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                Architectural Drift Analysis
+              </div>
+
+              <div class="meta-row">
+                <div class="meta-item">
+                  <span class="meta-label">Component:</span>
+                  <span class="meta-value">frontend</span>
+                  <span style="color: #8b949e; font-size: 13px">(Web Frontend)</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">Status:</span>
+                  <span class="status-issues">Issues detected</span>
+                </div>
+              </div>
+
+              <div class="collapsed-row">
+                <svg viewBox="0 0 12 12">
+                  <path d="M4.5 2l3.5 4-3.5 4" fill="none" stroke="#8b949e" stroke-width="1.5" />
+                </svg>
+                Selected from 5 candidates
+              </div>
+
+              <div class="violation">
+                <div class="violation-severity">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#f85149"
+                    stroke-width="2.5"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                  HIGH
+                </div>
+                <p>
+                  The frontend now directly depends on <code>user_service</code> by making HTTP
+                  requests to it, bypassing the <code>api_gateway</code>. This violates the
+                  documented architecture, which requires frontend to access
+                  <code>user_service</code> only through <code>api_gateway</code>.
+                </p>
+                <div class="violation-detail">
+                  <strong>Source:</strong>&nbsp; <code>packages/frontend/src/index.ts</code>
+                </div>
+                <div class="recommendation">
+                  <strong>Recommendation</strong>
+                  Remove the direct dependency from frontend to user_service. All frontend calls to
+                  user_service should be routed through the api_gateway. If direct access is
+                  required for a specific reason, update the architecture model to explicitly allow
+                  frontend &rarr; user_service and document why.
+                </div>
+              </div>
+
+              <div class="section-heading">How to Resolve</div>
+              <div class="resolve-list">
+                Adjust the architecture model to: include missing relationships, revise component
+                boundaries, or record intentional changes.
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="section-heading">Overview</div>
+              <div class="overview-text">
+                This pull request introduces a new <code>/admin/users</code> endpoint in the
+                frontend service. The implementation creates a direct HTTP connection from
+                <code>frontend</code> to <code>user_service</code>, which is not declared in the
+                current architecture model. The architecture specifies that
+                <code>frontend</code> communicates with backend services exclusively through
+                <code>api_gateway</code>.
+              </div>
+
+              <div class="erode-footer">
+                Automated by <strong style="color: #8b949e">erode</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">Reviewers</div>
+          <div class="sidebar-value" style="color: #8b949e">No reviews yet</div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Labels</div>
+          <div class="sidebar-value" style="gap: 4px; flex-wrap: wrap">
+            <span
+              class="label-tag"
+              style="border-color: #3fb950; color: #3fb950; background: rgba(63, 185, 80, 0.1)"
+              >feature</span
+            >
+            <span
+              class="label-tag"
+              style="border-color: #f85149; color: #f85149; background: rgba(248, 81, 73, 0.1)"
+              >architecture-drift</span
+            >
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Projects</div>
+          <div class="sidebar-value" style="color: #8b949e">None yet</div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Milestone</div>
+          <div class="sidebar-value" style="color: #8b949e">No milestone</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

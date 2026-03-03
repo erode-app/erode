@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, initial-scale=1" />
+    <title>feat: add admin users page #12</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+        background: #0d1117;
+        color: #e6edf3;
+        width: 1920px;
+        min-height: 1080px;
+        overflow: hidden;
+      }
+
+      /* Top nav bar */
+      .topbar {
+        background: #010409;
+        border-bottom: 1px solid #30363d;
+        height: 62px;
+        display: flex;
+        align-items: center;
+        padding: 0 32px;
+        gap: 16px;
+      }
+      .topbar .logo svg {
+        fill: #e6edf3;
+      }
+      .topbar .repo-path {
+        font-size: 16px;
+        color: #79c0ff;
+      }
+      .topbar .repo-path span {
+        color: #8b949e;
+      }
+      .topbar .search {
+        margin-left: auto;
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 5px 12px;
+        color: #8b949e;
+        font-size: 14px;
+        width: 280px;
+      }
+      .topbar .avatar-small {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #30363d;
+        margin-left: 8px;
+      }
+
+      /* Repo tabs */
+      .repo-tabs {
+        background: #010409;
+        border-bottom: 1px solid #30363d;
+        display: flex;
+        padding: 0 32px;
+        gap: 0;
+      }
+      .repo-tabs .tab {
+        padding: 12px 16px;
+        font-size: 14px;
+        color: #8b949e;
+        border-bottom: 2px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .repo-tabs .tab.active {
+        color: #e6edf3;
+        border-bottom-color: #f78166;
+      }
+      .repo-tabs .tab .count {
+        background: #30363d;
+        border-radius: 10px;
+        padding: 0 6px;
+        font-size: 12px;
+      }
+      .repo-tabs .tab svg {
+        fill: #8b949e;
+        width: 16px;
+        height: 16px;
+      }
+      .repo-tabs .tab.active svg {
+        fill: #e6edf3;
+      }
+
+      /* PR header */
+      .pr-header {
+        padding: 24px 64px 16px;
+        border-bottom: 1px solid #30363d;
+      }
+      .pr-title {
+        font-size: 32px;
+        font-weight: 400;
+        line-height: 1.3;
+      }
+      .pr-title .number {
+        color: #8b949e;
+        font-weight: 300;
+      }
+      .pr-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        font-size: 14px;
+        color: #8b949e;
+      }
+      .badge-open {
+        background: #238636;
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .badge-open svg {
+        fill: #fff;
+        width: 16px;
+        height: 16px;
+      }
+      .branch-label {
+        background: #1f3148;
+        color: #79c0ff;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      }
+
+      /* PR sub-tabs */
+      .pr-tabs {
+        display: flex;
+        padding: 0 64px;
+        gap: 0;
+        border-bottom: 1px solid #30363d;
+      }
+      .pr-tabs .tab {
+        padding: 12px 16px;
+        font-size: 14px;
+        color: #8b949e;
+        border-bottom: 2px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .pr-tabs .tab.active {
+        color: #e6edf3;
+        border-bottom-color: #f78166;
+      }
+      .pr-tabs .tab .count {
+        background: #30363d;
+        border-radius: 10px;
+        padding: 0 6px;
+        font-size: 12px;
+        color: #e6edf3;
+      }
+
+      /* Main content */
+      .main {
+        display: flex;
+        padding: 24px 64px;
+        gap: 24px;
+      }
+      .timeline {
+        flex: 1;
+        min-width: 0;
+      }
+      .sidebar {
+        width: 280px;
+        flex-shrink: 0;
+      }
+
+      /* Comment box */
+      .comment-box {
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        margin-bottom: 16px;
+      }
+      .comment-header {
+        background: #161b22;
+        border-bottom: 1px solid #30363d;
+        padding: 12px 16px;
+        font-size: 14px;
+        color: #8b949e;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 6px 6px 0 0;
+      }
+      .comment-header .author {
+        color: #e6edf3;
+        font-weight: 600;
+      }
+      .comment-header .owner-badge {
+        border: 1px solid #30363d;
+        border-radius: 16px;
+        padding: 0 8px;
+        font-size: 12px;
+        color: #8b949e;
+      }
+      .comment-body {
+        padding: 16px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #e6edf3;
+      }
+      .comment-body p {
+        margin-bottom: 12px;
+      }
+      .comment-body p:last-child {
+        margin-bottom: 0;
+      }
+      .comment-body code {
+        background: #1c2128;
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 13px;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        color: #e6edf3;
+      }
+
+      /* Avatar */
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .avatar-timeline {
+        display: flex;
+        gap: 12px;
+      }
+
+      /* Diff snippet */
+      .diff-snippet {
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        margin-top: 12px;
+        overflow: hidden;
+      }
+      .diff-file-header {
+        background: #161b22;
+        padding: 8px 12px;
+        font-size: 13px;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        color: #8b949e;
+        border-bottom: 1px solid #30363d;
+      }
+      .diff-lines {
+        font-size: 13px;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        line-height: 20px;
+      }
+      .diff-line {
+        padding: 0 12px;
+        white-space: pre;
+        display: flex;
+      }
+      .diff-line .ln {
+        display: inline-block;
+        width: 50px;
+        text-align: right;
+        padding-right: 12px;
+        color: #484f58;
+        user-select: none;
+        flex-shrink: 0;
+      }
+      .diff-line .ln2 {
+        display: inline-block;
+        width: 50px;
+        text-align: right;
+        padding-right: 16px;
+        color: #484f58;
+        user-select: none;
+        flex-shrink: 0;
+      }
+      .diff-line.add {
+        background: rgba(35, 134, 54, 0.15);
+      }
+      .diff-line.add .code {
+        color: #aff5b4;
+      }
+      .diff-line.context .code {
+        color: #8b949e;
+      }
+      .diff-hunk {
+        background: #161b22;
+        padding: 0 12px;
+        color: #79c0ff;
+        font-size: 13px;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        line-height: 28px;
+        border-top: 1px solid #30363d;
+        border-bottom: 1px solid #30363d;
+      }
+
+      /* Sidebar */
+      .sidebar-section {
+        padding-bottom: 16px;
+        margin-bottom: 16px;
+        border-bottom: 1px solid #30363d;
+      }
+      .sidebar-section:last-child {
+        border-bottom: none;
+      }
+      .sidebar-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #8b949e;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .sidebar-value {
+        font-size: 14px;
+        color: #e6edf3;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .sidebar-value .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .label-tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 500;
+        border: 1px solid;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top navbar -->
+    <div class="topbar">
+      <div class="logo">
+        <svg height="32" viewBox="0 0 16 16" width="32">
+          <path
+            d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"
+          />
+        </svg>
+      </div>
+      <div class="repo-path"><span>erode-app</span> / <strong>playground</strong></div>
+      <input class="search" placeholder="Type / to search" readonly />
+      <div class="avatar-small"></div>
+    </div>
+
+    <!-- Repo tabs -->
+    <div class="repo-tabs">
+      <div class="tab">
+        <svg viewBox="0 0 16 16">
+          <path
+            d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0 1 1.994.574ZM8.755 4.75l-.004 7.322a3.752 3.752 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0 0-2.25 2.25Z"
+          />
+        </svg>
+        Code
+      </div>
+      <div class="tab">
+        <svg viewBox="0 0 16 16">
+          <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+          <path
+            d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z"
+          />
+        </svg>
+        Issues
+      </div>
+      <div class="tab active">
+        <svg viewBox="0 0 16 16">
+          <path
+            d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z"
+          />
+        </svg>
+        Pull requests <span class="count">2</span>
+      </div>
+      <div class="tab">
+        <svg viewBox="0 0 16 16">
+          <path
+            d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"
+          />
+        </svg>
+        Actions
+      </div>
+    </div>
+
+    <!-- PR header -->
+    <div class="pr-header">
+      <div class="pr-title">feat: add admin users page <span class="number">#12</span></div>
+      <div class="pr-meta">
+        <span class="badge-open">
+          <svg viewBox="0 0 16 16">
+            <path
+              d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354Z"
+            />
+          </svg>
+          Open
+        </span>
+        <span><strong style="color: #e6edf3">parse</strong> wants to merge 3 commits into</span>
+        <span class="branch-label">main</span>
+        <span>from</span>
+        <span class="branch-label">feature/admin-users</span>
+      </div>
+    </div>
+
+    <!-- PR sub-tabs -->
+    <div class="pr-tabs">
+      <div class="tab active">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="#e6edf3">
+          <path
+            d="M1.75 1h8.5c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0 1 10.25 10H7.061l-2.574 2.573A1.458 1.458 0 0 1 2 11.543V10h-.25A1.75 1.75 0 0 1 0 8.25v-5.5C0 1.784.784 1 1.75 1ZM1.5 2.75v5.5c0 .138.112.25.25.25h1a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h3.5a.25.25 0 0 0 .25-.25v-5.5a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25Zm13 2a.25.25 0 0 0-.25-.25h-.5a.75.75 0 0 1 0-1.5h.5c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0 1 14.25 12H14v1.543a1.458 1.458 0 0 1-2.487 1.03L9.22 12.28a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215l2.22 2.22V11.25a.75.75 0 0 1 .75-.75h1a.25.25 0 0 0 .25-.25Z"
+          />
+        </svg>
+        Conversation <span class="count">2</span>
+      </div>
+      <div class="tab">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="#8b949e">
+          <path
+            d="M1 2.5A2.5 2.5 0 0 1 3.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 1 11.5Zm1.5 0v7.228A2.507 2.507 0 0 1 3.5 9.5h8V1.5H3.5a1 1 0 0 0-1 1Z"
+          />
+        </svg>
+        Commits <span class="count">3</span>
+      </div>
+      <div class="tab">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="#8b949e">
+          <path
+            d="M2.75 1h10.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25V2.75C1 1.784 1.784 1 2.75 1Zm10.5 1.5H2.75a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25V2.75a.25.25 0 0 0-.25-.25ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z"
+          />
+        </svg>
+        Files changed <span class="count">2</span>
+      </div>
+    </div>
+
+    <!-- Main content area -->
+    <div class="main">
+      <div class="timeline">
+        <!-- PR description -->
+        <div class="avatar-timeline">
+          <svg width="40" height="40" viewBox="0 0 40 40">
+            <rect width="40" height="40" rx="20" fill="#30363d" />
+            <text
+              x="20"
+              y="24"
+              text-anchor="middle"
+              fill="#8b949e"
+              font-size="16"
+              font-family="sans-serif"
+            >
+              P
+            </text>
+          </svg>
+          <div class="comment-box" style="flex: 1">
+            <div class="comment-header">
+              <span class="author">parse</span>
+              commented 2 minutes ago
+              <span class="owner-badge">Contributor</span>
+            </div>
+            <div class="comment-body">
+              <p>
+                Adds <code>/admin/users</code> route to the frontend that fetches user data directly
+                from <code>user-service</code>. Renders a simple admin page listing all users.
+              </p>
+
+              <div class="diff-snippet">
+                <div class="diff-file-header">packages/frontend/src/index.ts</div>
+                <div class="diff-lines">
+                  <div class="diff-hunk">@@ -3,6 +3,7 @@ import express from "express";</div>
+                  <div class="diff-line context">
+                    <span class="ln">3</span><span class="ln2">3</span
+                    ><span class="code"> const app = express();</span>
+                  </div>
+                  <div class="diff-line context">
+                    <span class="ln">4</span><span class="ln2">4</span
+                    ><span class="code"> const API_GATEWAY = "http://api-gateway:3000";</span>
+                  </div>
+                  <div class="diff-line add">
+                    <span class="ln"></span><span class="ln2">5</span
+                    ><span class="code">+const USER_SERVICE = "http://user-service:3001";</span>
+                  </div>
+                  <div class="diff-line context">
+                    <span class="ln">5</span><span class="ln2">6</span><span class="code"> </span>
+                  </div>
+                  <div class="diff-hunk">
+                    @@ -18,6 +19,15 @@ app.get("/products", async (req, res) => {
+                  </div>
+                  <div class="diff-line context">
+                    <span class="ln">18</span><span class="ln2">19</span
+                    ><span class="code"> res.json(data);</span>
+                  </div>
+                  <div class="diff-line context">
+                    <span class="ln">19</span><span class="ln2">20</span
+                    ><span class="code"> });</span>
+                  </div>
+                  <div class="diff-line context">
+                    <span class="ln">20</span><span class="ln2">21</span><span class="code"> </span>
+                  </div>
+                  <div class="diff-line add">
+                    <span class="ln"></span><span class="ln2">22</span
+                    ><span class="code">+app.get("/admin/users", async (req, res) => {</span>
+                  </div>
+                  <div class="diff-line add">
+                    <span class="ln"></span><span class="ln2">23</span
+                    ><span class="code"
+                      >+ const response = await fetch(`${USER_SERVICE}/users`);</span
+                    >
+                  </div>
+                  <div class="diff-line add">
+                    <span class="ln"></span><span class="ln2">24</span
+                    ><span class="code">+ const data = await response.json();</span>
+                  </div>
+                  <div class="diff-line add">
+                    <span class="ln"></span><span class="ln2">25</span
+                    ><span class="code">+ res.json(data);</span>
+                  </div>
+                  <div class="diff-line add">
+                    <span class="ln"></span><span class="ln2">26</span
+                    ><span class="code">+});</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">Reviewers</div>
+          <div class="sidebar-value" style="color: #8b949e">No reviews yet</div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Labels</div>
+          <div class="sidebar-value">
+            <span
+              class="label-tag"
+              style="border-color: #3fb950; color: #3fb950; background: rgba(63, 185, 80, 0.1)"
+              >feature</span
+            >
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Projects</div>
+          <div class="sidebar-value" style="color: #8b949e">None yet</div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Milestone</div>
+          <div class="sidebar-value" style="color: #8b949e">No milestone</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
