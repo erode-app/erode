@@ -15,7 +15,7 @@ on:
 
 concurrency:
   group: deploy-web
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: read
