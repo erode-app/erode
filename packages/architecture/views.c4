@@ -25,6 +25,24 @@ views {
   view pipeline-overview of erode.core.pipelines {
     title 'Analysis Pipeline'
     include *
+    autoLayout LeftRight
+  }
+
+  dynamic view pipeline-stages {
+    variant sequence
+    title 'Pipeline Stages'
+
+    erode.core.pipelines.stage1 -> erode.core.pipelines.stage2 'component resolved'
+    erode.core.pipelines.stage2 -> erode.core.pipelines.stage3 'dependencies extracted'
+    erode.core.pipelines.stage3 -> erode.core.pipelines.stage4 'relationships to add'
+    erode.core.pipelines.stage4 -> erode.core.pipelines.publish 'patch ready'
+
+    include
+      erode.core.pipelines.stage1,
+      erode.core.pipelines.stage2,
+      erode.core.pipelines.stage3,
+      erode.core.pipelines.stage4,
+      erode.core.pipelines.publish
   }
 
   dynamic view pipeline {
@@ -91,8 +109,10 @@ views {
     include *
     include anthropicApi
     include geminiApi
+    include openaiApi
     include erode.core.providers.* -> anthropicApi
     include erode.core.providers.* -> geminiApi
+    include erode.core.providers.* -> openaiApi
   }
 
   view platforms of erode.core.platforms {
