@@ -174,6 +174,10 @@ The `issue_comment` trigger fires for all PR comments. The `if` guard ensures th
 Use `open-pr: 'true'` if you want a model PR on every analysis run. Use `open-pr: 'auto'` with the workflow above if you prefer on-demand creation.
 :::
 
+:::tip[See it in action]
+[Playground PR #3](https://github.com/erode-app/playground/pull/3) demonstrates the full flow. The PR adds a new dependency and a new component. Erode detects both, a reviewer replies `/erode update-model`, and Erode creates a [model update PR](https://github.com/erode-app/playground-models-only/pull/2) with the proposed relationship and component additions.
+:::
+
 ## PR comments
 
 After analysis, Erode posts a comment on the pull request containing:
