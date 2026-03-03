@@ -6,6 +6,10 @@ Compares pull request diffs against a [LikeC4](https://likec4.dev) or [Structuri
 
 Supported AI providers: **Gemini** (default), **OpenAI**, and **Anthropic** (experimental).
 
+**New here?** Start with [Why it matters](https://erode.dev/docs/why-it-matters/) to understand the problem erode solves.
+
+<video src="packages/web/public/videos/erode_pitch.mp4" controls width="100%"></video>
+
 ## Why
 
 Your architecture already exists in the code. Erode makes it visible during code review, showing not just the code diff but the architectural diff, so teams can have the conversation while the change is still small. A finding is not necessarily a problem. What matters is that the change is conscious and documented.
@@ -33,27 +37,9 @@ jobs:
 
 See the [GitHub Actions guide](https://erode.dev/docs/ci/github-actions/) for inputs, outputs, and advanced examples.
 
-### CLI
-
-```bash
-node packages/cli/dist/cli.js analyze ./model \
-  --url https://github.com/org/repo/pull/42 \
-  --comment
-```
-
-See the [CLI usage guide](https://erode.dev/docs/guides/cli-usage/) for all commands and flags.
-
 ## Documentation
 
-Full documentation is available at [erode.dev](https://erode.dev):
-
-- [Configuration](https://erode.dev/docs/guides/configuration/) — environment variables, diff limits, timeouts, model overrides
-- [CLI Usage](https://erode.dev/docs/guides/cli-usage/) — all commands and flags
-- [GitHub Actions](https://erode.dev/docs/ci/github-actions/) — action inputs, outputs, and workflow examples
-- [GitLab CI](https://erode.dev/docs/ci/gitlab-ci/) — Docker image setup and pipeline configuration
-- [Self-Hosted](https://erode.dev/docs/ci/self-hosted/) — fork, Docker, and CLI deployment options
-- [LikeC4 Model](https://erode.dev/docs/models/likec4/) — writing a LikeC4 architecture model
-- [Structurizr Model](https://erode.dev/docs/models/structurizr/) — using a Structurizr workspace
+Full documentation at [erode.dev](https://erode.dev).
 
 ## Development
 
