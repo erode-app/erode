@@ -39,7 +39,7 @@ jobs:
 
       - run: npm run build --workspace=packages/web
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: packages/web/dist
 
