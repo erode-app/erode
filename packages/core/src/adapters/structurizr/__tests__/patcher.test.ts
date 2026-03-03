@@ -15,7 +15,7 @@ vi.mock('fs', () => ({
 }));
 
 vi.mock('child_process', () => ({
-  execSync: vi.fn(() => '/repo'),
+  execFileSync: vi.fn(() => '/repo'),
 }));
 
 vi.mock('../dsl-validator.js', () => ({

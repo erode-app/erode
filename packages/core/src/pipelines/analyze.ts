@@ -353,7 +353,7 @@ export async function runAnalyze(
         }
         // Write in-place when --patch without --open-pr
         if (options.patchLocal && !options.openPr && !options.dryRun) {
-          await writeFile(ctx.patchResult.filePath, ctx.patchResult.content, 'utf8');
+          await writeFile(ctx.patchResult.absolutePath, ctx.patchResult.content, 'utf8');
           p.succeed(`Model patched: ${ctx.patchResult.filePath}`);
         } else if (options.dryRun) {
           p.info('Dry run: skipped writing patched model');

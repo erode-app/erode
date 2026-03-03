@@ -3,7 +3,7 @@ title: GitHub Actions
 description: Set up Erode as a GitHub Actions workflow.
 ---
 
-The recommended way to run Erode is as a GitHub Actions workflow that checks every pull request automatically.
+Run Erode as a GitHub Actions workflow that checks every pull request automatically.
 
 ## Basic workflow
 
@@ -128,7 +128,10 @@ Relationship removals are informational only. The PR body lists relationships th
 
 With `open-pr: 'auto'`, Erode skips PR creation on regular analysis runs. Instead, when model updates are detected, the analysis comment includes a call-to-action:
 
-> Reply `/erode update-model` on this PR to open a model update PR.
+:::note
+When model updates are detected, the analysis comment includes the message:
+"Reply `/erode update-model` on this PR to open a model update PR."
+:::
 
 To handle that comment, add the `issue_comment` trigger to your workflow. Use `open-pr: 'true'` for comment-triggered runs so the initial model PR is created, and `'auto'` for regular `pull_request` runs so subsequent pushes keep it updated:
 

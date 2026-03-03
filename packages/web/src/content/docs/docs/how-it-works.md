@@ -17,7 +17,7 @@ Erode uses a multi-stage AI pipeline to analyze pull requests for architecture d
 
 ## File filtering
 
-Before any AI stage runs, Erode filters the PR diff to remove files that are irrelevant to architecture analysis. Tests, documentation, lock files, build config, CI config, and build output are all stripped out automatically. This reduces noise and saves API usage.
+Before any AI stage runs, Erode filters the PR diff to remove files that are irrelevant to architecture analysis. Erode strips out tests, documentation, lock files, build config, CI config, and build output automatically. This reduces noise and saves API usage.
 
 The built-in skip patterns cover:
 

@@ -15,7 +15,7 @@ vi.mock('fs', () => ({
 }));
 
 vi.mock('child_process', () => ({
-  execSync: vi.fn(() => '/repo'),
+  execFileSync: vi.fn(() => '/repo'),
   execFile: vi.fn(),
 }));
 
@@ -434,6 +434,40 @@ describe('LikeC4Patcher', () => {
     expect(result.newComponents).toBeUndefined();
     // Relationship should still be applied
     expect(result.content).toContain("customer -> backend 'New call'");
+  });
+
+  it('should attribute component DSL lines correctly when one ID is a substring of another', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+
+    const newComps: NewComponent[] = [
+      { id: 'api', kind: 'service', name: 'API' },
+      { id: 'api-gateway', kind: 'service', name: 'API Gateway' },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: [],
+      existingRelationships: [],
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+      newComponents: newComps,
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    expect(result.newComponents).toHaveLength(2);
+
+    const apiComp = result.newComponents?.find((c) => c.id === 'api');
+    const gatewayComp = result.newComponents?.find((c) => c.id === 'api-gateway');
+
+    // Each component should have exactly its own DSL block
+    expect(apiComp?.insertedLines).toHaveLength(1);
+    expect(apiComp?.insertedLines[0]).toContain("api = service 'API'");
+    expect(apiComp?.insertedLines[0]).not.toContain('api-gateway');
+
+    expect(gatewayComp?.insertedLines).toHaveLength(1);
+    expect(gatewayComp?.insertedLines[0]).toContain("api-gateway = service 'API Gateway'");
   });
 
   it('should produce correct combined output with new component and relationship', async () => {

@@ -177,6 +177,7 @@ describe('publishResults', () => {
   it('creates PR when openPr is true and patchResult is set', async () => {
     const patchResult = {
       filePath: 'model.c4',
+      absolutePath: '/tmp/model/model.c4',
       content: 'new content',
       insertedLines: ['comp.a -> comp.b'],
       skipped: [],
@@ -196,6 +197,7 @@ describe('publishResults', () => {
   it('skips PR creation on dry run', async () => {
     const patchResult = {
       filePath: 'model.c4',
+      absolutePath: '/tmp/model/model.c4',
       content: 'new content',
       insertedLines: ['comp.a -> comp.b'],
       skipped: [],
@@ -286,6 +288,7 @@ describe('publishResults', () => {
   it('uses parseOwnerRepo to split modelRepo for PR creation', async () => {
     const patchResult = {
       filePath: 'model.c4',
+      absolutePath: '/tmp/model/model.c4',
       content: 'new content',
       insertedLines: ['comp.a -> comp.b'],
       skipped: [],

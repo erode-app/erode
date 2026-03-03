@@ -9,6 +9,8 @@ export { quickValidatePatch } from './base-patcher.js';
 export interface PatchResult {
   /** Repo-relative path to the patched file */
   filePath: string;
+  /** Absolute path to the patched file, for local writes */
+  absolutePath: string;
   /** Complete patched file content */
   content: string;
   /** Lines that were inserted */

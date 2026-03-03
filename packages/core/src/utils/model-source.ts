@@ -108,7 +108,13 @@ function resolveToken(cloneUrl: string): string | undefined {
       default:
         return undefined;
     }
-  } catch {
+  } catch (error) {
+    if (CONFIG.debug.verbose) {
+      console.error(
+        '[model-source] Platform detection failed, proceeding without auth:',
+        String(error)
+      );
+    }
     return undefined;
   }
 }
@@ -126,7 +132,13 @@ function authUsername(cloneUrl: string): string {
       default:
         return 'token';
     }
-  } catch {
+  } catch (error) {
+    if (CONFIG.debug.verbose) {
+      console.error(
+        '[model-source] Platform detection failed, defaulting to generic auth:',
+        String(error)
+      );
+    }
     return 'token';
   }
 }

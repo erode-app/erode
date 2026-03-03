@@ -342,6 +342,7 @@ describe('runAnalyze', () => {
     mockAnalyzeDrift.mockResolvedValue(driftResult);
     mockPatcherPatch.mockResolvedValue({
       filePath: 'model.c4',
+      absolutePath: '/path/to/model/model.c4',
       content: 'patched content',
       insertedLines: ['  comp.api -> comp.db'],
       skipped: [],
@@ -351,6 +352,32 @@ describe('runAnalyze', () => {
 
     expect(createModelPatcher).toHaveBeenCalledWith('likec4');
     expect(mockPatcherPatch).toHaveBeenCalledOnce();
+  });
+
+  it('writes to absolutePath when --patch-local is set', async () => {
+    const driftResult = makeDriftResult({
+      modelUpdates: {
+        relationships: [
+          { source: 'comp.api', target: 'comp.db', kind: 'uses', description: 'API uses DB' },
+        ],
+      },
+    });
+    mockAnalyzeDrift.mockResolvedValue(driftResult);
+    mockPatcherPatch.mockResolvedValue({
+      filePath: 'model.c4',
+      absolutePath: '/path/to/model/model.c4',
+      content: 'patched content',
+      insertedLines: ['  comp.api -> comp.db'],
+      skipped: [],
+    });
+
+    await runAnalyze(makeOptions({ patchLocal: true }));
+
+    expect(mockWriteFile).toHaveBeenCalledWith(
+      '/path/to/model/model.c4',
+      'patched content',
+      'utf8'
+    );
   });
 
   it('skips patching when no modelUpdates relationships are present', async () => {

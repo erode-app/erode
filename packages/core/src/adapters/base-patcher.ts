@@ -1,6 +1,6 @@
 import { readFileSync, realpathSync } from 'fs';
 import { dirname, relative } from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import type { ModelPatcher, PatchResult, DslValidationResult } from './model-patcher.js';
 import type { StructuredRelationship, NewComponent } from '../analysis/analysis-types.js';
 import type { ModelRelationship, ComponentIndex } from './architecture-types.js';
@@ -145,17 +145,18 @@ export abstract class BasePatcher implements ModelPatcher {
 
     return {
       filePath: repoRelativePath,
+      absolutePath: targetFile,
       content: finalContent,
       insertedLines,
       relationshipLines: relationshipDslLines,
       skipped,
       newComponents:
         genuinelyNew.length > 0
-          ? genuinelyNew.map((c) => ({
+          ? genuinelyNew.map((c, i) => ({
               id: c.id,
               kind: c.kind,
               name: c.name,
-              insertedLines: componentDslLines.filter((line) => line.includes(c.id)),
+              insertedLines: componentDslLines[i] ? [componentDslLines[i]] : [],
             }))
           : undefined,
       validationSkipped: validationSkipped || undefined,
@@ -326,7 +327,7 @@ export abstract class BasePatcher implements ModelPatcher {
 
   protected getRepoRelativePath(filePath: string): string {
     try {
-      const repoRoot = execSync('git rev-parse --show-toplevel', {
+      const repoRoot = execFileSync('git', ['rev-parse', '--show-toplevel'], {
         encoding: 'utf-8',
         cwd: dirname(filePath),
       }).trim();

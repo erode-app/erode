@@ -44,6 +44,7 @@ erode analyze ./model --url https://bitbucket.org/workspace/repo/pull-requests/4
 | `--format <fmt>`            | Output format: `console`, `json`                                      | `console` |
 | `--open-pr`                 | Create a PR with model updates (see below)                            |           |
 | `--model-repo <owner/repo>` | Target repository for model PRs (defaults to the analyzed repo)       |           |
+| `--model-ref <ref>`         | Branch or tag to clone from `--model-repo`                            | `main`    |
 | `--patch-local`             | Patch the architecture model in-place (see below)                     |           |
 | `--dry-run`                 | Preview without creating a PR or writing patches                      |           |
 | `--draft`                   | Create change request as draft                                        | `true`    |

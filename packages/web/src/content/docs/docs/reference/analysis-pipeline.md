@@ -83,10 +83,10 @@ Each stage loads a markdown prompt template from `src/analysis/prompts/` at runt
 
 ## Error handling
 
-API errors are detected automatically across all stages. The pipeline handles:
+Erode detects API errors automatically across all stages. The pipeline handles:
 
 - **Rate limiting**: Detected from provider response headers and status codes. Reported with retry guidance.
 - **Timeouts**: Controlled by `GEMINI_TIMEOUT`, `OPENAI_TIMEOUT`, and `ANTHROPIC_TIMEOUT` environment variables.
 - **Acceleration limits**: Provider-specific quota errors are identified and reported with context.
 
-All errors are wrapped in structured error types that carry an error code, a user-facing message, and metadata about the failed request.
+The pipeline wraps all errors in structured error types that carry an error code, a user-facing message, and metadata about the failed request.
