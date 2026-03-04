@@ -8,7 +8,7 @@ Supported AI providers: **Gemini** (default), **OpenAI**, and **Anthropic** (exp
 
 **New here?** Start with [Why it matters](https://erode.dev/docs/why-it-matters/) to understand the problem erode solves.
 
-<video src="packages/web/public/videos/erode_pitch.mp4" controls width="100%"></video>
+![Erode demo](packages/web/public/videos/erode_pitch.gif)
 
 ## Why
 

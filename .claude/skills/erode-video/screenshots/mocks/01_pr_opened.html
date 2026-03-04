@@ -4,17 +4,40 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, initial-scale=1" />
     <title>feat: add admin users page #12</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
     <style>
+      :root {
+        --bg-primary: #0a0a0b;
+        --bg-darker: #060608;
+        --bg-secondary: #111113;
+        --bg-elevated: #18181b;
+        --text-primary: #fafafa;
+        --text-muted: #a1a1aa;
+        --text-tertiary: #8a8a93;
+        --accent: #f59e0b;
+        --success: #22c55e;
+        --severity-high: #ef4444;
+        --border: #27272a;
+        --diff-hunk: #818cf8;
+        --diff-add-text: #86efac;
+        --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+        --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+      }
+
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
       body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
-        background: #0d1117;
-        color: #e6edf3;
+        font-family: var(--font-body);
+        background: var(--bg-primary);
+        color: var(--text-primary);
         width: 1920px;
         min-height: 1080px;
         overflow: hidden;
@@ -22,82 +45,29 @@
 
       /* Top nav bar */
       .topbar {
-        background: #010409;
-        border-bottom: 1px solid #30363d;
+        background: var(--bg-darker);
+        border-bottom: 1px solid var(--border);
         height: 62px;
         display: flex;
         align-items: center;
         padding: 0 32px;
-        gap: 16px;
+        gap: 12px;
       }
       .topbar .logo svg {
-        fill: #e6edf3;
+        fill: var(--text-muted);
       }
       .topbar .repo-path {
         font-size: 16px;
-        color: #79c0ff;
+        color: var(--text-muted);
       }
-      .topbar .repo-path span {
-        color: #8b949e;
-      }
-      .topbar .search {
-        margin-left: auto;
-        background: #0d1117;
-        border: 1px solid #30363d;
-        border-radius: 6px;
-        padding: 5px 12px;
-        color: #8b949e;
-        font-size: 14px;
-        width: 280px;
-      }
-      .topbar .avatar-small {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #30363d;
-        margin-left: 8px;
-      }
-
-      /* Repo tabs */
-      .repo-tabs {
-        background: #010409;
-        border-bottom: 1px solid #30363d;
-        display: flex;
-        padding: 0 32px;
-        gap: 0;
-      }
-      .repo-tabs .tab {
-        padding: 12px 16px;
-        font-size: 14px;
-        color: #8b949e;
-        border-bottom: 2px solid transparent;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .repo-tabs .tab.active {
-        color: #e6edf3;
-        border-bottom-color: #f78166;
-      }
-      .repo-tabs .tab .count {
-        background: #30363d;
-        border-radius: 10px;
-        padding: 0 6px;
-        font-size: 12px;
-      }
-      .repo-tabs .tab svg {
-        fill: #8b949e;
-        width: 16px;
-        height: 16px;
-      }
-      .repo-tabs .tab.active svg {
-        fill: #e6edf3;
+      .topbar .repo-path strong {
+        color: var(--text-primary);
       }
 
       /* PR header */
       .pr-header {
         padding: 24px 64px 16px;
-        border-bottom: 1px solid #30363d;
+        border-bottom: 1px solid var(--border);
       }
       .pr-title {
         font-size: 32px;
@@ -105,7 +75,7 @@
         line-height: 1.3;
       }
       .pr-title .number {
-        color: #8b949e;
+        color: var(--text-tertiary);
         font-weight: 300;
       }
       .pr-meta {
@@ -114,10 +84,10 @@
         gap: 8px;
         margin-top: 8px;
         font-size: 14px;
-        color: #8b949e;
+        color: var(--text-muted);
       }
       .badge-open {
-        background: #238636;
+        background: var(--success);
         color: #fff;
         padding: 4px 12px;
         border-radius: 16px;
@@ -125,20 +95,22 @@
         font-weight: 600;
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 6px;
       }
-      .badge-open svg {
-        fill: #fff;
-        width: 16px;
-        height: 16px;
+      .badge-open .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #fff;
+        display: inline-block;
       }
       .branch-label {
-        background: #1f3148;
-        color: #79c0ff;
+        background: #1c1c20;
+        color: var(--text-muted);
         padding: 2px 8px;
         border-radius: 6px;
         font-size: 13px;
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-family: var(--font-mono);
       }
 
       /* PR sub-tabs */
@@ -146,27 +118,31 @@
         display: flex;
         padding: 0 64px;
         gap: 0;
-        border-bottom: 1px solid #30363d;
+        border-bottom: 1px solid var(--border);
       }
       .pr-tabs .tab {
         padding: 12px 16px;
         font-size: 14px;
-        color: #8b949e;
+        color: var(--text-muted);
         border-bottom: 2px solid transparent;
         display: flex;
         align-items: center;
         gap: 6px;
       }
       .pr-tabs .tab.active {
-        color: #e6edf3;
-        border-bottom-color: #f78166;
+        color: var(--text-primary);
+        border-bottom-color: var(--accent);
       }
       .pr-tabs .tab .count {
-        background: #30363d;
+        background: var(--bg-elevated);
         border-radius: 10px;
         padding: 0 6px;
         font-size: 12px;
-        color: #e6edf3;
+        color: var(--text-primary);
+      }
+      .pr-tabs .tab svg {
+        width: 16px;
+        height: 16px;
       }
 
       /* Main content */
@@ -186,37 +162,30 @@
 
       /* Comment box */
       .comment-box {
-        border: 1px solid #30363d;
+        border: 1px solid var(--border);
         border-radius: 6px;
         margin-bottom: 16px;
       }
       .comment-header {
-        background: #161b22;
-        border-bottom: 1px solid #30363d;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border);
         padding: 12px 16px;
         font-size: 14px;
-        color: #8b949e;
+        color: var(--text-muted);
         display: flex;
         align-items: center;
         gap: 8px;
         border-radius: 6px 6px 0 0;
       }
       .comment-header .author {
-        color: #e6edf3;
+        color: var(--text-primary);
         font-weight: 600;
-      }
-      .comment-header .owner-badge {
-        border: 1px solid #30363d;
-        border-radius: 16px;
-        padding: 0 8px;
-        font-size: 12px;
-        color: #8b949e;
       }
       .comment-body {
         padding: 16px;
         font-size: 14px;
         line-height: 1.6;
-        color: #e6edf3;
+        color: var(--text-primary);
       }
       .comment-body p {
         margin-bottom: 12px;
@@ -225,12 +194,12 @@
         margin-bottom: 0;
       }
       .comment-body code {
-        background: #1c2128;
+        background: var(--bg-elevated);
         border-radius: 4px;
         padding: 2px 6px;
         font-size: 13px;
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-        color: #e6edf3;
+        font-family: var(--font-mono);
+        color: var(--text-primary);
       }
 
       /* Avatar */
@@ -247,23 +216,23 @@
 
       /* Diff snippet */
       .diff-snippet {
-        background: #0d1117;
-        border: 1px solid #30363d;
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
         border-radius: 6px;
         margin-top: 12px;
         overflow: hidden;
       }
       .diff-file-header {
-        background: #161b22;
+        background: var(--bg-secondary);
         padding: 8px 12px;
         font-size: 13px;
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-        color: #8b949e;
-        border-bottom: 1px solid #30363d;
+        font-family: var(--font-mono);
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border);
       }
       .diff-lines {
         font-size: 13px;
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-family: var(--font-mono);
         line-height: 20px;
       }
       .diff-line {
@@ -276,7 +245,7 @@
         width: 50px;
         text-align: right;
         padding-right: 12px;
-        color: #484f58;
+        color: #3f3f46;
         user-select: none;
         flex-shrink: 0;
       }
@@ -285,35 +254,35 @@
         width: 50px;
         text-align: right;
         padding-right: 16px;
-        color: #484f58;
+        color: #3f3f46;
         user-select: none;
         flex-shrink: 0;
       }
       .diff-line.add {
-        background: rgba(35, 134, 54, 0.15);
+        background: rgba(34, 197, 94, 0.1);
       }
       .diff-line.add .code {
-        color: #aff5b4;
+        color: var(--diff-add-text);
       }
       .diff-line.context .code {
-        color: #8b949e;
+        color: var(--text-tertiary);
       }
       .diff-hunk {
-        background: #161b22;
+        background: var(--bg-secondary);
         padding: 0 12px;
-        color: #79c0ff;
+        color: var(--diff-hunk);
         font-size: 13px;
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-family: var(--font-mono);
         line-height: 28px;
-        border-top: 1px solid #30363d;
-        border-bottom: 1px solid #30363d;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
       }
 
       /* Sidebar */
       .sidebar-section {
         padding-bottom: 16px;
         margin-bottom: 16px;
-        border-bottom: 1px solid #30363d;
+        border-bottom: 1px solid var(--border);
       }
       .sidebar-section:last-child {
         border-bottom: none;
@@ -321,14 +290,14 @@
       .sidebar-label {
         font-size: 12px;
         font-weight: 600;
-        color: #8b949e;
+        color: var(--text-muted);
         margin-bottom: 8px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
       .sidebar-value {
         font-size: 14px;
-        color: #e6edf3;
+        color: var(--text-primary);
         display: flex;
         align-items: center;
         gap: 6px;
@@ -353,52 +322,24 @@
     <!-- Top navbar -->
     <div class="topbar">
       <div class="logo">
-        <svg height="32" viewBox="0 0 16 16" width="32">
-          <path
-            d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"
-          />
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="color: var(--text-muted)"
+        >
+          <line x1="6" y1="3" x2="6" y2="15" />
+          <circle cx="18" cy="6" r="3" />
+          <circle cx="6" cy="18" r="3" />
+          <path d="M18 9a9 9 0 0 1-9 9" />
         </svg>
       </div>
-      <div class="repo-path"><span>erode-app</span> / <strong>playground</strong></div>
-      <input class="search" placeholder="Type / to search" readonly />
-      <div class="avatar-small"></div>
-    </div>
-
-    <!-- Repo tabs -->
-    <div class="repo-tabs">
-      <div class="tab">
-        <svg viewBox="0 0 16 16">
-          <path
-            d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0 1 1.994.574ZM8.755 4.75l-.004 7.322a3.752 3.752 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0 0-2.25 2.25Z"
-          />
-        </svg>
-        Code
-      </div>
-      <div class="tab">
-        <svg viewBox="0 0 16 16">
-          <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
-          <path
-            d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z"
-          />
-        </svg>
-        Issues
-      </div>
-      <div class="tab active">
-        <svg viewBox="0 0 16 16">
-          <path
-            d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z"
-          />
-        </svg>
-        Pull requests <span class="count">2</span>
-      </div>
-      <div class="tab">
-        <svg viewBox="0 0 16 16">
-          <path
-            d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"
-          />
-        </svg>
-        Actions
-      </div>
+      <div class="repo-path"><strong>playground</strong></div>
     </div>
 
     <!-- PR header -->
@@ -406,14 +347,13 @@
       <div class="pr-title">feat: add admin users page <span class="number">#12</span></div>
       <div class="pr-meta">
         <span class="badge-open">
-          <svg viewBox="0 0 16 16">
-            <path
-              d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354Z"
-            />
-          </svg>
+          <span class="dot"></span>
           Open
         </span>
-        <span><strong style="color: #e6edf3">parse</strong> wants to merge 3 commits into</span>
+        <span
+          ><strong style="color: var(--text-primary)">parse</strong> opened with 3 commits
+          into</span
+        >
         <span class="branch-label">main</span>
         <span>from</span>
         <span class="branch-label">feature/admin-users</span>
@@ -423,28 +363,49 @@
     <!-- PR sub-tabs -->
     <div class="pr-tabs">
       <div class="tab active">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="#e6edf3">
-          <path
-            d="M1.75 1h8.5c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0 1 10.25 10H7.061l-2.574 2.573A1.458 1.458 0 0 1 2 11.543V10h-.25A1.75 1.75 0 0 1 0 8.25v-5.5C0 1.784.784 1 1.75 1ZM1.5 2.75v5.5c0 .138.112.25.25.25h1a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h3.5a.25.25 0 0 0 .25-.25v-5.5a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25Zm13 2a.25.25 0 0 0-.25-.25h-.5a.75.75 0 0 1 0-1.5h.5c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0 1 14.25 12H14v1.543a1.458 1.458 0 0 1-2.487 1.03L9.22 12.28a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215l2.22 2.22V11.25a.75.75 0 0 1 .75-.75h1a.25.25 0 0 0 .25-.25Z"
-          />
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="color: var(--text-primary)"
+        >
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
-        Conversation <span class="count">2</span>
+        Discussion <span class="count">2</span>
       </div>
       <div class="tab">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="#8b949e">
-          <path
-            d="M1 2.5A2.5 2.5 0 0 1 3.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 1 11.5Zm1.5 0v7.228A2.507 2.507 0 0 1 3.5 9.5h8V1.5H3.5a1 1 0 0 0-1 1Z"
-          />
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="color: var(--text-muted)"
+        >
+          <circle cx="12" cy="12" r="4" />
+          <line x1="1.05" y1="12" x2="7" y2="12" />
+          <line x1="17.01" y1="12" x2="22.96" y2="12" />
         </svg>
         Commits <span class="count">3</span>
       </div>
       <div class="tab">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="#8b949e">
-          <path
-            d="M2.75 1h10.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25V2.75C1 1.784 1.784 1 2.75 1Zm10.5 1.5H2.75a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25V2.75a.25.25 0 0 0-.25-.25ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z"
-          />
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="color: var(--text-muted)"
+        >
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
         </svg>
-        Files changed <span class="count">2</span>
+        Changes <span class="count">2</span>
       </div>
     </div>
 
@@ -454,14 +415,14 @@
         <!-- PR description -->
         <div class="avatar-timeline">
           <svg width="40" height="40" viewBox="0 0 40 40">
-            <rect width="40" height="40" rx="20" fill="#30363d" />
+            <rect width="40" height="40" rx="20" fill="var(--bg-elevated)" />
             <text
               x="20"
               y="24"
               text-anchor="middle"
-              fill="#8b949e"
+              fill="var(--text-muted)"
               font-size="16"
-              font-family="sans-serif"
+              font-family="var(--font-body)"
             >
               P
             </text>
@@ -470,7 +431,6 @@
             <div class="comment-header">
               <span class="author">parse</span>
               commented 2 minutes ago
-              <span class="owner-badge">Contributor</span>
             </div>
             <div class="comment-body">
               <p>
@@ -544,25 +504,17 @@
       <div class="sidebar">
         <div class="sidebar-section">
           <div class="sidebar-label">Reviewers</div>
-          <div class="sidebar-value" style="color: #8b949e">No reviews yet</div>
+          <div class="sidebar-value" style="color: var(--text-muted)">No reviews yet</div>
         </div>
         <div class="sidebar-section">
           <div class="sidebar-label">Labels</div>
           <div class="sidebar-value">
             <span
               class="label-tag"
-              style="border-color: #3fb950; color: #3fb950; background: rgba(63, 185, 80, 0.1)"
+              style="border-color: #22c55e; color: #22c55e; background: rgba(34, 197, 94, 0.1)"
               >feature</span
             >
           </div>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-label">Projects</div>
-          <div class="sidebar-value" style="color: #8b949e">None yet</div>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-label">Milestone</div>
-          <div class="sidebar-value" style="color: #8b949e">No milestone</div>
         </div>
       </div>
     </div>

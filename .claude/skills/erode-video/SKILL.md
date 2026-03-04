@@ -5,7 +5,7 @@ description: Generate product pitch videos for the Erode project from screenshot
 
 # Erode Video Generator
 
-Generates an MP4 product pitch video from a folder of screenshots. The video includes animated text overlays, Ken Burns zoom effects, smooth transitions, step indicators, and an intro/outro with Erode branding.
+Generates an MP4 video and an optimized GIF from a folder of screenshots. The video includes animated text overlays, Ken Burns zoom effects, smooth transitions, step indicators, and an intro/outro with Erode branding. The GIF is half-resolution (960px wide) at 12 fps for README embeds and social previews.
 
 ## Quick Start
 
@@ -79,15 +79,16 @@ Each slide has:
 
 ## CLI Arguments
 
-| Argument      | Default                                      | Description                                  |
-| ------------- | -------------------------------------------- | -------------------------------------------- |
-| `--input-dir` | `./screenshots`                              | Folder containing screenshots + config       |
-| `--output`    | `packages/web/public/videos/erode_pitch.mp4` | Output video path (directory auto-created)   |
-| `--config`    | `video_config.json`                          | Config filename inside input-dir             |
-| `--width`     | from config or 1920                          | Video width                                  |
-| `--height`    | from config or 1080                          | Video height                                 |
-| `--fps`       | from config or 30                            | Frames per second                            |
-| `--crf`       | from config or 23                            | FFmpeg quality (lower = better, 18-28 range) |
+| Argument       | Default                                      | Description                                    |
+| -------------- | -------------------------------------------- | ---------------------------------------------- |
+| `--input-dir`  | `./screenshots`                              | Folder containing screenshots + config         |
+| `--output`     | `packages/web/public/videos/erode_pitch.mp4` | Output MP4 video path (directory auto-created) |
+| `--output-gif` | same as `--output` with `.gif` extension     | Output GIF path                                |
+| `--config`     | `video_config.json`                          | Config filename inside input-dir               |
+| `--width`      | from config or 1920                          | Video width                                    |
+| `--height`     | from config or 1080                          | Video height                                   |
+| `--fps`        | from config or 30                            | Frames per second                              |
+| `--crf`        | from config or 23                            | FFmpeg quality (lower = better, 18-28 range)   |
 
 ## Screenshot Editing Tips
 
