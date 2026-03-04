@@ -21,10 +21,6 @@ The built CLI is at `packages/cli/dist/cli.js`. Run it with Node.js:
 node packages/cli/dist/cli.js --help
 ```
 
-## Interactive mode
-
-When run without arguments in an interactive terminal, Erode starts an Ink-based wizard that guides you through command selection and option entry.
-
 ## Commands
 
 ### `analyze <model-path>`

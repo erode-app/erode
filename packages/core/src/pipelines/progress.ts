@@ -1,7 +1,7 @@
 /**
  * Progress reporting abstraction for pipeline functions.
  *
- * CI callers pass SilentProgress; CLI callers pass an Ink-backed reporter.
+ * CI callers pass SilentProgress; CLI callers pass a ConsoleProgress reporter.
  */
 export interface ProgressReporter {
   section(title: string): void;

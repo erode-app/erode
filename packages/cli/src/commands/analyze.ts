@@ -3,6 +3,7 @@ import { runAnalyze, validate } from '@erode/core';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { AnalyzeOptionsSchema } from '../utils/command-schemas.js';
 import { OutputFormatter } from '../utils/cli-helpers.js';
+import { ConsoleProgress } from '../console-progress.js';
 
 export function createAnalyzeCommand(): Command {
   return new Command('analyze')
@@ -24,30 +25,24 @@ export function createAnalyzeCommand(): Command {
     .option('--fail-on-violations', 'Return a non-zero exit code if violations exist')
     .action(async (modelPath: string, options: unknown) => {
       const validated = validate(AnalyzeOptionsSchema, options, 'command options');
+      const progress = validated.format === 'json' ? undefined : new ConsoleProgress();
 
-      if (validated.format === 'json') {
-        try {
-          const result = await runAnalyze({ modelPath, ...validated });
+      try {
+        const result = await runAnalyze({ modelPath, ...validated }, progress);
+        if (validated.format === 'json') {
           if (result.structured) {
             console.log(OutputFormatter.format(result.structured, 'json'));
           }
-          if (validated.failOnViolations && result.hasViolations) {
-            process.exitCode = 1;
+        } else {
+          if (result.structured) {
+            console.log(OutputFormatter.formatConsole(result.structured));
           }
-        } catch (error) {
-          ErrorHandler.handleCliError(error);
         }
-        return;
-      }
-
-      try {
-        const { runAnalyzeApp } = await import('./analyze-app.js');
-        const result = await runAnalyzeApp({ modelPath, ...validated });
-        if (validated.failOnViolations && result?.hasViolations) {
+        if (validated.failOnViolations && result.hasViolations) {
           process.exitCode = 1;
         }
       } catch (error) {
-        process.exitCode = ErrorHandler.getExitCode(error);
+        ErrorHandler.handleCliError(error);
       }
     });
 }

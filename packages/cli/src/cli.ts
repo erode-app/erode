@@ -58,21 +58,8 @@ program.configureHelp({
   subcommandTerm: (cmd) => cmd.name() + (cmd.alias() ? `|${cmd.alias()}` : ''),
 });
 
-program.action(async () => {
-  if (process.stdout.isTTY) {
-    const { runInteractiveWizard } = await import('./commands/interactive-app.js');
-    const { promptContinue } = await import('./ui/components/wizard-continue.js');
-    for (;;) {
-      process.exitCode = 0;
-      const args = await runInteractiveWizard();
-      if (!args) break;
-      await program.parseAsync(['node', 'erode', ...args]);
-      const shouldContinue = await promptContinue();
-      if (!shouldContinue) break;
-    }
-  } else {
-    program.help();
-  }
+program.action(() => {
+  program.help();
 });
 
 program.parse();
