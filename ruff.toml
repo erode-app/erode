@@ -1,0 +1,8 @@
+target-version = "py313"
+line-length = 100
+
+[lint]
+select = ["E", "F", "I", "W", "UP", "B", "SIM", "RUF"]
+
+[format]
+docstring-code-format = true
