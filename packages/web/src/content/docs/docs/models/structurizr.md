@@ -101,7 +101,7 @@ your-org/architecture/
 Point the GitHub Action at this repository using `model-repo`:
 
 ```yaml
-- uses: erode-app/erode@main
+- uses: erode-app/erode@0
   with:
     model-format: structurizr
     model-repo: your-org/architecture

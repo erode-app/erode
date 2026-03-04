@@ -18,7 +18,7 @@ jobs:
     if: github.actor != 'dependabot[bot]' && !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
-      - uses: erode-app/erode@main
+      - uses: erode-app/erode@0
         with:
           model-repo: your-org/architecture
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -38,7 +38,7 @@ The action runs in a Docker container that clones the model repository directly 
 Erode expects the architecture model to live in its own repository (or a subdirectory of one). The `model-repo` input tells the action where to find it.
 
 ```yaml
-- uses: erode-app/erode@main
+- uses: erode-app/erode@0
   with:
     model-repo: your-org/architecture # required
     model-path: models/backend # subdirectory within the repo
@@ -52,7 +52,7 @@ Erode expects the architecture model to live in its own repository (or a subdire
 If the model repo requires different credentials than the repository running the workflow, pass a separate token:
 
 ```yaml
-- uses: erode-app/erode@main
+- uses: erode-app/erode@0
   with:
     model-repo: your-org/architecture
     model-repo-token: ${{ secrets.MODEL_REPO_TOKEN }}
@@ -93,7 +93,7 @@ Use outputs in subsequent workflow steps:
 
 ```yaml
 steps:
-  - uses: erode-app/erode@main
+  - uses: erode-app/erode@0
     id: erode
     with:
       model-repo: your-org/architecture
@@ -154,7 +154,7 @@ jobs:
        contains(github.event.comment.body, '/erode update-model'))
     runs-on: ubuntu-latest
     steps:
-      - uses: erode-app/erode@main
+      - uses: erode-app/erode@0
         with:
           model-repo: your-org/architecture
           open-pr: ${{ github.event_name == 'issue_comment' && 'true' || 'auto' }}
@@ -217,7 +217,7 @@ jobs:
           private-key: ${{ secrets.ERODE_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
 
-      - uses: erode-app/erode@main
+      - uses: erode-app/erode@0
         with:
           model-repo: your-org/architecture
           github-token: ${{ steps.app-token.outputs.token }}

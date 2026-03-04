@@ -29,7 +29,7 @@ jobs:
   erode:
     runs-on: ubuntu-latest
     steps:
-      - uses: erode-app/erode@main
+      - uses: erode-app/erode@0
         with:
           model-repo: your-org/architecture
           github-token: ${{ secrets.GITHUB_TOKEN }}
