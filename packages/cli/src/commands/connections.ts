@@ -3,6 +3,7 @@ import { runConnections, validate } from '@erode/core';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { ConnectionsOptionsSchema } from '../utils/command-schemas.js';
 import { OutputFormatter } from '../utils/cli-helpers.js';
+import { ConsoleProgress } from '../console-progress.js';
 
 export function createConnectionsCommand(): Command {
   return new Command('connections')
@@ -13,30 +14,16 @@ export function createConnectionsCommand(): Command {
     .option('--output <format>', 'Result format (console, json)', 'console')
     .action(async (modelPath: string, options: unknown) => {
       const validated = validate(ConnectionsOptionsSchema, options, 'command options');
-
-      if (validated.output === 'json') {
-        try {
-          const connections = await runConnections({
-            modelPath,
-            modelFormat: validated.modelFormat,
-            repo: validated.repo,
-          });
-          console.log(OutputFormatter.format(connections, 'json'));
-        } catch (error) {
-          ErrorHandler.handleCliError(error);
-        }
-        return;
-      }
+      const progress = new ConsoleProgress();
 
       try {
-        const { runConnectionsApp } = await import('./connections-app.js');
-        await runConnectionsApp({
-          modelPath,
-          modelFormat: validated.modelFormat,
-          repo: validated.repo,
-        });
+        const connections = await runConnections(
+          { modelPath, modelFormat: validated.modelFormat, repo: validated.repo },
+          progress
+        );
+        console.log(OutputFormatter.format(connections, validated.output));
       } catch (error) {
-        process.exitCode = ErrorHandler.getExitCode(error);
+        ErrorHandler.handleCliError(error);
       }
     });
 }

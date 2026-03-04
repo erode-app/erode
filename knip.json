@@ -6,7 +6,7 @@
       "project": ["src/**/*.ts"]
     },
     "packages/cli": {
-      "project": ["src/**/*.ts", "src/**/*.tsx"]
+      "project": ["src/**/*.ts"]
     },
     "packages/eslint-config": {
       "project": ["*.js"]

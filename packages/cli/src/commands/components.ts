@@ -3,6 +3,7 @@ import { runComponents, validate } from '@erode/core';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { ComponentsOptionsSchema } from '../utils/command-schemas.js';
 import { OutputFormatter } from '../utils/cli-helpers.js';
+import { ConsoleProgress } from '../console-progress.js';
 
 export function createComponentsCommand(): Command {
   return new Command('components')
@@ -12,25 +13,16 @@ export function createComponentsCommand(): Command {
     .option('--format <format>', 'Result format (table, json, yaml)', 'table')
     .action(async (modelPath: string, options: unknown) => {
       const validated = validate(ComponentsOptionsSchema, options, 'command options');
-
-      if (validated.format === 'json' || validated.format === 'yaml') {
-        try {
-          const components = await runComponents({
-            modelPath,
-            modelFormat: validated.modelFormat,
-          });
-          console.log(OutputFormatter.format(components, validated.format));
-        } catch (error) {
-          ErrorHandler.handleCliError(error);
-        }
-        return;
-      }
+      const progress = new ConsoleProgress();
 
       try {
-        const { runComponentsApp } = await import('./components-app.js');
-        await runComponentsApp({ modelPath, modelFormat: validated.modelFormat });
+        const components = await runComponents(
+          { modelPath, modelFormat: validated.modelFormat },
+          progress
+        );
+        console.log(OutputFormatter.format(components, validated.format));
       } catch (error) {
-        process.exitCode = ErrorHandler.getExitCode(error);
+        ErrorHandler.handleCliError(error);
       }
     });
 }
