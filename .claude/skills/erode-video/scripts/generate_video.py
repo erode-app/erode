@@ -13,7 +13,6 @@ Requires: pillow, ffmpeg
 
 import argparse
 import json
-import math
 import os
 import shutil
 import subprocess
@@ -21,7 +20,6 @@ import sys
 import tempfile
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
-
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
 
@@ -52,6 +50,7 @@ BG_COLOR = (13, 13, 20)
 
 # ── Font resolution ───────────────────────────────────────────────────────────
 
+
 def find_font(style="Bold"):
     """Try Poppins first, fall back to Arial/DejaVu Sans, then default."""
     candidates = [
@@ -67,7 +66,7 @@ def find_font(style="Bold"):
         # Linux
         f"/usr/share/fonts/truetype/google-fonts/Poppins-{style}.ttf",
         f"/usr/share/fonts/truetype/dejavu/DejaVuSans-{style}.ttf",
-        f"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     ]
     for path in candidates:
         if os.path.exists(path):
@@ -88,6 +87,7 @@ def load_font(path, size):
 
 # ── Color helpers ─────────────────────────────────────────────────────────────
 
+
 def hex_to_rgb(hex_str):
     """Convert '#FF6B35' to (255, 107, 53)."""
     hex_str = hex_str.lstrip("#")
@@ -95,14 +95,15 @@ def hex_to_rgb(hex_str):
 
 
 DEFAULT_ACCENTS = [
-    (255, 107, 53),   # Orange-red
-    (0, 209, 178),    # Teal
-    (138, 92, 246),   # Purple
-    (255, 200, 55),   # Yellow
+    (255, 107, 53),  # Orange-red
+    (0, 209, 178),  # Teal
+    (138, 92, 246),  # Purple
+    (255, 200, 55),  # Yellow
 ]
 
 
 # ── Easing ────────────────────────────────────────────────────────────────────
+
 
 def ease_out_cubic(t):
     return 1 - (1 - t) ** 3
@@ -115,6 +116,7 @@ def ease_out_back(t):
 
 
 # ── Drawing helpers ───────────────────────────────────────────────────────────
+
 
 def draw_gradient_bg(draw, w, h):
     for y in range(h):
@@ -130,7 +132,7 @@ def draw_glow_circle(img, cx, cy, radius, color, alpha=20):
     d = ImageDraw.Draw(overlay)
     for r in range(radius, 0, -4):
         a = int(alpha * (r / radius) ** 0.5)
-        c = color + (a,)
+        c = (*color, a)
         d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=c)
     overlay_blurred = overlay.filter(ImageFilter.GaussianBlur(radius=20))
     composited = Image.alpha_composite(img.convert("RGBA"), overlay_blurred)
@@ -148,9 +150,7 @@ def create_bg(w, h, accent):
 
 def draw_accent_bar(draw, x, y, width, height, color):
     if width > 0:
-        draw.rounded_rectangle(
-            [x, y, x + width, y + height], radius=height // 2, fill=color
-        )
+        draw.rounded_rectangle([x, y, x + width, y + height], radius=height // 2, fill=color)
 
 
 def fit_screenshot(img_path, max_w, max_h):
@@ -162,9 +162,7 @@ def fit_screenshot(img_path, max_w, max_h):
     img = img.resize((new_w, new_h), Image.LANCZOS)
 
     pad = 12
-    shadow = Image.new(
-        "RGBA", (new_w + pad * 2 + 20, new_h + pad * 2 + 20), (0, 0, 0, 0)
-    )
+    shadow = Image.new("RGBA", (new_w + pad * 2 + 20, new_h + pad * 2 + 20), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
     sd.rounded_rectangle(
         [pad, pad, new_w + pad + 20, new_h + pad + 20],
@@ -184,9 +182,7 @@ def draw_step_dots(draw, current, total, accent, y, canvas_w):
     for i in range(total):
         cx = sx + i * spacing
         if i == current:
-            draw.ellipse(
-                [cx - dot_r, y - dot_r, cx + dot_r, y + dot_r], fill=accent
-            )
+            draw.ellipse([cx - dot_r, y - dot_r, cx + dot_r, y + dot_r], fill=accent)
         else:
             draw.ellipse(
                 [cx - dot_r + 2, y - dot_r + 2, cx + dot_r - 2, y + dot_r - 2],
@@ -238,9 +234,7 @@ def generate_frames(config, input_dir, frames_dir):
         draw.text((tx, ty), text, font=font_logo, fill=(255, 255, 255, alpha))
 
         bar_w = int(tw * 0.6 * logo_t)
-        draw_accent_bar(
-            draw, W // 2 - bar_w // 2, ty + 110, bar_w, 6, intro_accent
-        )
+        draw_accent_bar(draw, W // 2 - bar_w // 2, ty + 110, bar_w, 6, intro_accent)
 
         if t > 0.4:
             tag_alpha = int(255 * min((t - 0.4) * 3, 1.0))
@@ -286,9 +280,7 @@ def generate_frames(config, input_dir, frames_dir):
             # Step label
             step_label = f"STEP {idx + 1} of {len(slides)}"
             step_y = int(40 + (1 - entry_t) * 20)
-            draw.text(
-                (60, step_y), step_label, font=font_step, fill=accent + (alpha,)
-            )
+            draw.text((60, step_y), step_label, font=font_step, fill=(*accent, alpha))
 
             # Title
             title_y = int(85 + (1 - entry_t) * 30)
@@ -301,7 +293,7 @@ def generate_frames(config, input_dir, frames_dir):
 
             # Accent bar
             bar_w = int(80 * entry_t)
-            draw_accent_bar(draw, 60, title_y + 86, bar_w, 4, accent + (alpha,))
+            draw_accent_bar(draw, 60, title_y + 86, bar_w, 4, (*accent, alpha))
 
             # Subtitle
             sub_y = int(190 + (1 - entry_t) * 30)
@@ -327,7 +319,7 @@ def generate_frames(config, input_dir, frames_dir):
             if alpha < 255:
                 faded = cropped.copy()
                 r, g, b, a = faded.split()
-                a = a.point(lambda x: int(x * alpha / 255))
+                a = a.point(lambda x, _alpha=alpha: int(x * _alpha / 255))
                 faded = Image.merge("RGBA", (r, g, b, a))
                 img.paste(faded, (sc_x, sc_y), faded)
             else:
@@ -368,12 +360,10 @@ def generate_frames(config, input_dir, frames_dir):
                 (W // 2 - uw // 2, uy),
                 url,
                 font=font_url,
-                fill=outro_accent + (url_alpha,),
+                fill=(*outro_accent, url_alpha),
             )
             bw = int(uw * min((t - 0.3) * 3, 1.0))
-            draw_accent_bar(
-                draw, W // 2 - bw // 2, uy + 60, bw, 4, outro_accent + (url_alpha,)
-            )
+            draw_accent_bar(draw, W // 2 - bw // 2, uy + 60, bw, 4, (*outro_accent, url_alpha))
 
         if t > 0.5:
             os_alpha = int(255 * min((t - 0.5) * 4, 1.0))
@@ -401,17 +391,70 @@ def encode_video(frames_dir, output_path, fps, crf):
     cmd = [
         "ffmpeg",
         "-y",
-        "-framerate", str(fps),
-        "-i", os.path.join(frames_dir, "frame_%05d.png"),
-        "-c:v", "libx264",
-        "-pix_fmt", "yuv420p",
-        "-crf", str(crf),
-        "-preset", "fast",
+        "-framerate",
+        str(fps),
+        "-i",
+        os.path.join(frames_dir, "frame_%05d.png"),
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-crf",
+        str(crf),
+        "-preset",
+        "fast",
         output_path,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         print(f"  FFmpeg error:\n{result.stderr[-500:]}", file=sys.stderr)
+        sys.exit(1)
+
+    size_mb = os.path.getsize(output_path) / (1024 * 1024)
+    print(f"  Done! {output_path} ({size_mb:.1f} MB)")
+
+
+def encode_gif(frames_dir, output_path, fps):
+    """Encode frames to GIF using ffmpeg two-pass palette approach."""
+    print(f"  Encoding to {output_path}...")
+    palette_path = os.path.join(frames_dir, "palette.png")
+    frame_pattern = os.path.join(frames_dir, "frame_%05d.png")
+    vf = "fps=12,scale=960:-1:flags=lanczos"
+
+    # Pass 1: generate optimal palette
+    cmd_palette = [
+        "ffmpeg",
+        "-y",
+        "-framerate",
+        str(fps),
+        "-i",
+        frame_pattern,
+        "-vf",
+        f"{vf},palettegen=stats_mode=diff",
+        palette_path,
+    ]
+    result = subprocess.run(cmd_palette, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"  FFmpeg palette error:\n{result.stderr[-500:]}", file=sys.stderr)
+        sys.exit(1)
+
+    # Pass 2: encode GIF using the palette
+    cmd_gif = [
+        "ffmpeg",
+        "-y",
+        "-framerate",
+        str(fps),
+        "-i",
+        frame_pattern,
+        "-i",
+        palette_path,
+        "-lavfi",
+        f"{vf}[x];[x][1:v]paletteuse=dither=sierra2_4a",
+        output_path,
+    ]
+    result = subprocess.run(cmd_gif, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"  FFmpeg GIF error:\n{result.stderr[-500:]}", file=sys.stderr)
         sys.exit(1)
 
     size_mb = os.path.getsize(output_path) / (1024 * 1024)
@@ -443,8 +486,11 @@ def main():
     parser.add_argument("--width", type=int, default=None, help="Video width")
     parser.add_argument("--height", type=int, default=None, help="Video height")
     parser.add_argument("--fps", type=int, default=None, help="Frames per second")
+    parser.add_argument("--crf", type=int, default=None, help="FFmpeg CRF quality (lower=better)")
     parser.add_argument(
-        "--crf", type=int, default=None, help="FFmpeg CRF quality (lower=better)"
+        "--output-gif",
+        default=None,
+        help="Output GIF file path (default: same as --output with .gif extension)",
     )
     args = parser.parse_args()
 
@@ -468,9 +514,7 @@ def main():
         # Auto-discover images
         exts = {".png", ".jpg", ".jpeg", ".webp"}
         images = sorted(
-            f
-            for f in os.listdir(args.input_dir)
-            if os.path.splitext(f)[1].lower() in exts
+            f for f in os.listdir(args.input_dir) if os.path.splitext(f)[1].lower() in exts
         )
         config["slides"] = [
             {
@@ -509,23 +553,31 @@ def main():
         + sum(s["duration_sec"] for s in config["slides"])
         + config["outro"]["duration_sec"]
     )
-    print(f"Erode Video Generator")
+    print("Erode Video Generator")
     print(f"  Resolution: {settings['width']}x{settings['height']} @ {settings['fps']}fps")
     print(f"  Slides: {len(config['slides'])}")
     print(f"  Duration: ~{total_sec:.1f}s")
     print()
 
-    # Ensure output directory exists
-    output_dir = os.path.dirname(args.output)
-    if output_dir:
-        os.makedirs(output_dir, exist_ok=True)
+    # Resolve output paths
+    gif_path = args.output_gif
+    if gif_path is None:
+        base, _ = os.path.splitext(args.output)
+        gif_path = base + ".gif"
 
-    # Generate frames in temp dir
+    # Ensure output directories exist
+    for path in (args.output, gif_path):
+        d = os.path.dirname(path)
+        if d:
+            os.makedirs(d, exist_ok=True)
+
+    # Generate frames in temp dir, then encode both formats
     frames_dir = tempfile.mkdtemp(prefix="erode_frames_")
     try:
         total_frames = generate_frames(config, args.input_dir, frames_dir)
         print(f"  Generated {total_frames} frames")
         encode_video(frames_dir, args.output, settings["fps"], settings["crf"])
+        encode_gif(frames_dir, gif_path, settings["fps"])
     finally:
         shutil.rmtree(frames_dir, ignore_errors=True)
 

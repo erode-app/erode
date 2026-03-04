@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "ignoreBinaries": ["tsx"],
+  "ignoreBinaries": ["tsx", "ruff"],
   "workspaces": {
     "packages/core": {
       "project": ["src/**/*.ts"]
