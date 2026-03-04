@@ -54,7 +54,7 @@ export const PromptBuilder = {
   buildDependencyExtractionPrompt(data: DependencyExtractionPromptData): string {
     const { diff, commit, repository, components } = data;
 
-    let componentsContext = '';
+    let componentsContext: string;
 
     if (!components || components.length === 0) {
       componentsContext = 'Component: Unknown (repository not mapped in LikeC4)';
