@@ -25,7 +25,7 @@ export function createAnalyzeCommand(): Command {
     .option('--fail-on-violations', 'Return a non-zero exit code if violations exist')
     .action(async (modelPath: string, options: unknown) => {
       const validated = validate(AnalyzeOptionsSchema, options, 'command options');
-      const progress = new ConsoleProgress();
+      const progress = validated.format === 'json' ? undefined : new ConsoleProgress();
 
       try {
         const result = await runAnalyze({ modelPath, ...validated }, progress);

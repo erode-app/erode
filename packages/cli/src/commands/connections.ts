@@ -14,7 +14,7 @@ export function createConnectionsCommand(): Command {
     .option('--output <format>', 'Result format (console, json)', 'console')
     .action(async (modelPath: string, options: unknown) => {
       const validated = validate(ConnectionsOptionsSchema, options, 'command options');
-      const progress = new ConsoleProgress();
+      const progress = validated.output === 'json' ? undefined : new ConsoleProgress();
 
       try {
         const connections = await runConnections(

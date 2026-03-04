@@ -13,7 +13,7 @@ export function createValidateCommand(): Command {
     .option('--format <format>', 'Result format (table, json)', 'table')
     .action(async (modelPath: string, options: unknown) => {
       const validated = validate(ValidateOptionsSchema, options, 'command options');
-      const progress = new ConsoleProgress();
+      const progress = validated.format === 'json' ? undefined : new ConsoleProgress();
 
       try {
         const result = await runValidate(

@@ -13,7 +13,7 @@ export function createComponentsCommand(): Command {
     .option('--format <format>', 'Result format (table, json, yaml)', 'table')
     .action(async (modelPath: string, options: unknown) => {
       const validated = validate(ComponentsOptionsSchema, options, 'command options');
-      const progress = new ConsoleProgress();
+      const progress = validated.format === 'json' ? undefined : new ConsoleProgress();
 
       try {
         const components = await runComponents(
