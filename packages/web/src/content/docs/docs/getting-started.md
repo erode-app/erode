@@ -36,6 +36,8 @@ jobs:
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
 
+> **Note:** The `GITHUB_TOKEN` requires specific permissions depending on your setup. See [Token permissions](/docs/guides/configuration/#token-permissions) for details.
+
 Replace `your-org/architecture` with the repository that contains your architecture model. The action clones the model repo automatically — no `actions/checkout` step is needed.
 
 ### 3. Open a pull request
