@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.0](https://github.com/erode-app/erode/compare/0.3.0...0.4.0) (2026-03-04)
+
+
+### Features
+
+* **web:** add mock GitHub screenshots for product video ([#23](https://github.com/erode-app/erode/issues/23)) ([6e17d43](https://github.com/erode-app/erode/commit/6e17d43767c0c96b00f8fd1eb9e9802396659813))
+* **web:** add video section to landing page and README ([61f9423](https://github.com/erode-app/erode/commit/61f9423bbbbbe73a9b20859e7a2e1881d8e86969))
+* **web:** improve video text readability and slide pacing ([913093c](https://github.com/erode-app/erode/commit/913093c02e5b3a8e2e44f91d66ec500fdc7fd00d))
+
+
+### Code Refactoring
+
+* **cli:** replace ink/react with plain console output ([#25](https://github.com/erode-app/erode/issues/25)) ([aa616fd](https://github.com/erode-app/erode/commit/aa616fd88d4b14c6088ab2544f975e3bbe333f7f))
+
 ## [0.3.0](https://github.com/erode-app/erode/compare/0.2.0...0.3.0) (2026-03-03)
 
 
