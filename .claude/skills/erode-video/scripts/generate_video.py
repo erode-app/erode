@@ -257,9 +257,9 @@ def generate_frames(config, input_dir, frames_dir):
         save(img)
 
     # ── Slides ──
-    font_title = load_font(FONT_BOLD, 54)
-    font_sub = load_font(FONT_REGULAR, 28)
-    font_step = load_font(FONT_BOLD, 22)
+    font_title = load_font(FONT_BOLD, 72)
+    font_sub = load_font(FONT_REGULAR, 38)
+    font_step = load_font(FONT_BOLD, 30)
 
     for idx, slide in enumerate(slides):
         print(f"  Generating slide {idx + 1}/{len(slides)}: {slide['title']}")
@@ -270,7 +270,7 @@ def generate_frames(config, input_dir, frames_dir):
             print(f"    WARNING: {img_path} not found, skipping")
             continue
 
-        screenshot = fit_screenshot(img_path, W - 200, H - 300)
+        screenshot = fit_screenshot(img_path, W - 200, H - 380)
         sc_w, sc_h = screenshot.size
         slide_frames = int(slide["duration_sec"] * FPS)
 
@@ -285,13 +285,13 @@ def generate_frames(config, input_dir, frames_dir):
 
             # Step label
             step_label = f"STEP {idx + 1} of {len(slides)}"
-            step_y = int(36 + (1 - entry_t) * 20)
+            step_y = int(40 + (1 - entry_t) * 20)
             draw.text(
                 (60, step_y), step_label, font=font_step, fill=accent + (alpha,)
             )
 
             # Title
-            title_y = int(72 + (1 - entry_t) * 30)
+            title_y = int(85 + (1 - entry_t) * 30)
             draw.text(
                 (60, title_y),
                 slide["title"],
@@ -301,10 +301,10 @@ def generate_frames(config, input_dir, frames_dir):
 
             # Accent bar
             bar_w = int(80 * entry_t)
-            draw_accent_bar(draw, 60, title_y + 66, bar_w, 4, accent + (alpha,))
+            draw_accent_bar(draw, 60, title_y + 86, bar_w, 4, accent + (alpha,))
 
             # Subtitle
-            sub_y = int(150 + (1 - entry_t) * 30)
+            sub_y = int(190 + (1 - entry_t) * 30)
             draw.text(
                 (60, sub_y),
                 slide["subtitle"],
@@ -322,7 +322,7 @@ def generate_frames(config, input_dir, frames_dir):
             cropped = zoomed.crop((cx, cy, cx + sc_w, cy + sc_h))
 
             sc_x = (W - sc_w) // 2
-            sc_y = int(200 + (1 - entry_t) * 40)
+            sc_y = int(260 + (1 - entry_t) * 40)
 
             if alpha < 255:
                 faded = cropped.copy()

@@ -2,7 +2,7 @@
   "intro": {
     "title": "erode",
     "tagline": "See the architectural diff, not just the code diff",
-    "duration_sec": 2.5
+    "duration_sec": 3.0
   },
   "slides": [
     {
@@ -10,28 +10,28 @@
       "title": "A developer opens a pull request",
       "subtitle": "Erode filters the diff and starts its analysis pipeline",
       "accent": "#FF6B35",
-      "duration_sec": 4.0
+      "duration_sec": 5.0
     },
     {
       "image": "02_drift_detected.png",
       "title": "Drift is caught where it is introduced",
       "subtitle": "The change is visible. Someone can decide what to do about it",
       "accent": "#8A5CF6",
-      "duration_sec": 4.5
+      "duration_sec": 5.5
     },
     {
       "image": "03_model_updated.png",
       "title": "The model stays worth trusting",
       "subtitle": "Erode opens a PR so the architecture keeps pace with the code",
       "accent": "#FFC837",
-      "duration_sec": 4.0
+      "duration_sec": 5.0
     }
   ],
   "outro": {
     "headline": "Shared understanding that keeps pace with the code.",
     "url": "erode.dev",
     "tags": "Open source • Architecture as Code • LikeC4 • Structurizr",
-    "duration_sec": 3.0
+    "duration_sec": 3.5
   },
   "settings": {
     "width": 1920,
