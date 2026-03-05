@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.5.0](https://github.com/erode-app/erode/compare/0.4.0...0.5.0) (2026-03-05)
+
+
+### Features
+
+* **web:** regenerate video with GIF and updated mocks ([c8a55ac](https://github.com/erode-app/erode/commit/c8a55ac499cdf7bca0d219ae0ffef970820eaac5))
+
+
+### Bug Fixes
+
+* harden input validation and sensitive data handling ([#35](https://github.com/erode-app/erode/issues/35)) ([8ac2424](https://github.com/erode-app/erode/commit/8ac2424f43fd108aab3aba2990f2a37be4affcad))
+* loop HTML sanitization until stable to handle nested tags ([#37](https://github.com/erode-app/erode/issues/37)) ([123a1bd](https://github.com/erode-app/erode/commit/123a1bddcd1c3df01e6e20842c063908a9147337))
+* **release:** use pull_request_target for dependabot auto-merge ([69e573c](https://github.com/erode-app/erode/commit/69e573cb8b83f26bfb6e4e9e1c074bb48faf06fd))
+* support GitLab and Bitbucket repository URLs in adapters ([#36](https://github.com/erode-app/erode/issues/36)) ([8687790](https://github.com/erode-app/erode/commit/868779034eeac39a13aec3996105747dd7701803))
+
+
+### Build System
+
+* **deps:** bump @google/genai from 1.43.0 to 1.44.0 in the non-major-updates group ([#34](https://github.com/erode-app/erode/issues/34)) ([05a1395](https://github.com/erode-app/erode/commit/05a139501039b0fe9eb2429cca80ebcf7356cae9))
+* **deps:** bump docker/login-action from 3 to 4 ([#30](https://github.com/erode-app/erode/issues/30)) ([bfd416b](https://github.com/erode-app/erode/commit/bfd416badb068b6ca6b0312d24e8c0a802e12e09))
+* **deps:** bump docker/setup-qemu-action from 3 to 4 ([#31](https://github.com/erode-app/erode/issues/31)) ([baef1f4](https://github.com/erode-app/erode/commit/baef1f42c2f16dd2b28af65904bc7a81bf298ebb))
+* **deps:** bump the non-major-updates group with 3 updates ([#29](https://github.com/erode-app/erode/issues/29)) ([d30efaa](https://github.com/erode-app/erode/commit/d30efaa02dc2973db73be0bb476e06b8d3284470))
+* **deps:** upgrade eslint from v9 to v10 ([#28](https://github.com/erode-app/erode/issues/28)) ([5fd1589](https://github.com/erode-app/erode/commit/5fd158933c2926a41d6f336bce73d5ff5e289214))
+* **release:** show build commits in release notes ([b10e0fb](https://github.com/erode-app/erode/commit/b10e0fbbab0e53a5207892564f23398ba8cbb53b))
+
 ## [0.4.0](https://github.com/erode-app/erode/compare/0.3.0...0.4.0) (2026-03-04)
 
 
