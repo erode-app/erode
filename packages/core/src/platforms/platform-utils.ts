@@ -34,11 +34,13 @@ export function applyDiffTruncation(
 
 export function sanitizeErrorMessage(message: string): string {
   if (/<[a-z/!][^>]*>/i.test(message)) {
-    return message
-      .replace(/<[^>]*>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 200);
+    let cleaned = message;
+    let prev: string;
+    do {
+      prev = cleaned;
+      cleaned = cleaned.replace(/<[^>]*>/g, '');
+    } while (cleaned !== prev);
+    return cleaned.replace(/\s+/g, ' ').trim().slice(0, 200);
   }
   return message;
 }
