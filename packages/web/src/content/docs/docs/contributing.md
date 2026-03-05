@@ -1,10 +1,6 @@
 ---
 title: Contributing
 description: How to contribute to the Erode monorepo.
-head:
-  - tag: script
-    attrs:
-      src: /architecture/likec4-views.js
 ---
 
 Erode is an npm workspace monorepo. The diagram below shows the package structure and their relationships.

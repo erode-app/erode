@@ -29,6 +29,11 @@ export default defineConfig({
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/erode-app/erode' }],
       head: [
         {
+          tag: 'script',
+          content:
+            "if(window.innerWidth>768){var s=document.createElement('script');s.src='/architecture/likec4-views.js';document.head.appendChild(s)}",
+        },
+        {
           tag: 'link',
           attrs: { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         },

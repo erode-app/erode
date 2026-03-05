@@ -1,10 +1,6 @@
 ---
 title: AI Providers
 description: Supported AI providers and model configuration.
-head:
-  - tag: script
-    attrs:
-      src: /architecture/likec4-views.js
 ---
 
 Erode supports three AI providers: **Gemini** (default), **OpenAI**, and **Anthropic** (experimental). Set the provider with the `AI_PROVIDER` environment variable.

@@ -1,10 +1,6 @@
 ---
 title: Analysis Pipeline
 description: Detailed stage-by-stage reference for Erode's analysis pipeline.
-head:
-  - tag: script
-    attrs:
-      src: /architecture/likec4-views.js
 ---
 
 <div class="likec4-embed">

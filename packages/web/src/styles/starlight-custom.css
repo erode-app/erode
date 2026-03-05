@@ -68,7 +68,13 @@
 }
 
 @media (max-width: 768px) {
-  .likec4-embed likec4-view {
-    height: 300px;
+  .likec4-embed {
+    display: none;
+  }
+
+  /* Promote the "Open full interactive viewer" link when embed is hidden */
+  .likec4-embed + blockquote {
+    text-align: center;
+    font-weight: 500;
   }
 }

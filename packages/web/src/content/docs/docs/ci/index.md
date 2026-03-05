@@ -1,10 +1,6 @@
 ---
 title: CI Integration
 description: Set up Erode in your CI pipeline to detect architecture drift on every pull request.
-head:
-  - tag: script
-    attrs:
-      src: /architecture/likec4-views.js
 ---
 
 Erode runs inside your CI pipeline and analyzes every pull request against your architecture model. When a PR introduces an undeclared dependency, Erode flags the violation and comments directly on the pull request.
