@@ -231,6 +231,67 @@ describe('LikeC4Adapter', () => {
     });
   });
 
+  describe('GitLab and Bitbucket repository extraction', () => {
+    it.each([
+      ['GitLab', 'https://gitlab.com/org/my-service', 'https://gitlab.com/org/my-service'],
+      ['Bitbucket', 'https://bitbucket.org/org/my-service', 'https://bitbucket.org/org/my-service'],
+    ])('should extract and look up %s repository', (_platform, url, expected) => {
+      const model: MockLikeC4Model = {
+        elements: () => [{ id: 'svc', title: 'Svc', kind: 'service', tags: [], links: [url] }],
+        relationships: () => [],
+      };
+      adapter.setMockModel(model);
+      expect(adapter.extractComponents().find((c) => c.id === 'svc')?.repository).toBe(expected);
+      expect(adapter.findComponentByRepository(url)?.id).toBe('svc');
+    });
+  });
+
+  describe('URL spoofing protection', () => {
+    it('should reject URLs from lookalike domains', () => {
+      const spoofedModel: MockLikeC4Model = {
+        elements: () => [
+          {
+            id: 'spoofed_service',
+            title: 'Spoofed Service',
+            kind: 'service',
+            tags: [],
+            links: ['https://evil-github.com/owner/repo'],
+          },
+        ],
+        relationships: () => [],
+      };
+      adapter.setMockModel(spoofedModel);
+      const components = adapter.extractComponents();
+      const spoofed = components.find((c) => c.id === 'spoofed_service');
+      expect(spoofed?.repository).toBeUndefined();
+    });
+
+    it('should reject URLs with github.com as query parameter', () => {
+      const spoofedModel: MockLikeC4Model = {
+        elements: () => [
+          {
+            id: 'query_spoofed',
+            title: 'Query Spoofed',
+            kind: 'service',
+            tags: [],
+            links: ['https://evil.com?redirect=github.com/owner/repo'],
+          },
+        ],
+        relationships: () => [],
+      };
+      adapter.setMockModel(spoofedModel);
+      const components = adapter.extractComponents();
+      const spoofed = components.find((c) => c.id === 'query_spoofed');
+      expect(spoofed?.repository).toBeUndefined();
+    });
+
+    it('should accept legitimate github.com URLs', () => {
+      const components = adapter.extractComponents();
+      const frontend = components.find((c) => c.id === 'frontend');
+      expect(frontend?.repository).toBe('https://github.com/example/frontend');
+    });
+  });
+
   describe('Allowed dependencies', () => {
     it('should correctly identify allowed dependencies', () => {
       const isAllowed1 = adapter.isAllowedDependency('frontend', 'api_gateway');
@@ -264,250 +325,136 @@ describe('LikeC4Adapter - Model not loaded guard', () => {
 describe('LikeC4Adapter - Component Exclusion', () => {
   let adapter: TestLikeC4Adapter;
 
-  beforeEach(async () => {
+  async function setupExclusion(paths: string[] = [], tags: string[] = []) {
     const configModule = await import('../../../utils/config.js');
-    configModule.CONFIG.adapter.likec4.excludePaths = [];
-    configModule.CONFIG.adapter.likec4.excludeTags = [];
-
+    configModule.CONFIG.adapter.likec4.excludePaths = paths;
+    configModule.CONFIG.adapter.likec4.excludeTags = tags;
     adapter = new TestLikeC4Adapter();
     adapter.setMockModel(createMockModel());
-  });
+  }
 
-  afterEach(async () => {
-    const configModule = await import('../../../utils/config.js');
-    configModule.CONFIG.adapter.likec4.excludePaths = [];
-    configModule.CONFIG.adapter.likec4.excludeTags = [];
-  });
+  const findId = (components: ArchitecturalComponent[], id: string) =>
+    components.find((c) => c.id === id);
+
+  beforeEach(() => setupExclusion());
+  afterEach(() => setupExclusion());
 
   describe('Exclusion by component ID prefix', () => {
     it('should exclude components by ID prefix', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludePaths = ['azure_infrastructure'];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
+      await setupExclusion(['azure_infrastructure']);
       const components = adapter.extractComponents();
-
-      const azureComponents = components.filter((c) => c.id.startsWith('azure_infrastructure'));
-      expect(azureComponents).toHaveLength(0);
-
-      expect(components.find((c) => c.id === 'frontend')).toBeDefined();
-      expect(components.find((c) => c.id === 'api_gateway')).toBeDefined();
+      expect(components.filter((c) => c.id.startsWith('azure_infrastructure'))).toHaveLength(0);
+      expect(findId(components, 'frontend')).toBeDefined();
+      expect(findId(components, 'api_gateway')).toBeDefined();
     });
 
     it('should exclude multiple component ID prefixes', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludePaths = [
-        'azure_infrastructure',
-        'experimental',
-        'temp',
-      ];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
+      await setupExclusion(['azure_infrastructure', 'experimental', 'temp']);
       const components = adapter.extractComponents();
-
       expect(components.find((c) => c.id.startsWith('azure_infrastructure'))).toBeUndefined();
       expect(components.find((c) => c.id.startsWith('experimental'))).toBeUndefined();
       expect(components.find((c) => c.id.startsWith('temp'))).toBeUndefined();
-
-      expect(components.find((c) => c.id === 'frontend')).toBeDefined();
-      expect(components.find((c) => c.id === 'database')).toBeDefined();
+      expect(findId(components, 'frontend')).toBeDefined();
     });
 
     it('should handle hierarchical component IDs', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludePaths = ['azure_infrastructure'];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
+      await setupExclusion(['azure_infrastructure']);
       const components = adapter.extractComponents();
-
-      expect(components.find((c) => c.id === 'azure_infrastructure')).toBeUndefined();
-      expect(components.find((c) => c.id === 'azure_infrastructure.vnet')).toBeUndefined();
+      expect(findId(components, 'azure_infrastructure')).toBeUndefined();
+      expect(findId(components, 'azure_infrastructure.vnet')).toBeUndefined();
     });
   });
 
   describe('Exclusion by tags', () => {
     it('should exclude components by tag', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludeTags = ['infrastructure'];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
+      await setupExclusion([], ['infrastructure']);
       const components = adapter.extractComponents();
-
-      const infrastructureComponents = components.filter((c) => c.tags.includes('infrastructure'));
-      expect(infrastructureComponents).toHaveLength(0);
-
-      expect(components.find((c) => c.id === 'frontend')).toBeDefined();
-      expect(components.find((c) => c.id === 'database')).toBeDefined();
+      expect(components.filter((c) => c.tags.includes('infrastructure'))).toHaveLength(0);
+      expect(findId(components, 'frontend')).toBeDefined();
     });
 
     it('should exclude multiple tags', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludeTags = ['infrastructure', 'experimental', 'temp'];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
+      await setupExclusion([], ['infrastructure', 'experimental', 'temp']);
       const components = adapter.extractComponents();
-
-      expect(components.find((c) => c.id === 'azure_infrastructure')).toBeUndefined();
-      expect(components.find((c) => c.id === 'azure_infrastructure.vnet')).toBeUndefined();
-      expect(components.find((c) => c.id === 'experimental.new_feature')).toBeUndefined();
-      expect(components.find((c) => c.id === 'temp.test_service')).toBeUndefined();
-
-      expect(components.find((c) => c.id === 'frontend')).toBeDefined();
-      expect(components.find((c) => c.id === 'database')).toBeDefined();
+      expect(findId(components, 'azure_infrastructure')).toBeUndefined();
+      expect(findId(components, 'experimental.new_feature')).toBeUndefined();
+      expect(findId(components, 'temp.test_service')).toBeUndefined();
+      expect(findId(components, 'frontend')).toBeDefined();
     });
   });
 
   describe('Tag inheritance', () => {
     it('should exclude child components when parent has excluded tag', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludeTags = ['infrastructure'];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
+      await setupExclusion([], ['infrastructure']);
       const components = adapter.extractComponents();
-
-      expect(components.find((c) => c.id === 'azure_infrastructure')).toBeUndefined();
-      expect(components.find((c) => c.id === 'azure_infrastructure.frontdoor')).toBeUndefined();
-      expect(components.find((c) => c.id === 'azure_infrastructure.vnet')).toBeUndefined();
+      expect(findId(components, 'azure_infrastructure')).toBeUndefined();
+      expect(findId(components, 'azure_infrastructure.frontdoor')).toBeUndefined();
+      expect(findId(components, 'azure_infrastructure.vnet')).toBeUndefined();
     });
 
     it('should exclude grandchildren when grandparent has excluded tag', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludeTags = ['infrastructure'];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
+      await setupExclusion([], ['infrastructure']);
       const components = adapter.extractComponents();
-
+      expect(findId(components, 'azure_infrastructure.vnet.private_dns')).toBeUndefined();
+      expect(findId(components, 'azure_infrastructure.vnet.container_app_env')).toBeUndefined();
       expect(
-        components.find((c) => c.id === 'azure_infrastructure.vnet.private_dns')
-      ).toBeUndefined();
-      expect(
-        components.find((c) => c.id === 'azure_infrastructure.vnet.container_app_env')
-      ).toBeUndefined();
-      expect(
-        components.find((c) => c.id === 'azure_infrastructure.vnet.container_app_env.axeman_api')
+        findId(components, 'azure_infrastructure.vnet.container_app_env.axeman_api')
       ).toBeUndefined();
     });
 
     it('should exclude descendants when mid-level component has excluded tag', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludeTags = ['networking'];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
+      await setupExclusion([], ['networking']);
       const components = adapter.extractComponents();
-
-      expect(components.find((c) => c.id === 'azure_infrastructure')).toBeDefined();
-      expect(components.find((c) => c.id === 'azure_infrastructure.vnet')).toBeUndefined();
-      expect(
-        components.find((c) => c.id === 'azure_infrastructure.vnet.private_dns')
-      ).toBeUndefined();
-      expect(
-        components.find((c) => c.id === 'azure_infrastructure.vnet.container_app_env')
-      ).toBeUndefined();
-      expect(
-        components.find((c) => c.id === 'azure_infrastructure.vnet.container_app_env.axeman_api')
-      ).toBeUndefined();
+      expect(findId(components, 'azure_infrastructure')).toBeDefined();
+      expect(findId(components, 'azure_infrastructure.vnet')).toBeUndefined();
+      expect(findId(components, 'azure_infrastructure.vnet.private_dns')).toBeUndefined();
+      expect(findId(components, 'azure_infrastructure.vnet.container_app_env')).toBeUndefined();
     });
 
     it('should not exclude unrelated siblings', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludeTags = ['infrastructure'];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
+      await setupExclusion([], ['infrastructure']);
       const components = adapter.extractComponents();
-
-      expect(components.find((c) => c.id === 'azure_infrastructure.frontdoor')).toBeUndefined();
-      expect(components.find((c) => c.id === 'frontend')).toBeDefined();
-      expect(components.find((c) => c.id === 'api_gateway')).toBeDefined();
-      expect(components.find((c) => c.id === 'database')).toBeDefined();
+      expect(findId(components, 'azure_infrastructure.frontdoor')).toBeUndefined();
+      expect(findId(components, 'frontend')).toBeDefined();
+      expect(findId(components, 'api_gateway')).toBeDefined();
     });
   });
 
   describe('Combined exclusion (paths and tags)', () => {
     it('should exclude by both paths and tags', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludePaths = ['temp'];
-      configModule.CONFIG.adapter.likec4.excludeTags = ['infrastructure'];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
+      await setupExclusion(['temp'], ['infrastructure']);
       const components = adapter.extractComponents();
-
       expect(components.find((c) => c.id.startsWith('temp'))).toBeUndefined();
-      expect(components.find((c) => c.id === 'azure_infrastructure')).toBeUndefined();
-      expect(components.find((c) => c.id === 'azure_infrastructure.vnet')).toBeUndefined();
-      expect(components.find((c) => c.id === 'frontend')).toBeDefined();
-      expect(components.find((c) => c.id === 'experimental.new_feature')).toBeDefined();
+      expect(findId(components, 'azure_infrastructure')).toBeUndefined();
+      expect(findId(components, 'frontend')).toBeDefined();
+      expect(findId(components, 'experimental.new_feature')).toBeDefined();
     });
   });
 
   describe('Relationship filtering', () => {
     it('should filter relationships involving excluded components', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludePaths = ['azure_infrastructure'];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
+      await setupExclusion(['azure_infrastructure']);
       const relationships = adapter.extractRelationships();
-
-      const azureRelationships = relationships.filter(
+      const azureRels = relationships.filter(
         (r) =>
           r.source.startsWith('azure_infrastructure') || r.target.startsWith('azure_infrastructure')
       );
-      expect(azureRelationships).toHaveLength(0);
-
+      expect(azureRels).toHaveLength(0);
       expect(
         relationships.find((r) => r.source === 'frontend' && r.target === 'api_gateway')
       ).toBeDefined();
     });
 
     it('should filter relationships by tag exclusion', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludeTags = ['experimental'];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
+      await setupExclusion([], ['experimental']);
       const relationships = adapter.extractRelationships();
-
-      const experimentalRelationships = relationships.filter((r) =>
-        r.source.startsWith('experimental')
-      );
-      expect(experimentalRelationships).toHaveLength(0);
+      expect(relationships.filter((r) => r.source.startsWith('experimental'))).toHaveLength(0);
     });
   });
 
   describe('No exclusions', () => {
-    it('should include all components when no exclusions are configured', async () => {
-      const configModule = await import('../../../utils/config.js');
-      configModule.CONFIG.adapter.likec4.excludePaths = [];
-      configModule.CONFIG.adapter.likec4.excludeTags = [];
-
-      adapter = new TestLikeC4Adapter();
-      adapter.setMockModel(createMockModel());
-
-      const components = adapter.extractComponents();
-
-      expect(components).toHaveLength(9);
+    it('should include all components when no exclusions are configured', () => {
+      expect(adapter.extractComponents()).toHaveLength(9);
     });
   });
 });

@@ -2,7 +2,7 @@ import { readFile } from 'fs/promises';
 import { existsSync, statSync } from 'fs';
 import { join, resolve } from 'path';
 import { validate, validatePath } from '../../utils/validation.js';
-import { normalizeGitHubUrl, isGitHubUrl } from '../url-utils.js';
+import { isRepositoryHostUrl, normalizeRepositoryUrl } from '../url-utils.js';
 import { AdapterError, ErrorCode } from '../../errors.js';
 import { STRUCTURIZR_METADATA } from './metadata.js';
 import { exportDslToJson } from './structurizr-cli.js';
@@ -199,7 +199,7 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
     if (!this.componentIndex) {
       throw AdapterError.notLoaded('structurizr');
     }
-    const normalizedUrl = normalizeGitHubUrl(repoUrl);
+    const normalizedUrl = normalizeRepositoryUrl(repoUrl);
     return this.componentIndex.byRepository.get(normalizedUrl);
   }
 
@@ -207,7 +207,7 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
     if (!this.componentIndex) {
       throw AdapterError.notLoaded('structurizr');
     }
-    const normalizedUrl = normalizeGitHubUrl(repoUrl);
+    const normalizedUrl = normalizeRepositoryUrl(repoUrl);
     const components: ArchitecturalComponent[] = [];
     for (const component of this.componentIndex.byId.values()) {
       if (component.repository === normalizedUrl) {
@@ -408,8 +408,8 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
   private extractRepositoryUrl(element: StructurizrElement): string | undefined {
     const url = element.url;
     if (!url) return undefined;
-    if (!isGitHubUrl(url)) return undefined;
-    return normalizeGitHubUrl(url);
+    if (!isRepositoryHostUrl(url)) return undefined;
+    return normalizeRepositoryUrl(url);
   }
 
   private parseTags(tags: string | undefined): string[] {

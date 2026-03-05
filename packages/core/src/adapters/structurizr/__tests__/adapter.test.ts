@@ -148,7 +148,7 @@ describe('StructurizrAdapter', () => {
       expect(adapter.findComponentById('svc')?.repository).toBe('https://github.com/org/repo');
     });
 
-    it('should not extract non-GitHub URLs as repository', () => {
+    it('should not extract non-repository-host URLs as repository', () => {
       const workspace: StructurizrWorkspace = {
         name: 'Test',
         model: {
@@ -157,6 +157,66 @@ describe('StructurizrAdapter', () => {
       };
       adapter.setMockWorkspace(workspace);
       expect(adapter.findComponentById('svc')?.repository).toBeUndefined();
+    });
+
+    it('should extract GitLab URLs as repository', () => {
+      const workspace: StructurizrWorkspace = {
+        name: 'Test',
+        model: {
+          softwareSystems: [
+            { id: 'gl_svc', name: 'GL Service', url: 'https://gitlab.com/org/my-service' },
+          ],
+        },
+      };
+      adapter.setMockWorkspace(workspace);
+      expect(adapter.findComponentById('gl_svc')?.repository).toBe(
+        'https://gitlab.com/org/my-service'
+      );
+    });
+
+    it('should extract Bitbucket URLs as repository', () => {
+      const workspace: StructurizrWorkspace = {
+        name: 'Test',
+        model: {
+          softwareSystems: [
+            { id: 'bb_svc', name: 'BB Service', url: 'https://bitbucket.org/org/my-service' },
+          ],
+        },
+      };
+      adapter.setMockWorkspace(workspace);
+      expect(adapter.findComponentById('bb_svc')?.repository).toBe(
+        'https://bitbucket.org/org/my-service'
+      );
+    });
+
+    it('should find component by GitLab repository URL', () => {
+      const workspace: StructurizrWorkspace = {
+        name: 'Test',
+        model: {
+          softwareSystems: [
+            { id: 'gl_svc', name: 'GL Service', url: 'https://gitlab.com/org/my-service' },
+          ],
+        },
+      };
+      adapter.setMockWorkspace(workspace);
+      expect(adapter.findComponentByRepository('https://gitlab.com/org/my-service')?.id).toBe(
+        'gl_svc'
+      );
+    });
+
+    it('should find component by Bitbucket repository URL', () => {
+      const workspace: StructurizrWorkspace = {
+        name: 'Test',
+        model: {
+          softwareSystems: [
+            { id: 'bb_svc', name: 'BB Service', url: 'https://bitbucket.org/org/my-service' },
+          ],
+        },
+      };
+      adapter.setMockWorkspace(workspace);
+      expect(adapter.findComponentByRepository('https://bitbucket.org/org/my-service')?.id).toBe(
+        'bb_svc'
+      );
     });
   });
 
