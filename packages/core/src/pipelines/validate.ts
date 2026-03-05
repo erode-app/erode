@@ -28,7 +28,8 @@ export interface ValidateResult {
 
 function isRepositoryUrl(url: string): boolean {
   try {
-    const { hostname } = new URL(url);
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
     return [
       'github.com',
       'www.github.com',
@@ -36,7 +37,7 @@ function isRepositoryUrl(url: string): boolean {
       'www.gitlab.com',
       'bitbucket.org',
       'www.bitbucket.org',
-    ].includes(hostname);
+    ].includes(parsed.hostname);
   } catch {
     return false;
   }

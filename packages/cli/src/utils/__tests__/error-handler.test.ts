@@ -30,50 +30,50 @@ describe('ErrorHandler.formatError - sensitive key redaction', () => {
 
   it('should redact keys containing "token"', () => {
     const error = new ErodeError('Test error', ErrorCode.AUTH_KEY_MISSING, 'Test user message', {
-      githubToken: 'ghp_secret123',
+      githubToken: 'test_value_redacted',
     });
 
     ErrorHandler.formatError(error);
 
     const detailLine = getErrorLines(consoleErrorSpy).find((c) => c.includes('githubToken'));
     expect(detailLine).toContain('***REDACTED***');
-    expect(detailLine).not.toContain('ghp_secret123');
+    expect(detailLine).not.toContain('test_value_redacted');
   });
 
   it('should redact keys containing "secret"', () => {
     const error = new ErodeError('Test error', ErrorCode.AUTH_KEY_MISSING, 'Test user message', {
-      apiSecret: 'supersecret',
+      apiSecret: 'test_value_redacted',
     });
 
     ErrorHandler.formatError(error);
 
     const detailLine = getErrorLines(consoleErrorSpy).find((c) => c.includes('apiSecret'));
     expect(detailLine).toContain('***REDACTED***');
-    expect(detailLine).not.toContain('supersecret');
+    expect(detailLine).not.toContain('test_value_redacted');
   });
 
   it('should redact keys containing "auth"', () => {
     const error = new ErodeError('Test error', ErrorCode.NET_ERROR, 'Test user message', {
-      myAuthHeader: 'Bearer xyz',
+      myAuthHeader: 'test_value_redacted',
     });
 
     ErrorHandler.formatError(error);
 
     const detailLine = getErrorLines(consoleErrorSpy).find((c) => c.includes('myAuthHeader'));
     expect(detailLine).toContain('***REDACTED***');
-    expect(detailLine).not.toContain('Bearer xyz');
+    expect(detailLine).not.toContain('test_value_redacted');
   });
 
   it('should redact keys containing "key"', () => {
     const error = new ErodeError('Test error', ErrorCode.AUTH_KEY_MISSING, 'Test user message', {
-      accessKey: 'AKIAIOSFODNN7',
+      accessKey: 'test_value_redacted',
     });
 
     ErrorHandler.formatError(error);
 
     const detailLine = getErrorLines(consoleErrorSpy).find((c) => c.includes('accessKey'));
     expect(detailLine).toContain('***REDACTED***');
-    expect(detailLine).not.toContain('AKIAIOSFODNN7');
+    expect(detailLine).not.toContain('test_value_redacted');
   });
 
   it('should not redact non-sensitive keys', () => {

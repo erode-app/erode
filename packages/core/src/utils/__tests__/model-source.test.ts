@@ -298,8 +298,8 @@ describe('resolveModelSource', () => {
 
     // The -- separator must appear before the URL and target directory
     const separatorIndex = gitArgs.indexOf('--');
-    expect(separatorIndex).toBeGreaterThan(-1);
-    expect(separatorIndex).toBeLessThan(gitArgs.length - 2);
+    expect(separatorIndex).toBe(gitArgs.length - 3);
+    expect(gitArgs.slice(separatorIndex + 1)).toHaveLength(2);
   });
 
   it('strips URL credentials from clone error messages', async () => {

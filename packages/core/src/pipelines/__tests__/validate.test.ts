@@ -102,6 +102,18 @@ describe('findRepositoryLink via runValidate', () => {
     expect(result.unlinked).toBe(1);
   });
 
+  it('should reject non-http/https protocols', async () => {
+    const mockAdapter = makeMockAdapter([
+      { id: 'service_a', links: ['javascript:alert(1)//github.com/owner/repo'] },
+    ]);
+    vi.mocked(createAdapter).mockReturnValue(mockAdapter as never);
+
+    const result = await runValidate({ modelPath: '/fake' });
+
+    expect(result.linked).toBe(0);
+    expect(result.unlinked).toBe(1);
+  });
+
   it('should reject URLs with gitlab.com as subdomain prefix', async () => {
     const mockAdapter = makeMockAdapter([
       { id: 'service_a', links: ['https://evil-gitlab.com/group/project'] },

@@ -85,7 +85,7 @@ function isSensitiveKey(key: string): boolean {
 }
 
 function redactSensitiveValue(value: string): string {
-  return value.replace(/https?:\/\/[^@\s]+@/g, 'https://***@');
+  return value.replace(/\b(https?):\/\/[^@\s]+@/gi, '$1://***@');
 }
 
 export const ErrorHandler = {

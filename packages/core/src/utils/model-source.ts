@@ -81,9 +81,14 @@ export async function resolveModelSource(
 export function parseModelRepo(modelRepo: string): { cloneUrl: string; slug: string } {
   // Full URL
   if (/^https?:\/\//.test(modelRepo)) {
+    const parsed = new URL(modelRepo);
+    parsed.username = '';
+    parsed.password = '';
+    parsed.search = '';
+    parsed.hash = '';
     const slug = extractSlugFromUrl(modelRepo);
-    const cleanUrl = stripTrailingSlashes(modelRepo.replace(/\.git\/?$/, ''));
-    return { cloneUrl: `${cleanUrl}.git`, slug };
+    parsed.pathname = `/${slug}.git`;
+    return { cloneUrl: parsed.toString(), slug };
   }
 
   // Bare slug — assume GitHub

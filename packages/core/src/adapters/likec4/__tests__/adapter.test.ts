@@ -231,52 +231,6 @@ describe('LikeC4Adapter', () => {
     });
   });
 
-  describe('URL spoofing protection', () => {
-    it('should reject URLs from lookalike domains', () => {
-      const spoofedModel: MockLikeC4Model = {
-        elements: () => [
-          {
-            id: 'spoofed_service',
-            title: 'Spoofed Service',
-            kind: 'service',
-            tags: [],
-            links: ['https://evil-github.com/owner/repo'],
-          },
-        ],
-        relationships: () => [],
-      };
-      adapter.setMockModel(spoofedModel);
-      const components = adapter.extractComponents();
-      const spoofed = components.find((c) => c.id === 'spoofed_service');
-      expect(spoofed?.repository).toBeUndefined();
-    });
-
-    it('should reject URLs with github.com as query parameter', () => {
-      const spoofedModel: MockLikeC4Model = {
-        elements: () => [
-          {
-            id: 'query_spoofed',
-            title: 'Query Spoofed',
-            kind: 'service',
-            tags: [],
-            links: ['https://evil.com?redirect=github.com/owner/repo'],
-          },
-        ],
-        relationships: () => [],
-      };
-      adapter.setMockModel(spoofedModel);
-      const components = adapter.extractComponents();
-      const spoofed = components.find((c) => c.id === 'query_spoofed');
-      expect(spoofed?.repository).toBeUndefined();
-    });
-
-    it('should accept legitimate github.com URLs', () => {
-      const components = adapter.extractComponents();
-      const frontend = components.find((c) => c.id === 'frontend');
-      expect(frontend?.repository).toBe('https://github.com/example/frontend');
-    });
-  });
-
   describe('Allowed dependencies', () => {
     it('should correctly identify allowed dependencies', () => {
       const isAllowed1 = adapter.isAllowedDependency('frontend', 'api_gateway');
