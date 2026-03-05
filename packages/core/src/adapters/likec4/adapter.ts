@@ -4,7 +4,7 @@ import { existsSync } from 'fs';
 import { resolve } from 'path';
 import { CONFIG } from '../../utils/config.js';
 import { validate } from '../../utils/validation.js';
-import { isGitHubUrl, normalizeGitHubUrl } from '../url-utils.js';
+import { isRepositoryHostUrl, normalizeRepositoryUrl } from '../url-utils.js';
 import { ErodeError, AdapterError, ErrorCode } from '../../errors.js';
 import type { ArchitectureModelAdapter, VersionCheckResult } from '../architecture-adapter.js';
 import { LIKEC4_METADATA } from './metadata.js';
@@ -154,8 +154,8 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
   }
 
   protected extractRepositoryUrl(element: LikeC4Element): string | undefined {
-    const link = element.links?.find((l) => isGitHubUrl(typeof l === 'string' ? l : l.url));
-    return link ? normalizeGitHubUrl(typeof link === 'string' ? link : link.url) : undefined;
+    const link = element.links?.find((l) => isRepositoryHostUrl(typeof l === 'string' ? l : l.url));
+    return link ? normalizeRepositoryUrl(typeof link === 'string' ? link : link.url) : undefined;
   }
 
   protected extractRelationships(): ModelRelationship[] {
@@ -217,7 +217,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     if (!this.componentIndex) {
       throw AdapterError.notLoaded('likec4');
     }
-    const normalizedUrl = normalizeGitHubUrl(repoUrl);
+    const normalizedUrl = normalizeRepositoryUrl(repoUrl);
     return this.componentIndex.byRepository.get(normalizedUrl);
   }
 
@@ -225,7 +225,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     if (!this.componentIndex) {
       throw AdapterError.notLoaded('likec4');
     }
-    const normalizedUrl = normalizeGitHubUrl(repoUrl);
+    const normalizedUrl = normalizeRepositoryUrl(repoUrl);
     const components: ArchitecturalComponent[] = [];
 
     for (const component of this.componentIndex.byId.values()) {
