@@ -25,6 +25,10 @@ describe('isRepositoryHostUrl', () => {
     expect(isRepositoryHostUrl('https://bitbucket.com/example/repo')).toBe(false);
   });
 
+  it('should reject prototype-chain keys', () => {
+    expect(isRepositoryHostUrl('https://constructor/')).toBe(false);
+  });
+
   it('should return false for invalid URLs', () => {
     expect(isRepositoryHostUrl('not-a-url')).toBe(false);
     expect(isRepositoryHostUrl('')).toBe(false);
@@ -69,6 +73,15 @@ describe('normalizeRepositoryUrl', () => {
     expect(normalizeRepositoryUrl('https://github.com/example/repo/extra/path')).toBe(
       'https://github.com/example/repo'
     );
+  });
+
+  it('should strip GitLab /-/ route segments', () => {
+    expect(normalizeRepositoryUrl('https://gitlab.com/group/repo/-/tree/main')).toBe(
+      'https://gitlab.com/group/repo'
+    );
+    expect(
+      normalizeRepositoryUrl('https://gitlab.com/group/subgroup/repo/-/merge_requests/42')
+    ).toBe('https://gitlab.com/group/subgroup/repo');
   });
 
   it('should preserve all path segments for GitLab (nested groups)', () => {

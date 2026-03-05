@@ -9,7 +9,7 @@ const REPO_HOSTNAMES: Record<string, string> = {
 
 export function isRepositoryHostUrl(url: string): boolean {
   try {
-    return new URL(url).hostname in REPO_HOSTNAMES;
+    return Object.hasOwn(REPO_HOSTNAMES, new URL(url).hostname);
   } catch {
     return false;
   }
@@ -24,7 +24,8 @@ export function normalizeRepositoryUrl(url: string): string {
     // GitLab supports nested groups (e.g. gitlab.com/group/subgroup/project),
     // so preserve all path segments instead of just two.
     if (base === 'https://gitlab.com') {
-      const parts = parsed.pathname.split('/').filter(Boolean);
+      const gitlabPath = parsed.pathname.split('/-/')[0] ?? parsed.pathname;
+      const parts = gitlabPath.split('/').filter(Boolean);
       if (parts.length >= 2) {
         const last = parts.at(-1);
         if (!last) return url;
