@@ -90,7 +90,7 @@ export function buildStructuredOutput(
 const COMMENT_MARKER = '<!-- erode -->';
 
 function escapeMarkdownLink(text: string): string {
-  return text.replace(/[[\]()]/g, '\\$&');
+  return text.replace(/[[\]()\\`<>|]/g, '\\$&');
 }
 
 /** Extras for formatting analysis results as a PR comment. */

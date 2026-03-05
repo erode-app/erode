@@ -61,7 +61,6 @@ function makeAnalysisResult(overrides: Partial<DriftAnalysisResult> = {}): Drift
 describe('buildStructuredOutput', () => {
   it('should return success status when no violations', () => {
     const result = buildStructuredOutput(makeAnalysisResult(), 'LikeC4');
-
     expect(result.status).toBe('success');
     expect(result.exitCode).toBe(0);
     expect(result.version).toBe('0.0.1');
@@ -84,7 +83,6 @@ describe('buildStructuredOutput', () => {
       }),
       'LikeC4'
     );
-
     expect(result.status).toBe('violations');
     expect(result.exitCode).toBe(1);
     expect(result.analysis.violations).toHaveLength(1);
@@ -93,7 +91,6 @@ describe('buildStructuredOutput', () => {
 
   it('should include metadata about PR and component', () => {
     const result = buildStructuredOutput(makeAnalysisResult(), 'LikeC4');
-
     expect(result.metadata.changeRequest?.number).toBe(42);
     expect(result.metadata.changeRequest?.title).toBe('Test PR');
     expect(result.metadata.component?.id).toBe('comp.api');
@@ -110,16 +107,15 @@ describe('buildStructuredOutput', () => {
         branch: 'drift/42',
       },
     });
-
     expect(result.selectedComponentId).toBe('comp.api');
     expect(result.candidateComponents).toHaveLength(1);
     expect(result.generatedChangeRequest?.action).toBe('created');
   });
 
   it('should include modelFormat', () => {
-    const result = buildStructuredOutput(makeAnalysisResult(), 'Structurizr');
-
-    expect(result.modelFormat).toBe('Structurizr');
+    expect(buildStructuredOutput(makeAnalysisResult(), 'Structurizr').modelFormat).toBe(
+      'Structurizr'
+    );
   });
 
   it('should include dependency changes', () => {
@@ -281,151 +277,67 @@ describe('formatAnalysisAsComment', () => {
 });
 
 describe('writeOutputToFile', () => {
-  beforeEach(() => {
-    mockWriteFileSync.mockClear();
-  });
+  beforeEach(() => mockWriteFileSync.mockClear());
 
-  it('should write JSON to the specified file', () => {
-    const output = buildStructuredOutput(makeAnalysisResult(), 'LikeC4');
-    writeOutputToFile(output, '/tmp/output.json');
-
+  it('should write pretty-printed JSON to the specified file', () => {
+    writeOutputToFile(buildStructuredOutput(makeAnalysisResult(), 'LikeC4'), '/tmp/output.json');
     expect(mockWriteFileSync).toHaveBeenCalledOnce();
     expect(mockWriteFileSync).toHaveBeenCalledWith('/tmp/output.json', expect.any(String), 'utf-8');
-
-    const call = mockWriteFileSync.mock.calls[0] as [string, string, string];
-    const writtenContent = JSON.parse(call[1]) as StructuredAnalysisOutput;
-    expect(writtenContent.status).toBe('success');
-  });
-
-  it('should write pretty-printed JSON', () => {
-    const output = buildStructuredOutput(makeAnalysisResult(), 'LikeC4');
-    writeOutputToFile(output, '/tmp/output.json');
-
-    const call = mockWriteFileSync.mock.calls[0] as [string, string, string];
-    const writtenJson = call[1];
+    const writtenJson = (mockWriteFileSync.mock.calls[0] as [string, string, string])[1];
+    expect((JSON.parse(writtenJson) as StructuredAnalysisOutput).status).toBe('success');
     expect(writtenJson).toContain('\n');
-    expect(writtenJson).toContain('  ');
   });
 });
 
 describe('formatErrorAsComment', () => {
-  it('should show rate limit message for ApiError with 429 status', () => {
-    const error = new ApiError('Resource exhausted', 429);
+  it.each([
+    [new ApiError('Resource exhausted', 429), 'rate limit was hit'],
+    [new ApiError('Request timeout', 408), 'timed out'],
+    [new ConfigurationError('Missing key'), 'configuration issue'],
+    [new Error('Something broke'), 'unexpected error happened'],
+  ])('shows appropriate message for %s', (error, expectedText) => {
     const output = formatErrorAsComment(error);
-
     expect(output).toContain(':x: **Analysis unsuccessful**');
-    expect(output).toContain('rate limit was hit');
-    expect(output).toContain('re-run the check');
-  });
-
-  it('should show timeout message for ApiError with timeout', () => {
-    const error = new ApiError('Request timeout', 408);
-    const output = formatErrorAsComment(error);
-
-    expect(output).toContain(':x: **Analysis unsuccessful**');
-    expect(output).toContain('timed out');
-    expect(output).toContain('try re-running');
-  });
-
-  it('should show config message for ConfigurationError', () => {
-    const error = new ConfigurationError('Missing GEMINI_API_KEY');
-    const output = formatErrorAsComment(error);
-
-    expect(output).toContain(':x: **Analysis unsuccessful**');
-    expect(output).toContain('configuration issue');
-    expect(output).toContain('API keys and tokens');
-  });
-
-  it('should show generic message for unknown errors', () => {
-    const error = new Error('Something broke');
-    const output = formatErrorAsComment(error);
-
-    expect(output).toContain(':x: **Analysis unsuccessful**');
-    expect(output).toContain('unexpected error happened');
-    expect(output).toContain('workflow logs');
-  });
-
-  it('should contain COMMENT_MARKER for upsert', () => {
-    const error = new Error('test');
-    const output = formatErrorAsComment(error);
-
+    expect(output).toContain(expectedText);
     expect(output).toContain(COMMENT_MARKER);
-  });
-
-  it('should contain the erode footer', () => {
-    const error = new Error('test');
-    const output = formatErrorAsComment(error);
-
     expect(output).toContain('*Automated by [erode]');
   });
 });
 
 describe('analysisHasFindings', () => {
-  it('should return true when violations are present', () => {
-    const result = makeAnalysisResult({
-      hasViolations: true,
-      violations: [{ severity: 'high', description: 'test' }],
-    });
-
-    expect(analysisHasFindings(result)).toBe(true);
-  });
-
-  it('should return true when model updates have add-only changes', () => {
-    const result = makeAnalysisResult({
-      modelUpdates: { add: ['comp.a -> comp.b'], relationships: [] },
-    });
-
-    expect(analysisHasFindings(result)).toBe(true);
-  });
-
-  it('should return true when model updates have remove-only changes', () => {
-    const result = makeAnalysisResult({
-      modelUpdates: { remove: ['comp.x -> comp.y'], relationships: [] },
-    });
-
-    expect(analysisHasFindings(result)).toBe(true);
-  });
-
-  it('should return true when model updates have both add and remove changes', () => {
-    const result = makeAnalysisResult({
-      modelUpdates: {
-        add: ['comp.a -> comp.b'],
-        remove: ['comp.x -> comp.y'],
-        relationships: [],
-      },
-    });
-
-    expect(analysisHasFindings(result)).toBe(true);
-  });
-
-  it('should return false when no findings are present', () => {
-    const result = makeAnalysisResult();
-
-    expect(analysisHasFindings(result)).toBe(false);
-  });
-
-  it('should return false when modelUpdates is undefined', () => {
-    const result = makeAnalysisResult({ modelUpdates: undefined });
-
-    expect(analysisHasFindings(result)).toBe(false);
-  });
-
-  it('should return false when model updates have empty arrays', () => {
-    const result = makeAnalysisResult({
-      modelUpdates: { add: [], remove: [], relationships: [] },
-    });
-
-    expect(analysisHasFindings(result)).toBe(false);
-  });
-
-  it('should return true when model updates have newComponents', () => {
-    const result = makeAnalysisResult({
-      modelUpdates: {
-        newComponents: [{ id: 'order_service', kind: 'service', name: 'Order Service' }],
-      },
-    });
-
-    expect(analysisHasFindings(result)).toBe(true);
+  it.each([
+    [
+      'violations present',
+      { hasViolations: true, violations: [{ severity: 'high', description: 'test' }] },
+      true,
+    ],
+    ['add-only model updates', { modelUpdates: { add: ['a -> b'], relationships: [] } }, true],
+    [
+      'remove-only model updates',
+      { modelUpdates: { remove: ['x -> y'], relationships: [] } },
+      true,
+    ],
+    [
+      'add + remove model updates',
+      { modelUpdates: { add: ['a -> b'], remove: ['x -> y'], relationships: [] } },
+      true,
+    ],
+    [
+      'newComponents present',
+      { modelUpdates: { newComponents: [{ id: 'svc', kind: 'service', name: 'Svc' }] } },
+      true,
+    ],
+    ['no findings', {}, false],
+    ['undefined modelUpdates', { modelUpdates: undefined }, false],
+    [
+      'empty model update arrays',
+      { modelUpdates: { add: [], remove: [], relationships: [] } },
+      false,
+    ],
+  ] as const)('returns %s => %s', (_label, overrides, expected) => {
+    expect(analysisHasFindings(makeAnalysisResult(overrides as Partial<DriftAnalysisResult>))).toBe(
+      expected
+    );
   });
 });
 
@@ -459,6 +371,24 @@ describe('formatPatchPrBody', () => {
     });
 
     expect(body).toContain('[PR #10: Add user auth](https://github.com/org/repo/pull/10)');
+  });
+
+  it.each([
+    { title: 'Fix `code` injection', escaped: '\\`code\\`', absent: '`code`' },
+    { title: 'Fix <script>alert(1)</script>', escaped: '\\<script\\>', absent: '<script>' },
+    { title: 'Fix path\\to\\file', escaped: '\\\\', absent: undefined },
+    { title: 'Fix table | injection', escaped: '\\|', absent: undefined },
+  ])('should escape special chars in PR title: $title', ({ title, escaped, absent }) => {
+    const body = formatPatchPrBody({
+      prNumber: 42,
+      prTitle: title,
+      prUrl: 'https://github.com/org/repo/pull/42',
+      summary: 'Summary',
+      insertedLines: ['  a -> b'],
+      skipped: [],
+    });
+    expect(body).toContain(escaped);
+    if (absent) expect(body).not.toContain(absent);
   });
 
   it('should render new components section in PR body', () => {

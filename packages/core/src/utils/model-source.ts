@@ -9,6 +9,12 @@ import { detectPlatform } from '../platforms/platform-factory.js';
 
 const execFileAsync = promisify(execFile);
 
+function stripTrailingSlashes(s: string): string {
+  let end = s.length;
+  while (end > 0 && s[end - 1] === '/') end--;
+  return s.slice(0, end);
+}
+
 export interface ResolvedModelSource {
   /** Absolute path to the local directory containing model files. */
   localPath: string;
@@ -75,24 +81,25 @@ export async function resolveModelSource(
 export function parseModelRepo(modelRepo: string): { cloneUrl: string; slug: string } {
   // Full URL
   if (/^https?:\/\//.test(modelRepo)) {
+    const parsed = new URL(modelRepo);
+    parsed.username = '';
+    parsed.password = '';
+    parsed.search = '';
+    parsed.hash = '';
     const slug = extractSlugFromUrl(modelRepo);
-    const cleanUrl = modelRepo.replace(/\.git\/?$/, '').replace(/\/+$/, '');
-    return { cloneUrl: `${cleanUrl}.git`, slug };
+    parsed.pathname = `/${slug}.git`;
+    return { cloneUrl: parsed.toString(), slug };
   }
 
   // Bare slug — assume GitHub
-  const slug = modelRepo.replace(/\/+$/, '');
+  const slug = stripTrailingSlashes(modelRepo);
   return { cloneUrl: `https://github.com/${slug}.git`, slug };
 }
 
 function extractSlugFromUrl(url: string): string {
   const parsed = new URL(url);
-  // Remove leading slash and trailing .git / slashes
-  const path = parsed.pathname
-    .replace(/^\//, '')
-    .replace(/\.git\/?$/, '')
-    .replace(/\/+$/, '');
-  return path;
+  const path = parsed.pathname.replace(/^\//, '').replace(/\.git\/?$/, '');
+  return stripTrailingSlashes(path);
 }
 
 function resolveToken(cloneUrl: string): string | undefined {
@@ -155,7 +162,7 @@ async function cloneRepo(
   token?: string
 ): Promise<void> {
   const effectiveUrl = token ? injectAuthUsername(cloneUrl) : cloneUrl;
-  const args = ['clone', '--depth', '1', '--branch', ref, effectiveUrl, targetDir];
+  const args = ['clone', '--depth', '1', '--branch', ref, '--', effectiveUrl, targetDir];
   const env: Record<string, string> = { ...process.env } as Record<string, string>;
 
   let askpassDir: string | undefined;
