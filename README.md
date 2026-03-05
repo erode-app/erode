@@ -1,8 +1,8 @@
 # erode
 
-Architecture erosion detection for GitHub PRs, GitLab MRs, and Bitbucket PRs using LikeC4 or Structurizr models and AI.
+Architecture erosion detection for GitHub PRs, GitLab MRs, Bitbucket PRs, and local changes using LikeC4 or Structurizr models and AI.
 
-Compares pull request diffs against a [LikeC4](https://likec4.dev) or [Structurizr](https://docs.structurizr.com/dsl/language) architecture model to surface undeclared dependencies and structural changes. Works as both a CLI tool and a GitHub Action. Supports GitHub pull requests, GitLab merge requests (experimental), and Bitbucket pull requests (experimental).
+Compares pull request diffs or local git diffs against a [LikeC4](https://likec4.dev) or [Structurizr](https://docs.structurizr.com/dsl/language) architecture model to surface undeclared dependencies and structural changes. Works as a CLI tool and a GitHub Action. Use `erode analyze` for PR review and `erode check` for pre-push local detection. Supports GitHub pull requests, GitLab merge requests (experimental), and Bitbucket pull requests (experimental).
 
 Supported AI providers: **Gemini** (default), **OpenAI**, and **Anthropic** (experimental).
 

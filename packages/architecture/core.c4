@@ -93,6 +93,10 @@ model {
       description 'Orchestrates the analysis pipeline — invoked by CLI and CI'
     }
 
+    check = module 'Check' {
+      description 'Local pre-push drift detection — reuses Stages 1-3 on local git diffs'
+    }
+
     config = module 'Config' {
       description 'Environment-variable-driven configuration'
     }
@@ -114,6 +118,13 @@ model {
   erode.core.analyze -> erode.core.analysis 'builds prompts'
   erode.core.analyze -> erode.core.output 'formats results'
   erode.core.analyze -> erode.core.config 'reads configuration'
+
+  // Check delegates to pipeline stages (no platform needed — uses local git diffs)
+  erode.core.check -> erode.core.pipelines 'runs Stages 1-3'
+  erode.core.check -> erode.core.adapters 'loads architecture model'
+  erode.core.check -> erode.core.analysis 'builds prompts'
+  erode.core.check -> erode.core.output 'formats results'
+  erode.core.check -> erode.core.config 'reads configuration'
 
   // Pipelines delegate AI calls to providers
   erode.core.pipelines -> erode.core.providers 'delegates AI calls'

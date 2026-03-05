@@ -3,7 +3,7 @@ title: CLI Usage
 description: Run Erode from the command line.
 ---
 
-Erode provides four commands for working with architecture models and analyzing change requests.
+Erode provides five commands for working with architecture models and analyzing change requests.
 
 ## Installation
 
@@ -65,6 +65,39 @@ erode analyze ./model --url https://bitbucket.org/workspace/repo/pull-requests/4
 :::note
 Relationship removals are informational only. The PR body lists relationships that may need removal, but the reviewer must remove them manually.
 :::
+
+### `check <model-path>`
+
+Check local changes for architectural drift before pushing. Uses the same AI pipeline as `analyze` (Stages 1-3) but operates on local git diffs instead of fetching PR data from a platform API.
+
+```bash
+erode check ./model --repo https://github.com/org/repo
+erode check ./model --staged
+erode check ./model --branch main
+```
+
+| Flag                    | Description                                                     | Default   |
+| ----------------------- | --------------------------------------------------------------- | --------- |
+| `--repo <url>`          | Repository URL (auto-detected from git remote if omitted)       |           |
+| `--model-format <fmt>`  | Architecture model format                                       | `likec4`  |
+| `--staged`              | Only check staged changes                                       | `false`   |
+| `--branch <branch>`     | Compare against a branch (e.g. `main`)                          |           |
+| `--component <id>`      | Component ID to analyze (skips AI component selection)          |           |
+| `--format <fmt>`        | Output format: `console`, `json`                                | `console` |
+| `--fail-on-violations`  | Exit with code 1 when violations are found                      |           |
+| `--skip-file-filtering` | Analyze all changed files (skip pattern-based filtering)        |           |
+
+When no flags are passed, `check` analyzes unstaged changes (`git diff`). Use `--staged` for pre-commit hooks and `--branch main` for pre-push hooks.
+
+#### Git hook integration
+
+```bash
+# .husky/pre-commit
+erode check ./architecture --staged --fail-on-violations
+
+# .husky/pre-push
+erode check ./architecture --branch main --fail-on-violations
+```
 
 ### `components <model-path>`
 

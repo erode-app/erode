@@ -7,7 +7,7 @@ head:
       src: /architecture/likec4-views.js
 ---
 
-Erode uses a multi-stage AI pipeline to analyze pull requests for architecture drift. Cheaper, faster models handle extraction and routing, while stronger models handle the analysis.
+Erode uses a multi-stage AI pipeline to analyze pull requests and local changes for architecture drift. Cheaper, faster models handle extraction and routing, while stronger models handle the analysis. The same pipeline powers both `erode analyze` (PR review) and `erode check` (local pre-push detection).
 
 <div class="likec4-embed">
 <likec4-view view-id="pipeline-stages" browser="true" dynamic-variant="sequence"></likec4-view>
@@ -17,7 +17,7 @@ Erode uses a multi-stage AI pipeline to analyze pull requests for architecture d
 
 ## File filtering
 
-Before any AI stage runs, Erode filters the PR diff to remove files that are irrelevant to architecture analysis. Erode strips out tests, documentation, lock files, build config, CI config, and build output automatically. This reduces noise and saves API usage.
+Before any AI stage runs, Erode filters the diff to remove files that are irrelevant to architecture analysis. Erode strips out tests, documentation, lock files, build config, CI config, and build output automatically. This reduces noise and saves API usage. This applies to both PR diffs (`analyze`) and local diffs (`check`).
 
 The built-in skip patterns cover:
 
