@@ -109,6 +109,12 @@ describe('sanitizeErrorMessage', () => {
     expect(result).toContain('Error');
   });
 
+  it('strips nested/malformed HTML tags', () => {
+    const result = sanitizeErrorMessage('<scr<script>ipt>alert(1)</script>');
+    expect(result).not.toMatch(/<[^>]*>/);
+    expect(result).toContain('alert(1)');
+  });
+
   it('truncates sanitized output to 200 characters', () => {
     const longHtml = '<div>' + 'A'.repeat(300) + '</div>';
     const result = sanitizeErrorMessage(longHtml);
