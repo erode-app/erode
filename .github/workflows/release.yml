@@ -8,7 +8,6 @@ permissions:
   contents: write
   pull-requests: write
   packages: write
-  id-token: write
 
 jobs:
   release-please:
@@ -72,6 +71,9 @@ jobs:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v6
 
@@ -84,12 +86,18 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - name: Set release version
+      - name: Set release version and pin core dependency
         run: |
           VERSION="${{ needs.release-please.outputs.tag_name }}"
           VERSION="${VERSION#v}"
           npm version "$VERSION" --no-git-tag-version --workspace=packages/core
           npm version "$VERSION" --no-git-tag-version --workspace=packages/cli
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('packages/cli/package.json', 'utf8'));
+            pkg.dependencies['@erode-app/core'] = '$VERSION';
+            fs.writeFileSync('packages/cli/package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
 
       - name: Publish @erode-app/core
         run: npm publish --workspace=packages/core --provenance --access public
