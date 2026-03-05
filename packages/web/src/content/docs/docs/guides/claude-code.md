@@ -133,7 +133,7 @@ For automatic checking after every code edit, add a [PostToolUse hook](https://d
         "hooks": [
           {
             "type": "command",
-            "command": "if echo \"$TOOL_INPUT\" | jq -re '.file_path // .filePath // empty' | grep -qE '\\.(ts|js|py|go|java|rs)$'; then erode check ./architecture --format json 2>&1 | tail -20; fi"
+            "command": "if jq -re '.tool_input.file_path // .tool_input.filePath // empty' | grep -qE '\\.(ts|js|py|go|java|rs)$'; then erode check ./architecture --format json 2>&1; fi"
           }
         ]
       }
@@ -144,8 +144,8 @@ For automatic checking after every code edit, add a [PostToolUse hook](https://d
 
 Replace `./architecture` with your model path. This runs `erode check` after every edit to a source file and feeds the output back to Claude Code.
 
-:::note
-The hook approach runs on every edit, which uses more AI provider API calls. The skill approach is more selective and only runs when Claude Code judges that new integrations were introduced.
+:::caution
+The hook approach runs on every edit, which triggers multiple AI API calls each time. This adds up quickly during active sessions. The skill approach above is recommended for most users — it only runs when Claude Code judges that new integrations were introduced.
 :::
 
 ## What's next
