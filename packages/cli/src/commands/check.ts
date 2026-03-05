@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { execSync } from 'child_process';
-import { runCheck, generateGitDiff, parseRepoFromRemote, validate } from '@erode/core';
+import { runCheck, generateGitDiff, parseRepoFromRemote, validate } from '@erode-app/core';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { CheckOptionsSchema } from '../utils/command-schemas.js';
 import { OutputFormatter } from '../utils/cli-helpers.js';

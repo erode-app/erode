@@ -54,7 +54,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "@erode/eslint-config": "*",
+    "@erode-app/eslint-config": "*",
     "@types/node": "^24.11.0",
     "concurrently": "^9.2.1",
     "eslint": "^10.0.2",

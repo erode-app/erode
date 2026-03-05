@@ -1,5 +1,5 @@
 {
-  "name": "@erode/web",
+  "name": "@erode-app/web",
   "private": true,
   "type": "module",
   "version": "0.0.1",
@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
-    "@erode/eslint-config": "*",
+    "@erode-app/eslint-config": "*",
     "eslint": "^10.0.2",
     "eslint-plugin-astro": "^1.6.0",
     "typescript": "^5.9.3"

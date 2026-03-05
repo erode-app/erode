@@ -1,4 +1,4 @@
-import { ErodeError, AdapterError, ErrorCode } from '@erode/core';
+import { ErodeError, AdapterError, ErrorCode } from '@erode-app/core';
 import { Logger } from './cli-helpers.js';
 
 interface RetryOptions {

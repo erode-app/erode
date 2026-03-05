@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { runValidate, validate } from '@erode/core';
+import { runValidate, validate } from '@erode-app/core';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { ValidateOptionsSchema } from '../utils/command-schemas.js';
 import { OutputFormatter } from '../utils/cli-helpers.js';

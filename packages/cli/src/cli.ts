@@ -9,7 +9,7 @@ import { createConnectionsCommand } from './commands/connections.js';
 import { createAnalyzeCommand } from './commands/analyze.js';
 import { createCheckCommand } from './commands/check.js';
 import { createValidateCommand } from './commands/validate.js';
-import { PackageJsonSchema, validate } from '@erode/core';
+import { PackageJsonSchema, validate } from '@erode-app/core';
 
 function setupSignalHandlers(): void {
   const handleShutdown = (signal: string) => {

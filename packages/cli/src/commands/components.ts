@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { runComponents, validate } from '@erode/core';
+import { runComponents, validate } from '@erode-app/core';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { ComponentsOptionsSchema } from '../utils/command-schemas.js';
 import { OutputFormatter } from '../utils/cli-helpers.js';

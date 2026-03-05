@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import type { ProgressReporter } from '@erode/core';
+import type { ProgressReporter } from '@erode-app/core';
 
 /** Console-based progress reporter that writes to stderr. */
 export class ConsoleProgress implements ProgressReporter {

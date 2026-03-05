@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { runAnalyze, validate } from '@erode/core';
+import { runAnalyze, validate } from '@erode-app/core';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { AnalyzeOptionsSchema } from '../utils/command-schemas.js';
 import { OutputFormatter } from '../utils/cli-helpers.js';

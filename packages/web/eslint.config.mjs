@@ -1,4 +1,4 @@
-import { createBaseConfig, ignores } from '@erode/eslint-config';
+import { createBaseConfig, ignores } from '@erode-app/eslint-config';
 import eslintPluginAstro from 'eslint-plugin-astro';
 
 export default [
