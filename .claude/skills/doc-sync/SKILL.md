@@ -23,6 +23,7 @@ Suggest running this skill when you detect changes to any of these files
 ### CLI interface
 
 - `packages/cli/src/commands/analyze.ts`
+- `packages/cli/src/commands/check.ts`
 - `packages/cli/src/commands/validate.ts`
 - `packages/cli/src/commands/components.ts`
 - `packages/cli/src/commands/connections.ts`
@@ -79,6 +80,7 @@ When any of these appear in changes, say:
 | Doc file                                                            | What it documents                                                                           |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `packages/web/src/content/docs/docs/guides/cli-usage.md`            | CLI commands, arguments, flags                                                              |
+| `packages/web/src/content/docs/docs/guides/claude-code.md`          | Claude Code skill setup and hook configuration                                              |
 | `packages/web/src/content/docs/docs/guides/configuration.md`        | Environment variables, defaults                                                             |
 | `packages/web/src/content/docs/docs/ci/github-actions.md`           | GH Action inputs, outputs, CI setup                                                         |
 | `packages/web/src/content/docs/docs/getting-started.md`             | Quick-start examples                                                                        |

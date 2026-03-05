@@ -73,4 +73,5 @@ Or browse the existing example PRs to see Erode's output without any setup:
 - [CI Integration overview](/docs/ci/) — supported platforms and setup options
 - [GitHub Actions reference](/docs/ci/github-actions/) — all action inputs, outputs, and advanced examples
 - [CLI usage](/docs/guides/cli-usage/) — run Erode locally against PRs or uncommitted changes
+- [Claude Code integration](/docs/guides/claude-code/) — add architecture drift checks to Claude Code sessions
 - [Configuration](/docs/guides/configuration/) — environment variables for tuning the analysis engine
