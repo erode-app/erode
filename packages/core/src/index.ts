@@ -87,6 +87,8 @@ export { runValidate } from './pipelines/validate.js';
 export type { ValidateOptions, ValidateResult } from './pipelines/validate.js';
 export { runConnections } from './pipelines/connections.js';
 export type { ConnectionsOptions, ComponentConnections } from './pipelines/connections.js';
+export { runCheck } from './pipelines/check.js';
+export type { CheckOptions, CheckResult } from './pipelines/check.js';
 export type { ProgressReporter } from './pipelines/progress.js';
 export { SilentProgress } from './pipelines/progress.js';
 export { createModelPr, closeModelPr, modelPrBranchName } from './pipelines/pr-creation.js';
@@ -101,3 +103,7 @@ export type { ModelPatcher, PatchResult, DslValidationResult } from './adapters/
 // Model source resolution
 export { resolveModelSource } from './utils/model-source.js';
 export type { ResolvedModelSource } from './utils/model-source.js';
+
+// Git diff (local check)
+export { generateGitDiff, parseRepoFromRemote } from './utils/git-diff.js';
+export type { GitDiffOptions, GitDiffResult } from './utils/git-diff.js';
