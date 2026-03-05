@@ -26,8 +26,24 @@ export interface ValidateResult {
   hasIssues: boolean;
 }
 
+function isRepositoryUrl(url: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return [
+      'github.com',
+      'www.github.com',
+      'gitlab.com',
+      'www.gitlab.com',
+      'bitbucket.org',
+      'www.bitbucket.org',
+    ].includes(hostname);
+  } catch {
+    return false;
+  }
+}
+
 function findRepositoryLink(links: string[]): string | undefined {
-  return links.find((link) => link.includes('github.com') || link.includes('gitlab.com'));
+  return links.find(isRepositoryUrl);
 }
 
 export async function runValidate(

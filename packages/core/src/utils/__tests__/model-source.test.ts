@@ -92,6 +92,22 @@ describe('parseModelRepo', () => {
       slug: 'owner/repo',
     });
   });
+
+  it('handles URLs with multiple trailing slashes', () => {
+    const result = parseModelRepo('https://github.com/owner/repo///');
+    expect(result).toEqual({
+      cloneUrl: 'https://github.com/owner/repo.git',
+      slug: 'owner/repo',
+    });
+  });
+
+  it('handles bare slugs with multiple trailing slashes', () => {
+    const result = parseModelRepo('owner/repo///');
+    expect(result).toEqual({
+      cloneUrl: 'https://github.com/owner/repo.git',
+      slug: 'owner/repo',
+    });
+  });
 });
 
 describe('resolveModelSource', () => {
@@ -137,6 +153,7 @@ describe('resolveModelSource', () => {
         '1',
         '--branch',
         'main',
+        '--',
         'https://x-access-token@github.com/erode-app/playground-models-only.git',
         tmpDir,
       ],
@@ -261,6 +278,28 @@ describe('resolveModelSource', () => {
       expect(content).toContain("echo '");
       expect(content).not.toContain('echo "');
     }
+  });
+
+  it('includes -- separator before positional args to prevent option injection', async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const { execFile } = await import('child_process');
+
+    vi.mocked(mkdtemp).mockResolvedValue('/tmp/erode-model-separator');
+    vi.mocked(execFile).mockImplementation((...args: unknown[]) => {
+      const cb = args[args.length - 1] as ExecFileCallback | undefined;
+      if (cb) cb(null, '', '');
+      return undefined as never;
+    });
+
+    await resolveModelSource('.', 'owner/repo');
+
+    const callArgs = vi.mocked(execFile).mock.calls[0];
+    const gitArgs = callArgs?.[1] as string[];
+
+    // The -- separator must appear before the URL and target directory
+    const separatorIndex = gitArgs.indexOf('--');
+    expect(separatorIndex).toBeGreaterThan(-1);
+    expect(separatorIndex).toBeLessThan(gitArgs.length - 2);
   });
 
   it('strips URL credentials from clone error messages', async () => {

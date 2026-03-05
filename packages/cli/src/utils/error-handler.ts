@@ -77,18 +77,15 @@ function provideSuggestions(error: ErodeError): void {
   }
 }
 
-const SENSITIVE_KEYS = new Set([
-  'token',
-  'apikey',
-  'api_key',
-  'secret',
-  'password',
-  'authorization',
-  'credential',
-]);
+const SENSITIVE_PATTERNS = ['token', 'key', 'secret', 'password', 'credential', 'auth', 'bearer'];
 
 function isSensitiveKey(key: string): boolean {
-  return SENSITIVE_KEYS.has(key.toLowerCase());
+  const lower = key.toLowerCase();
+  return SENSITIVE_PATTERNS.some((p) => lower.includes(p));
+}
+
+function redactSensitiveValue(value: string): string {
+  return value.replace(/https?:\/\/[^@\s]+@/g, 'https://***@');
 }
 
 export const ErrorHandler = {
@@ -99,7 +96,13 @@ export const ErrorHandler = {
         console.error('   Extra details:');
         for (const [key, value] of Object.entries(error.context)) {
           if (value !== undefined && value !== null) {
-            console.error(`   ${key}: ${isSensitiveKey(key) ? '***REDACTED***' : String(value)}`);
+            if (isSensitiveKey(key)) {
+              console.error(`   ${key}: ***REDACTED***`);
+            } else {
+              const display =
+                typeof value === 'string' ? redactSensitiveValue(value) : String(value);
+              console.error(`   ${key}: ${display}`);
+            }
           }
         }
       }

@@ -33,7 +33,7 @@ export function applyDiffTruncation(
 }
 
 export function sanitizeErrorMessage(message: string): string {
-  if (message.includes('<!DOCTYPE') || message.includes('<html')) {
+  if (/<[a-z/!][^>]*>/i.test(message)) {
     return message
       .replace(/<[^>]*>/g, '')
       .replace(/\s+/g, ' ')
