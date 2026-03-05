@@ -3,7 +3,7 @@ title: Claude Code Integration
 description: Add architecture drift detection to Claude Code sessions.
 ---
 
-Erode integrates with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) through a custom skill that checks local changes for architecture drift during coding sessions. When Claude Code edits code that introduces an undeclared dependency, the skill catches it immediately and provides guidance on how to resolve the violation.
+Erode integrates with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) through a custom skill that checks local changes for architecture drift during coding sessions. When Claude Code edits code that introduces an undeclared dependency, the skill flags it and shows what changed, what the model declares, and how to fix the mismatch.
 
 ## Prerequisites
 
@@ -116,9 +116,9 @@ The skill is now available to Claude Code in all sessions for this repository.
 
 ## How it works
 
-When Claude Code makes changes that introduce new integrations (imports, API calls, service connections), the skill runs `erode check` against the local diff. Erode's AI pipeline analyzes the changes against your declared architecture model and reports any undeclared dependencies.
+When Claude Code makes changes that introduce new integrations (imports, API calls, service connections), the skill runs `erode check` against the local diff. Erode analyzes the changes against your declared architecture model and reports any undeclared dependencies.
 
-Claude Code then reads the violations and can either fix the code to align with the architecture or inform you that the model needs updating.
+A violation is not necessarily a problem. Claude Code surfaces what it found so you can decide: fix the code to follow the declared path, or update the model to reflect the new dependency. Either way, the change is conscious.
 
 ## Optional: Hook-based automation
 
