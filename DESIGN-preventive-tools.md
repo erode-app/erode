@@ -20,11 +20,12 @@ Two complementary preventive mechanisms, sharing the same core logic:
    catch violations before pushing.
 
 Both are **standalone** — they load architecture models directly via the existing
-adapter system. No dependency on the LikeC4 MCP server.
+adapter system (LikeC4 and Structurizr). No dependency on the LikeC4 MCP
+server.
 
-Both are **AI-powered** — they use the existing AI provider system to understand
-code changes and detect architectural intent, not just structural pattern
-matching.
+Both are **AI-powered** — they use the existing AI provider system
+(`AIProvider` interface, with Anthropic/Gemini/OpenAI backends) to understand
+code changes and detect architectural intent.
 
 ---
 
@@ -35,102 +36,185 @@ matching.
 New workspace package using `@modelcontextprotocol/sdk` for the server
 implementation. Consumes `@erode/core` as a dependency.
 
+The server loads the architecture model **once at startup** via
+`createAdapter(format)` + `adapter.loadFromPath(path)`. All tools operate
+against this in-memory model. The model path and format are configured at
+launch, not per-tool-call.
+
 ### MCP Tools
 
 #### 1. `check-dependency`
 
 > "Can component X depend on component Y?"
 
-Fast, structural check against the loaded model. No AI needed.
+Fast, structural check using `adapter.isAllowedDependency(fromId, toId)`.
+No AI needed. Accepts component IDs or repository URLs (resolved via
+`adapter.findComponentByRepository()`).
 
 ```
 Input:  { from: string, to: string }
-Output: { allowed: boolean, fromComponent: {...}, toComponent: {...},
-          existingRelationship?: {...}, suggestion?: string }
+        // Each can be a component ID (e.g. "cloud.api_gateway")
+        // or a repository URL (e.g. "https://github.com/org/api")
+Output: {
+  allowed: boolean,
+  fromComponent: { id, name, type, repository },
+  toComponent: { id, name, type, repository },
+  existingRelationship?: { kind, title },
+  suggestion?: string
+}
 ```
 
-Use case: AI assistant imports a new library or calls a new service — checks if
-that dependency is architecturally declared.
+Use case: AI assistant adds an import or HTTP client call — checks if that
+dependency is architecturally declared before writing the code.
 
 #### 2. `get-architecture-context`
 
-> "What are the allowed dependencies and constraints for what I'm working on?"
+> "What are the architectural constraints for the component I'm working on?"
 
-Returns the full architectural context for a component, identified by repository
-URL or component ID.
+Returns the full architectural context for a component. Uses
+`adapter.findAllComponentsByRepository()`, `getComponentDependencies()`,
+`getComponentDependents()`, and `getComponentRelationships()`.
+
+When a repository maps to **multiple components** (monorepo), all matching
+components are returned with their individual dependency graphs. The AI
+assistant can use file paths to narrow down which component is relevant
+(mirrors Stage 1 logic in the analyze pipeline).
 
 ```
 Input:  { repo?: string, componentId?: string }
-Output: { component: {...}, dependencies: [...], dependents: [...],
-          relationships: [...], allComponents: [...] }
+Output: {
+  components: [{
+    component: { id, name, type, description, technology, tags, repository },
+    dependencies: [{ id, name, type, repository }],
+    dependents: [{ id, name, type, repository }],
+    relationships: [{ target: { id, name }, kind, title }]
+  }],
+  modelFormat: "likec4" | "structurizr",
+  totalComponents: number
+}
 ```
 
-Use case: AI assistant loads this at the start of a coding session to understand
-what the developer's component is allowed to interact with. This becomes context
-for all subsequent code generation.
+Use case: AI assistant calls this at session start. The returned dependency
+list becomes a guardrail: "you may call these services, not others."
 
 #### 3. `analyze-change`
 
 > "Does this code change violate the architecture?"
 
-AI-powered analysis of a diff or set of file changes against the architecture
-model. This is a lightweight version of the full `analyze` pipeline, designed
-for local/incremental use.
+Runs the existing Stage 2 (dependency extraction) and Stage 3 (drift analysis)
+AI pipeline against a local diff. **This makes 2 AI API calls** — one to the
+fast model (Haiku/Flash/GPT-4.1-mini) for dependency extraction, one to the
+advanced model (Sonnet/Flash/GPT-4.1) for drift analysis. Same cost profile as
+the `analyze` command, minus the GitHub API call.
 
 ```
-Input:  { diff: string, repo: string, modelPath: string }
-Output: { violations: [...], improvements: [...], warnings: [...],
-          suggestedModelUpdates?: {...} }
+Input:  { diff: string, repo: string }
+Output: {
+  hasViolations: boolean,
+  violations: [{ severity, description, file?, line?, suggestion? }],
+  improvements?: string[],
+  warnings?: string[],
+  dependencyChanges: { dependencies: [...], summary: string },
+  suggestedModelUpdates?: {
+    relationships: [{ source, target, kind?, description }],
+    newComponents: [{ id, kind, name, description?, tags?, technology? }]
+  }
+}
 ```
+
+**Implementation challenge**: The existing `DriftAnalysisPromptData` requires
+`ChangeRequestMetadata` (PR number, title, author, base/head refs) which
+doesn't exist for local diffs. The check pipeline needs to synthesize minimal
+metadata from git state:
+
+- PR number → 0 (local)
+- Title → git branch name or "Local changes"
+- Author → `git config user.name`
+- Base/head refs → derived from `--branch` flag or current HEAD
+- Stats → computed from the diff
+
+Similarly, `DependencyExtractionPromptData` requires `repository.owner` and
+`repository.repo` — these must be parsed from the repo URL or git remote.
 
 Use case: Developer asks their AI assistant to review changes before committing.
-The assistant calls this tool with the current diff.
 
 #### 4. `find-component`
 
 > "Which architectural component owns this repository/code?"
 
-```
-Input:  { repo?: string, query?: string }
-Output: { components: [{ id, name, type, repository, description }] }
-```
+Lookup by repository URL via `adapter.findAllComponentsByRepository()`, or
+by component ID via `adapter.findComponentById()`.
 
-Use case: Developer is in an unfamiliar repo and wants to understand where it
-sits in the architecture.
+Note: The adapter has no free-text search capability. A `query` parameter
+would require adding fuzzy matching over component names/descriptions —
+this is a new capability not in `@erode/core` today.
+
+```
+Input:  { repo?: string, componentId?: string }
+Output: { components: [{ id, name, type, repository, description, tags, technology }] }
+```
 
 #### 5. `validate-model`
 
 > "Is the architecture model healthy?"
 
-Runs the existing validate pipeline. Returns version check, missing links, etc.
+Delegates to the existing `runValidate` pipeline from `@erode/core`. Uses the
+model already loaded at server startup (no `modelPath` parameter needed).
 
 ```
-Input:  { modelPath: string }
-Output: { valid: boolean, issues: [...], stats: {...} }
+Input:  {}  // no parameters — uses the server's loaded model
+Output: {
+  valid: boolean,
+  versionCheck?: { found, version, compatible, minimum },
+  stats: { total, linked, unlinked },
+  unlinkedComponents: [{ id, name }]
+}
 ```
 
 #### 6. `list-components`
 
 > "What components exist in the architecture?"
 
-Returns all components, optionally filtered.
+Returns all components from `adapter.getAllComponents()`. Filtering by kind or
+tag is done in the MCP tool handler (the adapter doesn't support filtered
+queries — it returns all components and the tool filters in memory).
 
 ```
-Input:  { modelPath: string, filter?: { kind?: string, tag?: string } }
-Output: { components: [...] }
+Input:  { filter?: { kind?: string, tag?: string } }
+Output: { components: [{ id, name, type, repository, description, tags, technology }] }
 ```
 
 ### MCP Resources
 
 #### `architecture://model`
 
-The loaded architecture model as a resource. AI assistants can read this to get
-full context about the system architecture without making tool calls.
+The loaded architecture model as a resource. Exposes the full component and
+relationship graph as structured JSON. AI assistants can read this to get
+system-wide context without multiple tool calls.
+
+Content: serialized `ArchitectureModel` — `components[]` and
+`relationships[]` from `architecture-types.ts`.
+
+### MCP Prompts
+
+#### `review-changes`
+
+Pre-built prompt template that guides an AI assistant through an architecture
+review workflow:
+
+1. Call `get-architecture-context` with the current repo
+2. Generate a diff of local changes
+3. Call `analyze-change` with the diff
+4. Present findings to the developer
+
+This gives users a one-click "review my changes" experience.
 
 ### Server Configuration
 
 ```jsonc
-// .vscode/mcp.json or claude_desktop_config.json
+// Claude Code: .mcp.json
+// VS Code: .vscode/mcp.json
+// Claude Desktop: claude_desktop_config.json
 {
   "mcpServers": {
     "erode": {
@@ -145,20 +229,31 @@ full context about the system architecture without making tool calls.
 }
 ```
 
-Supports `--stdio` (default) and `--http` transports.
+CLI flags:
 
-The server watches the model directory for changes and reloads automatically.
+- `--model <path>` — Path to architecture model directory (required)
+- `--format <likec4|structurizr>` — Model format (default: `likec4`)
+- `--stdio` — Use stdio transport (default)
+- `--http` — Use streamable HTTP transport
+- `--port <number>` — HTTP port (default: 33335)
+- `--no-watch` — Disable file watching
+
+The server watches the model directory for `.c4`/`.dsl` file changes and
+reloads automatically via `adapter.loadFromPath()`.
 
 ### Implementation Notes
 
 - Uses `@modelcontextprotocol/sdk` TypeScript SDK
-- Loads models once at startup via `createAdapter()` + `loadFromPath()`
-- `check-dependency` and `get-architecture-context` are instant (in-memory
-  lookups on the loaded model)
-- `analyze-change` creates a lightweight analysis pipeline using existing
-  `PromptBuilder` + `AIProvider`
-- All tools return structured JSON, not prose — the AI assistant formats for the
-  user
+- Model loaded once at startup, reloaded on file changes
+- `check-dependency`, `get-architecture-context`, `find-component`, and
+  `list-components` are instant in-memory lookups — no AI, no API keys needed
+- `analyze-change` requires an AI provider (API key) and makes 2 AI calls
+- `validate-model` is pure adapter logic, no AI needed
+- All tools return structured JSON, not prose — the AI assistant formats
+- `CONFIG` singleton from `@erode/core` is initialized from env vars at
+  process startup, which works for MCP servers (env set in config)
+- Error handling: tool errors are returned as MCP error responses with
+  `ErodeError` codes mapped to human-readable messages
 
 ---
 
@@ -170,29 +265,39 @@ The server watches the model directory for changes and reloads automatically.
 # Check uncommitted changes against architecture
 erode check ./architecture --repo https://github.com/org/my-service
 
-# Check staged changes only
+# Check staged changes only (for pre-commit hooks)
 erode check ./architecture --repo https://github.com/org/my-service --staged
 
-# Check branch diff against main
+# Check branch diff against main (for pre-push hooks)
 erode check ./architecture --repo https://github.com/org/my-service --branch main
 
-# Quick structural check only (no AI, fast)
-erode check ./architecture --repo https://github.com/org/my-service --structural
+# Auto-detect repo URL from git remote
+erode check ./architecture
 ```
 
 ### Pipeline: `runCheck`
 
 New pipeline in `packages/core/src/pipelines/check.ts`:
 
-1. **Generate diff** — Run `git diff` (or `git diff --staged`, or
-   `git diff main...HEAD`) to get the local changes
-2. **Load model** — Same as existing pipelines
-3. **Find component** — Map repo URL to component(s)
-4. **Extract dependencies** — AI stage (Stage 2 from analyze pipeline), reused
-5. **Check against model** — For each extracted dependency, call
-   `adapter.isAllowedDependency()` and flag undeclared ones
-6. **AI analysis** (optional) — Run Stage 3 drift analysis for deeper violations
-7. **Output** — Console output with violations, or JSON for scripting
+1. **Accept diff as input** — The pipeline takes a diff string, not a PR URL.
+   The CLI command generates this diff via `git diff`; the MCP tool receives
+   it directly.
+2. **Load model** — `createAdapter(format)` + `adapter.loadFromPath(path)`,
+   same as existing pipelines.
+3. **Resolve repo identity** — Parse `--repo` URL into `owner/repo`, or
+   derive from `git remote get-url origin`. Needed for
+   `DependencyExtractionPromptData.repository`.
+4. **Find component(s)** — `adapter.findAllComponentsByRepository(repoUrl)`.
+   If multiple components match (monorepo), use Stage 1 component selection
+   (AI call to fast model) or accept `--component <id>` flag.
+5. **Synthesize metadata** — Build a minimal `ChangeRequestMetadata` from git
+   state (branch name as title, `git config user.name` as author, diff stats
+   computed from the diff).
+6. **Stage 2: Extract dependencies** — `provider.extractDependencies()` with
+   the diff. Uses fast model (Haiku/Flash). Same prompt template as analyze.
+7. **Stage 3: Drift analysis** — `provider.analyzeDrift()`. Uses advanced
+   model (Sonnet/Pro). Same prompt template as analyze.
+8. **Output** — Console output with violations, or JSON for scripting.
 
 ### Exit Codes
 
@@ -200,12 +305,18 @@ New pipeline in `packages/core/src/pipelines/check.ts`:
 - `1` — Violations detected
 - `2` — Error (model not found, API failure, etc.)
 
-This enables use in pre-commit/pre-push hooks:
+### Git Hook Integration
 
 ```bash
-# .husky/pre-push
-erode check ./architecture --repo $(git remote get-url origin) --staged
+# .husky/pre-commit (check staged changes)
+erode check ./architecture --staged
+
+# .husky/pre-push (check branch diff against main)
+erode check ./architecture --branch main
 ```
+
+Note: The pre-push hook should use `--branch` (not `--staged`) to compare
+the full branch diff against the base branch.
 
 ---
 
@@ -214,53 +325,81 @@ erode check ./architecture --repo $(git remote get-url origin) --staged
 Both the MCP server and the CLI command share the same core:
 
 ```
-packages/core/src/pipelines/check.ts    # New pipeline
-packages/core/src/analysis/             # Existing prompt builder + templates
-packages/core/src/adapters/             # Existing adapters
-packages/core/src/providers/            # Existing AI providers
+packages/core/src/pipelines/check.ts    # New: local diff analysis pipeline
+packages/core/src/analysis/             # Existing: prompt builder + templates
+packages/core/src/adapters/             # Existing: LikeC4 + Structurizr adapters
+packages/core/src/providers/            # Existing: Anthropic/Gemini/OpenAI
 ```
 
-The `runCheck` pipeline is the shared entry point. The MCP `analyze-change` tool
-and the `erode check` CLI command both call it.
+The `runCheck` pipeline is the shared entry point for AI-powered analysis.
+The MCP `analyze-change` tool and the `erode check` CLI command both call it.
 
-The structural checks (`check-dependency`, `get-architecture-context`) are
-direct adapter method calls — no new pipeline needed.
+The structural checks (`check-dependency`, `get-architecture-context`,
+`find-component`, `list-components`) are direct
+`ArchitectureModelAdapter` method calls — no new pipeline needed, no AI
+needed.
+
+### Key Difference from `runAnalyze`
+
+The existing `runAnalyze` pipeline is tightly coupled to platform readers
+(GitHub/GitLab/Bitbucket) for fetching PR data. The new `runCheck` pipeline
+decouples from this by accepting a raw diff string and minimal metadata.
+This means:
+
+- No `GITHUB_TOKEN` required for local checks
+- No PR URL required
+- The same prompt templates work (they operate on diffs, not PR API objects)
+- `ChangeRequestMetadata` is synthesized from git state, not fetched from API
 
 ---
 
 ## Part 4: Implementation Phases
 
-### Phase 1: Core Check Pipeline
+### Phase 1: Core Check Pipeline + CLI Command
 
-Add `packages/core/src/pipelines/check.ts` with the local diff analysis logic.
-This is the foundation both the MCP server and CLI command build on.
+Add `packages/core/src/pipelines/check.ts`:
 
-- Accept a diff string (not a PR URL) as input
-- Reuse Stage 2 (dependency extraction) and Stage 3 (drift analysis) prompts
-- Return structured results
-
-### Phase 2: CLI Command
+- Accept a diff string, repo URL, and model path as input
+- Synthesize `ChangeRequestMetadata` from git state
+- Reuse Stage 2 + Stage 3 via existing `AIProvider` methods
+- Return structured results (same `DriftAnalysisResult` type)
 
 Add `erode check` command to `packages/cli/`:
 
 - Git diff generation (working tree, staged, branch comparison)
-- Console output formatting
+- Repo URL detection from git remote
+- Console output formatting (reuse existing formatters)
 - Exit codes for scripting/hooks
 
-### Phase 3: MCP Server
+These go together because the CLI command is the most direct way to test
+the pipeline.
+
+### Phase 2: MCP Server
 
 Add `packages/mcp/` workspace package:
 
-- MCP server with all 6 tools
-- Model watching and hot-reload
+- MCP server with all 6 tools + 1 resource + 1 prompt
+- Model loading at startup with file watching
 - stdio and HTTP transports
 - npm publishable as `@erode/mcp`
+- Structural tools work without AI provider config
+- `analyze-change` requires AI provider config (env vars)
 
-### Phase 4: Developer Experience
+### Phase 3: Developer Experience
 
-- Pre-built hook scripts (`erode init-hooks`)
-- `.erode.json` project config file (model path, repo URL, provider settings)
-  so developers don't need to pass flags every time
+- Auto-detect repo URL from git remote (avoid `--repo` flag)
+- `.erode.json` project config file for defaults:
+
+  ```json
+  {
+    "model": "./architecture",
+    "format": "likec4",
+    "repo": "https://github.com/org/my-service"
+  }
+  ```
+
+- `erode init` command to generate `.erode.json` and optionally set up
+  git hooks
 - Documentation and examples on the web package
 
 ---
@@ -273,16 +412,44 @@ independent**:
 | Capability | LikeC4 MCP | Erode MCP |
 |---|---|---|
 | Browse architecture model | Yes | Yes (subset) |
-| Search elements | Yes | Yes (`find-component`) |
-| View diagrams | Yes | No |
-| Check dependency rules | No | Yes |
-| Analyze code for drift | No | Yes |
-| Suggest model updates | No | Yes |
+| Search elements by metadata | Yes (`search-element`) | No (ID/repo lookup only) |
+| View diagrams in editor | Yes (`open-view`) | No |
+| Check dependency rules | No | Yes (`check-dependency`) |
+| Analyze code for drift | No | Yes (`analyze-change`) |
+| Suggest model updates | No | Yes (in `analyze-change` output) |
 | AI-powered analysis | No | Yes |
+| Deployment model queries | Yes (`read-deployment`) | No |
 
-Users _can_ install both for the richest experience (LikeC4 MCP for browsing
-and visualization, Erode MCP for drift detection), but neither depends on the
-other.
+Users _can_ install both for the richest experience (LikeC4 MCP for browsing,
+diagrams, and deployment views; Erode MCP for drift detection and dependency
+validation), but neither depends on the other.
+
+**Overlap**: Both can list/read components. This is intentional — Erode MCP
+must be self-contained. Users who only want drift checking should not need
+to install LikeC4 MCP.
+
+---
+
+## Open Questions
+
+1. **Free-text component search** — `find-component` currently only supports
+   lookup by ID or repo URL (matching adapter capabilities). Should we add
+   fuzzy search over component names/descriptions? This would require new
+   logic not in the adapter interface today.
+
+2. **Model patching via MCP** — `analyze-change` returns suggested model
+   updates. Should the MCP server expose a tool to apply these patches
+   (using the existing `ModelPatcher`)? Or is that too risky for an
+   automated tool?
+
+3. **Cost awareness** — `analyze-change` makes 2 AI API calls per invocation.
+   Should there be rate limiting, caching, or a confirmation step? An eager AI
+   assistant could call this frequently.
+
+4. **Prompt template changes** — The current `drift-analysis.md` template
+   references PR-specific concepts ("PR", "change request"). Should there be
+   a variant template for local changes, or is the existing template
+   flexible enough with synthetic metadata?
 
 ---
 
@@ -297,8 +464,13 @@ other.
 3. **Diff-based, not file-based** — `analyze-change` works on diffs, not entire
    files. This matches the existing pipeline and keeps AI costs low.
 
-4. **Model-watching** — The MCP server watches for `.c4`/`.dsl` file changes and
-   reloads. Developers editing the architecture model get instant feedback.
+4. **Model loaded at startup** — The MCP server loads the model once and
+   watches for changes, rather than accepting `modelPath` per tool call.
+   This is faster and matches how developers work (one model per project).
 
 5. **Same AI providers** — Reuses the existing provider system. If you have an
    Anthropic key for PR analysis, the same key works for local checks.
+
+6. **Works with both model formats** — LikeC4 and Structurizr are both
+   supported via the existing adapter system. The `--format` flag or
+   `MODEL_FORMAT` env var controls which adapter is used.
