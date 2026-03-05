@@ -65,12 +65,27 @@ describe('normalizeRepositoryUrl', () => {
     );
   });
 
-  it('should strip trailing path segments', () => {
+  it('should strip trailing path segments for GitHub', () => {
     expect(normalizeRepositoryUrl('https://github.com/example/repo/extra/path')).toBe(
       'https://github.com/example/repo'
     );
+  });
+
+  it('should preserve all path segments for GitLab (nested groups)', () => {
     expect(normalizeRepositoryUrl('https://gitlab.com/example/repo/extra/path')).toBe(
-      'https://gitlab.com/example/repo'
+      'https://gitlab.com/example/repo/extra/path'
+    );
+  });
+
+  it('should normalize GitLab subgroup URLs', () => {
+    expect(normalizeRepositoryUrl('https://gitlab.com/Group/Subgroup/Repo.git')).toBe(
+      'https://gitlab.com/group/subgroup/repo'
+    );
+  });
+
+  it('should normalize deeply nested GitLab group URLs', () => {
+    expect(normalizeRepositoryUrl('https://gitlab.com/A/B/C/Repo')).toBe(
+      'https://gitlab.com/a/b/c/repo'
     );
   });
 

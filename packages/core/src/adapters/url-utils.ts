@@ -20,6 +20,24 @@ export function normalizeRepositoryUrl(url: string): string {
     const parsed = new URL(url);
     const base = REPO_HOSTNAMES[parsed.hostname];
     if (!base) return url;
+
+    // GitLab supports nested groups (e.g. gitlab.com/group/subgroup/project),
+    // so preserve all path segments instead of just two.
+    if (base === 'https://gitlab.com') {
+      const parts = parsed.pathname.split('/').filter(Boolean);
+      if (parts.length >= 2) {
+        const last = parts.at(-1);
+        if (!last) return url;
+        const repo = last.replace(/\.git$/, '').toLowerCase();
+        const namespace = parts
+          .slice(0, -1)
+          .map((p) => p.toLowerCase())
+          .join('/');
+        return `${base}/${namespace}/${repo}`;
+      }
+      return url;
+    }
+
     const match = /^\/([^/]+)\/([^/]+)/.exec(parsed.pathname);
     if (match?.[1] && match[2]) {
       const owner = match[1].toLowerCase();
