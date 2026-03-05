@@ -1,5 +1,5 @@
 {
-  "name": "@erode/core",
+  "name": "@erode-app/core",
   "version": "0.0.1",
   "description": "Architecture erosion detection",
   "type": "module",
@@ -13,6 +13,9 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\"",
     "build": "tsc && npm run copy-assets",

@@ -7,18 +7,14 @@ Erode provides five commands for working with architecture models and analyzing 
 
 ## Installation
 
-Erode is not yet published as an npm package. Clone the repository and build from source:
-
 ```bash
-git clone https://github.com/erode-app/erode.git
-cd core
-npm install && npm run build
+npm install -g @erode-app/cli
 ```
 
-The built CLI is at `packages/cli/dist/cli.js`. Run it with Node.js:
+Or run directly with npx:
 
 ```bash
-node packages/cli/dist/cli.js --help
+npx @erode-app/cli --help
 ```
 
 ## Commands

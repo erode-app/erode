@@ -8,9 +8,14 @@ Erode integrates with [Claude Code](https://docs.anthropic.com/en/docs/claude-co
 ## Prerequisites
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed
-- Erode installed (globally or locally) — see [CLI Usage](/docs/guides/cli-usage/)
 - An architecture model in your repository (see [Model Formats](/docs/models/))
 - An [AI provider](/docs/reference/ai-providers/) API key
+
+Install Erode globally so the skill can call it directly:
+
+```bash
+npm install -g @erode-app/cli
+```
 
 ## Setup
 
@@ -133,7 +138,7 @@ For automatic checking after every code edit, add a [PostToolUse hook](https://d
         "hooks": [
           {
             "type": "command",
-            "command": "if jq -re '.tool_input.file_path // .tool_input.filePath // empty' | grep -qE '\\.(ts|js|py|go|java|rs)$'; then erode check ./architecture --format json 2>&1; fi"
+            "command": "if jq -re '.tool_input.file_path // .tool_input.filePath // empty' | grep -qE '\\.(ts|js|py|go|java|rs)$'; then npx @erode-app/cli check ./architecture --format json 2>&1; fi"
           }
         ]
       }
