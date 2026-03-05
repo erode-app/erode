@@ -23,6 +23,11 @@
     "test:watch": "vitest",
     "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\" \"npm:build\""
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/erode-app/erode.git",
+    "directory": "packages/cli"
+  },
   "license": "MIT",
   "dependencies": {
     "@erode-app/core": "*",

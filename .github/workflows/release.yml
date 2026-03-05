@@ -101,10 +101,6 @@ jobs:
 
       - name: Publish @erode-app/core
         run: npm publish --workspace=packages/core --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @erode-app/cli
         run: npm publish --workspace=packages/cli --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

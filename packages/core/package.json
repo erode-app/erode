@@ -37,6 +37,11 @@
     "erode",
     "c4-model"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/erode-app/erode.git",
+    "directory": "packages/core"
+  },
   "author": "Anders Hassis",
   "license": "MIT",
   "engines": {
