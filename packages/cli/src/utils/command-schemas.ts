@@ -62,4 +62,6 @@ export const CheckOptionsSchema = z.object({
   format: z.enum(['console', 'json']).optional().default('console'),
   failOnViolations: z.boolean().optional().default(false),
   skipFileFiltering: z.boolean().optional().default(false),
+  modelRepo: z.string().optional(),
+  modelRef: z.string().optional(),
 });

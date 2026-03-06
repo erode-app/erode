@@ -123,6 +123,42 @@ export function generateGitDiff(options: GitDiffOptions = {}): GitDiffResult {
 }
 
 /**
+ * Filter a unified diff to include only segments for the given filenames.
+ * Splits on `diff --git` headers and reassembles matching segments.
+ */
+export function filterDiffByFiles(
+  diff: string,
+  files: { filename: string }[]
+): string {
+  if (!diff || files.length === 0) return '';
+  const allowed = new Set(files.map((f) => f.filename));
+  const segments: string[] = [];
+  const marker = 'diff --git ';
+
+  let current = '';
+  for (const line of diff.split('\n')) {
+    if (line.startsWith(marker)) {
+      if (current) segments.push(current);
+      current = line + '\n';
+    } else {
+      current += line + '\n';
+    }
+  }
+  if (current) segments.push(current);
+
+  return segments
+    .filter((seg) => {
+      const header = seg.split('\n')[0] ?? '';
+      const bIdx = header.lastIndexOf(' b/');
+      if (bIdx === -1) return false;
+      const filename = header.slice(bIdx + 3);
+      return allowed.has(filename);
+    })
+    .join('')
+    .trimEnd();
+}
+
+/**
  * Parse file paths from a unified diff.
  * Looks for `diff --git a/<path> b/<path>` headers.
  */

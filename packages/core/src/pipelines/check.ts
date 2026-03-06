@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { ProgressReporter } from './progress.js';
 import { SilentProgress } from './progress.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
@@ -16,13 +17,14 @@ import type {
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import type { ChangeRequestFile } from '../platforms/source-platform.js';
 import { selectComponentWithAI } from './resolve-component.js';
-import { parseFilesFromDiff } from '../utils/git-diff.js';
+import { parseFilesFromDiff, filterDiffByFiles } from '../utils/git-diff.js';
 import {
   loadArchitectureModel,
   buildArchitecturalContext,
   buildEmptyResult,
   runDriftStage,
 } from './pipeline-shared.js';
+import { resolveModelSource } from '../utils/model-source.js';
 
 export interface CheckOptions {
   /** Path to the architecture model directory. */
@@ -47,6 +49,10 @@ export interface CheckOptions {
   stats?: { additions: number; deletions: number; filesChanged: number };
   /** Whether to skip .erodeignore filtering. */
   skipFileFiltering?: boolean;
+  /** Model repository URL or owner/repo slug for remote model. */
+  modelRepo?: string;
+  /** Branch or tag to clone from the model repository. Defaults to main. */
+  modelRef?: string;
 }
 
 export interface CheckResult {
@@ -54,6 +60,30 @@ export interface CheckResult {
   structured?: StructuredAnalysisOutput;
   hasViolations: boolean;
 }
+
+const CheckOptionsInputSchema = z.object({
+  modelPath: z.string().min(1),
+  diff: z.string(),
+  repo: z.string().min(1),
+  repoOwner: z.string().min(1),
+  repoName: z.string().min(1),
+  modelFormat: z.string().optional(),
+  componentId: z.string().optional(),
+  format: z.enum(['console', 'json']).optional(),
+  files: z
+    .array(z.object({ filename: z.string(), status: z.string() }))
+    .optional(),
+  stats: z
+    .object({
+      additions: z.number(),
+      deletions: z.number(),
+      filesChanged: z.number(),
+    })
+    .optional(),
+  skipFileFiltering: z.boolean().optional(),
+  modelRepo: z.string().optional(),
+  modelRef: z.string().optional(),
+});
 
 /**
  * Run a local architecture drift check against a git diff.
@@ -66,147 +96,167 @@ export async function runCheck(
   options: CheckOptions,
   progress?: ProgressReporter
 ): Promise<CheckResult> {
+  CheckOptionsInputSchema.parse(options);
+
   const p = progress ?? new SilentProgress();
   const adapter = createAdapter(options.modelFormat);
 
-  // ── Load architecture model ──────────────────────────────────────────
-  const architectureModel = await loadArchitectureModel(adapter, options.modelPath, p);
+  // ── Resolve model source (clone if remote) ───────────────────────────
+  if (options.modelRepo) {
+    p.start('Cloning model repository');
+  }
+  const resolvedSource = await resolveModelSource(options.modelPath, options.modelRepo, {
+    ref: options.modelRef,
+  });
+  if (options.modelRepo) {
+    p.succeed(`Model repository cloned (${resolvedSource.repoSlug ?? options.modelRepo})`);
+  }
+  const effectiveModelPath = resolvedSource.localPath;
 
-  // ── Initialise AI provider ───────────────────────────────────────────
-  p.start('Setting up AI provider');
-  const provider = createAIProvider();
-  p.succeed('AI provider initialized');
+  try {
+    // ── Load architecture model ──────────────────────────────────────────
+    const architectureModel = await loadArchitectureModel(adapter, effectiveModelPath, p);
 
-  // ── Find components for this repository ──────────────────────────────
-  p.start('Locating components for repository');
-  const components = adapter.findAllComponentsByRepository(options.repo);
+    // ── Find components for this repository ──────────────────────────────
+    p.start('Locating components for repository');
+    const components = adapter.findAllComponentsByRepository(options.repo);
 
-  if (components.length === 0) {
-    p.warn(`No components matched repository: ${options.repo}`);
-    for (const line of adapter.metadata.noComponentHelpLines) {
-      p.info(line.replace('{{repoUrl}}', options.repo));
+    if (components.length === 0) {
+      p.warn(`No components matched repository: ${options.repo}`);
+      for (const line of adapter.metadata.noComponentHelpLines) {
+        p.info(line.replace('{{repoUrl}}', options.repo));
+      }
+      return buildEmptyResult({
+        metadata: buildLocalMetadata(options),
+        repoUrl: options.repo,
+        adapterDisplayName: adapter.metadata.displayName,
+        includeStructured: true,
+      });
     }
-    return buildEmptyResult({
-      metadata: buildLocalMetadata(options),
-      repoUrl: options.repo,
-      adapterDisplayName: adapter.metadata.displayName,
-      includeStructured: options.format === 'json',
-    });
-  }
-  p.succeed(`Located ${String(components.length)} component(s) for repository`);
+    p.succeed(`Located ${String(components.length)} component(s) for repository`);
 
-  const defaultComponent = components[0];
-  if (!defaultComponent) {
-    throw new ErodeError(
-      'Unexpected: components array was non-empty but first element was undefined',
-      ErrorCode.INTERNAL_UNKNOWN,
-      'Internal pipeline error'
-    );
-  }
+    // ── Initialise AI provider ───────────────────────────────────────────
+    p.start('Setting up AI provider');
+    const provider = createAIProvider();
+    p.succeed('AI provider initialized');
 
-  // ── Resolve files from diff ──────────────────────────────────────────
-  let files = options.files ?? parseFilesFromDiff(options.diff);
-
-  // ── File filtering ───────────────────────────────────────────────────
-  if (!options.skipFileFiltering) {
-    const patterns = loadSkipPatterns();
-    const asChangeRequestFiles: ChangeRequestFile[] = files.map((f) => ({
-      filename: f.filename,
-      status: f.status,
-      additions: 0,
-      deletions: 0,
-      changes: 0,
-    }));
-    const { included, excluded } = applySkipPatterns(asChangeRequestFiles, patterns);
-    if (excluded > 0) {
-      files = included.map((f) => ({ filename: f.filename, status: f.status }));
-      p.info(`Excluded ${String(excluded)} file(s) matching skip patterns`);
-    }
-  }
-
-  // ── Stage 1: Component selection ─────────────────────────────────────
-  let selectedComponent: ArchitecturalComponent = defaultComponent;
-  let candidateComponents: { id: string; name: string; type: string }[] | undefined;
-
-  if (options.componentId) {
-    const found = adapter.findComponentById(options.componentId);
-    if (!found) {
+    const defaultComponent = components[0];
+    if (!defaultComponent) {
       throw new ErodeError(
-        `Component not found: ${options.componentId}`,
-        ErrorCode.MODEL_COMPONENT_MISSING,
-        `No component with ID "${options.componentId}" exists in the architecture model.`
+        'Unexpected: components array was non-empty but first element was undefined',
+        ErrorCode.INTERNAL_UNKNOWN,
+        'Internal pipeline error'
       );
     }
-    selectedComponent = found;
-  } else if (components.length > 1) {
-    candidateComponents = components.map((c) => ({ id: c.id, name: c.name, type: c.type }));
-    p.section('Stage 1: Component Selection');
-    selectedComponent = await selectComponentWithAI(
-      provider,
-      components,
-      files.map((f) => ({ filename: f.filename })),
-      defaultComponent,
-      p
-    );
+
+    // ── Resolve files from diff ──────────────────────────────────────────
+    let files = options.files ?? parseFilesFromDiff(options.diff);
+
+    // ── File filtering ───────────────────────────────────────────────────
+    if (!options.skipFileFiltering) {
+      const patterns = loadSkipPatterns();
+      const asChangeRequestFiles: ChangeRequestFile[] = files.map((f) => ({
+        filename: f.filename,
+        status: f.status,
+        additions: 0,
+        deletions: 0,
+        changes: 0,
+      }));
+      const { included, excluded } = applySkipPatterns(asChangeRequestFiles, patterns);
+      if (excluded > 0) {
+        files = included.map((f) => ({ filename: f.filename, status: f.status }));
+        p.info(`Excluded ${String(excluded)} file(s) matching skip patterns`);
+      }
+    }
+
+    // ── Filter diff to match included files ────────────────────────────
+    const effectiveDiff = (!options.skipFileFiltering && files.length > 0)
+      ? filterDiffByFiles(options.diff, files)
+      : options.diff;
+
+    // ── Stage 1: Component selection ─────────────────────────────────────
+    let selectedComponent: ArchitecturalComponent = defaultComponent;
+    let candidateComponents: { id: string; name: string; type: string }[] | undefined;
+
+    if (options.componentId) {
+      const found = adapter.findComponentById(options.componentId);
+      if (!found) {
+        throw new ErodeError(
+          `Component not found: ${options.componentId}`,
+          ErrorCode.MODEL_COMPONENT_MISSING,
+          `No component with ID "${options.componentId}" exists in the architecture model.`
+        );
+      }
+      selectedComponent = found;
+    } else if (components.length > 1) {
+      candidateComponents = components.map((c) => ({ id: c.id, name: c.name, type: c.type }));
+      p.section('Stage 1: Component Selection');
+      selectedComponent = await selectComponentWithAI(
+        provider,
+        components,
+        files.map((f) => ({ filename: f.filename })),
+        defaultComponent,
+        p
+      );
+    }
+
+    const selectedComponentId = selectedComponent.id;
+
+    // ── Stage 2: Dependency extraction ───────────────────────────────────
+    p.section('Stage 2: Extract Dependencies');
+    p.start('Scanning diff for dependencies');
+    const extractedDeps: DependencyExtractionResult = await provider.extractDependencies({
+      diff: effectiveDiff,
+      commit: {
+        sha: 'local',
+        message: 'Local changes',
+        author: 'local',
+      },
+      repository: {
+        owner: options.repoOwner,
+        repo: options.repoName,
+        url: options.repo,
+      },
+      components: [selectedComponent],
+    });
+    p.succeed(`Found ${String(extractedDeps.dependencies.length)} dependency change(s)`);
+
+    if (CONFIG.debug.verbose) {
+      console.error('[Stage 2] Extracted dependencies:', JSON.stringify(extractedDeps));
+    }
+
+    // ── Build prompt data for drift analysis ─────────────────────────────
+    const architectural = buildArchitecturalContext(adapter, selectedComponent.id);
+
+    const promptData: DriftAnalysisPromptData = {
+      changeRequest: buildLocalMetadata(options),
+      component: selectedComponent,
+      dependencies: extractedDeps,
+      files,
+      architectural,
+      allComponentIds: Array.from(architectureModel.componentIndex.byId.keys()),
+      allRelationships: adapter.getAllRelationships(),
+    };
+
+    // ── Stage 3: Drift Analysis ──────────────────────────────────────────
+    const analysisResult = await runDriftStage(provider, promptData, p);
+
+    // ── Build structured output ──────────────────────────────────────────
+    const structured = buildStructuredOutput(analysisResult, adapter.metadata.displayName, {
+      selectedComponentId,
+      candidateComponents,
+    });
+
+    // Stage 4 (model patching) and publishing are intentionally omitted: check is a read-only local operation.
+
+    return {
+      analysisResult,
+      structured,
+      hasViolations: analysisResult.hasViolations,
+    };
+  } finally {
+    await resolvedSource.cleanup();
   }
-
-  const selectedComponentId = selectedComponent.id;
-
-  // ── Stage 2: Dependency extraction ───────────────────────────────────
-  p.section('Stage 2: Extract Dependencies');
-  p.start('Scanning diff for dependencies');
-  const extractedDeps: DependencyExtractionResult = await provider.extractDependencies({
-    diff: options.diff,
-    commit: {
-      sha: 'local',
-      message: 'Local changes',
-      author: 'local',
-    },
-    repository: {
-      owner: options.repoOwner,
-      repo: options.repoName,
-      url: options.repo,
-    },
-    components: [selectedComponent],
-  });
-  p.succeed(`Found ${String(extractedDeps.dependencies.length)} dependency change(s)`);
-
-  if (CONFIG.debug.verbose) {
-    console.error('[Stage 2] Extracted dependencies:', JSON.stringify(extractedDeps));
-  }
-
-  // ── Build prompt data for drift analysis ─────────────────────────────
-  const architectural = buildArchitecturalContext(adapter, selectedComponent.id);
-
-  const promptData: DriftAnalysisPromptData = {
-    changeRequest: buildLocalMetadata(options),
-    component: selectedComponent,
-    dependencies: extractedDeps,
-    files,
-    architectural,
-    allComponentIds: Array.from(architectureModel.componentIndex.byId.keys()),
-    allRelationships: adapter.getAllRelationships(),
-  };
-
-  // ── Stage 3: Drift Analysis ──────────────────────────────────────────
-  const analysisResult = await runDriftStage(provider, promptData, p);
-
-  // ── Build structured output ──────────────────────────────────────────
-  const needsStructured = options.format === 'json';
-  const structured = needsStructured
-    ? buildStructuredOutput(analysisResult, adapter.metadata.displayName, {
-        selectedComponentId,
-        candidateComponents,
-      })
-    : undefined;
-
-  // Stage 4 (model patching) and publishing are intentionally omitted: check is a read-only local operation.
-
-  return {
-    analysisResult,
-    structured,
-    hasViolations: analysisResult.hasViolations,
-  };
 }
 
 function buildLocalMetadata(options: CheckOptions): ChangeRequestMetadata {

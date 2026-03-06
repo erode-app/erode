@@ -118,6 +118,7 @@ export {
   normalizeToHttps,
   getRemoteUrl,
   parseFilesFromDiff,
+  filterDiffByFiles,
 } from './utils/git-diff.js';
 export type { GitDiffOptions, GitDiffResult, GitDiffFile } from './utils/git-diff.js';
 

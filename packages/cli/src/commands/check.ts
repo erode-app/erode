@@ -8,6 +8,7 @@ import {
   validate,
   ErodeError,
   ErrorCode,
+  CONFIG,
 } from '@erode-app/core';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { resolveModelPath } from '../utils/resolve-model-path.js';
@@ -27,6 +28,8 @@ export function createCheckCommand(): Command {
     .option('--format <format>', 'Output format (console, json)', 'console')
     .option('--fail-on-violations', 'Exit with code 1 when violations are found')
     .option('--skip-file-filtering', 'Bypass .erodeignore file patterns')
+    .option('--model-repo <repo>', 'Clone architecture model from this repository')
+    .option('--model-ref <ref>', 'Branch or tag to clone from model repository')
     .action(async (modelPath: string | undefined, options: unknown) => {
       try {
         const resolvedModelPath = resolveModelPath(modelPath);
@@ -81,6 +84,8 @@ export function createCheckCommand(): Command {
             files: diffResult.files,
             stats: diffResult.stats,
             skipFileFiltering: validated.skipFileFiltering,
+            modelRepo: validated.modelRepo ?? CONFIG.adapter.modelRepo,
+            modelRef: validated.modelRef ?? CONFIG.adapter.modelRef,
           },
           progress
         );
