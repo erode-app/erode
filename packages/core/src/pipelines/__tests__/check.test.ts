@@ -248,8 +248,7 @@ describe('runCheck', () => {
   });
 
   it('parses files from diff when files not provided', async () => {
-    const opts = baseOptions();
-    delete (opts as unknown as Record<string, unknown>)['files'];
+    const { files: _files, ...opts } = baseOptions();
 
     await runCheck(opts);
 
@@ -258,5 +257,25 @@ describe('runCheck', () => {
         files: [{ filename: 'src/client.ts', status: 'modified' }],
       })
     );
+  });
+
+  it('skips file filtering when skipFileFiltering is true', async () => {
+    await runCheck({ ...baseOptions(), skipFileFiltering: true });
+
+    expect(mockLoadSkipPatterns).not.toHaveBeenCalled();
+    expect(mockApplySkipPatterns).not.toHaveBeenCalled();
+  });
+
+  it('applies file filtering by default', async () => {
+    mockLoadSkipPatterns.mockReturnValue(['*.test.ts']);
+    mockApplySkipPatterns.mockReturnValue({
+      included: [{ filename: 'src/client.ts', status: 'modified', additions: 0, deletions: 0, changes: 0 }],
+      excluded: 0,
+    });
+
+    await runCheck(baseOptions());
+
+    expect(mockLoadSkipPatterns).toHaveBeenCalledOnce();
+    expect(mockApplySkipPatterns).toHaveBeenCalledOnce();
   });
 });
