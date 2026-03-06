@@ -176,11 +176,6 @@ function buildConfigSkeleton(): Record<string, unknown> {
   };
 }
 
-/** Check for any `ERODE_*` env vars present in `process.env`. */
-function hasErodeEnvVars(): boolean {
-  return Object.keys(ENV_MAP).some((key) => process.env[key] !== undefined);
-}
-
 /** Find `.eroderc.json` in cwd or home directory. Returns the path or undefined. */
 export function findConfigFile(): string | undefined {
   const cwdPath = path.join(process.cwd(), RC_FILENAME);
@@ -192,7 +187,7 @@ export function findConfigFile(): string | undefined {
   return undefined;
 }
 
-function deepMerge(
+export function deepMerge(
   target: Record<string, unknown>,
   source: Record<string, unknown>
 ): Record<string, unknown> {
@@ -217,7 +212,7 @@ function deepMerge(
 }
 
 /** Load and parse a `.eroderc.json` config file, merging onto the skeleton for defaults. */
-function loadConfigFromFile(filePath: string): Record<string, unknown> {
+export function loadConfigFromFile(filePath: string): Record<string, unknown> {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     const parsed = JSON.parse(content) as Record<string, unknown>;
@@ -231,7 +226,7 @@ function loadConfigFromFile(filePath: string): Record<string, unknown> {
   }
 }
 
-function loadConfigFromEnv(): Record<string, unknown> {
+export function loadConfigFromEnv(): Record<string, unknown> {
   const config = buildConfigSkeleton();
 
   for (const [envVar, dotPath] of Object.entries(ENV_MAP)) {
@@ -250,15 +245,15 @@ function validateRequiredConfig(config: Config): void {
     const provider = config.ai.provider;
     if (provider === 'gemini' && !config.gemini.apiKey) {
       errors.push(
-        `${ENV_VAR_NAMES.geminiApiKey} must be set when ${ENV_VAR_NAMES.aiProvider} is gemini`
+        'Set gemini.apiKey in .eroderc.json or ERODE_GEMINI_API_KEY as an environment variable'
       );
     } else if (provider === 'anthropic' && !config.anthropic.apiKey) {
       errors.push(
-        `${ENV_VAR_NAMES.anthropicApiKey} must be set when ${ENV_VAR_NAMES.aiProvider} is anthropic`
+        'Set anthropic.apiKey in .eroderc.json or ERODE_ANTHROPIC_API_KEY as an environment variable'
       );
     } else if (provider === 'openai' && !config.openai.apiKey) {
       errors.push(
-        `${ENV_VAR_NAMES.openaiApiKey} must be set when ${ENV_VAR_NAMES.aiProvider} is openai`
+        'Set openai.apiKey in .eroderc.json or ERODE_OPENAI_API_KEY as an environment variable'
       );
     }
   }
@@ -270,17 +265,9 @@ function validateRequiredConfig(config: Config): void {
 function createConfig(): Config {
   try {
     const configFile = findConfigFile();
-    const envVarsPresent = hasErodeEnvVars();
-
-    if (configFile && envVarsPresent) {
-      throw new ConfigurationError(
-        `Found ${RC_FILENAME} at ${configFile} but ERODE_* environment variables are also set. ` +
-          `Use one or the other, not both.`,
-        'configFile'
-      );
-    }
-
-    const rawConfig = configFile ? loadConfigFromFile(configFile) : loadConfigFromEnv();
+    const fileConfig = configFile ? loadConfigFromFile(configFile) : buildConfigSkeleton();
+    const envConfig = loadConfigFromEnv();
+    const rawConfig = deepMerge(fileConfig, envConfig);
     const config = ConfigSchema.parse(rawConfig);
     validateRequiredConfig(config);
     return config;

@@ -104,13 +104,23 @@ Parse the JSON output. The key fields are:
 Briefly confirm: "Architecture check passed — no undeclared dependencies
 detected."
 
-## Environment Variables
+## Configuration
 
-The following must be set in the shell environment for the check to work:
+The recommended way to configure Erode is with a `.eroderc.json` file in
+the repository root. Set the AI provider and any non-secret settings there:
 
-- `ERODE_GEMINI_API_KEY`, `ERODE_OPENAI_API_KEY`, or `ERODE_ANTHROPIC_API_KEY` — for the
-  AI analysis
-- `ERODE_AI_PROVIDER` — optional, defaults to `gemini`
+    {
+      "$schema": "https://erode.dev/schemas/eroderc.schema.json",
+      "ai": { "provider": "gemini" }
+    }
+
+API keys should be set as environment variables (they override
+`.eroderc.json` values):
+
+- `ERODE_GEMINI_API_KEY`, `ERODE_OPENAI_API_KEY`, or
+  `ERODE_ANTHROPIC_API_KEY`
+
+See [Configuration](/docs/guides/configuration/) for the full reference.
 ````
 
 ### 2. Commit the skill

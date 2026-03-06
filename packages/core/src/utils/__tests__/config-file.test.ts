@@ -10,13 +10,22 @@ vi.mock('fs', () => ({
 }));
 
 import * as fs from 'fs';
-import { findConfigFile, RC_FILENAME, ENV_VAR_NAMES } from '../config.js';
+import {
+  findConfigFile,
+  RC_FILENAME,
+  ENV_VAR_NAMES,
+  deepMerge,
+  loadConfigFromFile,
+  loadConfigFromEnv,
+} from '../config.js';
 
 const mockExistsSync = vi.mocked(fs.existsSync);
+const mockReadFileSync = vi.mocked(fs.readFileSync);
 
 describe('config file support', () => {
   beforeEach(() => {
     mockExistsSync.mockReset();
+    mockReadFileSync.mockReset();
   });
 
   describe('RC_FILENAME', () => {
@@ -132,6 +141,106 @@ describe('config file support', () => {
 
     it('should map modelRepoPrToken to ERODE_MODEL_REPO_PR_TOKEN', () => {
       expect(ENV_VAR_NAMES.modelRepoPrToken).toBe('ERODE_MODEL_REPO_PR_TOKEN');
+    });
+  });
+
+  describe('deepMerge', () => {
+    it('should override target values with source values', () => {
+      const target = { ai: { provider: 'gemini' } };
+      const source = { ai: { provider: 'anthropic' } };
+      const result = deepMerge(
+        target as Record<string, unknown>,
+        source as Record<string, unknown>
+      );
+      expect(result).toEqual({ ai: { provider: 'anthropic' } });
+    });
+
+    it('should preserve target values when source has no matching key', () => {
+      const target = { ai: { provider: 'gemini' }, gemini: { apiKey: 'key123' } };
+      const source = { ai: {} };
+      const result = deepMerge(
+        target as Record<string, unknown>,
+        source as Record<string, unknown>
+      );
+      expect(result).toEqual({ ai: { provider: 'gemini' }, gemini: { apiKey: 'key123' } });
+    });
+
+    it('should merge nested objects recursively', () => {
+      const target = { adapter: { format: 'likec4', likec4: { excludePaths: [] } } };
+      const source = { adapter: { format: 'structurizr' } };
+      const result = deepMerge(
+        target as Record<string, unknown>,
+        source as Record<string, unknown>
+      );
+      expect(result).toEqual({
+        adapter: { format: 'structurizr', likec4: { excludePaths: [] } },
+      });
+    });
+
+    it('should replace arrays instead of merging them', () => {
+      const target = { adapter: { likec4: { excludePaths: ['a', 'b'] } } };
+      const source = { adapter: { likec4: { excludePaths: ['c'] } } };
+      const result = deepMerge(
+        target as Record<string, unknown>,
+        source as Record<string, unknown>
+      );
+      expect(result).toEqual({ adapter: { likec4: { excludePaths: ['c'] } } });
+    });
+  });
+
+  describe('config merge strategy', () => {
+    it('should load values from file when no env vars are set', () => {
+      mockReadFileSync.mockReturnValue(
+        JSON.stringify({ ai: { provider: 'anthropic' }, gemini: { apiKey: 'file-key' } })
+      );
+      const fileConfig = loadConfigFromFile('/fake/.eroderc.json');
+      expect(fileConfig).toMatchObject({
+        ai: { provider: 'anthropic' },
+        gemini: { apiKey: 'file-key' },
+      });
+    });
+
+    it('should allow env vars to override file values via deepMerge', () => {
+      mockReadFileSync.mockReturnValue(
+        JSON.stringify({ ai: { provider: 'gemini' }, gemini: { apiKey: 'file-key' } })
+      );
+      const fileConfig = loadConfigFromFile('/fake/.eroderc.json');
+
+      // Simulate env config that only sets ai.provider
+      const envConfig = {
+        ai: { provider: 'anthropic' },
+        constraints: {},
+        adapter: { likec4: {}, structurizr: {} },
+        github: {},
+        gitlab: {},
+        bitbucket: {},
+        anthropic: {},
+        gemini: {},
+        openai: {},
+        debug: {},
+        app: {},
+      };
+
+      const merged = deepMerge(fileConfig, envConfig as Record<string, unknown>);
+      // Env var wins for ai.provider
+      expect(merged).toMatchObject({ ai: { provider: 'anthropic' } });
+      // File value preserved for gemini.apiKey (env skeleton has empty gemini object)
+      expect(merged).toMatchObject({ gemini: { apiKey: 'file-key' } });
+    });
+
+    it('should pick up env vars via loadConfigFromEnv only for set vars', () => {
+      const original = process.env['ERODE_AI_PROVIDER'];
+      process.env['ERODE_AI_PROVIDER'] = 'openai';
+      try {
+        const envConfig = loadConfigFromEnv();
+        expect(envConfig).toMatchObject({ ai: { provider: 'openai' } });
+      } finally {
+        if (original === undefined) {
+          delete process.env['ERODE_AI_PROVIDER'];
+        } else {
+          process.env['ERODE_AI_PROVIDER'] = original;
+        }
+      }
     });
   });
 });

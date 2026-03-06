@@ -5,9 +5,19 @@ description: Environment variables for tuning the Erode analysis engine.
 
 Erode is configured through environment variables or a `.eroderc.json` configuration file. For GitHub Actions-specific inputs (`model-repo`, `fail-on-violations`, etc.), see [GitHub Actions](/docs/ci/github-actions/).
 
+## Precedence
+
+Erode resolves configuration in the following order (highest priority wins):
+
+1. **Environment variables** (`ERODE_*`), whether set directly, through CI secrets, or via a `.env` file
+2. **`.eroderc.json`**, project-level settings from the config file
+3. **Defaults**, built-in defaults for all settings
+
+This means you can commit `.eroderc.json` with project settings (model format, constraints, adapter config) and provide secrets (API keys, tokens) through environment variables in CI or a local `.env` file.
+
 ## Configuration file
 
-As an alternative to environment variables, you can create a `.eroderc.json` file in your project root or home directory:
+Create a `.eroderc.json` file in your project root or home directory:
 
 ```json
 {
@@ -19,7 +29,7 @@ As an alternative to environment variables, you can create a `.eroderc.json` fil
 
 The `$schema` field enables autocomplete and validation in editors that support JSON Schema. All sections are optional; Erode fills in defaults for anything you omit.
 
-Erode looks for `.eroderc.json` in the current working directory first, then the home directory. If both a config file **and** `ERODE_*` environment variables are present, Erode throws an error. Use one or the other, not both.
+Erode looks for `.eroderc.json` in the current working directory first, then the home directory. Any `ERODE_*` environment variables override matching values from the config file.
 
 Environment variable names map to nested JSON keys. For example:
 

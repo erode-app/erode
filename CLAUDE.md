@@ -61,7 +61,7 @@ The `analyze` command fetches PR data from platform APIs, while `check` operates
 
 ### Configuration
 
-All config is environment-variable-driven via `packages/core/src/utils/config.ts`. It maps env vars to a Zod-validated config object (`CONFIG`). Key env vars: `ERODE_AI_PROVIDER`, `ERODE_GEMINI_API_KEY`, `ERODE_ANTHROPIC_API_KEY`, `ERODE_GITHUB_TOKEN`. Configuration can also be set via a `.eroderc.json` file as an alternative to environment variables. Tests run with `DEBUG_MODE=true` (set in `packages/core/vitest.config.ts`) which skips API key validation.
+The recommended configuration method is `.eroderc.json` (validated by Zod via `packages/core/src/utils/config.ts`). Commit it to the repo for shared project settings (provider, model format, constraints, adapter config). Secrets (API keys, tokens) go in environment variables or a `.env` file. Env vars override `.eroderc.json` values. Precedence: defaults, then `.eroderc.json`, then env vars (highest priority). Key env vars: `ERODE_AI_PROVIDER`, `ERODE_GEMINI_API_KEY`, `ERODE_ANTHROPIC_API_KEY`, `ERODE_GITHUB_TOKEN`. Tests run with `DEBUG_MODE=true` (set in `packages/core/vitest.config.ts`) which skips API key validation.
 
 ### Error Handling
 
