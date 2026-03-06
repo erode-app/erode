@@ -42,6 +42,16 @@ describe('parseRepoFromRemote', () => {
     expect(result).toEqual({ owner: 'group', repo: 'project' });
   });
 
+  it('parses GitLab HTTPS URL with nested groups', () => {
+    const result = parseRepoFromRemote('https://gitlab.com/group/subgroup/repo');
+    expect(result).toEqual({ owner: 'group/subgroup', repo: 'repo' });
+  });
+
+  it('parses GitLab SSH URL with nested groups', () => {
+    const result = parseRepoFromRemote('git@gitlab.com:group/subgroup/repo.git');
+    expect(result).toEqual({ owner: 'group/subgroup', repo: 'repo' });
+  });
+
   it('throws on invalid URL', () => {
     expect(() => parseRepoFromRemote('not-a-url')).toThrow(ErodeError);
   });
@@ -95,7 +105,7 @@ describe('generateGitDiff', () => {
   it('parses name-status output for all statuses', () => {
     mockExecFileSync.mockImplementation((_bin: string, args: string[]) => {
       if (args.includes('--name-status')) {
-        return 'A\tsrc/new.ts\nM\tsrc/modified.ts\nD\tsrc/deleted.ts\nR100\tsrc/renamed.ts\nC100\tsrc/copied.ts\n';
+        return 'A\tsrc/new.ts\nM\tsrc/modified.ts\nD\tsrc/deleted.ts\nR100\tsrc/old-name.ts\tsrc/renamed.ts\nC100\tsrc/source.ts\tsrc/copied.ts\n';
       }
       if (args.includes('--shortstat')) {
         return ' 5 files changed, 20 insertions(+), 3 deletions(-)';

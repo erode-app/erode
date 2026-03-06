@@ -18,10 +18,11 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
 function provideSuggestions(error: ErodeError): void {
   const suggestions: Partial<Record<ErrorCode, string[]>> = {
     [ErrorCode.AUTH_KEY_MISSING]: [
-      `Provide an AI provider key: ${ENV_VAR_NAMES.anthropicApiKey} or ${ENV_VAR_NAMES.geminiApiKey}`,
+      `Provide an AI provider key: ${ENV_VAR_NAMES.anthropicApiKey}, ${ENV_VAR_NAMES.geminiApiKey}, or ${ENV_VAR_NAMES.openaiApiKey}`,
       `Store the key in your environment or ${RC_FILENAME}`,
       'Obtain an Anthropic key at https://console.anthropic.com/',
       'Obtain a Gemini key at https://aistudio.google.com/apikey',
+      'Obtain an OpenAI key at https://platform.openai.com/',
     ],
     [ErrorCode.PROVIDER_SAFETY_BLOCK]: [
       'Content was rejected by the AI provider safety filters',

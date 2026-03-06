@@ -113,13 +113,21 @@ export async function runCheck(
       component: { id: '', name: '', tags: [], type: '' },
       dependencyChanges: { dependencies: [], summary: '' },
     };
-    return { analysisResult: emptyResult, hasViolations: false };
+    const structured =
+      options.format === 'json'
+        ? buildStructuredOutput(emptyResult, adapter.metadata.displayName)
+        : undefined;
+    return { analysisResult: emptyResult, structured, hasViolations: false };
   }
   p.succeed(`Located ${String(components.length)} component(s) for repository`);
 
   const defaultComponent = components[0];
   if (!defaultComponent) {
-    throw new Error('Unexpected: components array was non-empty but first element was undefined');
+    throw new ErodeError(
+      'Unexpected: components array was non-empty but first element was undefined',
+      ErrorCode.INTERNAL_UNKNOWN,
+      'Internal pipeline error'
+    );
   }
 
   // ── Resolve files from diff ──────────────────────────────────────────

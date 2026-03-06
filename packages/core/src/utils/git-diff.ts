@@ -45,7 +45,7 @@ function run(args: string[], cwd: string): string {
 function parseNameStatus(output: string): GitDiffFile[] {
   if (!output) return [];
   return output.split('\n').reduce<GitDiffFile[]>((acc, line) => {
-    const match = /^([AMDRC])\d*\t(.+)$/.exec(line);
+    const match = /^([AMDRC])\d*\t(?:.+\t)?(.+)$/.exec(line);
     if (match?.[1] && match[2]) {
       const statusMap: Record<string, string> = {
         A: 'added',
@@ -132,14 +132,16 @@ export function parseRepoFromRemote(remoteUrl: string): { owner: string; repo: s
       .replace(/\.git$/, '')
       .replace(/\/$/, '');
     const parts = path.split('/');
-    if (parts.length >= 2 && parts[0] && parts[1]) {
-      return { owner: parts[0], repo: parts[1] };
+    const repo = parts.at(-1);
+    const owner = parts.slice(0, -1).join('/');
+    if (owner && repo) {
+      return { owner, repo };
     }
   } catch {
     // Not a valid URL, try SSH format below
   }
   // SSH: git@github.com:owner/repo.git
-  const sshMatch = /^[^@]+@[^:]+:([^/]+)\/([^/]+?)(?:\.git)?$/.exec(remoteUrl);
+  const sshMatch = /^[^@]+@[^:]+:(.+)\/([^/]+?)(?:\.git)?$/.exec(remoteUrl);
   if (sshMatch?.[1] && sshMatch[2]) {
     return { owner: sshMatch[1], repo: sshMatch[2] };
   }

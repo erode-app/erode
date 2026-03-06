@@ -38,7 +38,7 @@ This stage is skipped entirely when the repository maps to a single component.
 
 ## Stage 2 -- Scan
 
-The PR diff is fed to a fast model that extracts dependency changes and new integrations. The output is a structured list of added, removed, or modified dependencies found in the code changes.
+The diff (from a PR or local working tree) is fed to a fast model that extracts dependency changes and new integrations. The output is a structured list of added, removed, or modified dependencies found in the code changes.
 
 This keeps the analysis stage focused on dependency changes rather than the full diff.
 

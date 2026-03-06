@@ -22,8 +22,7 @@ Create a `.eroderc.json` file in your project root or home directory:
 ```json
 {
   "$schema": "https://erode.dev/schemas/v0/eroderc.schema.json",
-  "ai": { "provider": "gemini" },
-  "gemini": { "apiKey": "AIza..." }
+  "ai": { "provider": "gemini" }
 }
 ```
 

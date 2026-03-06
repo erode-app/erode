@@ -25,7 +25,11 @@ MODEL_DIR="${ERODE_MODEL_PATH:-.}"
 
 if [ -n "${ERODE_MODEL_REPO:-}" ]; then
   MODEL_CLONE_DIR="/tmp/model-repo"
-  CLONE_TOKEN="${ERODE_MODEL_REPO_TOKEN:-$ERODE_BITBUCKET_TOKEN}"
+  CLONE_TOKEN="${ERODE_MODEL_REPO_TOKEN:-${ERODE_BITBUCKET_TOKEN:-}}"
+  if [ -z "$CLONE_TOKEN" ]; then
+    echo "ERROR: ERODE_MODEL_REPO_TOKEN or ERODE_BITBUCKET_TOKEN must be set when ERODE_MODEL_REPO is provided."
+    exit 1
+  fi
 
   # Build the askpass token value.
   # App passwords use username:app_password format (Basic auth).

@@ -7,7 +7,7 @@ vi.mock('child_process', () => ({
 import { execFile } from 'child_process';
 import { exportDslToJson } from '../structurizr-cli.js';
 import { AdapterError, ErrorCode } from '../../../errors.js';
-import { CONFIG } from '../../../utils/config.js';
+import { CONFIG, ENV_VAR_NAMES } from '../../../utils/config.js';
 
 const mockExecFile = vi.mocked(execFile);
 
@@ -43,9 +43,9 @@ describe('exportDslToJson', () => {
       const adapterError = error as AdapterError;
       expect(adapterError.code).toBe(ErrorCode.MODEL_LOAD_FAILED);
       expect(adapterError.suggestions).toBeDefined();
-      expect(adapterError.suggestions?.some((s) => s.includes('ERODE_STRUCTURIZR_CLI_PATH'))).toBe(
-        true
-      );
+      expect(
+        adapterError.suggestions?.some((s) => s.includes(ENV_VAR_NAMES.structurizrCliPath))
+      ).toBe(true);
     }
   });
 

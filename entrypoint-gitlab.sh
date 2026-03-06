@@ -25,7 +25,11 @@ MODEL_DIR="${ERODE_MODEL_PATH:-.}"
 
 if [ -n "${ERODE_MODEL_REPO:-}" ]; then
   MODEL_CLONE_DIR="/tmp/model-repo"
-  CLONE_TOKEN="${ERODE_MODEL_REPO_TOKEN:-$ERODE_GITLAB_TOKEN}"
+  CLONE_TOKEN="${ERODE_MODEL_REPO_TOKEN:-${ERODE_GITLAB_TOKEN:-}}"
+  if [ -z "$CLONE_TOKEN" ]; then
+    echo "ERROR: ERODE_MODEL_REPO_TOKEN or ERODE_GITLAB_TOKEN must be set when ERODE_MODEL_REPO is provided."
+    exit 1
+  fi
 
   GIT_ASKPASS_SCRIPT="/tmp/git-askpass-$$"
   ESCAPED_TOKEN=$(printf '%s' "$CLONE_TOKEN" | sed "s/'/'\\\\''/g")
