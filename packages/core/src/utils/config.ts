@@ -237,6 +237,7 @@ export function loadConfigFromFile(filePath: string): Record<string, unknown> {
     const parsed = raw as Record<string, unknown>;
     return deepMerge(buildConfigSkeleton(), parsed);
   } catch (error) {
+    if (error instanceof ConfigurationError) throw error;
     const message = error instanceof Error ? error.message : String(error);
     throw new ConfigurationError(
       `Failed to load config file ${filePath}: ${message}`,

@@ -121,6 +121,28 @@ export function generateGitDiff(options: GitDiffOptions = {}): GitDiffResult {
   };
 }
 
+/**
+ * Parse file paths from a unified diff.
+ * Looks for `diff --git a/<path> b/<path>` headers.
+ */
+export function parseFilesFromDiff(diff: string): { filename: string; status: string }[] {
+  const files: { filename: string; status: string }[] = [];
+  const seen = new Set<string>();
+  const prefix = 'diff --git a/';
+  for (const line of diff.split('\n')) {
+    if (!line.startsWith(prefix)) continue;
+    const rest = line.slice(prefix.length);
+    const bIdx = rest.lastIndexOf(' b/');
+    if (bIdx === -1) continue;
+    const filename = rest.slice(bIdx + 3);
+    if (filename && !seen.has(filename)) {
+      seen.add(filename);
+      files.push({ filename, status: 'modified' });
+    }
+  }
+  return files;
+}
+
 /** Convert SSH-style git remote URLs to HTTPS, stripping any embedded credentials. */
 export function normaliseToHttps(remote: string): string {
   // git@github.com:owner/repo.git → https://github.com/owner/repo

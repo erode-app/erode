@@ -117,5 +117,19 @@ export {
   parseRepoFromRemote,
   normaliseToHttps,
   getRemoteUrl,
+  parseFilesFromDiff,
 } from './utils/git-diff.js';
 export type { GitDiffOptions, GitDiffResult } from './utils/git-diff.js';
+
+// Pipeline shared helpers
+export {
+  loadArchitectureModel,
+  buildArchitecturalContext,
+  buildEmptyResult,
+  runDriftStage,
+} from './pipelines/pipeline-shared.js';
+export type {
+  ArchitecturalContext,
+  EmptyResultOptions,
+  EmptyCheckResult,
+} from './pipelines/pipeline-shared.js';

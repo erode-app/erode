@@ -7,8 +7,13 @@ import { createPlatformReader } from '../platforms/platform-factory.js';
 import type { ChangeRequestFile } from '../platforms/source-platform.js';
 import { createAIProvider } from '../providers/provider-factory.js';
 import { buildStructuredOutput, writeOutputToFile } from '../output.js';
-import { validatePath } from '../utils/validation.js';
 import { ErodeError, ErrorCode } from '../errors.js';
+import {
+  loadArchitectureModel,
+  buildArchitecturalContext,
+  buildEmptyResult,
+  runDriftStage,
+} from './pipeline-shared.js';
 import { CONFIG } from '../utils/config.js';
 import { loadSkipPatterns, applySkipPatterns } from '../utils/skip-patterns.js';
 import { createModelPatcher } from '../adapters/model-patcher.js';
@@ -90,11 +95,7 @@ export async function runAnalyze(
 
   try {
     // ── Load architecture model ──────────────────────────────────────────
-    p.section(`Preparing ${adapter.metadata.displayName} Architecture Model`);
-    validatePath(effectiveModelPath, 'directory');
-    p.start('Reading architecture model');
-    const architectureModel = await adapter.loadFromPath(effectiveModelPath);
-    p.succeed('Architecture model ready');
+    const architectureModel = await loadArchitectureModel(adapter, effectiveModelPath, p);
 
     // ── Initialise AI provider ───────────────────────────────────────────
     p.start('Setting up AI provider');
@@ -137,10 +138,7 @@ export async function runAnalyze(
         p.info(line.replace('{{repoUrl}}', repoUrl));
       }
       // Return an empty-ish result so callers don't have to handle undefined
-      const emptyResult: DriftAnalysisResult = {
-        hasViolations: false,
-        violations: [],
-        summary: `No components found matching repository: ${repoUrl}`,
+      return buildEmptyResult({
         metadata: {
           number: prData.number,
           title: prData.title,
@@ -157,13 +155,9 @@ export async function runAnalyze(
           },
           commits: [],
         },
-        component: { id: '', name: '', tags: [], type: '' },
-        dependencyChanges: { dependencies: [], summary: '' },
-      };
-      return {
-        analysisResult: emptyResult,
-        hasViolations: false,
-      };
+        repoUrl,
+        adapterDisplayName: adapter.metadata.displayName,
+      });
     }
     p.succeed(`Located ${String(components.length)} component(s) for repository`);
 
@@ -237,9 +231,7 @@ export async function runAnalyze(
     }
 
     // ── Build prompt data for drift analysis ─────────────────────────────
-    const dependencies = adapter.getComponentDependencies(selectedComponent.id);
-    const dependents = adapter.getComponentDependents(selectedComponent.id);
-    const relationships = adapter.getComponentRelationships(selectedComponent.id);
+    const architectural = buildArchitecturalContext(adapter, selectedComponent.id);
 
     const promptData: DriftAnalysisPromptData = {
       changeRequest: {
@@ -265,34 +257,13 @@ export async function runAnalyze(
       component: selectedComponent,
       dependencies: ctx.extractedDeps,
       files: prData.files.map((f) => ({ filename: f.filename, status: f.status })),
-      architectural: {
-        dependencies: dependencies.map((d) => ({ ...d, repository: d.repository })),
-        dependents: dependents.map((d) => ({ ...d, repository: d.repository })),
-        relationships: relationships.map((r) => ({
-          target: { id: r.target.id, name: r.target.name },
-          kind: r.kind,
-          title: r.title,
-        })),
-      },
+      architectural,
       allComponentIds: Array.from(architectureModel.componentIndex.byId.keys()),
       allRelationships: adapter.getAllRelationships(),
     };
 
     // ── Stage 3: Drift analysis ──────────────────────────────────────────
-    p.section('Stage 3: Drift Analysis');
-    p.start('Evaluating the change request for architectural drift');
-    ctx.analysisResult = await provider.analyzeDrift(promptData);
-    p.succeed('Drift analysis finished');
-
-    if (CONFIG.debug.verbose) {
-      console.error(
-        '[Stage 3] Drift analysis:',
-        JSON.stringify({
-          violations: ctx.analysisResult.violations.length,
-          hasModelUpdates: !!ctx.analysisResult.modelUpdates?.relationships?.length,
-        })
-      );
-    }
+    ctx.analysisResult = await runDriftStage(provider, promptData, p);
 
     // ── Build structured output ──────────────────────────────────────────
     p.section('Output');

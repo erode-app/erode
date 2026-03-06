@@ -2,7 +2,6 @@ import type { ProgressReporter } from './progress.js';
 import { SilentProgress } from './progress.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
 import { createAIProvider } from '../providers/provider-factory.js';
-import { validatePath } from '../utils/validation.js';
 import { loadSkipPatterns, applySkipPatterns } from '../utils/skip-patterns.js';
 import { ErodeError, ErrorCode } from '../errors.js';
 import { CONFIG } from '../utils/config.js';
@@ -17,6 +16,13 @@ import type {
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import type { ChangeRequestFile } from '../platforms/source-platform.js';
 import { selectComponentWithAI } from './resolve-component.js';
+import { parseFilesFromDiff } from '../utils/git-diff.js';
+import {
+  loadArchitectureModel,
+  buildArchitecturalContext,
+  buildEmptyResult,
+  runDriftStage,
+} from './pipeline-shared.js';
 
 export interface CheckOptions {
   /** Path to the architecture model directory. */
@@ -50,28 +56,6 @@ export interface CheckResult {
 }
 
 /**
- * Parse file paths from a unified diff.
- * Looks for `diff --git a/<path> b/<path>` headers.
- */
-function parseFilesFromDiff(diff: string): { filename: string; status: string }[] {
-  const files: { filename: string; status: string }[] = [];
-  const seen = new Set<string>();
-  const prefix = 'diff --git a/';
-  for (const line of diff.split('\n')) {
-    if (!line.startsWith(prefix)) continue;
-    const rest = line.slice(prefix.length);
-    const bIdx = rest.lastIndexOf(' b/');
-    if (bIdx === -1) continue;
-    const filename = rest.slice(bIdx + 3);
-    if (filename && !seen.has(filename)) {
-      seen.add(filename);
-      files.push({ filename, status: 'modified' });
-    }
-  }
-  return files;
-}
-
-/**
  * Run a local architecture drift check against a git diff.
  *
  * This is the local counterpart of `runAnalyze` — it reuses Stage 2
@@ -86,11 +70,7 @@ export async function runCheck(
   const adapter = createAdapter(options.modelFormat);
 
   // ── Load architecture model ──────────────────────────────────────────
-  p.section(`Preparing ${adapter.metadata.displayName} Architecture Model`);
-  validatePath(options.modelPath, 'directory');
-  p.start('Reading architecture model');
-  const architectureModel = await adapter.loadFromPath(options.modelPath);
-  p.succeed('Architecture model ready');
+  const architectureModel = await loadArchitectureModel(adapter, options.modelPath, p);
 
   // ── Initialise AI provider ───────────────────────────────────────────
   p.start('Setting up AI provider');
@@ -106,19 +86,12 @@ export async function runCheck(
     for (const line of adapter.metadata.noComponentHelpLines) {
       p.info(line.replace('{{repoUrl}}', options.repo));
     }
-    const emptyResult: DriftAnalysisResult = {
-      hasViolations: false,
-      violations: [],
-      summary: `No components found matching repository: ${options.repo}`,
+    return buildEmptyResult({
       metadata: buildLocalMetadata(options),
-      component: { id: '', name: '', tags: [], type: '' },
-      dependencyChanges: { dependencies: [], summary: '' },
-    };
-    const structured =
-      options.format === 'json'
-        ? buildStructuredOutput(emptyResult, adapter.metadata.displayName)
-        : undefined;
-    return { analysisResult: emptyResult, structured, hasViolations: false };
+      repoUrl: options.repo,
+      adapterDisplayName: adapter.metadata.displayName,
+      includeStructured: options.format === 'json',
+    });
   }
   p.succeed(`Located ${String(components.length)} component(s) for repository`);
 
@@ -203,43 +176,20 @@ export async function runCheck(
   }
 
   // ── Build prompt data for drift analysis ─────────────────────────────
-  const dependencies = adapter.getComponentDependencies(selectedComponent.id);
-  const dependents = adapter.getComponentDependents(selectedComponent.id);
-  const relationships = adapter.getComponentRelationships(selectedComponent.id);
+  const architectural = buildArchitecturalContext(adapter, selectedComponent.id);
 
   const promptData: DriftAnalysisPromptData = {
     changeRequest: buildLocalMetadata(options),
     component: selectedComponent,
     dependencies: extractedDeps,
     files,
-    architectural: {
-      dependencies: dependencies.map((d) => ({ ...d, repository: d.repository })),
-      dependents: dependents.map((d) => ({ ...d, repository: d.repository })),
-      relationships: relationships.map((r) => ({
-        target: { id: r.target.id, name: r.target.name },
-        kind: r.kind,
-        title: r.title,
-      })),
-    },
+    architectural,
     allComponentIds: Array.from(architectureModel.componentIndex.byId.keys()),
     allRelationships: adapter.getAllRelationships(),
   };
 
-  // ── Stage 3: Drift analysis ──────────────────────────────────────────
-  p.section('Stage 3: Drift Analysis');
-  p.start('Evaluating changes for architectural drift');
-  const analysisResult = await provider.analyzeDrift(promptData);
-  p.succeed('Drift analysis finished');
-
-  if (CONFIG.debug.verbose) {
-    console.error(
-      '[Stage 3] Drift analysis:',
-      JSON.stringify({
-        violations: analysisResult.violations.length,
-        hasModelUpdates: !!analysisResult.modelUpdates?.relationships?.length,
-      })
-    );
-  }
+  // ── Stage 3: Drift Analysis ──────────────────────────────────────────
+  const analysisResult = await runDriftStage(provider, promptData, p);
 
   // ── Build structured output ──────────────────────────────────────────
   const needsStructured = options.format === 'json';
