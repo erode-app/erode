@@ -269,7 +269,9 @@ describe('runCheck', () => {
   it('applies file filtering by default', async () => {
     mockLoadSkipPatterns.mockReturnValue(['*.test.ts']);
     mockApplySkipPatterns.mockReturnValue({
-      included: [{ filename: 'src/client.ts', status: 'modified', additions: 0, deletions: 0, changes: 0 }],
+      included: [
+        { filename: 'src/client.ts', status: 'modified', additions: 0, deletions: 0, changes: 0 },
+      ],
       excluded: 0,
     });
 

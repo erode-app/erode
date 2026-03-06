@@ -53,9 +53,7 @@ describe('parseRepoFromRemote', () => {
 
 describe('normaliseToHttps', () => {
   it('converts SSH URL to HTTPS', () => {
-    expect(normaliseToHttps('git@github.com:owner/repo.git')).toBe(
-      'https://github.com/owner/repo'
-    );
+    expect(normaliseToHttps('git@github.com:owner/repo.git')).toBe('https://github.com/owner/repo');
   });
 
   it('converts SSH URL without .git suffix', () => {
@@ -69,9 +67,7 @@ describe('normaliseToHttps', () => {
   });
 
   it('passes through plain HTTPS URL', () => {
-    expect(normaliseToHttps('https://github.com/owner/repo')).toBe(
-      'https://github.com/owner/repo'
-    );
+    expect(normaliseToHttps('https://github.com/owner/repo')).toBe('https://github.com/owner/repo');
   });
 
   it('handles GitLab SSH URLs', () => {
