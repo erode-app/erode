@@ -11,6 +11,8 @@ import type { ProgressReporter } from './progress.js';
 import { validatePath } from '../utils/validation.js';
 import { buildStructuredOutput } from '../output.js';
 import { CONFIG } from '../utils/config.js';
+import { ErodeError, ErrorCode } from '../errors.js';
+import { resolveModelSource, type ResolvedModelSource } from '../utils/model-source.js';
 
 /** Load and validate an architecture model, emitting progress. */
 export async function loadArchitectureModel(
@@ -108,3 +110,92 @@ export async function runDriftStage(
 
   return analysisResult;
 }
+
+/**
+ * Use AI to select the best-matching component when multiple candidates exist.
+ * Returns the selected component, falling back to `defaultComponent` if the
+ * provider lacks the capability or the model returns no result.
+ */
+export async function selectComponentWithAI(
+  provider: AIProvider,
+  components: ArchitecturalComponent[],
+  files: { filename: string }[],
+  defaultComponent: ArchitecturalComponent,
+  progress: ProgressReporter
+): Promise<ArchitecturalComponent> {
+  progress.start('Asking the model to pick the best-matching component');
+  if (!provider.selectComponent) {
+    progress.warn(`Provider lacks component selection, defaulting to: ${defaultComponent.name}`);
+    return defaultComponent;
+  }
+  const componentId = await provider.selectComponent({ components, files });
+  if (componentId) {
+    const found = components.find((c) => c.id === componentId) ?? defaultComponent;
+    progress.succeed(`Chosen component: ${found.name} (${componentId})`);
+    return found;
+  }
+  progress.warn(`AI was unable to pick a component, defaulting to: ${defaultComponent.name}`);
+  return defaultComponent;
+}
+
+/** Resolve model source, cloning if remote, with progress messages. */
+export async function resolveAndCloneModel(
+  modelPath: string,
+  modelRepo: string | undefined,
+  options: { ref?: string },
+  progress: ProgressReporter
+): Promise<ResolvedModelSource> {
+  if (modelRepo) {
+    progress.start('Cloning model repository');
+  }
+  const resolvedSource = await resolveModelSource(modelPath, modelRepo, options);
+  if (modelRepo) {
+    progress.succeed(`Model repository cloned (${resolvedSource.repoSlug ?? modelRepo})`);
+  }
+  return resolvedSource;
+}
+
+/** TS strict guard: extract the first element of a non-empty components array. */
+function firstComponentOrThrow(
+  components: ArchitecturalComponent[]
+): ArchitecturalComponent {
+  const first = components[0];
+  if (!first) {
+    throw new ErodeError(
+      'Unexpected: components array was non-empty but first element was undefined',
+      ErrorCode.INTERNAL_UNKNOWN,
+      'Internal pipeline error'
+    );
+  }
+  return first;
+}
+
+/** Look up components for a repository, returning an empty result if none match. */
+export function findComponentsForRepo(
+  adapter: ArchitectureModelAdapter,
+  repoUrl: string,
+  metadata: ChangeRequestMetadata,
+  progress: ProgressReporter
+): ComponentLookupResult {
+  progress.start('Locating components for repository');
+  const components = adapter.findAllComponentsByRepository(repoUrl);
+
+  if (components.length === 0) {
+    progress.warn(`No components matched repository: ${repoUrl}`);
+    for (const line of adapter.metadata.noComponentHelpLines) {
+      progress.info(line.replace('{{repoUrl}}', repoUrl));
+    }
+    return buildEmptyResult({
+      metadata,
+      repoUrl,
+      adapterDisplayName: adapter.metadata.displayName,
+      includeStructured: true,
+    });
+  }
+  progress.succeed(`Located ${String(components.length)} component(s) for repository`);
+  return { found: true, components, defaultComponent: firstComponentOrThrow(components) };
+}
+
+type ComponentLookupResult =
+  | { found: true; components: ArchitecturalComponent[]; defaultComponent: ArchitecturalComponent }
+  | EmptyCheckResult;

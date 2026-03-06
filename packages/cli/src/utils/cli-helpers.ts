@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { ErodeError, ErrorCode, CONFIG, type StructuredAnalysisOutput } from '@erode-app/core';
 import type { OutputFormat } from './command-schemas.js';
 
 export const Logger = {
@@ -217,3 +218,31 @@ export const OutputFormatter = {
     return String(data);
   },
 } as const;
+
+export function resolveModelPath(modelPath?: string): string {
+  const resolved = modelPath ?? CONFIG.adapter.modelPath;
+  if (!resolved) {
+    throw new ErodeError(
+      'Provide <model-path> or set adapter.modelPath in .eroderc.json',
+      ErrorCode.INPUT_INVALID
+    );
+  }
+  return resolved;
+}
+
+export function renderResultAndExit(
+  result: { structured?: StructuredAnalysisOutput; hasViolations: boolean },
+  format: 'console' | 'json',
+  failOnViolations?: boolean
+): void {
+  if (format === 'json') {
+    if (result.structured) {
+      console.log(OutputFormatter.format(result.structured, 'json'));
+    }
+  } else if (result.structured) {
+    console.log(OutputFormatter.formatConsole(result.structured));
+  }
+  if (failOnViolations && result.hasViolations) {
+    process.exitCode = 1;
+  }
+}

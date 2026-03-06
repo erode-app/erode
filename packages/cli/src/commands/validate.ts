@@ -1,9 +1,8 @@
 import { Command } from 'commander';
 import { runValidate, validate } from '@erode-app/core';
 import { ErrorHandler } from '../utils/error-handler.js';
-import { resolveModelPath } from '../utils/resolve-model-path.js';
 import { ValidateOptionsSchema } from '../utils/command-schemas.js';
-import { OutputFormatter } from '../utils/cli-helpers.js';
+import { resolveModelPath, OutputFormatter } from '../utils/cli-helpers.js';
 import { ConsoleProgress } from '../console-progress.js';
 
 export function createValidateCommand(): Command {

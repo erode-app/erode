@@ -11,9 +11,8 @@ import {
   CONFIG,
 } from '@erode-app/core';
 import { ErrorHandler } from '../utils/error-handler.js';
-import { resolveModelPath } from '../utils/resolve-model-path.js';
 import { CheckOptionsSchema } from '../utils/command-schemas.js';
-import { OutputFormatter } from '../utils/cli-helpers.js';
+import { resolveModelPath, renderResultAndExit } from '../utils/cli-helpers.js';
 import { ConsoleProgress } from '../console-progress.js';
 
 export function createCheckCommand(): Command {
@@ -91,17 +90,7 @@ export function createCheckCommand(): Command {
         );
 
         // ── Output ───────────────────────────────────────────────────────
-        if (validated.format === 'json') {
-          if (result.structured) {
-            console.log(OutputFormatter.format(result.structured, 'json'));
-          }
-        } else if (result.structured) {
-          console.log(OutputFormatter.formatConsole(result.structured));
-        }
-
-        if (validated.failOnViolations && result.hasViolations) {
-          process.exitCode = 1;
-        }
+        renderResultAndExit(result, validated.format, validated.failOnViolations);
       } catch (error) {
         ErrorHandler.handleCliError(error);
       }

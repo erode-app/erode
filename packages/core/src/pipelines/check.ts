@@ -16,15 +16,15 @@ import type {
 } from '../analysis/analysis-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import type { ChangeRequestFile } from '../platforms/source-platform.js';
-import { selectComponentWithAI } from './resolve-component.js';
 import { parseFilesFromDiff, filterDiffByFiles } from '../utils/git-diff.js';
 import {
   loadArchitectureModel,
   buildArchitecturalContext,
-  buildEmptyResult,
   runDriftStage,
+  selectComponentWithAI,
+  resolveAndCloneModel,
+  findComponentsForRepo,
 } from './pipeline-shared.js';
-import { resolveModelSource } from '../utils/model-source.js';
 
 export interface CheckOptions {
   /** Path to the architecture model directory. */
@@ -70,9 +70,7 @@ const CheckOptionsInputSchema = z.object({
   modelFormat: z.string().optional(),
   componentId: z.string().optional(),
   format: z.enum(['console', 'json']).optional(),
-  files: z
-    .array(z.object({ filename: z.string(), status: z.string() }))
-    .optional(),
+  files: z.array(z.object({ filename: z.string(), status: z.string() })).optional(),
   stats: z
     .object({
       additions: z.number(),
@@ -102,15 +100,12 @@ export async function runCheck(
   const adapter = createAdapter(options.modelFormat);
 
   // ── Resolve model source (clone if remote) ───────────────────────────
-  if (options.modelRepo) {
-    p.start('Cloning model repository');
-  }
-  const resolvedSource = await resolveModelSource(options.modelPath, options.modelRepo, {
-    ref: options.modelRef,
-  });
-  if (options.modelRepo) {
-    p.succeed(`Model repository cloned (${resolvedSource.repoSlug ?? options.modelRepo})`);
-  }
+  const resolvedSource = await resolveAndCloneModel(
+    options.modelPath,
+    options.modelRepo,
+    { ref: options.modelRef },
+    p
+  );
   const effectiveModelPath = resolvedSource.localPath;
 
   try {
@@ -118,36 +113,14 @@ export async function runCheck(
     const architectureModel = await loadArchitectureModel(adapter, effectiveModelPath, p);
 
     // ── Find components for this repository ──────────────────────────────
-    p.start('Locating components for repository');
-    const components = adapter.findAllComponentsByRepository(options.repo);
-
-    if (components.length === 0) {
-      p.warn(`No components matched repository: ${options.repo}`);
-      for (const line of adapter.metadata.noComponentHelpLines) {
-        p.info(line.replace('{{repoUrl}}', options.repo));
-      }
-      return buildEmptyResult({
-        metadata: buildLocalMetadata(options),
-        repoUrl: options.repo,
-        adapterDisplayName: adapter.metadata.displayName,
-        includeStructured: true,
-      });
-    }
-    p.succeed(`Located ${String(components.length)} component(s) for repository`);
+    const lookup = findComponentsForRepo(adapter, options.repo, buildLocalMetadata(options), p);
+    if (!('found' in lookup)) return lookup;
+    const { components, defaultComponent } = lookup;
 
     // ── Initialise AI provider ───────────────────────────────────────────
     p.start('Setting up AI provider');
     const provider = createAIProvider();
     p.succeed('AI provider initialized');
-
-    const defaultComponent = components[0];
-    if (!defaultComponent) {
-      throw new ErodeError(
-        'Unexpected: components array was non-empty but first element was undefined',
-        ErrorCode.INTERNAL_UNKNOWN,
-        'Internal pipeline error'
-      );
-    }
 
     // ── Resolve files from diff ──────────────────────────────────────────
     let files = options.files ?? parseFilesFromDiff(options.diff);
@@ -170,9 +143,10 @@ export async function runCheck(
     }
 
     // ── Filter diff to match included files ────────────────────────────
-    const effectiveDiff = (!options.skipFileFiltering && files.length > 0)
-      ? filterDiffByFiles(options.diff, files)
-      : options.diff;
+    const effectiveDiff =
+      !options.skipFileFiltering && files.length > 0
+        ? filterDiffByFiles(options.diff, files)
+        : options.diff;
 
     // ── Stage 1: Component selection ─────────────────────────────────────
     let selectedComponent: ArchitecturalComponent = defaultComponent;

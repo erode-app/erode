@@ -11,8 +11,10 @@ import { ErodeError, ErrorCode } from '../errors.js';
 import {
   loadArchitectureModel,
   buildArchitecturalContext,
-  buildEmptyResult,
   runDriftStage,
+  selectComponentWithAI,
+  resolveAndCloneModel,
+  findComponentsForRepo,
 } from './pipeline-shared.js';
 import { CONFIG } from '../utils/config.js';
 import { loadSkipPatterns, applySkipPatterns } from '../utils/skip-patterns.js';
@@ -22,8 +24,6 @@ import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
 import type { DriftAnalysisPromptData, DriftAnalysisResult } from '../analysis/analysis-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import type { StructuredAnalysisOutput } from '../output/structured-output.js';
-import { resolveModelSource } from '../utils/model-source.js';
-import { selectComponentWithAI } from './resolve-component.js';
 
 function buildDiffFromFiles(files: ChangeRequestFile[]): string {
   return files
@@ -81,15 +81,12 @@ export async function runAnalyze(
   const adapter = createAdapter(options.modelFormat);
 
   // ── Resolve model source (clone if remote) ───────────────────────────
-  if (options.modelRepo) {
-    p.start('Cloning model repository');
-  }
-  const resolvedSource = await resolveModelSource(options.modelPath, options.modelRepo, {
-    ref: options.modelRef,
-  });
-  if (options.modelRepo) {
-    p.succeed(`Model repository cloned (${resolvedSource.repoSlug ?? options.modelRepo})`);
-  }
+  const resolvedSource = await resolveAndCloneModel(
+    options.modelPath,
+    options.modelRepo,
+    { ref: options.modelRef },
+    p
+  );
   const effectiveModelPath = resolvedSource.localPath;
   const effectiveModelRepo = resolvedSource.repoSlug ?? options.modelRepo;
 
@@ -129,48 +126,25 @@ export async function runAnalyze(
 
     // ── Find components for this repository ──────────────────────────────
     const repoUrl = ref.repositoryUrl;
-    p.start('Locating components for repository');
-    const components = adapter.findAllComponentsByRepository(repoUrl);
-
-    if (components.length === 0) {
-      p.warn(`No components matched repository: ${repoUrl}`);
-      for (const line of adapter.metadata.noComponentHelpLines) {
-        p.info(line.replace('{{repoUrl}}', repoUrl));
-      }
-      // Return an empty-ish result so callers don't have to handle undefined
-      return buildEmptyResult({
-        metadata: {
-          number: prData.number,
-          title: prData.title,
-          description: prData.body,
-          repository: ref.repositoryUrl.replace(/^https?:\/\/[^/]+\//, ''),
-          author: prData.author,
-          base: prData.base,
-          head: prData.head,
-          stats: {
-            commits: prData.commits,
-            additions: prData.additions,
-            deletions: prData.deletions,
-            files_changed: prData.changed_files,
-          },
-          commits: [],
-        },
-        repoUrl,
-        adapterDisplayName: adapter.metadata.displayName,
-      });
-    }
-    p.succeed(`Located ${String(components.length)} component(s) for repository`);
-
-    // Guaranteed non-empty since we checked components.length === 0 above
-    const defaultComponent = components[0];
-    if (!defaultComponent) {
-      // This should never happen, but satisfies strict TS
-      throw new ErodeError(
-        'Unexpected: components array was non-empty but first element was undefined',
-        ErrorCode.INTERNAL_UNKNOWN,
-        'Internal pipeline error'
-      );
-    }
+    const prMetadata = {
+      number: prData.number,
+      title: prData.title,
+      description: prData.body,
+      repository: ref.repositoryUrl.replace(/^https?:\/\/[^/]+\//, ''),
+      author: prData.author,
+      base: prData.base,
+      head: prData.head,
+      stats: {
+        commits: prData.commits,
+        additions: prData.additions,
+        deletions: prData.deletions,
+        files_changed: prData.changed_files,
+      },
+      commits: [],
+    };
+    const lookup = findComponentsForRepo(adapter, repoUrl, prMetadata, p);
+    if (!('found' in lookup)) return lookup;
+    const { components, defaultComponent } = lookup;
 
     // ── Pipeline context accumulator ───────────────────────────────────
     const ctx: PipelineContext = {
@@ -235,19 +209,7 @@ export async function runAnalyze(
 
     const promptData: DriftAnalysisPromptData = {
       changeRequest: {
-        number: prData.number,
-        title: prData.title,
-        description: prData.body,
-        repository: ref.repositoryUrl.replace(/^https?:\/\/[^/]+\//, ''),
-        author: prData.author,
-        base: prData.base,
-        head: prData.head,
-        stats: {
-          commits: prData.commits,
-          additions: prData.additions,
-          deletions: prData.deletions,
-          files_changed: prData.changed_files,
-        },
+        ...prMetadata,
         commits: commits.map((c) => ({
           sha: c.sha,
           message: c.message,
