@@ -280,4 +280,31 @@ describe('runCheck', () => {
     expect(mockLoadSkipPatterns).toHaveBeenCalledOnce();
     expect(mockApplySkipPatterns).toHaveBeenCalledOnce();
   });
+
+  it('falls back to default component when selectComponent returns null', async () => {
+    const comp2 = { ...testComponent, id: 'cloud.web', name: 'Web App' };
+    mockFindAllComponentsByRepository.mockReturnValue([testComponent, comp2]);
+    mockSelectComponent.mockResolvedValue(null);
+
+    const result = await runCheck(baseOptions());
+
+    expect(mockSelectComponent).toHaveBeenCalledOnce();
+    expect(result.hasViolations).toBe(false);
+    // Should still proceed with default component (first in list)
+    expect(mockExtractDependencies).toHaveBeenCalledWith(
+      expect.objectContaining({
+        components: [testComponent],
+      })
+    );
+  });
+
+  it('builds structured output when format is json', async () => {
+    const mockStructured = { version: '1.0', analysis: {} };
+    mockBuildStructuredOutput.mockReturnValue(mockStructured);
+
+    const result = await runCheck({ ...baseOptions(), format: 'json' });
+
+    expect(mockBuildStructuredOutput).toHaveBeenCalledOnce();
+    expect(result.structured).toBe(mockStructured);
+  });
 });

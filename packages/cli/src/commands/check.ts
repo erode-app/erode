@@ -1,10 +1,10 @@
 import { Command } from 'commander';
-import { execSync } from 'child_process';
 import {
   runCheck,
   generateGitDiff,
   parseRepoFromRemote,
   normaliseToHttps,
+  getRemoteUrl,
   validate,
   ErodeError,
   ErrorCode,
@@ -44,7 +44,7 @@ export function createCheckCommand(): Command {
         if (!repoUrl) {
           let remote: string;
           try {
-            remote = execSync('git remote get-url origin', { encoding: 'utf-8' }).trim();
+            remote = getRemoteUrl();
           } catch {
             throw new ErodeError(
               'Could not detect repository URL from git remote',

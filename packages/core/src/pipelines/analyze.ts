@@ -18,6 +18,7 @@ import type { DriftAnalysisPromptData, DriftAnalysisResult } from '../analysis/a
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import type { StructuredAnalysisOutput } from '../output/structured-output.js';
 import { resolveModelSource } from '../utils/model-source.js';
+import { selectComponentWithAI } from './resolve-component.js';
 
 function buildDiffFromFiles(files: ChangeRequestFile[]): string {
   return files
@@ -170,7 +171,11 @@ export async function runAnalyze(
     const defaultComponent = components[0];
     if (!defaultComponent) {
       // This should never happen, but satisfies strict TS
-      throw new Error('Unexpected: components array was non-empty but first element was undefined');
+      throw new ErodeError(
+        'Unexpected: components array was non-empty but first element was undefined',
+        ErrorCode.INTERNAL_UNKNOWN,
+        'Internal pipeline error'
+      );
     }
 
     // ── Pipeline context accumulator ───────────────────────────────────
@@ -187,22 +192,14 @@ export async function runAnalyze(
       ctx.selectedComponentId = defaultComponent.id;
     } else {
       p.section('Stage 1: Component Selection');
-      p.start('Asking the model to pick the best-matching component');
-      if (!provider.selectComponent) {
-        p.warn(`Provider lacks component selection, defaulting to: ${defaultComponent.name}`);
-      } else {
-        const componentId = await provider.selectComponent({
-          components,
-          files: prData.files.map((f) => ({ filename: f.filename })),
-        });
-        if (componentId) {
-          ctx.selectedComponent = components.find((c) => c.id === componentId) ?? defaultComponent;
-          ctx.selectedComponentId = componentId;
-          p.succeed(`Chosen component: ${ctx.selectedComponent.name} (${componentId})`);
-        } else {
-          p.warn(`AI was unable to pick a component, defaulting to: ${defaultComponent.name}`);
-        }
-      }
+      ctx.selectedComponent = await selectComponentWithAI(
+        provider,
+        components,
+        prData.files.map((f) => ({ filename: f.filename })),
+        defaultComponent,
+        p
+      );
+      ctx.selectedComponentId = ctx.selectedComponent.id;
     }
 
     // ── Stage 2: Dependency extraction ───────────────────────────────────

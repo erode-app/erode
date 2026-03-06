@@ -16,6 +16,7 @@ import type {
 } from '../analysis/analysis-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import type { ChangeRequestFile } from '../platforms/source-platform.js';
+import { selectComponentWithAI } from './resolve-component.js';
 
 export interface CheckOptions {
   /** Path to the architecture model directory. */
@@ -171,22 +172,14 @@ export async function runCheck(
   } else {
     candidateComponents = components.map((c) => ({ id: c.id, name: c.name, type: c.type }));
     p.section('Stage 1: Component Selection');
-    p.start('Asking the model to pick the best-matching component');
-    if (!provider.selectComponent) {
-      p.warn(`Provider lacks component selection, defaulting to: ${defaultComponent.name}`);
-    } else {
-      const componentId = await provider.selectComponent({
-        components,
-        files: files.map((f) => ({ filename: f.filename })),
-      });
-      if (componentId) {
-        selectedComponent = components.find((c) => c.id === componentId) ?? defaultComponent;
-        selectedComponentId = componentId;
-        p.succeed(`Chosen component: ${selectedComponent.name} (${componentId})`);
-      } else {
-        p.warn(`AI was unable to pick a component, defaulting to: ${defaultComponent.name}`);
-      }
-    }
+    selectedComponent = await selectComponentWithAI(
+      provider,
+      components,
+      files.map((f) => ({ filename: f.filename })),
+      defaultComponent,
+      p
+    );
+    selectedComponentId = selectedComponent.id;
   }
 
   // ── Stage 2: Dependency extraction ───────────────────────────────────
@@ -259,6 +252,8 @@ export async function runCheck(
         candidateComponents,
       })
     : undefined;
+
+  // Stage 4 (model patching) and publishing are intentionally omitted: check is a read-only local operation.
 
   return {
     analysisResult,

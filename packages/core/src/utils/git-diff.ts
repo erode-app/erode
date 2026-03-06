@@ -119,6 +119,11 @@ export function normaliseToHttps(remote: string): string {
   return remote.replace(/\.git$/, '');
 }
 
+/** Read the URL of a named git remote (defaults to `origin`). */
+export function getRemoteUrl(remote = 'origin', cwd?: string): string {
+  return run(['remote', 'get-url', remote], cwd ?? process.cwd());
+}
+
 /**
  * Parse the repository owner and name from a git remote URL.
  * Supports HTTPS and SSH formats.

@@ -112,5 +112,10 @@ export { resolveModelSource } from './utils/model-source.js';
 export type { ResolvedModelSource } from './utils/model-source.js';
 
 // Git diff (local check)
-export { generateGitDiff, parseRepoFromRemote, normaliseToHttps } from './utils/git-diff.js';
+export {
+  generateGitDiff,
+  parseRepoFromRemote,
+  normaliseToHttps,
+  getRemoteUrl,
+} from './utils/git-diff.js';
 export type { GitDiffOptions, GitDiffResult } from './utils/git-diff.js';

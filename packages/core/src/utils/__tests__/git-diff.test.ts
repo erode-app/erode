@@ -8,7 +8,12 @@ vi.mock('child_process', () => ({
   execFileSync: mockExecFileSync,
 }));
 
-import { parseRepoFromRemote, normaliseToHttps, generateGitDiff } from '../git-diff.js';
+import {
+  parseRepoFromRemote,
+  normaliseToHttps,
+  generateGitDiff,
+  getRemoteUrl,
+} from '../git-diff.js';
 import { ErodeError } from '../../errors.js';
 
 describe('parseRepoFromRemote', () => {
@@ -50,6 +55,11 @@ describe('parseRepoFromRemote', () => {
   it('parses GitLab SSH URL with nested groups', () => {
     const result = parseRepoFromRemote('git@gitlab.com:group/subgroup/repo.git');
     expect(result).toEqual({ owner: 'group/subgroup', repo: 'repo' });
+  });
+
+  it('parses Bitbucket HTTPS URL', () => {
+    const result = parseRepoFromRemote('https://bitbucket.org/team/repo');
+    expect(result).toEqual({ owner: 'team', repo: 'repo' });
   });
 
   it('throws on invalid URL', () => {
@@ -199,5 +209,53 @@ describe('generateGitDiff', () => {
     });
 
     expect(() => generateGitDiff()).toThrow(ErodeError);
+  });
+});
+
+describe('getRemoteUrl', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns the remote URL for origin', () => {
+    mockExecFileSync.mockReturnValue('https://github.com/org/repo.git');
+
+    expect(getRemoteUrl()).toBe('https://github.com/org/repo.git');
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      ['remote', 'get-url', 'origin'],
+      expect.objectContaining({ encoding: 'utf-8' })
+    );
+  });
+
+  it('accepts a custom remote name', () => {
+    mockExecFileSync.mockReturnValue('https://github.com/org/repo.git');
+
+    expect(getRemoteUrl('upstream')).toBe('https://github.com/org/repo.git');
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      ['remote', 'get-url', 'upstream'],
+      expect.objectContaining({ encoding: 'utf-8' })
+    );
+  });
+
+  it('passes cwd to execFileSync', () => {
+    mockExecFileSync.mockReturnValue('https://github.com/org/repo.git');
+
+    getRemoteUrl('origin', '/custom/path');
+
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      ['remote', 'get-url', 'origin'],
+      expect.objectContaining({ cwd: '/custom/path' })
+    );
+  });
+
+  it('wraps git failures as ErodeError', () => {
+    mockExecFileSync.mockImplementation(() => {
+      throw new Error('fatal: No such remote');
+    });
+
+    expect(() => getRemoteUrl()).toThrow(ErodeError);
   });
 });
