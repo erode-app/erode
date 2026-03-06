@@ -22,7 +22,7 @@ export const STRUCTURIZR_METADATA: AdapterMetadata = {
     '    url "https://github.com/org/repo"',
     '  }',
     'Multiple components can share the same URL (monorepo support).',
-    'Use "erode validate <model-path>" to verify your model.',
+    'Use "erode validate [model-path]" to verify your model.',
     'See: https://docs.structurizr.com/dsl/language#url',
   ],
   missingLinksHelpLines: [

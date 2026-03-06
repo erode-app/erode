@@ -17,7 +17,8 @@
     "dist"
   ],
   "scripts": {
-    "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\"",
+    "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\" \"npm:check:schema\"",
+    "check:schema": "tsx scripts/generate-schema.ts --check",
     "build": "tsc && npm run copy-assets",
     "copy-assets": "bash scripts/copy-assets.sh",
     "dev": "tsx watch src/ci-entry.ts",

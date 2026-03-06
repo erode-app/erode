@@ -19,7 +19,7 @@ export const LIKEC4_METADATA: AdapterMetadata = {
     'Include a link directive on a component in your LikeC4 model:',
     "  my_component = service 'My Service' { link {{repoUrl}} }",
     'Multiple components can share the same URL (monorepo support).',
-    'Use "erode validate <model-path>" to verify your model.',
+    'Use "erode validate [model-path]" to verify your model.',
     'See: https://likec4.dev/dsl/links/',
   ],
   missingLinksHelpLines: [

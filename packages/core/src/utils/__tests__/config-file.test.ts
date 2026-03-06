@@ -99,6 +99,9 @@ describe('config file support', () => {
       expect(ENV_VAR_NAMES).toHaveProperty('bitbucketToken');
       expect(ENV_VAR_NAMES).toHaveProperty('structurizrCliPath');
       expect(ENV_VAR_NAMES).toHaveProperty('modelRepoPrToken');
+      expect(ENV_VAR_NAMES).toHaveProperty('modelPath');
+      expect(ENV_VAR_NAMES).toHaveProperty('modelRepo');
+      expect(ENV_VAR_NAMES).toHaveProperty('modelRef');
     });
 
     it('should have all values prefixed with ERODE_', () => {
@@ -141,6 +144,18 @@ describe('config file support', () => {
 
     it('should map modelRepoPrToken to ERODE_MODEL_REPO_PR_TOKEN', () => {
       expect(ENV_VAR_NAMES.modelRepoPrToken).toBe('ERODE_MODEL_REPO_PR_TOKEN');
+    });
+
+    it('should map modelPath to ERODE_MODEL_PATH', () => {
+      expect(ENV_VAR_NAMES.modelPath).toBe('ERODE_MODEL_PATH');
+    });
+
+    it('should map modelRepo to ERODE_MODEL_REPO', () => {
+      expect(ENV_VAR_NAMES.modelRepo).toBe('ERODE_MODEL_REPO');
+    });
+
+    it('should map modelRef to ERODE_MODEL_REF', () => {
+      expect(ENV_VAR_NAMES.modelRef).toBe('ERODE_MODEL_REF');
     });
   });
 

@@ -54,7 +54,7 @@ export async function runConnections(
 
   if (components.length === 0) {
     p.warn(`No components found for repository: ${options.repo}`);
-    p.info('Run "erode validate <model-path>" to check which components have repository links.');
+    p.info('Run "erode validate [model-path]" to check which components have repository links.');
     return [];
   }
   p.succeed(`Found ${String(components.length)} component(s)`);

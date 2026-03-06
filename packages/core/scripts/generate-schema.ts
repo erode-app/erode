@@ -67,14 +67,34 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true });
 
   const outPath = path.join(outDir, 'eroderc.schema.json');
-  fs.writeFileSync(outPath, JSON.stringify(schema, null, 2) + '\n');
+  const json = JSON.stringify(schema, null, 2) + '\n';
+
+  // --check mode: verify committed schemas are up-to-date
+  if (process.argv.includes('--check')) {
+    const corePath = path.join(outDir, 'eroderc.schema.json');
+    const webPath = path.resolve(
+      __dirname,
+      '../../../packages/web/public/schemas/v0/eroderc.schema.json'
+    );
+    const coreContent = fs.readFileSync(corePath, 'utf-8');
+    const webContent = fs.readFileSync(webPath, 'utf-8');
+    if (coreContent !== json || webContent !== json) {
+      console.error('Schema is stale. Run `npm run generate:schema --workspace=packages/core`.');
+      process.exit(1);
+    }
+    console.log('Schema is up-to-date.');
+    return;
+  }
+
+  // Write to core/schemas
+  fs.writeFileSync(outPath, json);
   console.log(`Schema written to ${outPath}`);
 
   // Also copy to web public
-  const webDir = path.resolve(__dirname, '../../../packages/web/public/schemas');
+  const webDir = path.resolve(__dirname, '../../../packages/web/public/schemas/v0');
   fs.mkdirSync(webDir, { recursive: true });
   const webPath = path.join(webDir, 'eroderc.schema.json');
-  fs.writeFileSync(webPath, JSON.stringify(schema, null, 2) + '\n');
+  fs.writeFileSync(webPath, json);
   console.log(`Schema copied to ${webPath}`);
 }
 

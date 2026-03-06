@@ -11,11 +11,8 @@ Erode integrates with [Claude Code](https://docs.anthropic.com/en/docs/claude-co
 - An architecture model in your repository (see [Model Formats](/docs/models/))
 - An [AI provider](/docs/reference/ai-providers/) API key
 
-Install Erode globally so the skill can call it directly:
-
-```bash
-npm install -g @erode-app/cli
-```
+No global install is needed. The skill runs Erode via `npx`, which downloads
+the package on first use and caches it for subsequent runs.
 
 ## Setup
 
@@ -59,21 +56,34 @@ Do NOT run this skill for:
 
 ## How to Run
 
+Pick the right mode depending on the situation:
+
+**After writing code** (unstaged changes in the working tree):
+
 ```bash
-erode check <model-path> --format json --fail-on-violations --repo <url>
+npx @erode-app/cli check <model-path> --format json
+```
+
+**Before committing** (changes already staged with `git add`):
+
+```bash
+npx @erode-app/cli check <model-path> --format json --staged
+```
+
+**Before pushing** (all commits on the branch vs. base branch):
+
+```bash
+npx @erode-app/cli check <model-path> --format json --branch main
 ```
 
 Replace `<model-path>` with the path to the architecture model directory
 in this repository (check for directories containing `.c4` or `.dsl`
 files, commonly `architecture/`, `model/`, or `docs/architecture/`).
 
-The `--repo` flag is optional. If omitted, the repository URL is
-auto-detected from the git remote.
+Add `--fail-on-violations` when you want a non-zero exit code on drift.
 
-Use `--staged` if you are about to commit, or no flag for unstaged
-changes.
-
-The `--format json` flag returns structured output for easier parsing.
+The repository URL is auto-detected from the git remote. Use `--repo
+<url>` only if auto-detection fails.
 
 ## Interpreting Results
 
@@ -101,24 +111,25 @@ Parse the JSON output. The key fields are:
 
 ### When no violations are found
 
-Briefly confirm: "Architecture check passed — no undeclared dependencies
+Briefly confirm: "Architecture check passed, no undeclared dependencies
 detected."
 
 ## Configuration
 
-The recommended way to configure Erode is with a `.eroderc.json` file in
-the repository root. Set the AI provider and any non-secret settings there:
+Add a `.eroderc.json` file to the repository root with your provider
+and API key:
 
     {
-      "$schema": "https://erode.dev/schemas/eroderc.schema.json",
-      "ai": { "provider": "gemini" }
+      "$schema": "https://erode.dev/schemas/v0/eroderc.schema.json",
+      "ai": { "provider": "openai" },
+      "openai": { "apiKey": "sk-..." }
     }
 
-API keys should be set as environment variables (they override
-`.eroderc.json` values):
-
-- `ERODE_GEMINI_API_KEY`, `ERODE_OPENAI_API_KEY`, or
-  `ERODE_ANTHROPIC_API_KEY`
+Add `.eroderc.json` to `.gitignore` to keep credentials out of version
+control. Alternatively, set the API key as an environment variable
+(`ERODE_OPENAI_API_KEY`, `ERODE_GEMINI_API_KEY`, or
+`ERODE_ANTHROPIC_API_KEY`) and commit a `.eroderc.json` with only
+non-secret settings.
 
 See [Configuration](/docs/guides/configuration/) for the full reference.
 ````

@@ -8,6 +8,7 @@ import {
   validate,
   ErodeError,
   ErrorCode,
+  CONFIG,
 } from '@erode-app/core';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { CheckOptionsSchema } from '../utils/command-schemas.js';
@@ -17,7 +18,7 @@ import { ConsoleProgress } from '../console-progress.js';
 export function createCheckCommand(): Command {
   return new Command('check')
     .description('Check local changes for architectural drift before pushing')
-    .argument('<model-path>', 'Directory containing the architecture model files')
+    .argument('[model-path]', 'Directory containing the architecture model files')
     .option('--repo <url>', 'Repository URL (auto-detected from git remote if omitted)')
     .option('--model-format <format>', 'Format of the architecture model', 'likec4')
     .option('--staged', 'Only check staged changes')
@@ -26,7 +27,14 @@ export function createCheckCommand(): Command {
     .option('--format <format>', 'Output format (console, json)', 'console')
     .option('--fail-on-violations', 'Exit with code 1 when violations are found')
     .option('--skip-file-filtering', 'Bypass .erodeignore file patterns')
-    .action(async (modelPath: string, options: unknown) => {
+    .action(async (modelPath: string | undefined, options: unknown) => {
+      const resolvedModelPath = modelPath ?? CONFIG.adapter.modelPath;
+      if (!resolvedModelPath) {
+        throw new ErodeError(
+          'Provide <model-path> or set adapter.modelPath in .eroderc.json',
+          ErrorCode.INPUT_INVALID
+        );
+      }
       const validated = validate(CheckOptionsSchema, options, 'command options');
       const progress = validated.format === 'json' ? undefined : new ConsoleProgress();
 
@@ -69,7 +77,7 @@ export function createCheckCommand(): Command {
         // ── Run check pipeline ───────────────────────────────────────────
         const result = await runCheck(
           {
-            modelPath,
+            modelPath: resolvedModelPath,
             diff: diffResult.diff,
             repo: repoUrl,
             repoOwner: owner,

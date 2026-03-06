@@ -19,6 +19,9 @@ export const ConfigSchema = z.object({
   }),
   adapter: z.object({
     format: z.string().default('likec4'),
+    modelPath: z.string().optional(),
+    modelRepo: z.string().optional(),
+    modelRef: z.string().default('main'),
     likec4: z.object({
       excludePaths: z.array(z.string()).default([]),
       excludeTags: z.array(z.string()).default([]),
@@ -81,6 +84,9 @@ export const ENV_VAR_NAMES = {
   bitbucketToken: 'ERODE_BITBUCKET_TOKEN',
   structurizrCliPath: 'ERODE_STRUCTURIZR_CLI_PATH',
   modelRepoPrToken: 'ERODE_MODEL_REPO_PR_TOKEN',
+  modelPath: 'ERODE_MODEL_PATH',
+  modelRepo: 'ERODE_MODEL_REPO',
+  modelRef: 'ERODE_MODEL_REF',
 } as const;
 
 const ENV_MAP: Record<string, string> = {
@@ -104,6 +110,9 @@ const ENV_MAP: Record<string, string> = {
   ERODE_BITBUCKET_TOKEN: 'bitbucket.token',
   ERODE_BITBUCKET_BASE_URL: 'bitbucket.baseUrl',
   ERODE_MODEL_FORMAT: 'adapter.format',
+  ERODE_MODEL_PATH: 'adapter.modelPath',
+  ERODE_MODEL_REPO: 'adapter.modelRepo',
+  ERODE_MODEL_REF: 'adapter.modelRef',
   ERODE_MODEL_REPO_PR_TOKEN: 'github.modelRepoPrToken',
   ERODE_LIKEC4_EXCLUDE_PATHS: 'adapter.likec4.excludePaths',
   ERODE_LIKEC4_EXCLUDE_TAGS: 'adapter.likec4.excludeTags',

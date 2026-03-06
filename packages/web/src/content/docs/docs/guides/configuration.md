@@ -21,7 +21,7 @@ Create a `.eroderc.json` file in your project root or home directory:
 
 ```json
 {
-  "$schema": "https://erode.dev/schemas/eroderc.schema.json",
+  "$schema": "https://erode.dev/schemas/v0/eroderc.schema.json",
   "ai": { "provider": "gemini" },
   "gemini": { "apiKey": "AIza..." }
 }
@@ -39,6 +39,9 @@ Environment variable names map to nested JSON keys. For example:
 | `ERODE_GEMINI_API_KEY`     | `gemini.apiKey`               |
 | `ERODE_MAX_FILES_PER_DIFF` | `constraints.maxFilesPerDiff` |
 | `ERODE_MODEL_FORMAT`       | `adapter.format`              |
+| `ERODE_MODEL_PATH`         | `adapter.modelPath`           |
+| `ERODE_MODEL_REPO`         | `adapter.modelRepo`           |
+| `ERODE_MODEL_REF`          | `adapter.modelRef`            |
 
 ## AI provider
 
@@ -54,6 +57,9 @@ Environment variable names map to nested JSON keys. For example:
 | Variable                     | Description                                             | Default  |
 | ---------------------------- | ------------------------------------------------------- | -------- |
 | `ERODE_MODEL_FORMAT`         | Architecture model format (`likec4` or `structurizr`)   | `likec4` |
+| `ERODE_MODEL_PATH`           | Path to the architecture model directory                | —        |
+| `ERODE_MODEL_REPO`           | Repository URL or owner/repo containing the model       | —        |
+| `ERODE_MODEL_REF`            | Branch or tag to clone from the model repository        | `main`   |
 | `ERODE_STRUCTURIZR_CLI_PATH` | Path to the Structurizr CLI WAR file (for `.dsl` files) | —        |
 | `ERODE_LIKEC4_EXCLUDE_PATHS` | Comma-separated paths to exclude from model loading     | —        |
 | `ERODE_LIKEC4_EXCLUDE_TAGS`  | Comma-separated tags to exclude from model loading      | —        |

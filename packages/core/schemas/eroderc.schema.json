@@ -46,6 +46,16 @@
           "default": "likec4",
           "type": "string"
         },
+        "modelPath": {
+          "type": "string"
+        },
+        "modelRepo": {
+          "type": "string"
+        },
+        "modelRef": {
+          "default": "main",
+          "type": "string"
+        },
         "likec4": {
           "type": "object",
           "properties": {

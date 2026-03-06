@@ -19,7 +19,7 @@ npx @erode-app/cli --help
 
 ## Commands
 
-### `analyze <model-path>`
+### `analyze [model-path]`
 
 Analyze a change request for architecture drift.
 
@@ -62,7 +62,7 @@ erode analyze ./model --url https://bitbucket.org/workspace/repo/pull-requests/4
 Relationship removals are informational only. The PR body lists relationships that may need removal, but the reviewer must remove them manually.
 :::
 
-### `check <model-path>`
+### `check [model-path]`
 
 Check local changes for architectural drift before pushing. Uses the same AI pipeline as `analyze` (Stages 1-3) but operates on local git diffs instead of fetching PR data from a platform API.
 
@@ -95,7 +95,7 @@ erode check ./architecture --staged --fail-on-violations
 erode check ./architecture --branch main --fail-on-violations
 ```
 
-### `components <model-path>`
+### `components [model-path]`
 
 List components from an architecture model.
 
@@ -109,7 +109,7 @@ erode components ./model --format json
 | `--model-format <fmt>` | Architecture model format              | `likec4` |
 | `--format <fmt>`       | Output format: `table`, `json`, `yaml` | `table`  |
 
-### `connections <model-path>`
+### `connections [model-path]`
 
 Show component connections from an architecture model.
 
@@ -124,7 +124,7 @@ erode connections ./model --repo https://gitlab.com/group/project
 | `--model-format <fmt>` | Architecture model format        | `likec4`  |
 | `--output <fmt>`       | Output format: `console`, `json` | `console` |
 
-### `validate <model-path>`
+### `validate [model-path]`
 
 Check that all components in an architecture model have repository links.
 
