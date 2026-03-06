@@ -196,12 +196,15 @@ export function findConfigFile(): string | undefined {
   return undefined;
 }
 
+const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 export function deepMerge(
   target: Record<string, unknown>,
   source: Record<string, unknown>
 ): Record<string, unknown> {
   const result = { ...target };
   for (const key of Object.keys(source)) {
+    if (UNSAFE_KEYS.has(key)) continue;
     const srcVal = source[key];
     const tgtVal = result[key];
     if (
@@ -224,7 +227,14 @@ export function deepMerge(
 export function loadConfigFromFile(filePath: string): Record<string, unknown> {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
-    const parsed = JSON.parse(content) as Record<string, unknown>;
+    const raw: unknown = JSON.parse(content);
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      throw new ConfigurationError(
+        `Config file must contain a JSON object: ${filePath}`,
+        'configFile'
+      );
+    }
+    const parsed = raw as Record<string, unknown>;
     return deepMerge(buildConfigSkeleton(), parsed);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

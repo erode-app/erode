@@ -93,6 +93,13 @@ function buildDiffArgs(options: GitDiffOptions): string[] {
       'The --branch and --staged options are mutually exclusive. Use --branch to compare against a branch, or --staged to check only staged changes.'
     );
   }
+  if (options.branch?.startsWith('-')) {
+    throw new ErodeError(
+      'Branch name cannot start with a dash',
+      ErrorCode.INPUT_INVALID,
+      'Branch names starting with a dash could be interpreted as git flags. Use a valid branch name.'
+    );
+  }
   if (options.branch) return [`${options.branch}...HEAD`];
   if (options.staged) return ['--staged'];
   return [];
@@ -114,19 +121,34 @@ export function generateGitDiff(options: GitDiffOptions = {}): GitDiffResult {
   };
 }
 
-/** Convert SSH-style git remote URLs to HTTPS. */
+/** Convert SSH-style git remote URLs to HTTPS, stripping any embedded credentials. */
 export function normaliseToHttps(remote: string): string {
   // git@github.com:owner/repo.git → https://github.com/owner/repo
   const sshMatch = /^git@([^:]+):(.+?)(?:\.git)?$/.exec(remote);
   if (sshMatch?.[1] && sshMatch[2]) {
     return `https://${sshMatch[1]}/${sshMatch[2]}`;
   }
-  // Already HTTPS — strip trailing .git
-  return remote.replace(/\.git$/, '');
+  // HTTPS — strip credentials and trailing .git
+  try {
+    const url = new URL(remote);
+    url.username = '';
+    url.password = '';
+    url.pathname = url.pathname.replace(/\.git$/, '');
+    return url.toString().replace(/\/$/, '');
+  } catch {
+    return remote.replace(/\.git$/, '');
+  }
 }
 
 /** Read the URL of a named git remote (defaults to `origin`). */
 export function getRemoteUrl(remote = 'origin', cwd?: string): string {
+  if (remote.startsWith('-')) {
+    throw new ErodeError(
+      'Remote name cannot start with a dash',
+      ErrorCode.INPUT_INVALID,
+      'Remote names starting with a dash could be interpreted as git flags. Use a valid remote name.'
+    );
+  }
   return run(['remote', 'get-url', remote], cwd ?? process.cwd());
 }
 
