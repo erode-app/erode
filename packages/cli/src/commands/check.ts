@@ -3,7 +3,7 @@ import {
   runCheck,
   generateGitDiff,
   parseRepoFromRemote,
-  normaliseToHttps,
+  normalizeToHttps,
   getRemoteUrl,
   validate,
   ErodeError,
@@ -45,7 +45,7 @@ export function createCheckCommand(): Command {
               'Could not detect the repository URL. Make sure you are inside a git repository with an "origin" remote, or use --repo to specify the URL explicitly.'
             );
           }
-          repoUrl = normaliseToHttps(remote);
+          repoUrl = normalizeToHttps(remote);
           progress?.info(`Detected repository: ${repoUrl}`);
         }
 

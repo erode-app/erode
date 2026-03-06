@@ -10,7 +10,7 @@ export interface GitDiffOptions {
   cwd?: string;
 }
 
-interface GitDiffFile {
+export interface GitDiffFile {
   filename: string;
   status: string;
 }
@@ -20,6 +20,14 @@ export interface GitDiffResult {
   stats: { additions: number; deletions: number; filesChanged: number };
   files: GitDiffFile[];
 }
+
+const STATUS_MAP: Record<string, string> = {
+  A: 'added',
+  M: 'modified',
+  D: 'removed',
+  R: 'renamed',
+  C: 'copied',
+};
 
 function classifyGitError(message: string): ErrorCode {
   if (/not a git repository/i.test(message)) return ErrorCode.IO_DIR_NOT_FOUND;
@@ -53,14 +61,7 @@ function parseNameStatus(output: string): GitDiffFile[] {
   return output.split('\n').reduce<GitDiffFile[]>((acc, line) => {
     const match = /^([AMDRC])\d*\t(?:.+\t)?(.+)$/.exec(line);
     if (match?.[1] && match[2]) {
-      const statusMap: Record<string, string> = {
-        A: 'added',
-        M: 'modified',
-        D: 'removed',
-        R: 'renamed',
-        C: 'copied',
-      };
-      acc.push({ filename: match[2], status: statusMap[match[1]] ?? 'modified' });
+      acc.push({ filename: match[2], status: STATUS_MAP[match[1]] ?? 'modified' });
     }
     return acc;
   }, []);
@@ -144,7 +145,7 @@ export function parseFilesFromDiff(diff: string): { filename: string; status: st
 }
 
 /** Convert SSH-style git remote URLs to HTTPS, stripping any embedded credentials. */
-export function normaliseToHttps(remote: string): string {
+export function normalizeToHttps(remote: string): string {
   // git@github.com:owner/repo.git → https://github.com/owner/repo
   const sshMatch = /^git@([^:]+):(.+?)(?:\.git)?$/.exec(remote);
   if (sshMatch?.[1] && sshMatch[2]) {

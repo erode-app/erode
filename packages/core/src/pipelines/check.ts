@@ -212,6 +212,7 @@ export async function runCheck(
 function buildLocalMetadata(options: CheckOptions): ChangeRequestMetadata {
   return {
     number: 0,
+    source: 'local',
     title: 'Local changes',
     description: null,
     repository: `${options.repoOwner}/${options.repoName}`,

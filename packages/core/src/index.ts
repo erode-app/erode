@@ -115,11 +115,11 @@ export type { ResolvedModelSource } from './utils/model-source.js';
 export {
   generateGitDiff,
   parseRepoFromRemote,
-  normaliseToHttps,
+  normalizeToHttps,
   getRemoteUrl,
   parseFilesFromDiff,
 } from './utils/git-diff.js';
-export type { GitDiffOptions, GitDiffResult } from './utils/git-diff.js';
+export type { GitDiffOptions, GitDiffResult, GitDiffFile } from './utils/git-diff.js';
 
 // Pipeline shared helpers
 export {

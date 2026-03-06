@@ -21,7 +21,7 @@ function relaxSchema(obj: Record<string, unknown>): void {
   // Allow $schema key at the top level while blocking unknown keys
   const props = obj['properties'] as Record<string, Record<string, unknown>> | undefined;
   if (!props) return;
-  props['$schema'] = { type: 'string', description: 'JSON Schema reference' };
+  props['$schema'] = { type: 'string', format: 'uri', description: 'JSON Schema reference' };
 
   for (const section of Object.values(props)) {
     if (section && typeof section === 'object' && section['type'] === 'object') {
@@ -71,12 +71,11 @@ async function main() {
 
   // --check mode: verify committed schemas are up-to-date
   if (process.argv.includes('--check')) {
-    const corePath = path.join(outDir, 'eroderc.schema.json');
     const webPath = path.resolve(
       __dirname,
       '../../../packages/web/public/schemas/v0/eroderc.schema.json'
     );
-    const coreContent = fs.readFileSync(corePath, 'utf-8');
+    const coreContent = fs.readFileSync(outPath, 'utf-8');
     const webContent = fs.readFileSync(webPath, 'utf-8');
     if (coreContent !== json || webContent !== json) {
       console.error('Schema is stale. Run `npm run generate:schema --workspace=packages/core`.');

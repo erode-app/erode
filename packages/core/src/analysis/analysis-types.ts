@@ -58,6 +58,8 @@ export interface DriftViolation {
  */
 export interface ChangeRequestMetadata {
   number: number;
+  /** Discriminant: 'local' for erode check, 'pr' for erode analyze. */
+  source?: 'local' | 'pr';
   title: string;
   description: string | null;
   repository: string; // owner/repo format

@@ -10,7 +10,7 @@ vi.mock('child_process', () => ({
 
 import {
   parseRepoFromRemote,
-  normaliseToHttps,
+  normalizeToHttps,
   generateGitDiff,
   getRemoteUrl,
 } from '../git-diff.js';
@@ -71,27 +71,27 @@ describe('parseRepoFromRemote', () => {
   });
 });
 
-describe('normaliseToHttps', () => {
+describe('normalizeToHttps', () => {
   it('converts SSH URL to HTTPS', () => {
-    expect(normaliseToHttps('git@github.com:owner/repo.git')).toBe('https://github.com/owner/repo');
+    expect(normalizeToHttps('git@github.com:owner/repo.git')).toBe('https://github.com/owner/repo');
   });
 
   it('converts SSH URL without .git suffix', () => {
-    expect(normaliseToHttps('git@github.com:owner/repo')).toBe('https://github.com/owner/repo');
+    expect(normalizeToHttps('git@github.com:owner/repo')).toBe('https://github.com/owner/repo');
   });
 
   it('strips .git suffix from HTTPS URL', () => {
-    expect(normaliseToHttps('https://github.com/owner/repo.git')).toBe(
+    expect(normalizeToHttps('https://github.com/owner/repo.git')).toBe(
       'https://github.com/owner/repo'
     );
   });
 
   it('passes through plain HTTPS URL', () => {
-    expect(normaliseToHttps('https://github.com/owner/repo')).toBe('https://github.com/owner/repo');
+    expect(normalizeToHttps('https://github.com/owner/repo')).toBe('https://github.com/owner/repo');
   });
 
   it('handles GitLab SSH URLs', () => {
-    expect(normaliseToHttps('git@gitlab.com:group/project.git')).toBe(
+    expect(normalizeToHttps('git@gitlab.com:group/project.git')).toBe(
       'https://gitlab.com/group/project'
     );
   });

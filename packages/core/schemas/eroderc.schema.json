@@ -48,7 +48,11 @@
       "properties": {
         "format": {
           "default": "likec4",
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "likec4",
+            "structurizr"
+          ]
         },
         "modelPath": {
           "type": "string"
@@ -247,6 +251,7 @@
     },
     "$schema": {
       "type": "string",
+      "format": "uri",
       "description": "JSON Schema reference"
     }
   },

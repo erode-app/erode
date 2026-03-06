@@ -18,7 +18,7 @@ export const ConfigSchema = z.object({
     maxContextChars: z.number().int().min(1000).max(100000).default(10000),
   }),
   adapter: z.object({
-    format: z.string().default('likec4'),
+    format: z.enum(['likec4', 'structurizr']).default('likec4'),
     modelPath: z.string().optional(),
     modelRepo: z.string().optional(),
     modelRef: z.string().default('main'),
@@ -105,6 +105,7 @@ const ENV_MAP: Record<string, string> = {
   ERODE_OPENAI_ADVANCED_MODEL: 'openai.advancedModel',
   ERODE_GITHUB_TOKEN: 'github.token',
   ERODE_GITHUB_TIMEOUT: 'github.defaultTimeout',
+  ERODE_GITHUB_BASE_URL: 'github.baseUrl',
   ERODE_GITLAB_TOKEN: 'gitlab.token',
   ERODE_GITLAB_BASE_URL: 'gitlab.baseUrl',
   ERODE_BITBUCKET_TOKEN: 'bitbucket.token',

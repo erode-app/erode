@@ -116,7 +116,7 @@ export const PromptBuilder = {
       ? formatChangedFiles(data.files)
       : 'No file list available.';
 
-    const isLocal = changeRequest.number === 0;
+    const isLocal = changeRequest.source === 'local' || changeRequest.number === 0;
     const changeContext: ChangeContextVars = isLocal
       ? {
           label: 'local changes',
