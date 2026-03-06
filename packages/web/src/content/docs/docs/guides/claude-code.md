@@ -61,24 +61,23 @@ Pick the right mode depending on the situation:
 **After writing code** (unstaged changes in the working tree):
 
 ```bash
-npx @erode-app/cli check <model-path> --format json
+npx @erode-app/cli check --format json
 ```
 
 **Before committing** (changes already staged with `git add`):
 
 ```bash
-npx @erode-app/cli check <model-path> --format json --staged
+npx @erode-app/cli check --format json --staged
 ```
 
 **Before pushing** (all commits on the branch vs. base branch):
 
 ```bash
-npx @erode-app/cli check <model-path> --format json --branch main
+npx @erode-app/cli check --format json --branch main
 ```
 
-Replace `<model-path>` with the path to the architecture model directory
-in this repository (check for directories containing `.c4` or `.dsl`
-files, commonly `architecture/`, `model/`, or `docs/architecture/`).
+The model path is read from `.eroderc.json` (`adapter.modelPath`). Pass
+`<model-path>` as a positional argument to override it.
 
 Add `--fail-on-violations` when you want a non-zero exit code on drift.
 
@@ -116,20 +115,17 @@ detected."
 
 ## Configuration
 
-Add a `.eroderc.json` file to the repository root with your provider
-and API key:
+Add a `.eroderc.json` file to the repository root:
 
     {
       "$schema": "https://erode.dev/schemas/v0/eroderc.schema.json",
-      "ai": { "provider": "openai" },
-      "openai": { "apiKey": "sk-..." }
+      "ai": { "provider": "gemini" },
+      "adapter": { "modelPath": "./architecture" }
     }
 
-Add `.eroderc.json` to `.gitignore` to keep credentials out of version
-control. Alternatively, set the API key as an environment variable
-(`ERODE_OPENAI_API_KEY`, `ERODE_GEMINI_API_KEY`, or
-`ERODE_ANTHROPIC_API_KEY`) and commit a `.eroderc.json` with only
-non-secret settings.
+Set API keys via environment variables (`ERODE_GEMINI_API_KEY`,
+`ERODE_OPENAI_API_KEY`, or `ERODE_ANTHROPIC_API_KEY`), not in
+`.eroderc.json`. This way the config file can be committed safely.
 
 See [Configuration](/docs/guides/configuration/) for the full reference.
 ````
@@ -162,7 +158,7 @@ For automatic checking after every code edit, add a [PostToolUse hook](https://d
         "hooks": [
           {
             "type": "command",
-            "command": "if jq -re '.tool_input.file_path // .tool_input.filePath // empty' | grep -qE '\\.(ts|js|py|go|java|rs)$'; then npx @erode-app/cli check ./architecture --format json 2>&1; fi"
+            "command": "if jq -re '.tool_input.file_path // .tool_input.filePath // empty' | grep -qE '\\.(ts|js|py|go|java|rs)$'; then npx @erode-app/cli check --format json 2>&1; fi"
           }
         ]
       }
@@ -171,7 +167,7 @@ For automatic checking after every code edit, add a [PostToolUse hook](https://d
 }
 ```
 
-Replace `./architecture` with your model path. This runs `erode check` after every edit to a source file and feeds the output back to Claude Code.
+This runs `erode check` after every edit to a source file and feeds the output back to Claude Code.
 
 :::caution
 The hook approach runs on every edit, which triggers multiple AI API calls each time. This adds up quickly during active sessions. The skill approach above is recommended for most users — it only runs when Claude Code judges that new integrations were introduced.

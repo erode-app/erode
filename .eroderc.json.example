@@ -6,8 +6,5 @@
   "adapter": {
     "format": "likec4",
     "modelPath": "./architecture"
-  },
-  "github": {
-    "token": ""
   }
 }
