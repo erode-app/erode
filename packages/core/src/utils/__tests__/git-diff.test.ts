@@ -13,8 +13,10 @@ import {
   normalizeToHttps,
   generateGitDiff,
   getRemoteUrl,
+  parseFilesFromDiff,
+  filterDiffByFiles,
 } from '../git-diff.js';
-import { ErodeError } from '../../errors.js';
+import { ErodeError, ErrorCode } from '../../errors.js';
 
 describe('parseRepoFromRemote', () => {
   it('parses HTTPS URL', () => {
@@ -93,6 +95,18 @@ describe('normalizeToHttps', () => {
   it('handles GitLab SSH URLs', () => {
     expect(normalizeToHttps('git@gitlab.com:group/project.git')).toBe(
       'https://gitlab.com/group/project'
+    );
+  });
+
+  it('strips credentials from HTTPS URL', () => {
+    expect(normalizeToHttps('https://user:token@github.com/owner/repo.git')).toBe(
+      'https://github.com/owner/repo'
+    );
+  });
+
+  it('strips username-only credentials from HTTPS URL', () => {
+    expect(normalizeToHttps('https://user@github.com/owner/repo.git')).toBe(
+      'https://github.com/owner/repo'
     );
   });
 });
@@ -191,6 +205,39 @@ describe('generateGitDiff', () => {
     );
   });
 
+  it('throws when branch starts with a dash', () => {
+    expect(() => generateGitDiff({ branch: '--exec=malicious' })).toThrow(ErodeError);
+    expect(() => generateGitDiff({ branch: '--exec=malicious' })).toThrow(
+      'Branch name cannot start with a dash'
+    );
+  });
+
+  it('classifies permission denied errors', () => {
+    mockExecFileSync.mockImplementation(() => {
+      throw new Error('error: permission denied');
+    });
+
+    try {
+      generateGitDiff();
+    } catch (err) {
+      expect(err).toBeInstanceOf(ErodeError);
+      expect((err as ErodeError).code).toBe(ErrorCode.IO_PERMISSION_DENIED);
+    }
+  });
+
+  it('classifies generic git errors as IO_EXEC_FAILED', () => {
+    mockExecFileSync.mockImplementation(() => {
+      throw new Error('some unknown git error');
+    });
+
+    try {
+      generateGitDiff();
+    } catch (err) {
+      expect(err).toBeInstanceOf(ErodeError);
+      expect((err as ErodeError).code).toBe(ErrorCode.IO_EXEC_FAILED);
+    }
+  });
+
   it('passes cwd to execFileSync', () => {
     mockExecFileSync.mockReturnValue('');
 
@@ -257,5 +304,96 @@ describe('getRemoteUrl', () => {
     });
 
     expect(() => getRemoteUrl()).toThrow(ErodeError);
+  });
+
+  it('throws when remote name starts with a dash', () => {
+    expect(() => getRemoteUrl('--upload-pack=malicious')).toThrow(ErodeError);
+    expect(() => getRemoteUrl('--upload-pack=malicious')).toThrow(
+      'Remote name cannot start with a dash'
+    );
+  });
+});
+
+describe('parseFilesFromDiff', () => {
+  it('extracts filenames from multi-file diff', () => {
+    const diff = [
+      'diff --git a/src/index.ts b/src/index.ts',
+      '--- a/src/index.ts',
+      '+++ b/src/index.ts',
+      '@@ -1 +1,2 @@',
+      '+import { foo } from "./foo";',
+      'diff --git a/src/foo.ts b/src/foo.ts',
+      '--- /dev/null',
+      '+++ b/src/foo.ts',
+      '@@ -0,0 +1 @@',
+      '+export const foo = 1;',
+    ].join('\n');
+
+    const result = parseFilesFromDiff(diff);
+
+    expect(result).toEqual([
+      { filename: 'src/index.ts', status: 'modified' },
+      { filename: 'src/foo.ts', status: 'modified' },
+    ]);
+  });
+
+  it('deduplicates files appearing multiple times', () => {
+    const diff = [
+      'diff --git a/src/a.ts b/src/a.ts',
+      '+line1',
+      'diff --git a/src/a.ts b/src/a.ts',
+      '+line2',
+    ].join('\n');
+
+    const result = parseFilesFromDiff(diff);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.filename).toBe('src/a.ts');
+  });
+
+  it('handles renamed files (b/ path)', () => {
+    const diff = 'diff --git a/old-name.ts b/new-name.ts\n--- a/old-name.ts\n+++ b/new-name.ts';
+
+    const result = parseFilesFromDiff(diff);
+
+    expect(result).toEqual([{ filename: 'new-name.ts', status: 'modified' }]);
+  });
+
+  it('returns empty array for empty diff', () => {
+    expect(parseFilesFromDiff('')).toEqual([]);
+  });
+
+  it('returns empty array for diff without git headers', () => {
+    expect(parseFilesFromDiff('just some text\nno diff headers')).toEqual([]);
+  });
+});
+
+describe('filterDiffByFiles', () => {
+  it('filters diff to only include specified files', () => {
+    const diff = [
+      'diff --git a/src/keep.ts b/src/keep.ts',
+      '--- a/src/keep.ts',
+      '+++ b/src/keep.ts',
+      '@@ -1 +1,2 @@',
+      '+kept line',
+      'diff --git a/src/exclude.ts b/src/exclude.ts',
+      '--- a/src/exclude.ts',
+      '+++ b/src/exclude.ts',
+      '@@ -1 +1,2 @@',
+      '+excluded line',
+    ].join('\n');
+
+    const result = filterDiffByFiles(diff, [{ filename: 'src/keep.ts' }]);
+
+    expect(result).toContain('src/keep.ts');
+    expect(result).not.toContain('src/exclude.ts');
+  });
+
+  it('returns empty string for empty diff', () => {
+    expect(filterDiffByFiles('', [{ filename: 'a.ts' }])).toBe('');
+  });
+
+  it('returns empty string for empty file list', () => {
+    expect(filterDiffByFiles('diff --git a/a.ts b/a.ts\n+line', [])).toBe('');
   });
 });

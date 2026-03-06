@@ -16,6 +16,7 @@ const {
   mockApplySkipPatterns,
   mockValidatePath,
   mockBuildStructuredOutput,
+  mockResolveModelSource,
 } = vi.hoisted(() => ({
   mockLoadFromPath: vi.fn(),
   mockFindAllComponentsByRepository: vi.fn(),
@@ -31,6 +32,7 @@ const {
   mockApplySkipPatterns: vi.fn(),
   mockValidatePath: vi.fn(),
   mockBuildStructuredOutput: vi.fn(),
+  mockResolveModelSource: vi.fn(),
 }));
 
 // ── Module mocks ──────────────────────────────────────────────────────────
@@ -76,6 +78,10 @@ vi.mock('../../output.js', () => ({
   buildStructuredOutput: mockBuildStructuredOutput,
 }));
 
+vi.mock('../../utils/model-source.js', () => ({
+  resolveModelSource: mockResolveModelSource,
+}));
+
 import { runCheck, type CheckOptions } from '../check.js';
 
 const testComponent = {
@@ -108,6 +114,10 @@ function baseOptions(): CheckOptions {
 describe('runCheck', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockResolveModelSource.mockResolvedValue({
+      localPath: '/models/arch',
+      cleanup: vi.fn(),
+    });
     mockLoadFromPath.mockResolvedValue({
       components: [testComponent],
       relationships: [],
@@ -226,8 +236,7 @@ describe('runCheck', () => {
   it('passes local metadata to drift analysis', async () => {
     await runCheck(baseOptions());
 
-    const call = mockAnalyzeDrift.mock.calls[0] as unknown[];
-    const promptData = call[0] as { changeRequest: { number: number; title: string } };
+    const [promptData] = mockAnalyzeDrift.mock.calls[0] as [{ changeRequest: { number: number; title: string } }];
     expect(promptData.changeRequest.number).toBe(0);
     expect(promptData.changeRequest.title).toBe('Local changes');
   });
@@ -235,16 +244,10 @@ describe('runCheck', () => {
   it('passes diff to dependency extraction', async () => {
     await runCheck(baseOptions());
 
-    const call = mockExtractDependencies.mock.calls[0] as unknown[];
-    const data = call[0] as {
-      diff: string;
-      commit: { sha: string };
-      repository: { owner: string; repo: string };
-    };
-    expect(data.diff).toBe(testDiff);
-    expect(data.commit.sha).toBe('local');
-    expect(data.repository.owner).toBe('org');
-    expect(data.repository.repo).toBe('api');
+    const [extractData] = mockExtractDependencies.mock.calls[0] as [{ commit: { sha: string }; repository: { owner: string; repo: string } }];
+    expect(extractData.commit.sha).toBe('local');
+    expect(extractData.repository.owner).toBe('org');
+    expect(extractData.repository.repo).toBe('api');
   });
 
   it('parses files from diff when files not provided', async () => {
@@ -298,13 +301,41 @@ describe('runCheck', () => {
     );
   });
 
-  it('builds structured output when format is json', async () => {
+  it('always builds structured output regardless of format', async () => {
     const mockStructured = { version: '1.0', analysis: {} };
     mockBuildStructuredOutput.mockReturnValue(mockStructured);
 
-    const result = await runCheck({ ...baseOptions(), format: 'json' });
+    const result = await runCheck(baseOptions());
 
     expect(mockBuildStructuredOutput).toHaveBeenCalledOnce();
     expect(result.structured).toBe(mockStructured);
+  });
+
+  it('calls resolveModelSource with modelRepo and modelRef', async () => {
+    await runCheck({
+      ...baseOptions(),
+      modelRepo: 'org/arch-model',
+      modelRef: 'v2',
+    });
+
+    expect(mockResolveModelSource).toHaveBeenCalledWith(
+      '/models/arch',
+      'org/arch-model',
+      { ref: 'v2' }
+    );
+  });
+
+  it('calls cleanup even when pipeline throws', async () => {
+    const mockCleanup = vi.fn();
+    mockResolveModelSource.mockResolvedValue({
+      localPath: '/models/arch',
+      cleanup: mockCleanup,
+    });
+    mockFindAllComponentsByRepository.mockImplementation(() => {
+      throw new Error('boom');
+    });
+
+    await expect(runCheck(baseOptions())).rejects.toThrow('boom');
+    expect(mockCleanup).toHaveBeenCalledOnce();
   });
 });

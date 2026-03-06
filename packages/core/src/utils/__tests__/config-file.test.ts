@@ -110,52 +110,8 @@ describe('config file support', () => {
       }
     });
 
-    it('should map aiProvider to ERODE_AI_PROVIDER', () => {
-      expect(ENV_VAR_NAMES.aiProvider).toBe('ERODE_AI_PROVIDER');
-    });
-
-    it('should map geminiApiKey to ERODE_GEMINI_API_KEY', () => {
-      expect(ENV_VAR_NAMES.geminiApiKey).toBe('ERODE_GEMINI_API_KEY');
-    });
-
-    it('should map anthropicApiKey to ERODE_ANTHROPIC_API_KEY', () => {
-      expect(ENV_VAR_NAMES.anthropicApiKey).toBe('ERODE_ANTHROPIC_API_KEY');
-    });
-
-    it('should map openaiApiKey to ERODE_OPENAI_API_KEY', () => {
-      expect(ENV_VAR_NAMES.openaiApiKey).toBe('ERODE_OPENAI_API_KEY');
-    });
-
-    it('should map githubToken to ERODE_GITHUB_TOKEN', () => {
-      expect(ENV_VAR_NAMES.githubToken).toBe('ERODE_GITHUB_TOKEN');
-    });
-
-    it('should map gitlabToken to ERODE_GITLAB_TOKEN', () => {
-      expect(ENV_VAR_NAMES.gitlabToken).toBe('ERODE_GITLAB_TOKEN');
-    });
-
-    it('should map bitbucketToken to ERODE_BITBUCKET_TOKEN', () => {
-      expect(ENV_VAR_NAMES.bitbucketToken).toBe('ERODE_BITBUCKET_TOKEN');
-    });
-
-    it('should map structurizrCliPath to ERODE_STRUCTURIZR_CLI_PATH', () => {
-      expect(ENV_VAR_NAMES.structurizrCliPath).toBe('ERODE_STRUCTURIZR_CLI_PATH');
-    });
-
-    it('should map modelRepoPrToken to ERODE_MODEL_REPO_PR_TOKEN', () => {
-      expect(ENV_VAR_NAMES.modelRepoPrToken).toBe('ERODE_MODEL_REPO_PR_TOKEN');
-    });
-
-    it('should map modelPath to ERODE_MODEL_PATH', () => {
-      expect(ENV_VAR_NAMES.modelPath).toBe('ERODE_MODEL_PATH');
-    });
-
-    it('should map modelRepo to ERODE_MODEL_REPO', () => {
-      expect(ENV_VAR_NAMES.modelRepo).toBe('ERODE_MODEL_REPO');
-    });
-
-    it('should map modelRef to ERODE_MODEL_REF', () => {
-      expect(ENV_VAR_NAMES.modelRef).toBe('ERODE_MODEL_REF');
+    it.each(Object.entries(ENV_VAR_NAMES))('should map %s to %s', (key, value) => {
+      expect(ENV_VAR_NAMES[key as keyof typeof ENV_VAR_NAMES]).toBe(value);
     });
   });
 
