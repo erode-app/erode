@@ -7,7 +7,7 @@ head:
       src: /architecture/likec4-views.js
 ---
 
-Erode uses a multi-stage AI pipeline to analyze pull requests and local changes for architecture drift. Cheaper, faster models handle extraction and routing, while stronger models handle the analysis. The same pipeline powers both `erode analyze` (PR review) and `erode check` (local pre-push detection).
+Erode uses a multi-stage AI pipeline to analyze code changes for architecture drift. Cheaper, faster models handle extraction and routing, while stronger models handle the analysis. The same pipeline powers both `erode analyze` (code review) and `erode check` (local pre-push detection).
 
 <div class="likec4-embed">
 <likec4-view view-id="pipeline-stages" browser="true" dynamic-variant="sequence"></likec4-view>
@@ -17,7 +17,7 @@ Erode uses a multi-stage AI pipeline to analyze pull requests and local changes 
 
 ## File filtering
 
-Before any AI stage runs, Erode filters the diff to remove files that are irrelevant to architecture analysis. Erode strips out tests, documentation, lock files, build config, CI config, and build output automatically. This reduces noise and saves API usage. This applies to both PR diffs (`analyze`) and local diffs (`check`).
+Before any AI stage runs, Erode filters the diff to remove files that are irrelevant to architecture analysis. Erode strips out tests, documentation, lock files, build config, CI config, and build output automatically. This reduces noise and saves API usage. This applies to both code diffs (`analyze`) and local diffs (`check`).
 
 The built-in skip patterns cover:
 
@@ -32,13 +32,13 @@ To analyze all files regardless of these patterns, set `skip-file-filtering: 'tr
 
 ## Stage 1 -- Resolve
 
-When a repository maps to multiple components in the architecture model, Erode uses AI to determine which component is most relevant to the pull request. This stage uses a cheaper model (Haiku for Anthropic, Mini for OpenAI, Flash for Gemini) to keep costs low.
+When a repository maps to multiple components in the architecture model, Erode uses AI to determine which component is most relevant to the code change. This stage uses a cheaper model (Haiku for Anthropic, Mini for OpenAI, Flash for Gemini) to keep costs low.
 
 This stage is skipped entirely when the repository maps to a single component.
 
 ## Stage 2 -- Scan
 
-The diff (from a PR or local working tree) is fed to a fast model that extracts dependency changes and new integrations. The output is a structured list of added, removed, or modified dependencies found in the code changes.
+The diff (from a code change or local working tree) is fed to a fast model that extracts dependency changes and new integrations. The output is a structured list of added, removed, or modified dependencies found in the code changes.
 
 This keeps the analysis stage focused on dependency changes rather than the full diff.
 
@@ -58,7 +58,7 @@ This stage is skipped when neither flag is set or when Stage 3 produces no relat
 
 ## Publish
 
-After analysis, the pipeline publishes results: creating a PR with model updates (`--open-pr`), posting a comment on the source PR (`--comment`), or writing GitHub Actions outputs (`--github-actions`). See [Analysis Pipeline](/docs/reference/analysis-pipeline/) for details.
+After analysis, the pipeline publishes results: proposing model updates (`--open-pr`), posting a comment on the source code change (`--comment`), or writing GitHub Actions outputs (`--github-actions`). See [Analysis Pipeline](/docs/reference/analysis-pipeline/) for details.
 
 ## Prompt templates
 

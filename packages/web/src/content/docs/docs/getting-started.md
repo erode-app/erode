@@ -3,11 +3,11 @@ title: Getting Started
 description: Set up Erode in your CI pipeline in under five minutes.
 ---
 
-Erode detects architecture drift by comparing pull requests against your architecture model. When a PR introduces an undeclared dependency, Erode surfaces it as a finding and comments directly on the pull request.
+Erode detects architecture drift by comparing code changes against your architecture model. When a change introduces an undeclared dependency, Erode surfaces it as a finding and comments directly on the code change.
 
 ## Prerequisites
 
-- A **repository** with pull requests (this guide uses GitHub Actions — see [CI Integration](/docs/ci/) for GitLab, Bitbucket, and other platforms)
+- A **repository** with code review enabled (this guide uses GitHub Actions — see [CI Integration](/docs/ci/) for GitLab, Bitbucket, and other platforms)
 - An **architecture model** describing your system (see [Model Formats](/docs/models/))
 - An **API key** for [Gemini, OpenAI, or Anthropic](/docs/reference/ai-providers/)
 
@@ -40,9 +40,9 @@ jobs:
 
 Replace `your-org/architecture` with the repository that contains your architecture model. The action clones the model repo automatically — no `actions/checkout` step is needed.
 
-### 3. Open a pull request
+### 3. Open a code change
 
-Erode runs on every PR and posts a comment listing any undeclared dependencies, their severity, and how to fix them. If Erode finds no drift, it confirms the PR aligns with the declared architecture.
+Erode runs on every code change and posts a comment listing any undeclared dependencies, their severity, and how to fix them. If Erode finds no drift, it confirms the change aligns with the declared architecture.
 
 ## Try the example project
 
@@ -52,7 +52,7 @@ To try it yourself:
 
 1. [Fork the repository](https://github.com/erode-app/playground/fork)
 2. Add your `GEMINI_API_KEY` (or another [AI provider](/docs/reference/ai-providers/) key) as a repository secret
-3. Open a PR that introduces an undeclared dependency
+3. Open a change that introduces an undeclared dependency
 
 Or browse the existing example PRs to see Erode's output without any setup:
 

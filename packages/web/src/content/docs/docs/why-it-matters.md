@@ -29,7 +29,7 @@ Architecture has traditionally been something owned by a small group: a handful 
 senior engineers or an architecture board that maintains the diagrams and reviews
 proposals. That creates a bottleneck. When only a few people can read or update the
 model, everyone else works around it. Treating the model as code, in a repository,
-with pull requests and review, makes it something the whole team can contribute to.
+with version control and review, makes it something the whole team can contribute to.
 
 > The people closest to the code are often the first to know when the architecture
 > shifts. Let them say so.
@@ -40,7 +40,7 @@ Architecture models do not die because people stop valuing them. They die becaus
 keeping them updated is a manual process disconnected from the work that changes the
 architecture.
 
-You finish a feature, push your PR, move on. Updating the diagram is a separate chore
+You finish a feature, push your changes, move on. Updating the diagram is a separate chore
 in a separate tool. Nobody does it.
 
 > The gap grows until trust collapses and the model becomes fiction.
@@ -64,7 +64,7 @@ This is not a flaw in the tooling.
 > Agents are doing exactly what they are good at: accomplishing the task at hand.
 > The gap was always there. AI just widens it faster.
 
-More PRs, more features, more refactors, shipped at a pace that makes manual
+More changes, more features, more refactors, shipped at a pace that makes manual
 structural review impractical.
 
 The answer is not to slow down. It is to check automatically what humans can no longer review by hand.
@@ -91,7 +91,7 @@ Start there. You can always add detail where it earns its keep.
 
 ## Closing the loop
 
-Erode checks every pull request against the declared architecture and flags what does
+Erode checks every code change against the declared architecture and flags what does
 not match. Drift gets caught where it is introduced, during code review, before it
 merges.
 
@@ -99,14 +99,14 @@ merges.
 > are a natural part of that.
 
 What matters is that the change is visible. Someone can
-look at the PR and see not just the code diff but the architectural diff. Sometimes
+look at the change and see not just the code diff but the architectural diff. Sometimes
 the right response is to update the model. Sometimes it is to rethink the approach.
 Either way, the decision is conscious and documented, not something that happened by
 accident six months ago.
 
 ## The cost of not paying attention
 
-Nobody wakes up one morning and decides to build a distributed monolith. It happens one PR at a time.
+Nobody wakes up one morning and decides to build a distributed monolith. It happens one change at a time.
 
 A frontend starts calling a backend directly instead of going
 through the gateway. A shared library quietly becomes a dependency of every service.
@@ -118,7 +118,7 @@ supposed to talk to each other. Or onboarding someone who cannot figure out why
 deploying one service breaks three others. The architecture you thought you had is not
 the architecture you are running. By then, untangling it is a project in itself.
 
-Paying a little attention on every PR is cheap. Paying a lot of attention after the
+Paying a little attention on every change is cheap. Paying a lot of attention after the
 fact is not.
 
 > Erode does not exist to enforce rules or block merges. It exists to make people
