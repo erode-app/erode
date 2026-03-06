@@ -10,7 +10,11 @@
         "provider": {
           "default": "gemini",
           "type": "string",
-          "enum": ["gemini", "anthropic", "openai"]
+          "enum": [
+            "gemini",
+            "anthropic",
+            "openai"
+          ]
         }
       },
       "additionalProperties": false
