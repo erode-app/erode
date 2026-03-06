@@ -1,6 +1,7 @@
 import { Command } from 'commander';
-import { runAnalyze, validate, ErodeError, ErrorCode, CONFIG } from '@erode-app/core';
+import { runAnalyze, validate, CONFIG } from '@erode-app/core';
 import { ErrorHandler } from '../utils/error-handler.js';
+import { resolveModelPath } from '../utils/resolve-model-path.js';
 import { AnalyzeOptionsSchema } from '../utils/command-schemas.js';
 import { OutputFormatter } from '../utils/cli-helpers.js';
 import { ConsoleProgress } from '../console-progress.js';
@@ -24,17 +25,11 @@ export function createAnalyzeCommand(): Command {
     .option('--github-actions', 'Emit GitHub Actions outputs and step summary')
     .option('--fail-on-violations', 'Return a non-zero exit code if violations exist')
     .action(async (modelPath: string | undefined, options: unknown) => {
-      const validated = validate(AnalyzeOptionsSchema, options, 'command options');
-      const resolvedModelPath = modelPath ?? CONFIG.adapter.modelPath;
-      if (!resolvedModelPath) {
-        throw new ErodeError(
-          'Provide <model-path> or set adapter.modelPath in .eroderc.json',
-          ErrorCode.INPUT_INVALID
-        );
-      }
-      const progress = validated.format === 'json' ? undefined : new ConsoleProgress();
-
       try {
+        const validated = validate(AnalyzeOptionsSchema, options, 'command options');
+        const resolvedModelPath = resolveModelPath(modelPath);
+        const progress = validated.format === 'json' ? undefined : new ConsoleProgress();
+
         const result = await runAnalyze(
           {
             modelPath: resolvedModelPath,

@@ -8,9 +8,9 @@ import {
   validate,
   ErodeError,
   ErrorCode,
-  CONFIG,
 } from '@erode-app/core';
 import { ErrorHandler } from '../utils/error-handler.js';
+import { resolveModelPath } from '../utils/resolve-model-path.js';
 import { CheckOptionsSchema } from '../utils/command-schemas.js';
 import { OutputFormatter } from '../utils/cli-helpers.js';
 import { ConsoleProgress } from '../console-progress.js';
@@ -28,17 +28,10 @@ export function createCheckCommand(): Command {
     .option('--fail-on-violations', 'Exit with code 1 when violations are found')
     .option('--skip-file-filtering', 'Bypass .erodeignore file patterns')
     .action(async (modelPath: string | undefined, options: unknown) => {
-      const resolvedModelPath = modelPath ?? CONFIG.adapter.modelPath;
-      if (!resolvedModelPath) {
-        throw new ErodeError(
-          'Provide <model-path> or set adapter.modelPath in .eroderc.json',
-          ErrorCode.INPUT_INVALID
-        );
-      }
-      const validated = validate(CheckOptionsSchema, options, 'command options');
-      const progress = validated.format === 'json' ? undefined : new ConsoleProgress();
-
       try {
+        const resolvedModelPath = resolveModelPath(modelPath);
+        const validated = validate(CheckOptionsSchema, options, 'command options');
+        const progress = validated.format === 'json' ? undefined : new ConsoleProgress();
         // ── Resolve repository URL ───────────────────────────────────────
         let repoUrl = validated.repo;
         if (!repoUrl) {

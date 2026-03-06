@@ -153,7 +153,6 @@ export async function runCheck(
 
   // ── Stage 1: Component selection ─────────────────────────────────────
   let selectedComponent: ArchitecturalComponent = defaultComponent;
-  let selectedComponentId: string | undefined;
   let candidateComponents: { id: string; name: string; type: string }[] | undefined;
 
   if (options.componentId) {
@@ -166,10 +165,7 @@ export async function runCheck(
       );
     }
     selectedComponent = found;
-    selectedComponentId = options.componentId;
-  } else if (components.length === 1) {
-    selectedComponentId = defaultComponent.id;
-  } else {
+  } else if (components.length > 1) {
     candidateComponents = components.map((c) => ({ id: c.id, name: c.name, type: c.type }));
     p.section('Stage 1: Component Selection');
     selectedComponent = await selectComponentWithAI(
@@ -179,8 +175,9 @@ export async function runCheck(
       defaultComponent,
       p
     );
-    selectedComponentId = selectedComponent.id;
   }
+
+  const selectedComponentId = selectedComponent.id;
 
   // ── Stage 2: Dependency extraction ───────────────────────────────────
   p.section('Stage 2: Extract Dependencies');

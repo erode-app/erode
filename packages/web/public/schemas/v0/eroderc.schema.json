@@ -244,6 +244,11 @@
         }
       },
       "additionalProperties": false
+    },
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
     }
-  }
+  },
+  "additionalProperties": false
 }

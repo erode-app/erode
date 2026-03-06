@@ -21,6 +21,12 @@ export interface GitDiffResult {
   files: GitDiffFile[];
 }
 
+function classifyGitError(message: string): ErrorCode {
+  if (/not a git repository/i.test(message)) return ErrorCode.IO_DIR_NOT_FOUND;
+  if (/permission denied/i.test(message)) return ErrorCode.IO_PERMISSION_DENIED;
+  return ErrorCode.IO_EXEC_FAILED;
+}
+
 function run(args: string[], cwd: string): string {
   try {
     return execFileSync('git', args, {
@@ -32,7 +38,7 @@ function run(args: string[], cwd: string): string {
     const message = error instanceof Error ? error.message : String(error);
     throw new ErodeError(
       `Git command failed: git ${args.join(' ')}`,
-      ErrorCode.IO_FILE_NOT_FOUND,
+      classifyGitError(message),
       `Could not run git command. Make sure you are inside a git repository.\n${message}`
     );
   }

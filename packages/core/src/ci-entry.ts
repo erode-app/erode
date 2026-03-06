@@ -7,8 +7,8 @@ import { CONFIG } from './utils/config.js';
 
 function parseArgs(argv: string[]): AnalyzeOptions {
   const args = argv.slice(2);
-  // args[0] = 'analyze', args[1] = modelPath
-  const modelPath = args[1] ?? CONFIG.adapter.modelPath;
+  // args[0] = 'analyze', args[1] = modelPath (skip if it looks like a flag)
+  const modelPath = args[1] && !args[1].startsWith('-') ? args[1] : CONFIG.adapter.modelPath;
   if (!modelPath) {
     console.error('Usage: erode-ci analyze [model-path] --url <url> [flags]');
     process.exit(2);

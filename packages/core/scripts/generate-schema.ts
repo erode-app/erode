@@ -17,11 +17,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 function relaxSchema(obj: Record<string, unknown>): void {
   // Remove top-level required (all sections are optional)
   delete obj['required'];
-  // Allow $schema key at the top level
-  delete obj['additionalProperties'];
 
+  // Allow $schema key at the top level while blocking unknown keys
   const props = obj['properties'] as Record<string, Record<string, unknown>> | undefined;
   if (!props) return;
+  props['$schema'] = { type: 'string', description: 'JSON Schema reference' };
 
   for (const section of Object.values(props)) {
     if (section && typeof section === 'object' && section['type'] === 'object') {
