@@ -1,5 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { parseRepoFromRemote } from '../git-diff.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const { mockExecSync } = vi.hoisted(() => ({
+  mockExecSync: vi.fn(),
+}));
+
+vi.mock('child_process', () => ({
+  execSync: mockExecSync,
+}));
+
+import { parseRepoFromRemote, normaliseToHttps, generateGitDiff } from '../git-diff.js';
 import { ErodeError } from '../../errors.js';
 
 describe('parseRepoFromRemote', () => {
@@ -39,5 +48,147 @@ describe('parseRepoFromRemote', () => {
 
   it('throws on empty string', () => {
     expect(() => parseRepoFromRemote('')).toThrow(ErodeError);
+  });
+});
+
+describe('normaliseToHttps', () => {
+  it('converts SSH URL to HTTPS', () => {
+    expect(normaliseToHttps('git@github.com:owner/repo.git')).toBe(
+      'https://github.com/owner/repo'
+    );
+  });
+
+  it('converts SSH URL without .git suffix', () => {
+    expect(normaliseToHttps('git@github.com:owner/repo')).toBe('https://github.com/owner/repo');
+  });
+
+  it('strips .git suffix from HTTPS URL', () => {
+    expect(normaliseToHttps('https://github.com/owner/repo.git')).toBe(
+      'https://github.com/owner/repo'
+    );
+  });
+
+  it('passes through plain HTTPS URL', () => {
+    expect(normaliseToHttps('https://github.com/owner/repo')).toBe(
+      'https://github.com/owner/repo'
+    );
+  });
+
+  it('handles GitLab SSH URLs', () => {
+    expect(normaliseToHttps('git@gitlab.com:group/project.git')).toBe(
+      'https://gitlab.com/group/project'
+    );
+  });
+});
+
+describe('generateGitDiff', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns empty result for clean working tree', () => {
+    mockExecSync.mockReturnValue('');
+
+    const result = generateGitDiff();
+
+    expect(result.diff).toBe('');
+    expect(result.files).toEqual([]);
+    expect(result.stats).toEqual({ additions: 0, deletions: 0, filesChanged: 0 });
+  });
+
+  it('parses name-status output for all statuses', () => {
+    mockExecSync.mockImplementation((cmd: string) => {
+      if (cmd.includes('--name-status')) {
+        return 'A\tsrc/new.ts\nM\tsrc/modified.ts\nD\tsrc/deleted.ts\nR100\tsrc/renamed.ts\nC100\tsrc/copied.ts\n';
+      }
+      if (cmd.includes('--shortstat')) {
+        return ' 5 files changed, 20 insertions(+), 3 deletions(-)';
+      }
+      return 'diff content';
+    });
+
+    const result = generateGitDiff();
+
+    expect(result.files).toEqual([
+      { filename: 'src/new.ts', status: 'added' },
+      { filename: 'src/modified.ts', status: 'modified' },
+      { filename: 'src/deleted.ts', status: 'removed' },
+      { filename: 'src/renamed.ts', status: 'renamed' },
+      { filename: 'src/copied.ts', status: 'copied' },
+    ]);
+  });
+
+  it('parses shortstat output', () => {
+    mockExecSync.mockImplementation((cmd: string) => {
+      if (cmd.includes('--shortstat')) {
+        return ' 3 files changed, 12 insertions(+), 5 deletions(-)';
+      }
+      return '';
+    });
+
+    const result = generateGitDiff();
+
+    expect(result.stats).toEqual({ additions: 12, deletions: 5, filesChanged: 3 });
+  });
+
+  it('handles shortstat with only insertions', () => {
+    mockExecSync.mockImplementation((cmd: string) => {
+      if (cmd.includes('--shortstat')) {
+        return ' 1 file changed, 7 insertions(+)';
+      }
+      return '';
+    });
+
+    const result = generateGitDiff();
+
+    expect(result.stats).toEqual({ additions: 7, deletions: 0, filesChanged: 1 });
+  });
+
+  it('passes --staged flag to git diff', () => {
+    mockExecSync.mockReturnValue('');
+
+    generateGitDiff({ staged: true });
+
+    expect(mockExecSync).toHaveBeenCalledWith(
+      'git diff --staged',
+      expect.objectContaining({ encoding: 'utf-8' })
+    );
+  });
+
+  it('passes branch arg as three-dot diff', () => {
+    mockExecSync.mockReturnValue('');
+
+    generateGitDiff({ branch: 'main' });
+
+    expect(mockExecSync).toHaveBeenCalledWith(
+      'git diff main...HEAD',
+      expect.objectContaining({ encoding: 'utf-8' })
+    );
+  });
+
+  it('throws when both branch and staged are set', () => {
+    expect(() => generateGitDiff({ branch: 'main', staged: true })).toThrow(ErodeError);
+    expect(() => generateGitDiff({ branch: 'main', staged: true })).toThrow(
+      'Cannot use --branch and --staged together'
+    );
+  });
+
+  it('passes cwd to execSync', () => {
+    mockExecSync.mockReturnValue('');
+
+    generateGitDiff({ cwd: '/custom/path' });
+
+    expect(mockExecSync).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ cwd: '/custom/path' })
+    );
+  });
+
+  it('wraps git failures as ErodeError', () => {
+    mockExecSync.mockImplementation(() => {
+      throw new Error('fatal: not a git repository');
+    });
+
+    expect(() => generateGitDiff()).toThrow(ErodeError);
   });
 });
