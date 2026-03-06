@@ -14,7 +14,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/__tests__"
   ],
   "scripts": {
     "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\" \"npm:check:schema\"",
@@ -46,6 +47,9 @@
   },
   "author": "Anders Hassis",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=24.0.0"
   },

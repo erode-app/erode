@@ -8,7 +8,8 @@
     "erode": "./dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/__tests__"
   ],
   "scripts": {
     "build": "tsc",
@@ -44,6 +45,9 @@
     "rimraf": "^6.1.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.14"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "engines": {
     "node": ">=24.0.0"
