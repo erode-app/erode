@@ -3,35 +3,58 @@ title: Configuration
 description: Environment variables for tuning the Erode analysis engine.
 ---
 
-Erode is configured through environment variables. There are no configuration files.
+Erode is configured through environment variables or a `.eroderc.json` configuration file. For GitHub Actions-specific inputs (`model-repo`, `fail-on-violations`, etc.), see [GitHub Actions](/docs/ci/github-actions/).
 
-For GitHub Actions-specific inputs (`model-repo`, `fail-on-violations`, etc.), see [GitHub Actions](/docs/ci/github-actions/).
+## Configuration file
+
+As an alternative to environment variables, you can create a `.eroderc.json` file in your project root or home directory:
+
+```json
+{
+  "$schema": "https://erode.dev/schemas/eroderc.schema.json",
+  "ai": { "provider": "gemini" },
+  "gemini": { "apiKey": "AIza..." }
+}
+```
+
+The `$schema` field enables autocomplete and validation in editors that support JSON Schema. All sections are optional; Erode fills in defaults for anything you omit.
+
+Erode looks for `.eroderc.json` in the current working directory first, then the home directory. If both a config file **and** `ERODE_*` environment variables are present, Erode throws an error. Use one or the other, not both.
+
+Environment variable names map to nested JSON keys. For example:
+
+| Environment variable       | JSON path                     |
+| -------------------------- | ----------------------------- |
+| `ERODE_AI_PROVIDER`        | `ai.provider`                 |
+| `ERODE_GEMINI_API_KEY`     | `gemini.apiKey`               |
+| `ERODE_MAX_FILES_PER_DIFF` | `constraints.maxFilesPerDiff` |
+| `ERODE_MODEL_FORMAT`       | `adapter.format`              |
 
 ## AI provider
 
-| Variable            | Description                                             | Default  |
-| ------------------- | ------------------------------------------------------- | -------- |
-| `AI_PROVIDER`       | AI provider to use (`gemini`, `openai`, or `anthropic`) | `gemini` |
-| `GEMINI_API_KEY`    | Google Gemini API key                                   | —        |
-| `OPENAI_API_KEY`    | OpenAI API key                                          | —        |
-| `ANTHROPIC_API_KEY` | Anthropic API key (experimental)                        | —        |
+| Variable                  | Description                                             | Default  |
+| ------------------------- | ------------------------------------------------------- | -------- |
+| `ERODE_AI_PROVIDER`       | AI provider to use (`gemini`, `openai`, or `anthropic`) | `gemini` |
+| `ERODE_GEMINI_API_KEY`    | Google Gemini API key                                   | —        |
+| `ERODE_OPENAI_API_KEY`    | OpenAI API key                                          | —        |
+| `ERODE_ANTHROPIC_API_KEY` | Anthropic API key (experimental)                        | —        |
 
 ## Architecture model
 
-| Variable               | Description                                             | Default  |
-| ---------------------- | ------------------------------------------------------- | -------- |
-| `MODEL_FORMAT`         | Architecture model format (`likec4` or `structurizr`)   | `likec4` |
-| `STRUCTURIZR_CLI_PATH` | Path to the Structurizr CLI WAR file (for `.dsl` files) | —        |
-| `LIKEC4_EXCLUDE_PATHS` | Comma-separated paths to exclude from model loading     | —        |
-| `LIKEC4_EXCLUDE_TAGS`  | Comma-separated tags to exclude from model loading      | —        |
+| Variable                     | Description                                             | Default  |
+| ---------------------------- | ------------------------------------------------------- | -------- |
+| `ERODE_MODEL_FORMAT`         | Architecture model format (`likec4` or `structurizr`)   | `likec4` |
+| `ERODE_STRUCTURIZR_CLI_PATH` | Path to the Structurizr CLI WAR file (for `.dsl` files) | —        |
+| `ERODE_LIKEC4_EXCLUDE_PATHS` | Comma-separated paths to exclude from model loading     | —        |
+| `ERODE_LIKEC4_EXCLUDE_TAGS`  | Comma-separated tags to exclude from model loading      | —        |
 
 ## Diff limits
 
-| Variable             | Description                                    | Default |
-| -------------------- | ---------------------------------------------- | ------- |
-| `MAX_FILES_PER_DIFF` | Maximum number of files to include in the diff | `50`    |
-| `MAX_LINES_PER_DIFF` | Maximum number of lines to include in the diff | `5000`  |
-| `MAX_CONTEXT_CHARS`  | Maximum characters of architectural context    | `10000` |
+| Variable                   | Description                                    | Default |
+| -------------------------- | ---------------------------------------------- | ------- |
+| `ERODE_MAX_FILES_PER_DIFF` | Maximum number of files to include in the diff | `50`    |
+| `ERODE_MAX_LINES_PER_DIFF` | Maximum number of lines to include in the diff | `5000`  |
+| `ERODE_MAX_CONTEXT_CHARS`  | Maximum characters of architectural context    | `10000` |
 
 Erode truncates large diffs to stay within these limits. If a PR exceeds them, Erode processes the most relevant files first based on the architecture model context.
 
@@ -39,28 +62,28 @@ Erode truncates large diffs to stay within these limits. If a PR exceeds them, E
 
 Each AI provider uses two model tiers: a fast model for extraction stages and an advanced model for analysis. Override the defaults with these variables:
 
-| Variable                   | Description                                      |
-| -------------------------- | ------------------------------------------------ |
-| `GEMINI_FAST_MODEL`        | Gemini model for Stages 1–2 and model updates    |
-| `GEMINI_ADVANCED_MODEL`    | Gemini model for Stage 3 (analysis)              |
-| `OPENAI_FAST_MODEL`        | OpenAI model for Stages 1–2 and model updates    |
-| `OPENAI_ADVANCED_MODEL`    | OpenAI model for Stage 3 (analysis)              |
-| `ANTHROPIC_FAST_MODEL`     | Anthropic model for Stages 1–2 and model updates |
-| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for Stage 3 (analysis)           |
+| Variable                         | Description                                      |
+| -------------------------------- | ------------------------------------------------ |
+| `ERODE_GEMINI_FAST_MODEL`        | Gemini model for Stages 1–2 and model updates    |
+| `ERODE_GEMINI_ADVANCED_MODEL`    | Gemini model for Stage 3 (analysis)              |
+| `ERODE_OPENAI_FAST_MODEL`        | OpenAI model for Stages 1–2 and model updates    |
+| `ERODE_OPENAI_ADVANCED_MODEL`    | OpenAI model for Stage 3 (analysis)              |
+| `ERODE_ANTHROPIC_FAST_MODEL`     | Anthropic model for Stages 1–2 and model updates |
+| `ERODE_ANTHROPIC_ADVANCED_MODEL` | Anthropic model for Stage 3 (analysis)           |
 
 See [AI Providers](/docs/reference/ai-providers/) for default model names and guidance on choosing a provider.
 
 ## GitHub
 
-| Variable              | Description                             | Default             |
-| --------------------- | --------------------------------------- | ------------------- |
-| `GITHUB_TOKEN`        | GitHub token for API access             | —                   |
-| `GITHUB_TIMEOUT`      | Request timeout for GitHub API (ms)     | `30000`             |
-| `MODEL_REPO_PR_TOKEN` | Separate token for the model repository | Uses `GITHUB_TOKEN` |
+| Variable                    | Description                             | Default                   |
+| --------------------------- | --------------------------------------- | ------------------------- |
+| `ERODE_GITHUB_TOKEN`        | GitHub token for API access             | —                         |
+| `ERODE_GITHUB_TIMEOUT`      | Request timeout for GitHub API (ms)     | `30000`                   |
+| `ERODE_MODEL_REPO_PR_TOKEN` | Separate token for the model repository | Uses `ERODE_GITHUB_TOKEN` |
 
 ### Token permissions
 
-Erode uses `GITHUB_TOKEN` to read the source PR and post analysis comments. `MODEL_REPO_PR_TOKEN` is used to create model update PRs (branches, commits, pull requests) on the model repository and falls back to `GITHUB_TOKEN` when not set.
+Erode uses `ERODE_GITHUB_TOKEN` to read the source PR and post analysis comments. `ERODE_MODEL_REPO_PR_TOKEN` is used to create model update PRs (branches, commits, pull requests) on the model repository and falls back to `ERODE_GITHUB_TOKEN` when not set.
 
 **Same repository** — source code and architecture model live in one repo, so a single token covers everything:
 
@@ -72,10 +95,10 @@ Erode uses `GITHUB_TOKEN` to read the source PR and post analysis comments. `MOD
 
 **External model repository** — source and model are in separate repos, each with its own token:
 
-| Token                 | Repository  | Permissions                                                 |
-| --------------------- | ----------- | ----------------------------------------------------------- |
-| `GITHUB_TOKEN`        | Source repo | Contents: Read, Pull requests: Read, Issues: Read and write |
-| `MODEL_REPO_PR_TOKEN` | Model repo  | Contents: Read and write, Pull requests: Read and write     |
+| Token                       | Repository  | Permissions                                                 |
+| --------------------------- | ----------- | ----------------------------------------------------------- |
+| `ERODE_GITHUB_TOKEN`        | Source repo | Contents: Read, Pull requests: Read, Issues: Read and write |
+| `ERODE_MODEL_REPO_PR_TOKEN` | Model repo  | Contents: Read and write, Pull requests: Read and write     |
 
 #### Fine-grained PATs
 
@@ -87,7 +110,7 @@ Select these **Repository permissions** when creating a fine-grained personal ac
 
 #### Classic PATs
 
-The `repo` scope covers all required permissions. If the model repository is public, `public_repo` is sufficient for `MODEL_REPO_PR_TOKEN`.
+The `repo` scope covers all required permissions. If the model repository is public, `public_repo` is sufficient for `ERODE_MODEL_REPO_PR_TOKEN`.
 
 #### GitHub Apps (recommended for organizations)
 
@@ -106,14 +129,14 @@ PR comments are created through GitHub's Issues API (`issues.createComment`), so
 
 ## GitLab (experimental)
 
-| Variable          | Description                   | Default              |
-| ----------------- | ----------------------------- | -------------------- |
-| `GITLAB_TOKEN`    | GitLab token with `api` scope | —                    |
-| `GITLAB_BASE_URL` | GitLab instance URL           | `https://gitlab.com` |
+| Variable                | Description                   | Default              |
+| ----------------------- | ----------------------------- | -------------------- |
+| `ERODE_GITLAB_TOKEN`    | GitLab token with `api` scope | —                    |
+| `ERODE_GITLAB_BASE_URL` | GitLab instance URL           | `https://gitlab.com` |
 
 ### Token permissions
 
-Erode uses `GITLAB_TOKEN` for all operations on the source project — reading MR diffs, posting notes, and (with `--open-pr`) creating branches, commits, and merge requests. The `api` scope is required; `read_api` is **not** sufficient.
+Erode uses `ERODE_GITLAB_TOKEN` for all operations on the source project: reading MR diffs, posting notes, and (with `--open-pr`) creating branches, commits, and merge requests. The `api` scope is required; `read_api` is **not** sufficient.
 
 For external model projects, the CI entrypoint accepts `ERODE_MODEL_REPO_TOKEN` (see [GitLab CI](/docs/ci/gitlab-ci/)).
 
@@ -125,14 +148,14 @@ For external model projects, the CI entrypoint accepts `ERODE_MODEL_REPO_TOKEN` 
 
 ## Bitbucket (experimental)
 
-| Variable             | Description                     | Default                         |
-| -------------------- | ------------------------------- | ------------------------------- |
-| `BITBUCKET_TOKEN`    | Bitbucket app password or token | —                               |
-| `BITBUCKET_BASE_URL` | Bitbucket API base URL          | `https://api.bitbucket.org/2.0` |
+| Variable                   | Description                     | Default                         |
+| -------------------------- | ------------------------------- | ------------------------------- |
+| `ERODE_BITBUCKET_TOKEN`    | Bitbucket app password or token | —                               |
+| `ERODE_BITBUCKET_BASE_URL` | Bitbucket API base URL          | `https://api.bitbucket.org/2.0` |
 
 ### Token permissions
 
-`BITBUCKET_TOKEN` handles all operations — there is no separate model-repo token. If the token contains `:` (e.g. `username:app_password`), Erode uses HTTP Basic auth; otherwise it uses Bearer auth.
+`ERODE_BITBUCKET_TOKEN` handles all operations. There is no separate model-repo token. If the token contains `:` (e.g. `username:app_password`), Erode uses HTTP Basic auth; otherwise it uses Bearer auth.
 
 | Feature                              | App password scopes                       |
 | ------------------------------------ | ----------------------------------------- |
@@ -147,19 +170,19 @@ Repository access tokens and workspace access tokens use the same permission cat
 
 ## Timeouts
 
-| Variable            | Description                                  | Default |
-| ------------------- | -------------------------------------------- | ------- |
-| `GEMINI_TIMEOUT`    | Request timeout for Gemini API calls (ms)    | `60000` |
-| `OPENAI_TIMEOUT`    | Request timeout for OpenAI API calls (ms)    | `60000` |
-| `ANTHROPIC_TIMEOUT` | Request timeout for Anthropic API calls (ms) | `60000` |
-| `GITHUB_TIMEOUT`    | Request timeout for GitHub API calls (ms)    | `30000` |
+| Variable                  | Description                                  | Default |
+| ------------------------- | -------------------------------------------- | ------- |
+| `ERODE_GEMINI_TIMEOUT`    | Request timeout for Gemini API calls (ms)    | `60000` |
+| `ERODE_OPENAI_TIMEOUT`    | Request timeout for OpenAI API calls (ms)    | `60000` |
+| `ERODE_ANTHROPIC_TIMEOUT` | Request timeout for Anthropic API calls (ms) | `60000` |
+| `ERODE_GITHUB_TIMEOUT`    | Request timeout for GitHub API calls (ms)    | `30000` |
 
 ## Debug
 
-| Variable     | Description            | Default |
-| ------------ | ---------------------- | ------- |
-| `DEBUG_MODE` | Enable debug output    | `false` |
-| `VERBOSE`    | Enable verbose logging | `false` |
+| Variable           | Description            | Default |
+| ------------------ | ---------------------- | ------- |
+| `ERODE_DEBUG_MODE` | Enable debug output    | `false` |
+| `ERODE_VERBOSE`    | Enable verbose logging | `false` |
 
 ## What's next
 

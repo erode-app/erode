@@ -52,7 +52,7 @@ The `analyze` command fetches PR data from platform APIs, while `check` operates
 ### Key Abstractions
 
 - **`AIProvider`** (`packages/core/src/providers/ai-provider.ts`): Provider-agnostic interface for all AI operations. Implemented by `AnthropicProvider`, `GeminiProvider`, and `OpenAIProvider`.
-- **`ArchitectureModelAdapter`** (`packages/core/src/adapters/architecture-adapter.ts`): Interface for loading/querying architecture models. Currently only `LikeC4Adapter` implements it.
+- **`ArchitectureModelAdapter`** (`packages/core/src/adapters/architecture-adapter.ts`): Interface for loading/querying architecture models. Implemented by `LikeC4Adapter` and `StructurizrAdapter`.
 - **`PromptBuilder`** (`packages/core/src/analysis/prompt-builder.ts`): Assembles prompts from markdown templates (`packages/core/src/analysis/prompts/*.md`) using `TemplateEngine`'s (`packages/core/src/analysis/template-engine.ts`) `{{variable}}` substitution.
 
 ### Provider System
@@ -61,7 +61,7 @@ The `analyze` command fetches PR data from platform APIs, while `check` operates
 
 ### Configuration
 
-All config is environment-variable-driven via `packages/core/src/utils/config.ts`. It maps env vars to a Zod-validated config object (`CONFIG`). Key env vars: `AI_PROVIDER`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `GITHUB_TOKEN`. Tests run with `DEBUG_MODE=true` (set in `packages/core/vitest.config.ts`) which skips API key validation.
+All config is environment-variable-driven via `packages/core/src/utils/config.ts`. It maps env vars to a Zod-validated config object (`CONFIG`). Key env vars: `ERODE_AI_PROVIDER`, `ERODE_GEMINI_API_KEY`, `ERODE_ANTHROPIC_API_KEY`, `ERODE_GITHUB_TOKEN`. Configuration can also be set via a `.eroderc.json` file as an alternative to environment variables. Tests run with `DEBUG_MODE=true` (set in `packages/core/vitest.config.ts`) which skips API key validation.
 
 ### Error Handling
 

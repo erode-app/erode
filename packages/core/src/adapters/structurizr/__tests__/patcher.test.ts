@@ -8,7 +8,8 @@ import type {
 } from '../../architecture-types.js';
 import type { AIProvider } from '../../../providers/ai-provider.js';
 
-vi.mock('fs', () => ({
+vi.mock('fs', async (importOriginal) => ({
+  ...(await importOriginal()),
   readFileSync: vi.fn(),
   readdirSync: vi.fn(),
   statSync: vi.fn(() => ({ isDirectory: () => true })),

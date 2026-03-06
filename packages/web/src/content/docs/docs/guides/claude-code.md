@@ -60,12 +60,15 @@ Do NOT run this skill for:
 ## How to Run
 
 ```bash
-erode check <model-path> --format json --fail-on-violations
+erode check <model-path> --format json --fail-on-violations --repo <url>
 ```
 
 Replace `<model-path>` with the path to the architecture model directory
 in this repository (check for directories containing `.c4` or `.dsl`
 files, commonly `architecture/`, `model/`, or `docs/architecture/`).
+
+The `--repo` flag is optional. If omitted, the repository URL is
+auto-detected from the git remote.
 
 Use `--staged` if you are about to commit, or no flag for unstaged
 changes.
@@ -105,9 +108,9 @@ detected."
 
 The following must be set in the shell environment for the check to work:
 
-- `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY` — for the
+- `ERODE_GEMINI_API_KEY`, `ERODE_OPENAI_API_KEY`, or `ERODE_ANTHROPIC_API_KEY` — for the
   AI analysis
-- `AI_PROVIDER` — optional, defaults to `gemini`
+- `ERODE_AI_PROVIDER` — optional, defaults to `gemini`
 ````
 
 ### 2. Commit the skill

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CONFIG } from '../../utils/config.js';
+import { CONFIG, ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import { ErodeError, ErrorCode } from '../../errors.js';
 import type {
   SourcePlatformWriter,
@@ -37,7 +37,7 @@ export class BitbucketWriter implements SourcePlatformWriter {
       throw new ErodeError(
         'A Bitbucket token is needed to create pull requests',
         ErrorCode.AUTH_KEY_MISSING,
-        'Provide BITBUCKET_TOKEN to create pull requests.'
+        `Provide ${ENV_VAR_NAMES.bitbucketToken} in your environment or ${RC_FILENAME} to create pull requests.`
       );
     }
     this.api = new BitbucketApiClient(token);

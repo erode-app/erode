@@ -92,6 +92,7 @@ When any of these appear in changes, say:
 | `packages/architecture/core.c4`                                     | Core internals: pipeline stages, providers, adapters, platforms, modules, dependency arrows |
 | `packages/architecture/externals.c4`                                | External APIs and libraries (Anthropic, Gemini, GitHub, GitLab, LikeC4)                     |
 | `README.md`                                                         | Commands, flags, env vars, examples                                                         |
+| `packages/core/schemas/eroderc.schema.json`                         | Generated JSON Schema from `ConfigSchema`; must match `packages/core/src/utils/config.ts`   |
 
 ## Workflow
 
@@ -201,7 +202,7 @@ Check `externals.c4` against actual `package.json` dependencies and API usage.
 
 **Known intentional differences** (do NOT flag as bugs):
 
-- `action.yml` defaults `ai-provider` to `anthropic`, but `config.ts` defaults `AI_PROVIDER` to `gemini` — these are different interfaces with different defaults
+- `action.yml` defaults `ai-provider` to `anthropic`, but `config.ts` defaults `ERODE_AI_PROVIDER` to `gemini` — these are different interfaces with different defaults
 - `packages/architecture/` is a meta-package for diagrams — may or may not be in `model.c4`
 
 ### Step 3: Report

@@ -32,7 +32,8 @@ vi.mock('@gitbeaker/rest', () => ({
 }));
 
 // Mock config
-vi.mock('../../../utils/config.js', () => ({
+vi.mock('../../../utils/config.js', async (importOriginal) => ({
+  ...(await importOriginal()),
   CONFIG: {
     gitlab: { token: 'test-token', baseUrl: 'https://gitlab.com' },
   },

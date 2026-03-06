@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { BaseProvider } from '../base-provider.js';
 import { ErodeError, ErrorCode, ApiError } from '../../errors.js';
+import { ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import type { AnalysisPhase } from '../analysis-phase.js';
 import { OPENAI_MODELS } from './models.js';
 
@@ -12,7 +13,7 @@ export class OpenAIProvider extends BaseProvider {
       throw new ErodeError(
         'An OpenAI API key is needed',
         ErrorCode.AUTH_KEY_MISSING,
-        'No OpenAI API key found. Set OPENAI_API_KEY in your environment.'
+        `No OpenAI API key found. Set ${ENV_VAR_NAMES.openaiApiKey} in your environment or ${RC_FILENAME}.`
       );
     }
     super({

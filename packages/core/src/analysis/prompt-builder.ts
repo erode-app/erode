@@ -124,7 +124,7 @@ export const PromptBuilder = {
           refLabel: 'Changes:',
           inSuffix: '',
           considerations: [
-            '- Evaluate if the changes align with the component\'s architectural role',
+            "- Evaluate if the changes align with the component's architectural role",
             '- Consider whether new dependencies should be declared in the model',
             '- Provide recommendations before these changes are committed',
           ].join('\n'),
@@ -135,8 +135,8 @@ export const PromptBuilder = {
           refLabel: `PR #${String(changeRequest.number)}:`,
           inSuffix: ' IN THIS PR',
           considerations: [
-            '- Consider the PR\'s stated goals and description',
-            '- Evaluate if the architectural changes align with the PR\'s purpose',
+            "- Consider the PR's stated goals and description",
+            "- Evaluate if the architectural changes align with the PR's purpose",
             '- Provide recommendations for the PR review',
           ].join('\n'),
         };

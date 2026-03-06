@@ -82,7 +82,7 @@ For each package (`@erode-app/core` and `@erode-app/cli`):
    - **Repository owner**: `erode-app`
    - **Repository name**: `erode`
    - **Workflow filename**: `release.yml`
-   - **Environment**: *(leave blank)*
+   - **Environment**: _(leave blank)_
 5. Save
 
 ### 4. Delete the granular access token

@@ -2,7 +2,7 @@ import type { AIProvider } from './ai-provider.js';
 import { GeminiProvider } from './gemini/provider.js';
 import { AnthropicProvider } from './anthropic/provider.js';
 import { OpenAIProvider } from './openai/provider.js';
-import { CONFIG } from '../utils/config.js';
+import { CONFIG, ENV_VAR_NAMES, RC_FILENAME } from '../utils/config.js';
 import { ErodeError, ErrorCode } from '../errors.js';
 
 export function createAIProvider(): AIProvider {
@@ -14,7 +14,7 @@ export function createAIProvider(): AIProvider {
         throw new ErodeError(
           'A Gemini API key is needed',
           ErrorCode.AUTH_KEY_MISSING,
-          'No Gemini API key found. Set GEMINI_API_KEY in your environment or .env file.'
+          `No Gemini API key found. Set ${ENV_VAR_NAMES.geminiApiKey} in your environment or ${RC_FILENAME}.`
         );
       }
       return new GeminiProvider({
@@ -28,7 +28,7 @@ export function createAIProvider(): AIProvider {
         throw new ErodeError(
           'An OpenAI API key is needed',
           ErrorCode.AUTH_KEY_MISSING,
-          'No OpenAI API key found. Set OPENAI_API_KEY in your environment or .env file.'
+          `No OpenAI API key found. Set ${ENV_VAR_NAMES.openaiApiKey} in your environment or ${RC_FILENAME}.`
         );
       }
       return new OpenAIProvider({
@@ -42,7 +42,7 @@ export function createAIProvider(): AIProvider {
         throw new ErodeError(
           'An Anthropic API key is needed',
           ErrorCode.AUTH_KEY_MISSING,
-          'No Anthropic API key found. Set ANTHROPIC_API_KEY in your environment or .env file.'
+          `No Anthropic API key found. Set ${ENV_VAR_NAMES.anthropicApiKey} in your environment or ${RC_FILENAME}.`
         );
       }
       return new AnthropicProvider({

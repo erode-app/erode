@@ -60,7 +60,7 @@ Erode can load Structurizr models in two ways:
 
 The Erode Docker image and GitHub Action bundle Java 21 and the Structurizr CLI, so `.dsl` files work out of the box. If running the CLI locally, you need one of:
 
-- **Java 21+** with `STRUCTURIZR_CLI_PATH` pointing to the Structurizr WAR file
+- **Java 21+** with `ERODE_STRUCTURIZR_CLI_PATH` pointing to the Structurizr WAR file
 - **Docker** — Erode falls back to `docker run structurizr/structurizr` automatically
 
 To skip runtime dependencies entirely, pre-export your workspace:

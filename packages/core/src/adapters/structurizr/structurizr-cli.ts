@@ -4,7 +4,7 @@ import { basename, dirname, join } from 'path';
 import { tmpdir } from 'os';
 import { promisify } from 'util';
 import { AdapterError, ErrorCode } from '../../errors.js';
-import { CONFIG } from '../../utils/config.js';
+import { CONFIG, ENV_VAR_NAMES } from '../../utils/config.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -107,7 +107,7 @@ function isEnoentError(error: unknown): boolean {
 
 function getInstallSuggestions(): string[] {
   return [
-    'Set STRUCTURIZR_CLI_PATH to the path of the Structurizr WAR file',
+    `Set ${ENV_VAR_NAMES.structurizrCliPath} to the path of the Structurizr WAR file`,
     'Or install Docker and pull the structurizr/structurizr image',
     'Or pre-export your workspace to JSON: java -jar structurizr.war export -workspace workspace.dsl -format json',
   ];

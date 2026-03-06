@@ -12,6 +12,7 @@ node_modules/
 
 .DS_Store
 .linear_api_token
+.eroderc.json
 oldversion
 
 # Astro generated

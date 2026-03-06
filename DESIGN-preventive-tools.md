@@ -56,19 +56,19 @@ erode check ./architecture --branch main --fail-on-violations
 
 ### New Files
 
-| File | Purpose |
-|---|---|
-| `packages/core/src/pipelines/check.ts` | Core pipeline (shared logic) |
-| `packages/core/src/utils/git-diff.ts` | Generate diffs from local git state |
-| `packages/cli/src/commands/check.ts` | CLI command definition |
+| File                                   | Purpose                             |
+| -------------------------------------- | ----------------------------------- |
+| `packages/core/src/pipelines/check.ts` | Core pipeline (shared logic)        |
+| `packages/core/src/utils/git-diff.ts`  | Generate diffs from local git state |
+| `packages/cli/src/commands/check.ts`   | CLI command definition              |
 
 ### Modified Files
 
-| File | Change |
-|---|---|
-| `packages/core/src/index.ts` | Export `runCheck` pipeline |
-| `packages/cli/src/cli.ts` | Register `check` command |
-| `packages/cli/src/utils/command-schemas.ts` | Add `CheckOptionsSchema` |
+| File                                        | Change                     |
+| ------------------------------------------- | -------------------------- |
+| `packages/core/src/index.ts`                | Export `runCheck` pipeline |
+| `packages/cli/src/cli.ts`                   | Register `check` command   |
+| `packages/cli/src/utils/command-schemas.ts` | Add `CheckOptionsSchema`   |
 
 ---
 
@@ -79,11 +79,16 @@ Location: `packages/core/src/pipelines/check.ts`
 ```typescript
 interface CheckOptions {
   modelPath: string;
-  diff: string;                   // Pre-generated diff string
-  repo: string;                   // Repository URL
-  modelFormat?: string;           // 'likec4' | 'structurizr'
-  componentId?: string;           // Skip Stage 1 if provided
+  diff: string; // Pre-generated diff string
+  repo: string; // Repository URL
+  repoOwner: string; // Parsed repository owner
+  repoName: string; // Parsed repository name
+  modelFormat?: string; // 'likec4' | 'structurizr'
+  componentId?: string; // Skip Stage 1 if provided
   format?: 'console' | 'json';
+  files?: GitDiffFile[]; // Changed files from the diff
+  stats?: GitDiffStats; // Diff statistics (additions, deletions, filesChanged)
+  skipFileFiltering?: boolean; // Bypass .erodeignore patterns
 }
 
 interface CheckResult {
@@ -136,9 +141,9 @@ Thin wrapper around `child_process.execSync` to generate diffs:
 
 ```typescript
 interface GitDiffOptions {
-  staged?: boolean;       // git diff --staged
-  branch?: string;        // git diff <branch>...HEAD
-  cwd?: string;           // Working directory
+  staged?: boolean; // git diff --staged
+  branch?: string; // git diff <branch>...HEAD
+  cwd?: string; // Working directory
 }
 
 interface GitDiffResult {
@@ -162,9 +167,9 @@ function generateGitDiff(options: GitDiffOptions): GitDiffResult;
 
 Location: `packages/cli/src/commands/check.ts`
 
-```
+```text
 erode check <model-path>
-  --repo <url>              Repository URL (required)
+  --repo <url>              Repository URL (auto-detected from git remote if omitted)
   --model-format <format>   Model format (default: likec4)
   --staged                  Check staged changes only
   --branch <branch>         Compare against branch (e.g., main)
@@ -205,35 +210,18 @@ export const CheckOptionsSchema = z.object({
 
 ## What Gets Reused vs. What's New
 
-| Component | Status |
-|---|---|
-| `ArchitectureModelAdapter` interface | Reused as-is |
-| `AIProvider.extractDependencies()` | Reused as-is |
-| `AIProvider.analyzeDrift()` | Reused as-is |
-| `AIProvider.selectComponent()` | Reused as-is |
-| `PromptBuilder` + templates | Reused as-is |
-| `createAdapter()` / `createAIProvider()` | Reused as-is |
-| `ProgressReporter` / `ConsoleProgress` | Reused as-is |
-| `OutputFormatter` | Reused as-is |
-| `loadSkipPatterns` / `applySkipPatterns` | Reused for file filtering |
-| `runCheck` pipeline | **New** — orchestrates the above |
-| `generateGitDiff` utility | **New** — local diff generation |
-| `erode check` CLI command | **New** — Commander.js command |
-| `CheckOptionsSchema` | **New** — Zod schema |
-
----
-
-## Open Questions
-
-1. **Prompt template wording** — The `drift-analysis.md` template says
-   "Pull Request" and "PR" throughout. Should we parameterize this
-   ("change" vs "pull request") or is the existing wording fine for
-   local diffs too?
-
-2. **Output formatting** — Should `erode check` reuse the full
-   `StructuredAnalysisOutput` format, or use a simpler output? The
-   existing format includes PR metadata that may look odd for local runs.
-
-3. **Diff size limits** — The existing `CONFIG.constraints` (maxFilesPerDiff,
-   maxLinesPerDiff) apply. Should the check command warn and truncate,
-   or should it be more lenient for local use?
+| Component                                | Status                           |
+| ---------------------------------------- | -------------------------------- |
+| `ArchitectureModelAdapter` interface     | Reused as-is                     |
+| `AIProvider.extractDependencies()`       | Reused as-is                     |
+| `AIProvider.analyzeDrift()`              | Reused as-is                     |
+| `AIProvider.selectComponent()`           | Reused as-is                     |
+| `PromptBuilder` + templates              | Reused as-is                     |
+| `createAdapter()` / `createAIProvider()` | Reused as-is                     |
+| `ProgressReporter` / `ConsoleProgress`   | Reused as-is                     |
+| `OutputFormatter`                        | Reused as-is                     |
+| `loadSkipPatterns` / `applySkipPatterns` | Reused for file filtering        |
+| `runCheck` pipeline                      | **New** — orchestrates the above |
+| `generateGitDiff` utility                | **New** — local diff generation  |
+| `erode check` CLI command                | **New** — Commander.js command   |
+| `CheckOptionsSchema`                     | **New** — Zod schema             |

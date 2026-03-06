@@ -15,9 +15,9 @@ MR_URL="${CI_PROJECT_URL}/-/merge_requests/${CI_MERGE_REQUEST_IID}"
 
 # ── 2. Export env vars for the CLI ──
 
-export AI_PROVIDER="${AI_PROVIDER:-anthropic}"
-export MODEL_FORMAT="${ERODE_MODEL_FORMAT:-likec4}"
-# ANTHROPIC_API_KEY, GEMINI_API_KEY, GITLAB_TOKEN should be set as CI/CD variables
+export ERODE_AI_PROVIDER="${ERODE_AI_PROVIDER:-anthropic}"
+export ERODE_MODEL_FORMAT="${ERODE_MODEL_FORMAT:-likec4}"
+# ERODE_ANTHROPIC_API_KEY, ERODE_GEMINI_API_KEY, ERODE_GITLAB_TOKEN should be set as CI/CD variables
 
 # ── 3. Clone model repository (if separate from source) ──
 
@@ -25,7 +25,7 @@ MODEL_DIR="${ERODE_MODEL_PATH:-.}"
 
 if [ -n "${ERODE_MODEL_REPO:-}" ]; then
   MODEL_CLONE_DIR="/tmp/model-repo"
-  CLONE_TOKEN="${ERODE_MODEL_REPO_TOKEN:-$GITLAB_TOKEN}"
+  CLONE_TOKEN="${ERODE_MODEL_REPO_TOKEN:-$ERODE_GITLAB_TOKEN}"
 
   GIT_ASKPASS_SCRIPT="/tmp/git-askpass-$$"
   ESCAPED_TOKEN=$(printf '%s' "$CLONE_TOKEN" | sed "s/'/'\\\\''/g")
@@ -46,7 +46,7 @@ fi
 CORE_ARGS=(
   analyze "$MODEL_DIR"
   --url "$MR_URL"
-  --model-format "$MODEL_FORMAT"
+  --model-format "$ERODE_MODEL_FORMAT"
   --format json
   --comment
 )

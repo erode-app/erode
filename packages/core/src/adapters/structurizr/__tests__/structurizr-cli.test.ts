@@ -43,7 +43,9 @@ describe('exportDslToJson', () => {
       const adapterError = error as AdapterError;
       expect(adapterError.code).toBe(ErrorCode.MODEL_LOAD_FAILED);
       expect(adapterError.suggestions).toBeDefined();
-      expect(adapterError.suggestions?.some((s) => s.includes('STRUCTURIZR_CLI_PATH'))).toBe(true);
+      expect(adapterError.suggestions?.some((s) => s.includes('ERODE_STRUCTURIZR_CLI_PATH'))).toBe(
+        true
+      );
     }
   });
 

@@ -12,7 +12,7 @@ model {
 
       stage2 = stage 'Stage 2: Scan' {
         #fast-model
-        description 'Extracts dependency changes from the PR diff'
+        description 'Extracts dependency changes from the diff'
       }
 
       stage3 = stage 'Stage 3: Analyze' {
@@ -90,7 +90,7 @@ model {
     }
 
     analyze = module 'Analyze' {
-      description 'Orchestrates the analysis pipeline — invoked by CLI and CI'
+      description 'Orchestrates the analysis pipeline, invoked by CLI and CI'
     }
 
     check = module 'Check' {

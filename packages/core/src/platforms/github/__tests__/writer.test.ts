@@ -46,7 +46,8 @@ vi.mock('@octokit/rest', () => ({
 }));
 
 // Mock config
-vi.mock('../../../utils/config.js', () => ({
+vi.mock('../../../utils/config.js', async (importOriginal) => ({
+  ...(await importOriginal()),
   CONFIG: {
     github: { token: 'test-token', modelRepoPrToken: null },
   },

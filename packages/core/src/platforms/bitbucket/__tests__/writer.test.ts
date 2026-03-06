@@ -16,7 +16,8 @@ vi.mock('../api-client.js', () => ({
 }));
 
 // Mock config
-vi.mock('../../../utils/config.js', () => ({
+vi.mock('../../../utils/config.js', async (importOriginal) => ({
+  ...(await importOriginal()),
   CONFIG: {
     bitbucket: { token: 'test-token', baseUrl: 'https://api.bitbucket.org/2.0' },
   },

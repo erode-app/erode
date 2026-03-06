@@ -72,16 +72,16 @@ erode check ./model --staged
 erode check ./model --branch main
 ```
 
-| Flag                    | Description                                                     | Default   |
-| ----------------------- | --------------------------------------------------------------- | --------- |
-| `--repo <url>`          | Repository URL (auto-detected from git remote if omitted)       |           |
-| `--model-format <fmt>`  | Architecture model format                                       | `likec4`  |
-| `--staged`              | Only check staged changes                                       | `false`   |
-| `--branch <branch>`     | Compare against a branch (e.g. `main`)                          |           |
-| `--component <id>`      | Component ID to analyze (skips AI component selection)          |           |
-| `--format <fmt>`        | Output format: `console`, `json`                                | `console` |
-| `--fail-on-violations`  | Exit with code 1 when violations are found                      |           |
-| `--skip-file-filtering` | Analyze all changed files (skip pattern-based filtering)        |           |
+| Flag                    | Description                                               | Default   |
+| ----------------------- | --------------------------------------------------------- | --------- |
+| `--repo <url>`          | Repository URL (auto-detected from git remote if omitted) |           |
+| `--model-format <fmt>`  | Architecture model format                                 | `likec4`  |
+| `--staged`              | Only check staged changes                                 | `false`   |
+| `--branch <branch>`     | Compare against a branch (e.g. `main`)                    |           |
+| `--component <id>`      | Component ID to analyze (skips AI component selection)    |           |
+| `--format <fmt>`        | Output format: `console`, `json`                          | `console` |
+| `--fail-on-violations`  | Exit with code 1 when violations are found                |           |
+| `--skip-file-filtering` | Analyze all changed files (skip pattern-based filtering)  |           |
 
 When no flags are passed, `check` analyzes unstaged changes (`git diff`). Use `--staged` for pre-commit hooks and `--branch main` for pre-push hooks.
 
@@ -144,21 +144,23 @@ Exits with code 1 if any components are missing repository links.
 
 Set these before running any command:
 
-| Variable                                                   | Description                                                                                                                   |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `GITHUB_TOKEN`                                             | Required for GitHub PRs. See [Configuration](/docs/guides/configuration/#github) for required permissions.                    |
-| `GITLAB_TOKEN`                                             | Required for GitLab MRs. Requires `api` scope.                                                                                |
-| `BITBUCKET_TOKEN`                                          | Required for Bitbucket PRs. See [Configuration](/docs/guides/configuration/#bitbucket-experimental) for required permissions. |
-| `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY` | API key for your chosen AI provider.                                                                                          |
-| `AI_PROVIDER`                                              | `gemini` (default), `openai`, or `anthropic`.                                                                                 |
+| Variable                                                                     | Description                                                                                                                   |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `ERODE_GITHUB_TOKEN`                                                         | Required for GitHub PRs. See [Configuration](/docs/guides/configuration/#github) for required permissions.                    |
+| `ERODE_GITLAB_TOKEN`                                                         | Required for GitLab MRs. Requires `api` scope.                                                                                |
+| `ERODE_BITBUCKET_TOKEN`                                                      | Required for Bitbucket PRs. See [Configuration](/docs/guides/configuration/#bitbucket-experimental) for required permissions. |
+| `ERODE_GEMINI_API_KEY`, `ERODE_OPENAI_API_KEY`, or `ERODE_ANTHROPIC_API_KEY` | API key for your chosen AI provider.                                                                                          |
+| `ERODE_AI_PROVIDER`                                                          | `gemini` (default), `openai`, or `anthropic`.                                                                                 |
+
+You can also configure these values in a `.eroderc.json` file. See [Configuration](/docs/guides/configuration/#configuration-file) for details.
 
 See [Configuration](/docs/guides/configuration/) for the full list of environment variables including diff limits, timeouts, and model overrides.
 
 ## Example
 
 ```bash
-export GITHUB_TOKEN="ghp_..."
-export GEMINI_API_KEY="AIza..."
+export ERODE_GITHUB_TOKEN="ghp_..."
+export ERODE_GEMINI_API_KEY="AIza..."
 
 node packages/cli/dist/cli.js analyze ./architecture \
   --url https://github.com/acme/backend/pull/42 \

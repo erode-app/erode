@@ -1,6 +1,12 @@
 import { Command } from 'commander';
 import { execSync } from 'child_process';
-import { runCheck, generateGitDiff, parseRepoFromRemote, validate } from '@erode-app/core';
+import {
+  runCheck,
+  generateGitDiff,
+  parseRepoFromRemote,
+  normaliseToHttps,
+  validate,
+} from '@erode-app/core';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { CheckOptionsSchema } from '../utils/command-schemas.js';
 import { OutputFormatter } from '../utils/cli-helpers.js';
@@ -84,15 +90,4 @@ export function createCheckCommand(): Command {
         ErrorHandler.handleCliError(error);
       }
     });
-}
-
-/** Convert SSH-style git remote URLs to HTTPS. */
-function normaliseToHttps(remote: string): string {
-  // git@github.com:owner/repo.git → https://github.com/owner/repo
-  const sshMatch = /^git@([^:]+):(.+?)(?:\.git)?$/.exec(remote);
-  if (sshMatch?.[1] && sshMatch[2]) {
-    return `https://${sshMatch[1]}/${sshMatch[2]}`;
-  }
-  // Already HTTPS — strip trailing .git
-  return remote.replace(/\.git$/, '');
 }

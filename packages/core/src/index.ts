@@ -60,7 +60,14 @@ export {
 } from './output/ci-output.js';
 
 // Config
-export { CONFIG } from './utils/config.js';
+export {
+  CONFIG,
+  ENV_VAR_NAMES,
+  findConfigFile,
+  RC_FILENAME,
+  ConfigSchema,
+} from './utils/config.js';
+export type { Config } from './utils/config.js';
 
 // Errors
 export { ErodeError, ConfigurationError, ApiError, AdapterError, ErrorCode } from './errors.js';
@@ -105,5 +112,5 @@ export { resolveModelSource } from './utils/model-source.js';
 export type { ResolvedModelSource } from './utils/model-source.js';
 
 // Git diff (local check)
-export { generateGitDiff, parseRepoFromRemote } from './utils/git-diff.js';
+export { generateGitDiff, parseRepoFromRemote, normaliseToHttps } from './utils/git-diff.js';
 export type { GitDiffOptions, GitDiffResult } from './utils/git-diff.js';

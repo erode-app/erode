@@ -7,7 +7,7 @@ head:
       src: /architecture/likec4-views.js
 ---
 
-Erode supports three AI providers: **Gemini** (default), **OpenAI**, and **Anthropic** (experimental). Set the provider with the `AI_PROVIDER` environment variable.
+Erode supports three AI providers: **Gemini** (default), **OpenAI**, and **Anthropic** (experimental). Set the provider with the `ERODE_AI_PROVIDER` environment variable.
 
 <div class="likec4-embed">
 <likec4-view view-id="providers" browser="true"></likec4-view>
@@ -53,22 +53,22 @@ Anthropic support is experimental and may not produce consistent results across 
 
 You can override the default models with environment variables:
 
-| Variable                   | Description                                                  |
-| -------------------------- | ------------------------------------------------------------ |
-| `GEMINI_FAST_MODEL`        | Gemini model for fast tier (Stages 1–2 and model updates)    |
-| `GEMINI_ADVANCED_MODEL`    | Gemini model for advanced tier (Stage 3)                     |
-| `OPENAI_FAST_MODEL`        | OpenAI model for fast tier (Stages 1–2 and model updates)    |
-| `OPENAI_ADVANCED_MODEL`    | OpenAI model for advanced tier (Stage 3)                     |
-| `ANTHROPIC_FAST_MODEL`     | Anthropic model for fast tier (Stages 1–2 and model updates) |
-| `ANTHROPIC_ADVANCED_MODEL` | Anthropic model for advanced tier (Stage 3)                  |
+| Variable                         | Description                                                  |
+| -------------------------------- | ------------------------------------------------------------ |
+| `ERODE_GEMINI_FAST_MODEL`        | Gemini model for fast tier (Stages 1–2 and model updates)    |
+| `ERODE_GEMINI_ADVANCED_MODEL`    | Gemini model for advanced tier (Stage 3)                     |
+| `ERODE_OPENAI_FAST_MODEL`        | OpenAI model for fast tier (Stages 1–2 and model updates)    |
+| `ERODE_OPENAI_ADVANCED_MODEL`    | OpenAI model for advanced tier (Stage 3)                     |
+| `ERODE_ANTHROPIC_FAST_MODEL`     | Anthropic model for fast tier (Stages 1–2 and model updates) |
+| `ERODE_ANTHROPIC_ADVANCED_MODEL` | Anthropic model for advanced tier (Stage 3)                  |
 
 ## Timeout configuration
 
-| Variable            | Default    |
-| ------------------- | ---------- |
-| `GEMINI_TIMEOUT`    | `60000` ms |
-| `OPENAI_TIMEOUT`    | `60000` ms |
-| `ANTHROPIC_TIMEOUT` | `60000` ms |
+| Variable                  | Default    |
+| ------------------------- | ---------- |
+| `ERODE_GEMINI_TIMEOUT`    | `60000` ms |
+| `ERODE_OPENAI_TIMEOUT`    | `60000` ms |
+| `ERODE_ANTHROPIC_TIMEOUT` | `60000` ms |
 
 These control the maximum wait time for each API request. Increase them if you experience timeouts with large diffs.
 

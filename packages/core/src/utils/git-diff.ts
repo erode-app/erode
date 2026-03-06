@@ -10,7 +10,7 @@ export interface GitDiffOptions {
   cwd?: string;
 }
 
-export interface GitDiffFile {
+interface GitDiffFile {
   filename: string;
   status: string;
 }
@@ -60,7 +60,11 @@ function parseNameStatus(output: string): GitDiffFile[] {
  * Parse `git diff --shortstat` output to extract additions, deletions, and file count.
  * Example: " 3 files changed, 12 insertions(+), 5 deletions(-)"
  */
-function parseShortstat(output: string): { additions: number; deletions: number; filesChanged: number } {
+function parseShortstat(output: string): {
+  additions: number;
+  deletions: number;
+  filesChanged: number;
+} {
   const filesMatch = /(\d+) files? changed/.exec(output);
   const addMatch = /(\d+) insertions?/.exec(output);
   const delMatch = /(\d+) deletions?/.exec(output);
@@ -91,6 +95,17 @@ export function generateGitDiff(options: GitDiffOptions = {}): GitDiffResult {
     files: parseNameStatus(nameStatus),
     stats: parseShortstat(shortstat),
   };
+}
+
+/** Convert SSH-style git remote URLs to HTTPS. */
+export function normaliseToHttps(remote: string): string {
+  // git@github.com:owner/repo.git → https://github.com/owner/repo
+  const sshMatch = /^git@([^:]+):(.+?)(?:\.git)?$/.exec(remote);
+  if (sshMatch?.[1] && sshMatch[2]) {
+    return `https://${sshMatch[1]}/${sshMatch[2]}`;
+  }
+  // Already HTTPS — strip trailing .git
+  return remote.replace(/\.git$/, '');
 }
 
 /**

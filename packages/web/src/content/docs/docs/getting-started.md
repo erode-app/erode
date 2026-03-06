@@ -15,7 +15,7 @@ Erode detects architecture drift by comparing pull requests against your archite
 
 ### 1. Add your AI provider API key as a repository secret
 
-Go to your repository's **Settings > Secrets and variables > Actions** and add the API key for your chosen [AI provider](/docs/reference/ai-providers/) (e.g. `GEMINI_API_KEY` for the default Gemini provider).
+Go to your repository's **Settings > Secrets and variables > Actions** and add the API key for your chosen [AI provider](/docs/reference/ai-providers/) (e.g. `GEMINI_API_KEY` for the default Gemini provider). The GitHub Action maps these secret values to the `ERODE_`-prefixed environment variables that Erode expects.
 
 ### 2. Create the workflow file
 

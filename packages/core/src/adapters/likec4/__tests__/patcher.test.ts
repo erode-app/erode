@@ -9,7 +9,8 @@ import type {
 import type { AIProvider } from '../../../providers/ai-provider.js';
 
 // Mock fs and child_process
-vi.mock('fs', () => ({
+vi.mock('fs', async (importOriginal) => ({
+  ...(await importOriginal()),
   readFileSync: vi.fn(),
   readdirSync: vi.fn(),
 }));

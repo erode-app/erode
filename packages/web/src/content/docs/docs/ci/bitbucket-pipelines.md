@@ -23,8 +23,8 @@ pipelines:
           script:
             - /entrypoint-bitbucket.sh
           variables:
-            BITBUCKET_TOKEN: $BITBUCKET_TOKEN
-            ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+            ERODE_BITBUCKET_TOKEN: $BITBUCKET_TOKEN
+            ERODE_ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
             ERODE_MODEL_REPO: 'workspace/architecture-model'
 ```
 
@@ -34,20 +34,20 @@ Bitbucket Pipelines does **not** provide a built-in token like GitHub's `GITHUB_
 
 ### Environment variables
 
-| Variable                                                   | Required | Default                         | Description                                                 |
-| ---------------------------------------------------------- | -------- | ------------------------------- | ----------------------------------------------------------- |
-| `BITBUCKET_TOKEN`                                          | Yes      |                                 | App password or repository/workspace access token           |
-| `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY` | Yes      |                                 | AI provider API key                                         |
-| `AI_PROVIDER`                                              | No       | `anthropic`                     | `gemini`, `openai`, or `anthropic`                          |
-| `ERODE_MODEL_REPO`                                         | No       |                                 | Model repository path (e.g. `workspace/architecture-model`) |
-| `ERODE_MODEL_PATH`                                         | No       | `.`                             | Path to model within the repository                         |
-| `ERODE_MODEL_REF`                                          | No       | `main`                          | Git ref for the model repository                            |
-| `ERODE_MODEL_FORMAT`                                       | No       | `likec4`                        | Architecture model format (`likec4` or `structurizr`)       |
-| `ERODE_MODEL_REPO_TOKEN`                                   | No       | `$BITBUCKET_TOKEN`              | Separate token for model repository access                  |
-| `ERODE_OPEN_PR`                                            | No       | `false`                         | Create PR with suggested model updates                      |
-| `ERODE_FAIL_ON_VIOLATIONS`                                 | No       | `false`                         | Exit with code 1 when violations are found                  |
-| `ERODE_SKIP_FILE_FILTERING`                                | No       | `false`                         | Analyze all changed files                                   |
-| `BITBUCKET_BASE_URL`                                       | No       | `https://api.bitbucket.org/2.0` | For self-hosted Bitbucket Data Center/Server instances      |
+| Variable                                                                     | Required | Default                         | Description                                                 |
+| ---------------------------------------------------------------------------- | -------- | ------------------------------- | ----------------------------------------------------------- |
+| `ERODE_BITBUCKET_TOKEN`                                                      | Yes      |                                 | App password or repository/workspace access token           |
+| `ERODE_GEMINI_API_KEY`, `ERODE_OPENAI_API_KEY`, or `ERODE_ANTHROPIC_API_KEY` | Yes      |                                 | AI provider API key                                         |
+| `ERODE_AI_PROVIDER`                                                          | No       | `anthropic`                     | `gemini`, `openai`, or `anthropic`                          |
+| `ERODE_MODEL_REPO`                                                           | No       |                                 | Model repository path (e.g. `workspace/architecture-model`) |
+| `ERODE_MODEL_PATH`                                                           | No       | `.`                             | Path to model within the repository                         |
+| `ERODE_MODEL_REF`                                                            | No       | `main`                          | Git ref for the model repository                            |
+| `ERODE_MODEL_FORMAT`                                                         | No       | `likec4`                        | Architecture model format (`likec4` or `structurizr`)       |
+| `ERODE_MODEL_REPO_TOKEN`                                                     | No       | `$ERODE_BITBUCKET_TOKEN`        | Separate token for model repository access                  |
+| `ERODE_OPEN_PR`                                                              | No       | `false`                         | Create PR with suggested model updates                      |
+| `ERODE_FAIL_ON_VIOLATIONS`                                                   | No       | `false`                         | Exit with code 1 when violations are found                  |
+| `ERODE_SKIP_FILE_FILTERING`                                                  | No       | `false`                         | Analyze all changed files                                   |
+| `ERODE_BITBUCKET_BASE_URL`                                                   | No       | `https://api.bitbucket.org/2.0` | For self-hosted Bitbucket Data Center/Server instances      |
 
 ## Calling the CLI directly
 
@@ -66,8 +66,8 @@ pipelines:
               --url "https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/pull-requests/${BITBUCKET_PR_ID}"
               --format json --comment --fail-on-violations
           variables:
-            BITBUCKET_TOKEN: $BITBUCKET_TOKEN
-            ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+            ERODE_BITBUCKET_TOKEN: $BITBUCKET_TOKEN
+            ERODE_ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
 ```
 
 ## Cloning model from a separate repository
@@ -80,27 +80,27 @@ pipelines:
           name: erode
           image: ghcr.io/erode-app/erode:0
           script:
-            - git clone --depth 1 "https://x-token-auth:${BITBUCKET_TOKEN}@bitbucket.org/workspace/architecture-model.git" /tmp/model
+            - git clone --depth 1 "https://x-token-auth:${ERODE_BITBUCKET_TOKEN}@bitbucket.org/workspace/architecture-model.git" /tmp/model
             - >
               node /app/packages/core/dist/ci-entry.js analyze /tmp/model
               --url "https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/pull-requests/${BITBUCKET_PR_ID}"
               --format json --comment
           variables:
-            BITBUCKET_TOKEN: $BITBUCKET_TOKEN
-            ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+            ERODE_BITBUCKET_TOKEN: $BITBUCKET_TOKEN
+            ERODE_ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
 ```
 
-If your token is an app password (`username:app_password` format), use it directly in the clone URL instead of `x-token-auth:${BITBUCKET_TOKEN}`.
+If your token is an app password (`username:app_password` format), use it directly in the clone URL instead of `x-token-auth:${ERODE_BITBUCKET_TOKEN}`.
 
 ## Self-hosted Bitbucket
 
-Set `BITBUCKET_BASE_URL` to point at your Data Center or Server instance:
+Set `ERODE_BITBUCKET_BASE_URL` to point at your Data Center or Server instance:
 
 ```yaml
 variables:
-  BITBUCKET_BASE_URL: https://bitbucket.example.com/rest/api/1.0
+  ERODE_BITBUCKET_BASE_URL: https://bitbucket.example.com/rest/api/1.0
 ```
 
-Platform detection identifies `bitbucket.org` from PR URLs. Self-hosted Bitbucket instances require `BITBUCKET_BASE_URL` and the full PR URL passed via `--url`.
+Platform detection identifies `bitbucket.org` from PR URLs. Self-hosted Bitbucket instances require `ERODE_BITBUCKET_BASE_URL` and the full PR URL passed via `--url`.
 
 See [Configuration](/docs/guides/configuration/) for all environment variables and [Self-Hosted](/docs/ci/self-hosted/) for other deployment options.

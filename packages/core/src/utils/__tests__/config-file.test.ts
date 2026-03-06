@@ -1,0 +1,137 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as path from 'path';
+import * as os from 'os';
+
+// Mock fs before importing config.js so the module-level createConfig()
+// doesn't find a real .eroderc.json on disk.
+vi.mock('fs', () => ({
+  existsSync: vi.fn().mockReturnValue(false),
+  readFileSync: vi.fn(),
+}));
+
+import * as fs from 'fs';
+import { findConfigFile, RC_FILENAME, ENV_VAR_NAMES } from '../config.js';
+
+const mockExistsSync = vi.mocked(fs.existsSync);
+
+describe('config file support', () => {
+  beforeEach(() => {
+    mockExistsSync.mockReset();
+  });
+
+  describe('RC_FILENAME', () => {
+    it('should be .eroderc.json', () => {
+      expect(RC_FILENAME).toBe('.eroderc.json');
+    });
+  });
+
+  describe('findConfigFile', () => {
+    it('should return cwd path when config file exists there', () => {
+      const cwdPath = path.join(process.cwd(), '.eroderc.json');
+      mockExistsSync.mockImplementation((p) => p === cwdPath);
+
+      expect(findConfigFile()).toBe(cwdPath);
+    });
+
+    it('should return home path when config file only exists in home dir', () => {
+      const homePath = path.join(os.homedir(), '.eroderc.json');
+      mockExistsSync.mockImplementation((p) => p === homePath);
+
+      expect(findConfigFile()).toBe(homePath);
+    });
+
+    it('should return undefined when no config file exists', () => {
+      mockExistsSync.mockReturnValue(false);
+
+      expect(findConfigFile()).toBeUndefined();
+    });
+
+    it('should prefer cwd over home directory when both exist', () => {
+      mockExistsSync.mockReturnValue(true);
+
+      const cwdPath = path.join(process.cwd(), '.eroderc.json');
+      expect(findConfigFile()).toBe(cwdPath);
+    });
+
+    it('should check cwd path before home path', () => {
+      mockExistsSync.mockReturnValue(false);
+      findConfigFile();
+
+      const cwdPath = path.join(process.cwd(), '.eroderc.json');
+      const homePath = path.join(os.homedir(), '.eroderc.json');
+      expect(mockExistsSync).toHaveBeenCalledWith(cwdPath);
+      expect(mockExistsSync).toHaveBeenCalledWith(homePath);
+
+      // cwd should be checked first
+      const calls = mockExistsSync.mock.calls.map((c) => c[0]);
+      expect(calls.indexOf(cwdPath)).toBeLessThan(calls.indexOf(homePath));
+    });
+
+    it('should not check home path if cwd path exists', () => {
+      const cwdPath = path.join(process.cwd(), '.eroderc.json');
+      mockExistsSync.mockImplementation((p) => p === cwdPath);
+
+      findConfigFile();
+
+      // Only one call should have been made (to cwdPath)
+      expect(mockExistsSync).toHaveBeenCalledTimes(1);
+      expect(mockExistsSync).toHaveBeenCalledWith(cwdPath);
+    });
+  });
+
+  describe('ENV_VAR_NAMES', () => {
+    it('should have all expected keys', () => {
+      expect(ENV_VAR_NAMES).toHaveProperty('aiProvider');
+      expect(ENV_VAR_NAMES).toHaveProperty('geminiApiKey');
+      expect(ENV_VAR_NAMES).toHaveProperty('anthropicApiKey');
+      expect(ENV_VAR_NAMES).toHaveProperty('openaiApiKey');
+      expect(ENV_VAR_NAMES).toHaveProperty('githubToken');
+      expect(ENV_VAR_NAMES).toHaveProperty('gitlabToken');
+      expect(ENV_VAR_NAMES).toHaveProperty('bitbucketToken');
+      expect(ENV_VAR_NAMES).toHaveProperty('structurizrCliPath');
+      expect(ENV_VAR_NAMES).toHaveProperty('modelRepoPrToken');
+    });
+
+    it('should have all values prefixed with ERODE_', () => {
+      for (const value of Object.values(ENV_VAR_NAMES)) {
+        expect(value).toMatch(/^ERODE_/);
+      }
+    });
+
+    it('should map aiProvider to ERODE_AI_PROVIDER', () => {
+      expect(ENV_VAR_NAMES.aiProvider).toBe('ERODE_AI_PROVIDER');
+    });
+
+    it('should map geminiApiKey to ERODE_GEMINI_API_KEY', () => {
+      expect(ENV_VAR_NAMES.geminiApiKey).toBe('ERODE_GEMINI_API_KEY');
+    });
+
+    it('should map anthropicApiKey to ERODE_ANTHROPIC_API_KEY', () => {
+      expect(ENV_VAR_NAMES.anthropicApiKey).toBe('ERODE_ANTHROPIC_API_KEY');
+    });
+
+    it('should map openaiApiKey to ERODE_OPENAI_API_KEY', () => {
+      expect(ENV_VAR_NAMES.openaiApiKey).toBe('ERODE_OPENAI_API_KEY');
+    });
+
+    it('should map githubToken to ERODE_GITHUB_TOKEN', () => {
+      expect(ENV_VAR_NAMES.githubToken).toBe('ERODE_GITHUB_TOKEN');
+    });
+
+    it('should map gitlabToken to ERODE_GITLAB_TOKEN', () => {
+      expect(ENV_VAR_NAMES.gitlabToken).toBe('ERODE_GITLAB_TOKEN');
+    });
+
+    it('should map bitbucketToken to ERODE_BITBUCKET_TOKEN', () => {
+      expect(ENV_VAR_NAMES.bitbucketToken).toBe('ERODE_BITBUCKET_TOKEN');
+    });
+
+    it('should map structurizrCliPath to ERODE_STRUCTURIZR_CLI_PATH', () => {
+      expect(ENV_VAR_NAMES.structurizrCliPath).toBe('ERODE_STRUCTURIZR_CLI_PATH');
+    });
+
+    it('should map modelRepoPrToken to ERODE_MODEL_REPO_PR_TOKEN', () => {
+      expect(ENV_VAR_NAMES.modelRepoPrToken).toBe('ERODE_MODEL_REPO_PR_TOKEN');
+    });
+  });
+});

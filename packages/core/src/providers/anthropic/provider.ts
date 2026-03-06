@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { BaseProvider } from '../base-provider.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
+import { ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import type { AnalysisPhase } from '../analysis-phase.js';
 import { ANTHROPIC_MODELS } from './models.js';
 
@@ -12,7 +13,7 @@ export class AnthropicProvider extends BaseProvider {
       throw new ErodeError(
         'An Anthropic API key is needed',
         ErrorCode.AUTH_KEY_MISSING,
-        'No Anthropic API key found. Set ANTHROPIC_API_KEY in your environment.'
+        `No Anthropic API key found. Set ${ENV_VAR_NAMES.anthropicApiKey} in your environment or ${RC_FILENAME}.`
       );
     }
     super({

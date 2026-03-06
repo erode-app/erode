@@ -157,9 +157,7 @@ describe('runCheck', () => {
   it('returns violations when drift is found', async () => {
     mockAnalyzeDrift.mockResolvedValue({
       hasViolations: true,
-      violations: [
-        { severity: 'high', description: 'Undeclared dependency on payments' },
-      ],
+      violations: [{ severity: 'high', description: 'Undeclared dependency on payments' }],
       summary: 'Drift detected',
       metadata: {
         number: 0,
@@ -238,7 +236,11 @@ describe('runCheck', () => {
     await runCheck(baseOptions());
 
     const call = mockExtractDependencies.mock.calls[0] as unknown[];
-    const data = call[0] as { diff: string; commit: { sha: string }; repository: { owner: string; repo: string } };
+    const data = call[0] as {
+      diff: string;
+      commit: { sha: string };
+      repository: { owner: string; repo: string };
+    };
     expect(data.diff).toBe(testDiff);
     expect(data.commit.sha).toBe('local');
     expect(data.repository.owner).toBe('org');
@@ -247,7 +249,7 @@ describe('runCheck', () => {
 
   it('parses files from diff when files not provided', async () => {
     const opts = baseOptions();
-    delete (opts as Record<string, unknown>).files;
+    delete (opts as unknown as Record<string, unknown>)['files'];
 
     await runCheck(opts);
 

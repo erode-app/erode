@@ -30,7 +30,8 @@
     "prebuild": "npm run clean",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate:schema": "tsx scripts/generate-schema.ts"
   },
   "keywords": [
     "architecture",
