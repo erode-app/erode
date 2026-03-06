@@ -126,10 +126,7 @@ export function generateGitDiff(options: GitDiffOptions = {}): GitDiffResult {
  * Filter a unified diff to include only segments for the given filenames.
  * Splits on `diff --git` headers and reassembles matching segments.
  */
-export function filterDiffByFiles(
-  diff: string,
-  files: { filename: string }[]
-): string {
+export function filterDiffByFiles(diff: string, files: { filename: string }[]): string {
   if (!diff || files.length === 0) return '';
   const allowed = new Set(files.map((f) => f.filename));
   const segments: string[] = [];

@@ -236,7 +236,9 @@ describe('runCheck', () => {
   it('passes local metadata to drift analysis', async () => {
     await runCheck(baseOptions());
 
-    const [promptData] = mockAnalyzeDrift.mock.calls[0] as [{ changeRequest: { number: number; title: string } }];
+    const [promptData] = mockAnalyzeDrift.mock.calls[0] as [
+      { changeRequest: { number: number; title: string } },
+    ];
     expect(promptData.changeRequest.number).toBe(0);
     expect(promptData.changeRequest.title).toBe('Local changes');
   });
@@ -244,7 +246,9 @@ describe('runCheck', () => {
   it('passes diff to dependency extraction', async () => {
     await runCheck(baseOptions());
 
-    const [extractData] = mockExtractDependencies.mock.calls[0] as [{ commit: { sha: string }; repository: { owner: string; repo: string } }];
+    const [extractData] = mockExtractDependencies.mock.calls[0] as [
+      { commit: { sha: string }; repository: { owner: string; repo: string } },
+    ];
     expect(extractData.commit.sha).toBe('local');
     expect(extractData.repository.owner).toBe('org');
     expect(extractData.repository.repo).toBe('api');
@@ -318,11 +322,9 @@ describe('runCheck', () => {
       modelRef: 'v2',
     });
 
-    expect(mockResolveModelSource).toHaveBeenCalledWith(
-      '/models/arch',
-      'org/arch-model',
-      { ref: 'v2' }
-    );
+    expect(mockResolveModelSource).toHaveBeenCalledWith('/models/arch', 'org/arch-model', {
+      ref: 'v2',
+    });
   });
 
   it('calls cleanup even when pipeline throws', async () => {

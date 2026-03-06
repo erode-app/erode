@@ -57,7 +57,10 @@ export const CheckOptionsSchema = z.object({
   repo: z.url().optional(),
   modelFormat: z.string().default('likec4'),
   staged: z.boolean().optional().default(false),
-  branch: z.string().regex(/^[a-zA-Z0-9._/-]+$/, 'Invalid branch name').optional(),
+  branch: z
+    .string()
+    .regex(/^[a-zA-Z0-9._/-]+$/, 'Invalid branch name')
+    .optional(),
   component: z.string().optional(),
   format: z.enum(['console', 'json']).optional().default('console'),
   failOnViolations: z.boolean().optional().default(false),

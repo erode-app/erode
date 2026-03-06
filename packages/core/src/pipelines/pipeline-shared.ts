@@ -156,9 +156,7 @@ export async function resolveAndCloneModel(
 }
 
 /** TS strict guard: extract the first element of a non-empty components array. */
-function firstComponentOrThrow(
-  components: ArchitecturalComponent[]
-): ArchitecturalComponent {
+function firstComponentOrThrow(components: ArchitecturalComponent[]): ArchitecturalComponent {
   const first = components[0];
   if (!first) {
     throw new ErodeError(
