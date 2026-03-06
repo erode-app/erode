@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { ErodeError, ErrorCode } from '../errors.js';
 
 export interface GitDiffOptions {
@@ -21,13 +21,17 @@ export interface GitDiffResult {
   files: GitDiffFile[];
 }
 
-function run(cmd: string, cwd: string): string {
+function run(args: string[], cwd: string): string {
   try {
-    return execSync(cmd, { cwd, encoding: 'utf-8', maxBuffer: 50 * 1024 * 1024 }).trim();
+    return execFileSync('git', args, {
+      cwd,
+      encoding: 'utf-8',
+      maxBuffer: 50 * 1024 * 1024,
+    }).trim();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new ErodeError(
-      `Git command failed: ${cmd}`,
+      `Git command failed: git ${args.join(' ')}`,
       ErrorCode.IO_FILE_NOT_FOUND,
       `Could not run git command. Make sure you are inside a git repository.\n${message}`
     );
@@ -75,7 +79,7 @@ function parseShortstat(output: string): {
   };
 }
 
-function buildDiffArgs(options: GitDiffOptions): string {
+function buildDiffArgs(options: GitDiffOptions): string[] {
   if (options.branch && options.staged) {
     throw new ErodeError(
       'Cannot use --branch and --staged together',
@@ -83,9 +87,9 @@ function buildDiffArgs(options: GitDiffOptions): string {
       'The --branch and --staged options are mutually exclusive. Use --branch to compare against a branch, or --staged to check only staged changes.'
     );
   }
-  if (options.branch) return `${options.branch}...HEAD`;
-  if (options.staged) return '--staged';
-  return '';
+  if (options.branch) return [`${options.branch}...HEAD`];
+  if (options.staged) return ['--staged'];
+  return [];
 }
 
 /** Generate a git diff from the local working tree. */
@@ -93,9 +97,9 @@ export function generateGitDiff(options: GitDiffOptions = {}): GitDiffResult {
   const cwd = options.cwd ?? process.cwd();
   const args = buildDiffArgs(options);
 
-  const diff = run(`git diff ${args}`, cwd);
-  const nameStatus = run(`git diff ${args} --name-status`, cwd);
-  const shortstat = run(`git diff ${args} --shortstat`, cwd);
+  const diff = run(['diff', ...args], cwd);
+  const nameStatus = run(['diff', ...args, '--name-status'], cwd);
+  const shortstat = run(['diff', ...args, '--shortstat'], cwd);
 
   return {
     diff,
@@ -121,20 +125,23 @@ export function normaliseToHttps(remote: string): string {
  */
 export function parseRepoFromRemote(remoteUrl: string): { owner: string; repo: string } {
   // HTTPS: https://github.com/owner/repo.git or https://github.com/owner/repo
-  const httpsMatch = /(?:https?:\/\/[^/]+\/)(.+?)(?:\.git)?$/.exec(remoteUrl);
-  if (httpsMatch?.[1]) {
-    const parts = httpsMatch[1].split('/');
+  try {
+    const url = new URL(remoteUrl);
+    const path = url.pathname
+      .replace(/^\//, '')
+      .replace(/\.git$/, '')
+      .replace(/\/$/, '');
+    const parts = path.split('/');
     if (parts.length >= 2 && parts[0] && parts[1]) {
       return { owner: parts[0], repo: parts[1] };
     }
+  } catch {
+    // Not a valid URL, try SSH format below
   }
   // SSH: git@github.com:owner/repo.git
-  const sshMatch = /[^@]+@[^:]+:(.+?)(?:\.git)?$/.exec(remoteUrl);
-  if (sshMatch?.[1]) {
-    const parts = sshMatch[1].split('/');
-    if (parts.length >= 2 && parts[0] && parts[1]) {
-      return { owner: parts[0], repo: parts[1] };
-    }
+  const sshMatch = /^[^@]+@[^:]+:([^/]+)\/([^/]+?)(?:\.git)?$/.exec(remoteUrl);
+  if (sshMatch?.[1] && sshMatch[2]) {
+    return { owner: sshMatch[1], repo: sshMatch[2] };
   }
   throw new ErodeError(
     `Cannot parse repository from remote URL: ${remoteUrl}`,

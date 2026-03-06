@@ -55,11 +55,16 @@ export interface CheckResult {
 function parseFilesFromDiff(diff: string): { filename: string; status: string }[] {
   const files: { filename: string; status: string }[] = [];
   const seen = new Set<string>();
+  const prefix = 'diff --git a/';
   for (const line of diff.split('\n')) {
-    const match = /^diff --git a\/(.+?) b\/(.+)$/.exec(line);
-    if (match?.[2] && !seen.has(match[2])) {
-      seen.add(match[2]);
-      files.push({ filename: match[2], status: 'modified' });
+    if (!line.startsWith(prefix)) continue;
+    const rest = line.slice(prefix.length);
+    const bIdx = rest.lastIndexOf(' b/');
+    if (bIdx === -1) continue;
+    const filename = rest.slice(bIdx + 3);
+    if (filename && !seen.has(filename)) {
+      seen.add(filename);
+      files.push({ filename, status: 'modified' });
     }
   }
   return files;

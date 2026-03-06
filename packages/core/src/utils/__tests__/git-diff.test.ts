@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockExecSync } = vi.hoisted(() => ({
-  mockExecSync: vi.fn(),
+const { mockExecFileSync } = vi.hoisted(() => ({
+  mockExecFileSync: vi.fn(),
 }));
 
 vi.mock('child_process', () => ({
-  execSync: mockExecSync,
+  execFileSync: mockExecFileSync,
 }));
 
 import { parseRepoFromRemote, normaliseToHttps, generateGitDiff } from '../git-diff.js';
@@ -83,7 +83,7 @@ describe('generateGitDiff', () => {
   });
 
   it('returns empty result for clean working tree', () => {
-    mockExecSync.mockReturnValue('');
+    mockExecFileSync.mockReturnValue('');
 
     const result = generateGitDiff();
 
@@ -93,11 +93,11 @@ describe('generateGitDiff', () => {
   });
 
   it('parses name-status output for all statuses', () => {
-    mockExecSync.mockImplementation((cmd: string) => {
-      if (cmd.includes('--name-status')) {
+    mockExecFileSync.mockImplementation((_bin: string, args: string[]) => {
+      if (args.includes('--name-status')) {
         return 'A\tsrc/new.ts\nM\tsrc/modified.ts\nD\tsrc/deleted.ts\nR100\tsrc/renamed.ts\nC100\tsrc/copied.ts\n';
       }
-      if (cmd.includes('--shortstat')) {
+      if (args.includes('--shortstat')) {
         return ' 5 files changed, 20 insertions(+), 3 deletions(-)';
       }
       return 'diff content';
@@ -115,8 +115,8 @@ describe('generateGitDiff', () => {
   });
 
   it('parses shortstat output', () => {
-    mockExecSync.mockImplementation((cmd: string) => {
-      if (cmd.includes('--shortstat')) {
+    mockExecFileSync.mockImplementation((_bin: string, args: string[]) => {
+      if (args.includes('--shortstat')) {
         return ' 3 files changed, 12 insertions(+), 5 deletions(-)';
       }
       return '';
@@ -128,8 +128,8 @@ describe('generateGitDiff', () => {
   });
 
   it('handles shortstat with only insertions', () => {
-    mockExecSync.mockImplementation((cmd: string) => {
-      if (cmd.includes('--shortstat')) {
+    mockExecFileSync.mockImplementation((_bin: string, args: string[]) => {
+      if (args.includes('--shortstat')) {
         return ' 1 file changed, 7 insertions(+)';
       }
       return '';
@@ -141,23 +141,25 @@ describe('generateGitDiff', () => {
   });
 
   it('passes --staged flag to git diff', () => {
-    mockExecSync.mockReturnValue('');
+    mockExecFileSync.mockReturnValue('');
 
     generateGitDiff({ staged: true });
 
-    expect(mockExecSync).toHaveBeenCalledWith(
-      'git diff --staged',
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      ['diff', '--staged'],
       expect.objectContaining({ encoding: 'utf-8' })
     );
   });
 
   it('passes branch arg as three-dot diff', () => {
-    mockExecSync.mockReturnValue('');
+    mockExecFileSync.mockReturnValue('');
 
     generateGitDiff({ branch: 'main' });
 
-    expect(mockExecSync).toHaveBeenCalledWith(
-      'git diff main...HEAD',
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      ['diff', 'main...HEAD'],
       expect.objectContaining({ encoding: 'utf-8' })
     );
   });
@@ -169,19 +171,20 @@ describe('generateGitDiff', () => {
     );
   });
 
-  it('passes cwd to execSync', () => {
-    mockExecSync.mockReturnValue('');
+  it('passes cwd to execFileSync', () => {
+    mockExecFileSync.mockReturnValue('');
 
     generateGitDiff({ cwd: '/custom/path' });
 
-    expect(mockExecSync).toHaveBeenCalledWith(
-      expect.any(String),
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      expect.any(Array),
       expect.objectContaining({ cwd: '/custom/path' })
     );
   });
 
   it('wraps git failures as ErodeError', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('fatal: not a git repository');
     });
 
