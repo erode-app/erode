@@ -1,6 +1,7 @@
 import type { ProgressReporter } from './progress.js';
 import { SilentProgress } from './progress.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
+import type { ComponentSummary } from '../adapters/architecture-types.js';
 import { validatePath } from '../utils/validation.js';
 
 export interface ConnectionsOptions {
@@ -10,24 +11,9 @@ export interface ConnectionsOptions {
 }
 
 export interface ComponentConnections {
-  component: {
-    id: string;
-    name: string;
-    type: string;
-    repository?: string;
-  };
-  dependencies: {
-    id: string;
-    name: string;
-    type: string;
-    repository?: string;
-  }[];
-  dependents: {
-    id: string;
-    name: string;
-    type: string;
-    repository?: string;
-  }[];
+  component: ComponentSummary & { repository?: string };
+  dependencies: (ComponentSummary & { repository?: string })[];
+  dependents: (ComponentSummary & { repository?: string })[];
   relationships: {
     targetId: string;
     targetName: string;

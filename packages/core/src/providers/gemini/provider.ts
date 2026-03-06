@@ -1,5 +1,5 @@
 import { FinishReason, GoogleGenAI } from '@google/genai';
-import { BaseProvider } from '../base-provider.js';
+import { BaseProvider, type ProviderConfig } from '../base-provider.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
 import { ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import type { AnalysisPhase } from '../analysis-phase.js';
@@ -8,7 +8,7 @@ import { GEMINI_MODELS } from './models.js';
 export class GeminiProvider extends BaseProvider {
   private readonly client: GoogleGenAI;
 
-  constructor(config: { apiKey: string; fastModel?: string; advancedModel?: string }) {
+  constructor(config: ProviderConfig) {
     if (!config.apiKey) {
       throw new ErodeError(
         'A Gemini API key is needed',

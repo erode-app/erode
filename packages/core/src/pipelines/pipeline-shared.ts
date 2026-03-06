@@ -1,5 +1,6 @@
 import type { ArchitectureModelAdapter } from '../adapters/architecture-adapter.js';
 import type { ArchitecturalComponent, ArchitectureModel } from '../adapters/architecture-types.js';
+import type { ComponentRelationshipRef } from '../analysis/analysis-types.js';
 import type { AIProvider } from '../providers/ai-provider.js';
 import type {
   DriftAnalysisPromptData,
@@ -31,11 +32,7 @@ export async function loadArchitectureModel(
 export interface ArchitecturalContext {
   dependencies: (ArchitecturalComponent & { repository?: string })[];
   dependents: (ArchitecturalComponent & { repository?: string })[];
-  relationships: {
-    target: { id: string; name: string };
-    kind?: string;
-    title?: string;
-  }[];
+  relationships: ComponentRelationshipRef[];
 }
 
 /** Build architectural context (dependencies, dependents, relationships) for a component. */

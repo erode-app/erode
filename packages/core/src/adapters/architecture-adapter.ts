@@ -1,6 +1,7 @@
 import type {
   ArchitectureModel,
   ArchitecturalComponent,
+  ComponentRelationship,
   ModelRelationship,
   SimpleComponent,
 } from './architecture-types.js';
@@ -40,9 +41,7 @@ export interface ArchitectureModelAdapter {
   getComponentDependents(componentId: string): ArchitecturalComponent[];
 
   /** Get relationships from a component with kind and title metadata. */
-  getComponentRelationships(
-    componentId: string
-  ): { target: ArchitecturalComponent; kind?: string; title?: string }[];
+  getComponentRelationships(componentId: string): ComponentRelationship[];
 
   /** Get all components in the loaded model. */
   getAllComponents(): ArchitecturalComponent[];

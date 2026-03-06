@@ -1,15 +1,10 @@
+import type { CommitInfo } from './analysis-types.js';
+import type { RepoIdentifier } from '../utils/git-diff.js';
+
 export interface DependencyExtractionPromptVars {
   diff: string;
-  commit: {
-    sha: string;
-    message: string;
-    author: string;
-  };
-  repository: {
-    owner: string;
-    repo: string;
-    url: string;
-  };
+  commit: CommitInfo;
+  repository: RepoIdentifier & { url: string };
   componentsContext: string;
 }
 

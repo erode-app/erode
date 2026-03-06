@@ -22,6 +22,12 @@ function debugLog(msg: string, data?: unknown): void {
   }
 }
 
+export interface ProviderConfig {
+  apiKey: string;
+  fastModel?: string;
+  advancedModel?: string;
+}
+
 /**
  * Abstract base class for AI providers.
  *

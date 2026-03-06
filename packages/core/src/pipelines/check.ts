@@ -16,6 +16,7 @@ import type {
 } from '../analysis/analysis-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import type { ChangeRequestFile } from '../platforms/source-platform.js';
+import type { DiffStats, GitDiffFile } from '../utils/git-diff.js';
 import { parseFilesFromDiff, filterDiffByFiles } from '../utils/git-diff.js';
 import {
   loadArchitectureModel,
@@ -44,9 +45,9 @@ export interface CheckOptions {
   /** Output format. */
   format?: 'console' | 'json';
   /** Files extracted from the diff (filename + status). */
-  files?: { filename: string; status: string }[];
+  files?: GitDiffFile[];
   /** Diff stats. */
-  stats?: { additions: number; deletions: number; filesChanged: number };
+  stats?: DiffStats;
   /** Whether to skip .erodeignore filtering. */
   skipFileFiltering?: boolean;
   /** Model repository URL or owner/repo slug for remote model. */

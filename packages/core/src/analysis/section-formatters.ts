@@ -1,7 +1,9 @@
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
+import type { CommitInfo, ComponentRelationshipRef } from './analysis-types.js';
+import type { GitDiffFile } from '../utils/git-diff.js';
 
 export function formatAllowedDependencies(architectural: {
-  relationships?: { target: { id: string; name: string }; kind?: string; title?: string }[];
+  relationships?: ComponentRelationshipRef[];
   dependencies: { id: string; name: string; type: string; repository?: string }[];
 }): string {
   if (architectural.relationships && architectural.relationships.length > 0) {
@@ -114,14 +116,14 @@ export function formatAllRelationships(
     .join('\n');
 }
 
-export function formatChangedFiles(files: { filename: string; status: string }[]): string {
+export function formatChangedFiles(files: GitDiffFile[]): string {
   if (files.length === 0) {
     return 'No changed files.';
   }
   return files.map((f) => `- ${f.filename} (${f.status})`).join('\n');
 }
 
-export function formatCommits(commits: { sha: string; message: string; author: string }[]): {
+export function formatCommits(commits: CommitInfo[]): {
   section: string;
   note: string;
 } {

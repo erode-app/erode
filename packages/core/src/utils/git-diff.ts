@@ -15,9 +15,20 @@ export interface GitDiffFile {
   status: string;
 }
 
+export interface DiffStats {
+  additions: number;
+  deletions: number;
+  filesChanged: number;
+}
+
+export interface RepoIdentifier {
+  owner: string;
+  repo: string;
+}
+
 export interface GitDiffResult {
   diff: string;
-  stats: { additions: number; deletions: number; filesChanged: number };
+  stats: DiffStats;
   files: GitDiffFile[];
 }
 
@@ -71,11 +82,7 @@ function parseNameStatus(output: string): GitDiffFile[] {
  * Parse `git diff --shortstat` output to extract additions, deletions, and file count.
  * Example: " 3 files changed, 12 insertions(+), 5 deletions(-)"
  */
-function parseShortstat(output: string): {
-  additions: number;
-  deletions: number;
-  filesChanged: number;
-} {
+function parseShortstat(output: string): DiffStats {
   const filesMatch = /(\d+) files? changed/.exec(output);
   const addMatch = /(\d+) insertions?/.exec(output);
   const delMatch = /(\d+) deletions?/.exec(output);
@@ -159,8 +166,8 @@ export function filterDiffByFiles(diff: string, files: { filename: string }[]): 
  * Parse file paths from a unified diff.
  * Looks for `diff --git a/<path> b/<path>` headers.
  */
-export function parseFilesFromDiff(diff: string): { filename: string; status: string }[] {
-  const files: { filename: string; status: string }[] = [];
+export function parseFilesFromDiff(diff: string): GitDiffFile[] {
+  const files: GitDiffFile[] = [];
   const seen = new Set<string>();
   const prefix = 'diff --git a/';
   for (const line of diff.split('\n')) {
@@ -212,7 +219,7 @@ export function getRemoteUrl(remote = 'origin', cwd?: string): string {
  * Parse the repository owner and name from a git remote URL.
  * Supports HTTPS and SSH formats.
  */
-export function parseRepoFromRemote(remoteUrl: string): { owner: string; repo: string } {
+export function parseRepoFromRemote(remoteUrl: string): RepoIdentifier {
   // HTTPS: https://github.com/owner/repo.git or https://github.com/owner/repo
   try {
     const url = new URL(remoteUrl);

@@ -26,6 +26,20 @@ export interface ArchitectureModel {
   componentIndex: ComponentIndex;
 }
 
+/** A resolved relationship from a component to its target, with optional metadata. */
+export interface ComponentRelationship {
+  target: ArchitecturalComponent;
+  kind?: string;
+  title?: string;
+}
+
+/** Lightweight component reference used in prompt data and pipeline context. */
+export interface ComponentSummary {
+  id: string;
+  name: string;
+  type: string;
+}
+
 export interface SimpleComponent {
   id: string;
   title?: string;

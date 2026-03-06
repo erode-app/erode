@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { BaseProvider } from '../base-provider.js';
+import { BaseProvider, type ProviderConfig } from '../base-provider.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
 import { ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import type { AnalysisPhase } from '../analysis-phase.js';
@@ -8,7 +8,7 @@ import { ANTHROPIC_MODELS } from './models.js';
 export class AnthropicProvider extends BaseProvider {
   private readonly client: Anthropic;
 
-  constructor(config: { apiKey: string; fastModel?: string; advancedModel?: string }) {
+  constructor(config: ProviderConfig) {
     if (!config.apiKey) {
       throw new ErodeError(
         'An Anthropic API key is needed',
