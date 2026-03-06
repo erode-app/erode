@@ -6,6 +6,8 @@ import {
   parseRepoFromRemote,
   normaliseToHttps,
   validate,
+  ErodeError,
+  ErrorCode,
 } from '@erode-app/core';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { CheckOptionsSchema } from '../utils/command-schemas.js';
@@ -32,8 +34,16 @@ export function createCheckCommand(): Command {
         // ── Resolve repository URL ───────────────────────────────────────
         let repoUrl = validated.repo;
         if (!repoUrl) {
-          const remote = execSync('git remote get-url origin', { encoding: 'utf-8' }).trim();
-          // Normalise SSH URLs to HTTPS for adapter matching
+          let remote: string;
+          try {
+            remote = execSync('git remote get-url origin', { encoding: 'utf-8' }).trim();
+          } catch {
+            throw new ErodeError(
+              'Could not detect repository URL from git remote',
+              ErrorCode.INPUT_INVALID,
+              'Could not detect the repository URL. Make sure you are inside a git repository with an "origin" remote, or use --repo to specify the URL explicitly.'
+            );
+          }
           repoUrl = normaliseToHttps(remote);
           progress?.info(`Detected repository: ${repoUrl}`);
         }

@@ -76,6 +76,13 @@ function parseShortstat(output: string): {
 }
 
 function buildDiffArgs(options: GitDiffOptions): string {
+  if (options.branch && options.staged) {
+    throw new ErodeError(
+      'Cannot use --branch and --staged together',
+      ErrorCode.INPUT_INVALID,
+      'The --branch and --staged options are mutually exclusive. Use --branch to compare against a branch, or --staged to check only staged changes.'
+    );
+  }
   if (options.branch) return `${options.branch}...HEAD`;
   if (options.staged) return '--staged';
   return '';
