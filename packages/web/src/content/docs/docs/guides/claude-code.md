@@ -130,10 +130,31 @@ Set API keys via environment variables (`ERODE_GEMINI_API_KEY`,
 See [Configuration](/docs/guides/configuration/) for the full reference.
 ````
 
-### 2. Commit the skill
+### 2. Add a project config (if you don't have one)
+
+The skill reads model path and provider settings from `.eroderc.json` in the
+repository root. If you already have one, skip this step.
+
+```json
+{
+  "$schema": "https://erode.dev/schemas/v0/eroderc.schema.json",
+  "ai": { "provider": "gemini" },
+  "adapter": { "modelPath": "./architecture" }
+}
+```
+
+Set `adapter.modelPath` to the directory containing your architecture model
+files. Set `ai.provider` to your preferred provider (`gemini`, `openai`, or
+`anthropic`).
+
+API keys go in environment variables (`ERODE_GEMINI_API_KEY`,
+`ERODE_OPENAI_API_KEY`, or `ERODE_ANTHROPIC_API_KEY`), not in the config
+file. See [Configuration](/docs/guides/configuration/) for the full reference.
+
+### 3. Commit the skill and config
 
 ```bash
-git add .claude/skills/erode-check/SKILL.md
+git add .claude/skills/erode-check/SKILL.md .eroderc.json
 git commit -m "chore: add erode architecture check skill for Claude Code"
 ```
 

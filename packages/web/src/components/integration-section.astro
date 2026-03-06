@@ -1,13 +1,21 @@
 <section class="integration">
   <div class="container">
     <h2>Get Started</h2>
-    <p class="subtitle">Add Erode to your CI pipeline.</p>
+    <p class="subtitle">Add Erode to your workflow.</p>
+
     <div class="code-wrapper">
-      <div class="code-block">
-        <div class="code-header">
-          <span class="code-lang">GitHub Actions</span>
-        </div>
-        <pre><code><span class="comment"># .github/workflows/erode.yml</span>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="true" aria-controls="panel-ci" id="tab-ci">CI</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-claude" id="tab-claude">Claude Code</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-cli" id="tab-cli">Local CLI</button>
+      </div>
+
+      <div class="panel" role="tabpanel" id="panel-ci" aria-labelledby="tab-ci">
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">GitHub Actions</span>
+          </div>
+          <pre><code><span class="comment"># .github/workflows/erode.yml</span>
 name: Architecture Drift Check
 on: [pull_request]
 
@@ -20,11 +28,68 @@ jobs:
           model-repo: your-org/architecture
           github-token: $&#123;&#123; secrets.GITHUB_TOKEN &#125;&#125;
           gemini-api-key: $&#123;&#123; secrets.GEMINI_API_KEY &#125;&#125;</code></pre>
+        </div>
+        <a href="/docs/getting-started/" class="docs-link">View full setup guide &rarr;</a>
       </div>
-      <a href="/docs/getting-started/" class="docs-link">View full setup guide &rarr;</a>
+
+      <div class="panel" role="tabpanel" id="panel-claude" aria-labelledby="tab-claude" hidden>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Markdown</span>
+          </div>
+          <pre><code><span class="comment"># .claude/skills/erode-check/SKILL.md</span>
+---
+name: erode-check
+description: &gt;-
+  Check local code changes for architecture drift.
+  Triggers after significant code changes to catch
+  undeclared dependencies before code review.
+allowed-tools: Bash, Read, Glob, Grep
+---
+
+Run `erode check` against local changes to detect
+undeclared dependencies and architecture violations
+before pushing.</code></pre>
+        </div>
+        <a href="/docs/guides/claude-code/" class="docs-link">View Claude Code guide &rarr;</a>
+      </div>
+
+      <div class="panel" role="tabpanel" id="panel-cli" aria-labelledby="tab-cli" hidden>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Bash</span>
+          </div>
+          <pre><code><span class="comment"># Check unstaged changes</span>
+npx @erode-app/cli check
+
+<span class="comment"># Check staged changes before committing</span>
+npx @erode-app/cli check --staged
+
+<span class="comment"># Compare branch against main before pushing</span>
+npx @erode-app/cli check --branch main</code></pre>
+        </div>
+        <a href="/docs/guides/cli-usage/" class="docs-link">View CLI reference &rarr;</a>
+      </div>
     </div>
   </div>
 </section>
+
+<script>
+  document.querySelectorAll('.tabs').forEach((tablist) => {
+    tablist.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const tab = target.closest('[role="tab"]');
+      if (!tab) return;
+      const section = tablist.closest('section');
+      if (!section) return;
+      section.querySelectorAll('[role="tab"]').forEach((t) => t.setAttribute('aria-selected', 'false'));
+      section.querySelectorAll('[role="tabpanel"]').forEach((p) => p.setAttribute('hidden', ''));
+      tab.setAttribute('aria-selected', 'true');
+      const panel = section.querySelector(`#${tab.getAttribute('aria-controls')}`);
+      if (panel) panel.removeAttribute('hidden');
+    });
+  });
+</script>
 
 <style>
   .integration {
@@ -46,6 +111,30 @@ jobs:
   .code-wrapper {
     max-width: 38rem;
     margin: var(--space-xl) auto 0;
+  }
+
+  .tabs {
+    display: flex;
+    gap: var(--space-lg);
+    justify-content: center;
+    margin-bottom: var(--space-lg);
+  }
+
+  .tab {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    background: none;
+    border: none;
+    padding: var(--space-xs) 0;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .tab[aria-selected="true"] {
+    color: var(--text-primary);
+    border-bottom-color: var(--accent);
   }
 
   .code-block {
