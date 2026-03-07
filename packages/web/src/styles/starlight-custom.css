@@ -72,3 +72,42 @@
     height: 300px;
   }
 }
+
+/* Blog listing — card layout */
+.posts {
+  gap: 2rem;
+}
+
+article.preview {
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  background: var(--sl-color-gray-6);
+  gap: 0.5rem;
+}
+
+article.preview h2 {
+  margin-bottom: 0;
+}
+
+article.preview h2 a {
+  text-decoration: none;
+}
+
+article.preview header {
+  display: flex;
+  flex-direction: column;
+}
+
+article.preview .metadata {
+  order: -1;
+}
+
+article.preview .metadata .dates time {
+  font-size: 0.8rem;
+  color: var(--sl-color-gray-3);
+}
+
+article.preview .metadata .authors {
+  display: none;
+}

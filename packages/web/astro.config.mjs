@@ -22,13 +22,14 @@ export default defineConfig({
     starlight({
       plugins: [
         starlightBlog({
-          title: 'Blog',
+          title: 'Announcements',
+          prefix: 'announcements',
           postCount: 5,
           recentPostCount: 5,
           authors: {
             anders: {
               name: 'Anders Hassis',
-              title: 'Creator of Erode',
+              title: 'Core maintainer',
               url: 'https://github.com/parse',
             },
           },
