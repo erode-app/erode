@@ -24,9 +24,10 @@ Create `.claude/skills/erode-check/SKILL.md` in your repository:
 ---
 name: erode-check
 description: >-
-  Check local code changes for architecture drift using Erode. Triggers
-  after significant code changes to catch undeclared dependencies and
-  structural violations before they reach code review.
+  Use this skill whenever code changes introduce new imports, API calls,
+  database connections, message queues, or service-to-service communication.
+  Also use before any commit or push. Catches undeclared dependencies and
+  architecture violations using Erode.
 allowed-tools: Bash, Read, Glob, Grep
 ---
 
@@ -37,40 +38,40 @@ and architecture violations before pushing.
 
 ## When to Activate
 
-Run this skill proactively in these situations:
+Run this check proactively:
 
-1. **After writing code that adds a new integration** — new imports,
-   API calls, database connections, message queue producers/consumers,
-   or service-to-service communication
-2. **Before committing** — when the user asks you to commit, run this
-   first to verify no drift was introduced
-3. **When the user asks** — any mention of "architecture check",
-   "drift check", or "erode check"
+1. **After adding new integrations** -- run when you write code that
+   introduces new imports, API calls, database connections, message queue
+   producers/consumers, or service-to-service communication
+2. **Before committing** -- run before creating any commit to verify no
+   drift was introduced during the session
+3. **On request** -- run when the user mentions "architecture check",
+   "drift check", or "erode"
 
-Do NOT run this skill for:
+Skip this check for changes that cannot introduce new dependencies:
 
-- Documentation-only changes
-- Test-only changes
-- Config/tooling changes (tsconfig, eslint, prettier, etc.)
-- Changes that only modify existing logic without new external calls
+- Documentation-only changes (no code paths affected)
+- Test-only changes (test code is not part of the production architecture)
+- Config/tooling changes like tsconfig, eslint, or prettier (no runtime dependencies)
+- Refactors that modify existing logic without adding external calls
 
 ## How to Run
 
-Pick the right mode depending on the situation:
+Choose the mode based on git state:
 
-**After writing code** (unstaged changes in the working tree):
+**Unstaged changes exist** (you just wrote code):
 
 ```bash
 npx @erode-app/cli check --format json
 ```
 
-**Before committing** (changes already staged with `git add`):
+**Changes are staged** (ready to commit):
 
 ```bash
 npx @erode-app/cli check --format json --staged
 ```
 
-**Before pushing** (all commits on the branch vs. base branch):
+**Commits exist on the branch** (ready to push):
 
 ```bash
 npx @erode-app/cli check --format json --branch main
@@ -95,39 +96,39 @@ Parse the JSON output. The key fields are:
 - `analysis.summary`: human-readable overview
 - `analysis.modelUpdates`: suggested relationship changes for the
   architecture model
+- `dependencyChanges[]`: each entry has `type` (added, removed, modified),
+  `dependency`, `file`, and `description` -- use this to explain what
+  dependency changes were detected
 
 ### When violations are found
 
 1. **Read each violation** and its suggestion
-2. **Decide the right fix** — either:
+2. **Decide the right fix** -- either:
    - Refactor the code to use the declared dependency path (e.g., call
      through an API gateway instead of directly)
    - Or note that the architecture model needs updating (the dependency
      is intentional but undeclared)
 3. **Tell the user** what you found, the severity, and your recommended
    fix
-4. **Do not silently suppress violations** — always surface them
+4. **Do not silently suppress violations** -- always surface them
 
 ### When no violations are found
 
 Briefly confirm: "Architecture check passed, no undeclared dependencies
 detected."
 
+### When the command fails
+
+If `erode check` exits with an error, read the error message. Common causes:
+the AI provider API key is not set, the model path in `.eroderc.json` does
+not exist, or there is no git remote configured. Report the error to the
+user with the suggested fix from the error message.
+
 ## Configuration
 
-Add a `.eroderc.json` file to the repository root:
-
-    {
-      "$schema": "https://erode.dev/schemas/v0/eroderc.schema.json",
-      "ai": { "provider": "gemini" },
-      "adapter": { "modelPath": "./architecture" }
-    }
-
-Set API keys via environment variables (`ERODE_GEMINI_API_KEY`,
-`ERODE_OPENAI_API_KEY`, or `ERODE_ANTHROPIC_API_KEY`), not in
-`.eroderc.json`. This way the config file can be committed safely.
-
-See [Configuration](/docs/guides/configuration/) for the full reference.
+The model path and provider are read from `.eroderc.json` at the repository
+root. API keys come from environment variables (`ERODE_GEMINI_API_KEY`,
+`ERODE_OPENAI_API_KEY`, or `ERODE_ANTHROPIC_API_KEY`).
 ````
 
 ### 2. Add a project config (if you don't have one)
