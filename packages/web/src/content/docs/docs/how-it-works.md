@@ -21,14 +21,14 @@ Before any AI stage runs, Erode filters the diff to remove files that are irrele
 
 The built-in skip patterns cover:
 
-- **Tests** — `*.test.ts`, `*.spec.js`, `__tests__/`, etc.
-- **Documentation** — `*.md`, `docs/`, `README`, `CHANGELOG`
-- **Config & tooling** — `.vscode/`, `.prettierrc`, `tsconfig.json`, `vite.config.*`
-- **Lock files** — `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`
-- **Build output** — `dist/`, `build/`, `.next/`, `coverage/`
-- **CI/CD** — `.github/`, `.gitlab-ci.yml`, `.circleci/`
+- **Tests**:`*.test.ts`, `*.spec.js`, `__tests__/`, etc.
+- **Documentation**:`*.md`, `docs/`, `README`, `CHANGELOG`
+- **Config & tooling**:`.vscode/`, `.prettierrc`, `tsconfig.json`, `vite.config.*`
+- **Lock files**:`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`
+- **Build output**:`dist/`, `build/`, `.next/`, `coverage/`
+- **CI/CD**:`.github/`, `.gitlab-ci.yml`, `.circleci/`
 
-To analyze all files regardless of these patterns, set `skip-file-filtering: 'true'` in the [GitHub Action](/docs/ci/github-actions/) or pass `--skip-file-filtering` on the CLI.
+To analyze all files regardless of these patterns, set `skip-file-filtering: 'true'` in the [GitHub Action](/docs/integrations/github-actions/) or pass `--skip-file-filtering` on the CLI.
 
 ## Stage 1 -- Resolve
 

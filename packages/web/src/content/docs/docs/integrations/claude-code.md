@@ -150,7 +150,7 @@ files. Set `ai.provider` to your preferred provider (`gemini`, `openai`, or
 
 API keys go in environment variables (`ERODE_GEMINI_API_KEY`,
 `ERODE_OPENAI_API_KEY`, or `ERODE_ANTHROPIC_API_KEY`), not in the config
-file. See [Configuration](/docs/guides/configuration/) for the full reference.
+file. See [Configuration](/docs/reference/configuration/) for the full reference.
 
 ### 3. Commit the skill and config
 
@@ -192,11 +192,11 @@ For automatic checking after every code edit, add a [PostToolUse hook](https://d
 This runs `erode check` after every edit to a source file and feeds the output back to Claude Code.
 
 :::caution
-The hook approach runs on every edit, which triggers multiple AI API calls each time. This adds up quickly during active sessions. The skill approach above is recommended for most users — it only runs when Claude Code judges that new integrations were introduced.
+The hook approach runs on every edit, which triggers multiple AI API calls each time. This adds up quickly during active sessions. The skill approach above is recommended for most users. It only runs when Claude Code judges that new integrations were introduced.
 :::
 
 ## What's next
 
-- [CLI Usage](/docs/guides/cli-usage/) — all `erode check` flags and options
-- [Configuration](/docs/guides/configuration/) — environment variables for tuning the analysis
-- [How It Works](/docs/how-it-works/) — understand the AI pipeline behind the check
+- [CLI Commands](/docs/reference/cli-commands/): all `erode check` flags and options
+- [Configuration](/docs/reference/configuration/): environment variables for tuning the analysis
+- [How It Works](/docs/how-it-works/): understand the AI pipeline behind the check
