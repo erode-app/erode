@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/erode-app/erode/compare/0.5.0...0.6.0) (2026-03-07)
+
+
+### Features
+
+* add erode check command, npm publishing, and Claude Code skill ([#39](https://github.com/erode-app/erode/issues/39)) ([712a642](https://github.com/erode-app/erode/commit/712a64238b97a00133a0c02e8554c6628be4a9b9))
+
 ## [0.5.0](https://github.com/erode-app/erode/compare/0.4.0...0.5.0) (2026-03-05)
 
 
