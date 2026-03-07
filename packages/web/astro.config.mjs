@@ -2,6 +2,7 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightBlog from 'starlight-blog';
 import starlightLinksValidator from 'starlight-links-validator';
 
 // Resolve zod to Astro's bundled version to avoid conflicts with root zod@4
@@ -20,6 +21,18 @@ export default defineConfig({
   integrations: [
     starlight({
       plugins: [
+        starlightBlog({
+          title: 'Blog',
+          postCount: 5,
+          recentPostCount: 5,
+          authors: {
+            anders: {
+              name: 'Anders Hassis',
+              title: 'Creator of Erode',
+              url: 'https://github.com/parse',
+            },
+          },
+        }),
         starlightLinksValidator({
           exclude: ['/architecture/**'],
         }),
