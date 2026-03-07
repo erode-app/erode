@@ -31,7 +31,7 @@ See the [playground repository](https://github.com/erode-app/playground) for a c
 
 The `if` guard skips dependabot PRs and draft PRs. Since Erode uses AI tokens on every run, this avoids spending them on automated dependency bumps and work-in-progress PRs that rarely introduce architectural drift. Remove the guard if you want Erode to run on all PRs.
 
-The action runs in a Docker container that clones the model repository directly — you do not need an `actions/checkout` step.
+The action runs in a Docker container that clones the model repository directly. You do not need an `actions/checkout` step.
 
 ## Remote model repository
 

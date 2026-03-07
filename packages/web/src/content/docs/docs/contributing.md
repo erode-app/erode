@@ -17,7 +17,7 @@ Erode is an npm workspace monorepo. The diagram below shows the package structur
 
 ## Packages
 
-- **core** — Analysis engine with AI pipeline, providers, adapters, and platform integrations.
-- **cli** — Interactive terminal interface.
-- **web** — Documentation and landing page.
-- **eslint-config** — Shared ESLint configuration for all packages.
+- **core**: Analysis engine with AI pipeline, providers, adapters, and platform integrations.
+- **cli**: Interactive terminal interface.
+- **web**: Documentation and landing page.
+- **eslint-config**: Shared ESLint configuration for all packages.

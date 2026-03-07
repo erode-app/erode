@@ -97,4 +97,4 @@ The more accurately the model reflects the dependencies that matter, the better 
 
 ## Version requirements
 
-Erode uses the `likec4` npm package `^1.45.0`. The Docker image and GitHub Action bundle it automatically — no local installation needed.
+Erode uses the `likec4` npm package `^1.45.0`. The Docker image and GitHub Action bundle it automatically. No local installation needed.

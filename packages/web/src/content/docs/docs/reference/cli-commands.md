@@ -82,6 +82,8 @@ erode check ./model --branch main
 | `--format <fmt>`        | Output format: `console`, `json`                          | `console` |
 | `--fail-on-violations`  | Exit with code 1 when violations are found                |           |
 | `--skip-file-filtering` | Analyze all changed files (skip pattern-based filtering)  |           |
+| `--model-repo <repo>`   | Clone architecture model from this repository             |           |
+| `--model-ref <ref>`     | Branch or tag to clone from model repository              |           |
 
 When no flags are passed, `check` analyzes unstaged changes (`git diff`). Use `--staged` for pre-commit hooks and `--branch main` for pre-push hooks.
 
@@ -158,6 +160,6 @@ node packages/cli/dist/cli.js analyze ./architecture \
 
 ## What's next
 
-- [Configuration](/docs/reference/configuration/) — environment variables for tuning diff limits, timeouts, and model overrides
-- [Integrations](/docs/integrations/) — run Erode automatically on every pull request
-- [AI Providers](/docs/reference/ai-providers/) — supported providers and model selection
+- [Configuration](/docs/reference/configuration/): environment variables for tuning diff limits, timeouts, and model overrides
+- [Integrations](/docs/integrations/): run Erode automatically on every pull request
+- [AI Providers](/docs/reference/ai-providers/): supported providers and model selection

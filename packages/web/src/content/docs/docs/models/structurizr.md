@@ -55,13 +55,13 @@ This declares that the frontend depends on the backend through a REST API. If a 
 
 Erode can load Structurizr models in two ways:
 
-- **`.json` files** — pre-exported workspace JSON. No extra tooling needed.
-- **`.dsl` files** — Structurizr DSL source. Requires the Structurizr CLI to export to JSON.
+- **`.json` files**: pre-exported workspace JSON. No extra tooling needed.
+- **`.dsl` files**: Structurizr DSL source. Requires the Structurizr CLI to export to JSON.
 
 The Erode Docker image and GitHub Action bundle Java 21 and the Structurizr CLI, so `.dsl` files work out of the box. If running the CLI locally, you need one of:
 
 - **Java 21+** with `ERODE_STRUCTURIZR_CLI_PATH` pointing to the Structurizr WAR file
-- **Docker** — Erode falls back to `docker run structurizr/structurizr` automatically
+- **Docker**: Erode falls back to `docker run structurizr/structurizr` automatically
 
 To skip runtime dependencies entirely, pre-export your workspace:
 
@@ -126,9 +126,9 @@ The more accurately the model reflects the dependencies that matter, the better 
 
 Erode resolves element IDs using the following priority:
 
-1. **`erode.id` property** — if an element has a `properties` block with `erode.id`, that value is used directly
-2. **DSL identifier** — the variable name assigned to the element (e.g., `backend` in `backend = container "Backend API"`)
-3. **snake_case name** — the element name converted to snake_case (e.g., `"Backend API"` becomes `backend_api`)
+1. **`erode.id` property**: if an element has a `properties` block with `erode.id`, that value is used directly
+2. **DSL identifier**: the variable name assigned to the element (e.g., `backend` in `backend = container "Backend API"`)
+3. **snake_case name**: the element name converted to snake_case (e.g., `"Backend API"` becomes `backend_api`)
 
 IDs are hierarchical: a container inside a software system gets a dotted path like `my_system.backend`.
 

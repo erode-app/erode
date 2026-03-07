@@ -11,7 +11,7 @@ The [GitHub Action](/docs/integrations/github-actions/) is the fastest way to ge
 
 ## Option 1: Fork the repo
 
-The simplest self-hosted path for GitHub users. Fork the repository and reference your fork as a GitHub Action — the same `action.yml` inputs and outputs work without changes.
+The simplest self-hosted path for GitHub users. Fork the repository and reference your fork as a GitHub Action. The same `action.yml` inputs and outputs work without changes.
 
 1. Fork [`erode-app/erode`](https://github.com/erode-app/erode) to your organization
 2. Add repository secrets for your AI key and GitHub token

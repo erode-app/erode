@@ -93,6 +93,7 @@ See [AI Providers](/docs/reference/ai-providers/) for default model names and gu
 | Variable                    | Description                             | Default                         |
 | --------------------------- | --------------------------------------- | ------------------------------- |
 | `ERODE_GITHUB_TOKEN`        | GitHub token for API access             | —                               |
+| `ERODE_GITHUB_BASE_URL`     | GitHub API base URL                     | `https://api.github.com`        |
 | `ERODE_MODEL_REPO_PR_TOKEN` | Separate token for the model repository | Uses `ERODE_GITHUB_TOKEN`       |
 | `ERODE_GITLAB_TOKEN`        | GitLab token with `api` scope           | —                               |
 | `ERODE_GITLAB_BASE_URL`     | GitLab instance URL                     | `https://gitlab.com`            |
@@ -119,7 +120,7 @@ See [Authentication](/docs/reference/authentication/) for required permissions, 
 
 ## What's next
 
-- [CLI Commands](/docs/reference/cli-commands/) — run Erode locally against any pull request
-- [Authentication](/docs/reference/authentication/) — token permissions for GitHub, GitLab, and Bitbucket
-- [AI Providers](/docs/reference/ai-providers/) — supported providers, default models, and overrides
-- [Analysis pipeline](/docs/reference/analysis-pipeline/) — stage-by-stage reference for the analysis engine
+- [CLI Commands](/docs/reference/cli-commands/): run Erode locally against any pull request
+- [Authentication](/docs/reference/authentication/): token permissions for GitHub, GitLab, and Bitbucket
+- [AI Providers](/docs/reference/ai-providers/): supported providers, default models, and overrides
+- [Analysis pipeline](/docs/reference/analysis-pipeline/): stage-by-stage reference for the analysis engine

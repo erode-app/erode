@@ -51,11 +51,11 @@ Anthropic support is experimental and may not produce consistent results across 
 
 ## Overriding models
 
-Override the default models per provider with environment variables. See [Configuration — Provider model overrides](/docs/reference/configuration/#provider-model-overrides) for the full list.
+Override the default models per provider with environment variables. See [Configuration: Provider model overrides](/docs/reference/configuration/#provider-model-overrides) for the full list.
 
 ## Timeouts
 
-Each provider has a configurable request timeout (default: 60 seconds). Increase them if you experience timeouts with large diffs. See [Configuration — Timeouts](/docs/reference/configuration/#timeouts) for all timeout variables.
+Each provider has a configurable request timeout (default: 60 seconds). Increase them if you experience timeouts with large diffs. See [Configuration: Timeouts](/docs/reference/configuration/#timeouts) for all timeout variables.
 
 ## Choosing a provider
 
