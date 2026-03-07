@@ -86,6 +86,11 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+      - name: Copy changelog to packages
+        run: |
+          cp CHANGELOG.md packages/core/CHANGELOG.md
+          cp CHANGELOG.md packages/cli/CHANGELOG.md
+
       - name: Set release version and pin core dependency
         run: |
           VERSION="${{ needs.release-please.outputs.tag_name }}"

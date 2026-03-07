@@ -15,6 +15,9 @@ node_modules/
 .eroderc.json
 oldversion
 
+# Copied changelogs (build artifacts)
+packages/*/CHANGELOG.md
+
 # Astro generated
 .astro/
 
