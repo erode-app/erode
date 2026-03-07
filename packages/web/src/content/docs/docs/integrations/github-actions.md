@@ -231,4 +231,4 @@ The `owner` field ensures the token covers all repositories the App is installed
 - Start with the Gemini provider during evaluation. It is cheaper per request. OpenAI is another good option for production workflows.
 - Keep your architecture model up to date. Erode can only detect drift against what is declared in the model.
 - Set `fail-on-violations: 'true'` to block PRs that introduce undeclared dependencies.
-- See [Configuration](/docs/guides/configuration/) for tuning diff limits, timeouts, and model overrides.
+- See [Configuration](/docs/reference/configuration/) for tuning diff limits, timeouts, and model overrides.

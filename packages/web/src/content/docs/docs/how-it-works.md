@@ -28,7 +28,7 @@ The built-in skip patterns cover:
 - **Build output** — `dist/`, `build/`, `.next/`, `coverage/`
 - **CI/CD** — `.github/`, `.gitlab-ci.yml`, `.circleci/`
 
-To analyze all files regardless of these patterns, set `skip-file-filtering: 'true'` in the [GitHub Action](/docs/ci/github-actions/) or pass `--skip-file-filtering` on the CLI.
+To analyze all files regardless of these patterns, set `skip-file-filtering: 'true'` in the [GitHub Action](/docs/integrations/github-actions/) or pass `--skip-file-filtering` on the CLI.
 
 ## Stage 1 -- Resolve
 

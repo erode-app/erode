@@ -82,7 +82,7 @@ Point the GitHub Action at this repository using `model-repo`:
     gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
 
-See [GitHub Actions](/docs/ci/github-actions/) for all model repository options including `model-path`, `model-ref`, and `model-repo-token`.
+See [GitHub Actions](/docs/integrations/github-actions/) for all model repository options including `model-path`, `model-ref`, and `model-repo-token`.
 
 ## How Erode uses the model
 

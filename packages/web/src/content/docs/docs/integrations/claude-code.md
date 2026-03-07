@@ -150,7 +150,7 @@ files. Set `ai.provider` to your preferred provider (`gemini`, `openai`, or
 
 API keys go in environment variables (`ERODE_GEMINI_API_KEY`,
 `ERODE_OPENAI_API_KEY`, or `ERODE_ANTHROPIC_API_KEY`), not in the config
-file. See [Configuration](/docs/guides/configuration/) for the full reference.
+file. See [Configuration](/docs/reference/configuration/) for the full reference.
 
 ### 3. Commit the skill and config
 
@@ -197,6 +197,6 @@ The hook approach runs on every edit, which triggers multiple AI API calls each 
 
 ## What's next
 
-- [CLI Usage](/docs/guides/cli-usage/) — all `erode check` flags and options
-- [Configuration](/docs/guides/configuration/) — environment variables for tuning the analysis
+- [CLI Commands](/docs/reference/cli-commands/) — all `erode check` flags and options
+- [Configuration](/docs/reference/configuration/) — environment variables for tuning the analysis
 - [How It Works](/docs/how-it-works/) — understand the AI pipeline behind the check

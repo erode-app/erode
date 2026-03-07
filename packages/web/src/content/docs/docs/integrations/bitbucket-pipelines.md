@@ -103,4 +103,4 @@ variables:
 
 Platform detection identifies `bitbucket.org` from PR URLs. Self-hosted Bitbucket instances require `ERODE_BITBUCKET_BASE_URL` and the full PR URL passed via `--url`.
 
-See [Configuration](/docs/guides/configuration/) for all environment variables and [Self-Hosted](/docs/ci/self-hosted/) for other deployment options.
+See [Configuration](/docs/reference/configuration/) for all environment variables and [Self-Hosted](/docs/integrations/self-hosted/) for other deployment options.

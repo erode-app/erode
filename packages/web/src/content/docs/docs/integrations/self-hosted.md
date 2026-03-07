@@ -3,7 +3,7 @@ title: Self-Hosted
 description: Run Erode outside the official GitHub Action.
 ---
 
-The [GitHub Action](/docs/ci/github-actions/) is the fastest way to get started, but you may want to run Erode yourself if you:
+The [GitHub Action](/docs/integrations/github-actions/) is the fastest way to get started, but you may want to run Erode yourself if you:
 
 - Need full control over the runtime environment
 - Use GitHub Enterprise Server, self-hosted GitLab, or Bitbucket Cloud
@@ -25,7 +25,7 @@ The simplest self-hosted path for GitHub users. Fork the repository and referenc
     gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
 
-All [action inputs and outputs](/docs/ci/github-actions/#action-inputs) work the same way.
+All [action inputs and outputs](/docs/integrations/github-actions/#action-inputs) work the same way.
 
 ## Option 2: Docker image
 
@@ -90,4 +90,4 @@ node packages/cli/dist/cli.js analyze ./path/to/model \
   --fail-on-violations
 ```
 
-See [CLI Usage](/docs/guides/cli-usage/) for the full command reference and [Configuration](/docs/guides/configuration/) for all environment variables.
+See [CLI Commands](/docs/reference/cli-commands/) for the full command reference and [Configuration](/docs/reference/configuration/) for all environment variables.

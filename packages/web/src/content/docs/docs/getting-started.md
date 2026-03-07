@@ -7,7 +7,7 @@ Erode detects architecture drift by comparing code changes against your architec
 
 ## Prerequisites
 
-- A **repository** with code review enabled (this guide uses GitHub Actions — see [CI Integration](/docs/ci/) for GitLab, Bitbucket, and other platforms)
+- A **repository** with code review enabled (this guide uses GitHub Actions — see [CI Integration](/docs/integrations/) for GitLab, Bitbucket, and other platforms)
 - An **architecture model** describing your system (see [Model Formats](/docs/models/))
 - An **API key** for [Gemini, OpenAI, or Anthropic](/docs/reference/ai-providers/)
 
@@ -36,7 +36,7 @@ jobs:
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
 
-> **Note:** The `GITHUB_TOKEN` requires specific permissions depending on your setup. See [Token permissions](/docs/guides/configuration/#token-permissions) for details.
+> **Note:** The `GITHUB_TOKEN` requires specific permissions depending on your setup. See [Token permissions](/docs/reference/authentication/#token-permissions) for details.
 
 Replace `your-org/architecture` with the repository that contains your architecture model. The action clones the model repo automatically — no `actions/checkout` step is needed.
 
@@ -70,8 +70,8 @@ Or browse the existing example PRs to see Erode's output without any setup:
 
 ## What's next
 
-- [CI Integration overview](/docs/ci/) — supported platforms and setup options
-- [GitHub Actions reference](/docs/ci/github-actions/) — all action inputs, outputs, and advanced examples
-- [CLI usage](/docs/guides/cli-usage/) — run Erode locally against PRs or uncommitted changes
-- [Claude Code integration](/docs/guides/claude-code/) — add architecture drift checks to Claude Code sessions
-- [Configuration](/docs/guides/configuration/) — environment variables for tuning the analysis engine
+- [CI Integration overview](/docs/integrations/) — supported platforms and setup options
+- [GitHub Actions reference](/docs/integrations/github-actions/) — all action inputs, outputs, and advanced examples
+- [CLI Commands](/docs/reference/cli-commands/) — run Erode locally against PRs or uncommitted changes
+- [Claude Code integration](/docs/integrations/claude-code/) — add architecture drift checks to Claude Code sessions
+- [Configuration](/docs/reference/configuration/) — environment variables for tuning the analysis engine
