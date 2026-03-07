@@ -1,4 +1,5 @@
 import { ErrorCode } from '../../errors.js';
+import { ENV_VAR_NAMES } from '../../utils/config.js';
 import type { AdapterMetadata } from '../adapter-metadata.js';
 
 export const STRUCTURIZR_METADATA: AdapterMetadata = {
@@ -10,7 +11,7 @@ export const STRUCTURIZR_METADATA: AdapterMetadata = {
   prTitleTemplate: 'chore: update Structurizr model for {{sourceRepo}}#{{prNumber}} — {{prTitle}}',
   errorSuggestions: {
     [ErrorCode.MODEL_LOAD_FAILED]: [
-      'For .dsl files: ensure Structurizr is available (STRUCTURIZR_CLI_PATH or Docker)',
+      `For .dsl files: ensure Structurizr is available (${ENV_VAR_NAMES.structurizrCliPath} or Docker)`,
       'For .json files: ensure the file is a valid Structurizr JSON export',
       'Or pre-export: java -jar structurizr.war export -workspace workspace.dsl -format json',
     ],
@@ -21,7 +22,7 @@ export const STRUCTURIZR_METADATA: AdapterMetadata = {
     '    url "https://github.com/org/repo"',
     '  }',
     'Multiple components can share the same URL (monorepo support).',
-    'Use "erode validate <model-path>" to verify your model.',
+    'Use "erode validate [model-path]" to verify your model.',
     'See: https://docs.structurizr.com/dsl/language#url',
   ],
   missingLinksHelpLines: [

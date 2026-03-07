@@ -3,11 +3,11 @@ title: Getting Started
 description: Set up Erode in your CI pipeline in under five minutes.
 ---
 
-Erode detects architecture drift by comparing pull requests against your architecture model. When a PR introduces an undeclared dependency, Erode surfaces it as a finding and comments directly on the pull request.
+Erode detects architecture drift by comparing code changes against your architecture model. When a change introduces an undeclared dependency, Erode surfaces it as a finding and comments directly on the code change.
 
 ## Prerequisites
 
-- A **repository** with pull requests (this guide uses GitHub Actions — see [CI Integration](/docs/ci/) for GitLab, Bitbucket, and other platforms)
+- A **repository** with code review enabled (this guide uses GitHub Actions — see [CI Integration](/docs/ci/) for GitLab, Bitbucket, and other platforms)
 - An **architecture model** describing your system (see [Model Formats](/docs/models/))
 - An **API key** for [Gemini, OpenAI, or Anthropic](/docs/reference/ai-providers/)
 
@@ -15,7 +15,7 @@ Erode detects architecture drift by comparing pull requests against your archite
 
 ### 1. Add your AI provider API key as a repository secret
 
-Go to your repository's **Settings > Secrets and variables > Actions** and add the API key for your chosen [AI provider](/docs/reference/ai-providers/) (e.g. `GEMINI_API_KEY` for the default Gemini provider).
+Go to your repository's **Settings > Secrets and variables > Actions** and add the API key for your chosen [AI provider](/docs/reference/ai-providers/) (e.g. `GEMINI_API_KEY` for the default Gemini provider). The GitHub Action maps these secret values to the `ERODE_`-prefixed environment variables that Erode expects.
 
 ### 2. Create the workflow file
 
@@ -40,9 +40,9 @@ jobs:
 
 Replace `your-org/architecture` with the repository that contains your architecture model. The action clones the model repo automatically — no `actions/checkout` step is needed.
 
-### 3. Open a pull request
+### 3. Open a code change
 
-Erode runs on every PR and posts a comment listing any undeclared dependencies, their severity, and how to fix them. If Erode finds no drift, it confirms the PR aligns with the declared architecture.
+Erode runs on every code change and posts a comment listing any undeclared dependencies, their severity, and how to fix them. If Erode finds no drift, it confirms the change aligns with the declared architecture.
 
 ## Try the example project
 
@@ -52,7 +52,7 @@ To try it yourself:
 
 1. [Fork the repository](https://github.com/erode-app/playground/fork)
 2. Add your `GEMINI_API_KEY` (or another [AI provider](/docs/reference/ai-providers/) key) as a repository secret
-3. Open a PR that introduces an undeclared dependency
+3. Open a change that introduces an undeclared dependency
 
 Or browse the existing example PRs to see Erode's output without any setup:
 
@@ -72,5 +72,6 @@ Or browse the existing example PRs to see Erode's output without any setup:
 
 - [CI Integration overview](/docs/ci/) — supported platforms and setup options
 - [GitHub Actions reference](/docs/ci/github-actions/) — all action inputs, outputs, and advanced examples
-- [CLI usage](/docs/guides/cli-usage/) — run Erode locally against any PR
+- [CLI usage](/docs/guides/cli-usage/) — run Erode locally against PRs or uncommitted changes
+- [Claude Code integration](/docs/guides/claude-code/) — add architecture drift checks to Claude Code sessions
 - [Configuration](/docs/guides/configuration/) — environment variables for tuning the analysis engine

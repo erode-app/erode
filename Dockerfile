@@ -41,7 +41,7 @@ ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 COPY --from=structurizr /structurizr.war /opt/structurizr.war
-ENV STRUCTURIZR_CLI_PATH=/opt/structurizr.war
+ENV ERODE_STRUCTURIZR_CLI_PATH=/opt/structurizr.war
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git jq ca-certificates && \

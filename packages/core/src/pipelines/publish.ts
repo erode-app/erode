@@ -1,9 +1,11 @@
 import type { ProgressReporter } from './progress.js';
-import type { ChangeRequestRef } from '../platforms/source-platform.js';
+import type { ChangeRequestRef, ChangeRequestResult } from '../platforms/source-platform.js';
 import type { AdapterMetadata } from '../adapters/adapter-metadata.js';
+import type { ComponentSummary } from '../adapters/architecture-types.js';
 import type { DriftAnalysisResult } from '../analysis/analysis-types.js';
 import type { PatchResult } from '../adapters/model-patcher.js';
 import type { StructuredAnalysisOutput } from '../output/structured-output.js';
+import type { RepoIdentifier } from '../utils/git-diff.js';
 import { createModelPr, closeModelPr } from './pr-creation.js';
 import { createPlatformWriter } from '../platforms/platform-factory.js';
 import {
@@ -15,7 +17,7 @@ import {
 import { writeGitHubActionsOutputs, writeGitHubStepSummary } from '../output/ci-output.js';
 import { CONFIG } from '../utils/config.js';
 
-function parseOwnerRepo(modelRepo: string): { owner: string; repo: string } {
+function parseOwnerRepo(modelRepo: string): RepoIdentifier {
   const i = modelRepo.lastIndexOf('/');
   return {
     owner: modelRepo.substring(0, i),
@@ -39,17 +41,12 @@ export interface PublishOptions {
   };
   context: {
     selectedComponentId?: string;
-    candidateComponents?: { id: string; name: string; type: string }[];
+    candidateComponents?: ComponentSummary[];
   };
 }
 
 export interface PublishResult {
-  generatedChangeRequest?: {
-    url: string;
-    number: number;
-    action: 'created' | 'updated';
-    branch: string;
-  };
+  generatedChangeRequest?: ChangeRequestResult;
 }
 
 export async function publishResults(
@@ -63,9 +60,7 @@ export async function publishResults(
   const modelTarget = options.modelRepo ? parseOwnerRepo(options.modelRepo) : ref.platformId;
 
   // ── PR creation ──────────────────────────────────────────────────────
-  let generatedChangeRequest:
-    | { url: string; number: number; action: 'created' | 'updated'; branch: string }
-    | undefined;
+  let generatedChangeRequest: ChangeRequestResult | undefined;
 
   if (options.openPr && !options.dryRun) {
     if (patchResult) {

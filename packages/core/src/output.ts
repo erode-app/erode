@@ -3,6 +3,9 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import type { DriftAnalysisResult, DriftViolation } from './analysis/analysis-types.js';
 import type { StructuredAnalysisOutput } from './output/structured-output.js';
+import type { ChangeRequestResult } from './platforms/source-platform.js';
+import type { SkippedRelationship, PatchNewComponent } from './adapters/model-patcher.js';
+import type { ComponentSummary } from './adapters/architecture-types.js';
 import { ApiError, ConfigurationError, ErrorCode } from './errors.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -33,13 +36,8 @@ export function buildStructuredOutput(
   modelFormat: string,
   extras?: {
     selectedComponentId?: string;
-    candidateComponents?: { id: string; name: string; type: string }[];
-    generatedChangeRequest?: {
-      url: string;
-      number: number;
-      action: 'created' | 'updated';
-      branch: string;
-    };
+    candidateComponents?: ComponentSummary[];
+    generatedChangeRequest?: ChangeRequestResult;
     modelFormat?: string;
   }
 ): StructuredAnalysisOutput {
@@ -96,13 +94,8 @@ function escapeMarkdownLink(text: string): string {
 /** Extras for formatting analysis results as a PR comment. */
 export interface CommentExtras {
   selectedComponentId?: string;
-  candidateComponents?: { id: string; name: string; type: string }[];
-  generatedChangeRequest?: {
-    url: string;
-    number: number;
-    action: 'created' | 'updated';
-    branch: string;
-  };
+  candidateComponents?: ComponentSummary[];
+  generatedChangeRequest?: ChangeRequestResult;
   githubActions?: boolean;
   modelInfo?: { provider: string; fastModel: string; advancedModel: string };
   modelFormat?: string;
@@ -262,9 +255,9 @@ export function formatPatchPrBody(options: {
   summary: string;
   insertedLines: string[];
   relationshipLines?: string[];
-  skipped: { source: string; target: string; reason: string }[];
+  skipped: SkippedRelationship[];
   removals?: string[];
-  newComponents?: { id: string; kind: string; name: string; insertedLines: string[] }[];
+  newComponents?: PatchNewComponent[];
 }): string {
   const lines: string[] = [];
 

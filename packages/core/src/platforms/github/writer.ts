@@ -1,5 +1,5 @@
 import { Octokit } from '@octokit/rest';
-import { CONFIG } from '../../utils/config.js';
+import { CONFIG, ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import { ErodeError, ErrorCode } from '../../errors.js';
 import { withRetry } from '../../utils/retry.js';
 import type {
@@ -33,7 +33,7 @@ export class GitHubWriter implements SourcePlatformWriter {
       throw new ErodeError(
         'A GitHub token is needed to create PRs',
         ErrorCode.AUTH_KEY_MISSING,
-        'Provide MODEL_REPO_PR_TOKEN or GITHUB_TOKEN to create PRs.'
+        `Provide ${ENV_VAR_NAMES.modelRepoPrToken} or ${ENV_VAR_NAMES.githubToken} in your environment or ${RC_FILENAME} to create PRs.`
       );
     }
     this.octokit = new Octokit({ auth: token });

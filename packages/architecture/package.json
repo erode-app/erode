@@ -1,5 +1,5 @@
 {
-  "name": "@erode/architecture",
+  "name": "@erode-app/architecture",
   "private": true,
   "license": "MIT",
   "scripts": {

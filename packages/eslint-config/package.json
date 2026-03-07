@@ -1,5 +1,5 @@
 {
-  "name": "@erode/eslint-config",
+  "name": "@erode-app/eslint-config",
   "version": "0.0.1",
   "private": true,
   "license": "MIT",

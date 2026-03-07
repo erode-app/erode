@@ -23,17 +23,17 @@ fi
 
 # ── 2. Map action inputs to CLI environment variables ──
 
-export AI_PROVIDER="${INPUT_AI_PROVIDER:-anthropic}"
-export ANTHROPIC_API_KEY="${INPUT_ANTHROPIC_API_KEY:-}"
-export GEMINI_API_KEY="${INPUT_GEMINI_API_KEY:-}"
-export OPENAI_API_KEY="${INPUT_OPENAI_API_KEY:-}"
-export GITHUB_TOKEN="${INPUT_GITHUB_TOKEN:?github-token input is required}"
-export MODEL_FORMAT="${INPUT_MODEL_FORMAT:-likec4}"
-export MODEL_REPO_PR_TOKEN="${INPUT_MODEL_REPO_TOKEN:-$GITHUB_TOKEN}"
+export ERODE_AI_PROVIDER="${INPUT_AI_PROVIDER:-anthropic}"
+export ERODE_ANTHROPIC_API_KEY="${INPUT_ANTHROPIC_API_KEY:-}"
+export ERODE_GEMINI_API_KEY="${INPUT_GEMINI_API_KEY:-}"
+export ERODE_OPENAI_API_KEY="${INPUT_OPENAI_API_KEY:-}"
+export ERODE_GITHUB_TOKEN="${INPUT_GITHUB_TOKEN:?github-token input is required}"
+export ERODE_MODEL_FORMAT="${INPUT_MODEL_FORMAT:-likec4}"
+export ERODE_MODEL_REPO_PR_TOKEN="${INPUT_MODEL_REPO_TOKEN:-$ERODE_GITHUB_TOKEN}"
 
 # ── 3. Auth setup for model-repo access ──
 
-CLONE_TOKEN="${INPUT_MODEL_REPO_TOKEN:-$GITHUB_TOKEN}"
+CLONE_TOKEN="${INPUT_MODEL_REPO_TOKEN:-$ERODE_GITHUB_TOKEN}"
 
 GIT_ASKPASS_SCRIPT="/tmp/git-askpass-$$"
 ESCAPED_TOKEN=$(printf '%s' "$CLONE_TOKEN" | sed "s/'/'\\\\''/g")
@@ -45,7 +45,7 @@ chmod +x "$GIT_ASKPASS_SCRIPT"
 CORE_ARGS=(
   analyze "${INPUT_MODEL_PATH:-.}"
   --url "$PR_URL"
-  --model-format "$MODEL_FORMAT"
+  --model-format "$ERODE_MODEL_FORMAT"
   --format json
   --comment
   --github-actions

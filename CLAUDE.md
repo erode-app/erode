@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Project Does
 
-erode is a CLI tool that detects architecture drift by comparing GitHub pull requests against a LikeC4 architecture model. It uses AI (Gemini or Anthropic) to analyze PR diffs and identify undeclared dependencies or violations of the declared architecture.
+erode is a CLI tool that detects architecture drift by comparing pull requests or local git diffs against a LikeC4 or Structurizr architecture model. It uses AI (Gemini, OpenAI, or Anthropic) to analyze diffs and identify undeclared dependencies or violations of the declared architecture. The `analyze` command works with GitHub PRs, GitLab MRs, and Bitbucket PRs; the `check` command works with local git diffs for pre-push detection.
 
 ## Project Structure
 
@@ -41,16 +41,18 @@ npm run test -- packages/core/src/providers/__tests__/some-provider.test.ts  # S
 
 ### Multi-Stage Analysis Pipeline
 
-The `analyze` command (`packages/core/src/commands/analyze.ts`) orchestrates a multi-stage AI pipeline:
+The `analyze` command (`packages/core/src/pipelines/analyze.ts`) and `check` command (`packages/core/src/pipelines/check.ts`) orchestrate a multi-stage AI pipeline:
 
-1. **Stage 1 - Component Resolution**: When a repo maps to multiple LikeC4 components, AI picks the most relevant one (uses cheaper/faster model: Haiku/Flash)
-2. **Stage 2 - Dependency Scan**: AI extracts dependency changes from the PR diff (Haiku/Flash)
-3. **Stage 3 - PR Analysis**: AI analyzes the PR for architectural drift violations against the declared model (uses stronger model: Sonnet/Pro)
+1. **Stage 1 - Component Resolution**: When a repo maps to multiple components, AI picks the most relevant one (uses cheaper/faster model: Haiku/Flash)
+2. **Stage 2 - Dependency Scan**: AI extracts dependency changes from the diff (Haiku/Flash)
+3. **Stage 3 - Drift Analysis**: AI analyzes the diff for architectural drift violations against the declared model (uses stronger model: Sonnet/Pro)
+
+The `analyze` command fetches PR data from platform APIs, while `check` operates on local git diffs (`packages/core/src/utils/git-diff.ts`).
 
 ### Key Abstractions
 
-- **`AIProvider`** (`packages/core/src/providers/ai-provider.ts`): Provider-agnostic interface for all AI operations. Implemented by `AnthropicProvider` and `GeminiProvider`.
-- **`ArchitectureModelAdapter`** (`packages/core/src/adapters/architecture-adapter.ts`): Interface for loading/querying architecture models. Currently only `LikeC4Adapter` implements it.
+- **`AIProvider`** (`packages/core/src/providers/ai-provider.ts`): Provider-agnostic interface for all AI operations. Implemented by `AnthropicProvider`, `GeminiProvider`, and `OpenAIProvider`.
+- **`ArchitectureModelAdapter`** (`packages/core/src/adapters/architecture-adapter.ts`): Interface for loading/querying architecture models. Implemented by `LikeC4Adapter` and `StructurizrAdapter`.
 - **`PromptBuilder`** (`packages/core/src/analysis/prompt-builder.ts`): Assembles prompts from markdown templates (`packages/core/src/analysis/prompts/*.md`) using `TemplateEngine`'s (`packages/core/src/analysis/template-engine.ts`) `{{variable}}` substitution.
 
 ### Provider System
@@ -59,7 +61,7 @@ The `analyze` command (`packages/core/src/commands/analyze.ts`) orchestrates a m
 
 ### Configuration
 
-All config is environment-variable-driven via `packages/core/src/utils/config.ts`. It maps env vars to a Zod-validated config object (`CONFIG`). Key env vars: `AI_PROVIDER`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `GITHUB_TOKEN`. Tests run with `DEBUG_MODE=true` (set in `packages/core/vitest.config.ts`) which skips API key validation.
+The recommended configuration method is `.eroderc.json` (validated by Zod via `packages/core/src/utils/config.ts`). Commit it to the repo for shared project settings (provider, model format, constraints, adapter config). Secrets (API keys, tokens) go in environment variables or a `.env` file. Env vars override `.eroderc.json` values. Precedence: defaults, then `.eroderc.json`, then env vars (highest priority). Key env vars: `ERODE_AI_PROVIDER`, `ERODE_GEMINI_API_KEY`, `ERODE_ANTHROPIC_API_KEY`, `ERODE_OPENAI_API_KEY`, `ERODE_GITHUB_TOKEN`. Tests run with `DEBUG_MODE=true` (set in `packages/core/vitest.config.ts`) which skips API key validation.
 
 ### Error Handling
 

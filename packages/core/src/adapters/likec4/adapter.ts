@@ -11,6 +11,7 @@ import { LIKEC4_METADATA } from './metadata.js';
 import type {
   ArchitecturalComponent,
   ComponentIndex,
+  ComponentRelationship,
   ModelRelationship,
   ArchitectureModel,
   SimpleComponent,
@@ -334,9 +335,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
       .filter((comp): comp is ArchitecturalComponent => comp != null);
   }
 
-  getComponentRelationships(
-    componentId: string
-  ): { target: ArchitecturalComponent; kind?: string; title?: string }[] {
+  getComponentRelationships(componentId: string): ComponentRelationship[] {
     if (!this.componentIndex || !this.relationships) {
       throw AdapterError.notLoaded('likec4');
     }
@@ -344,7 +343,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     return (this.outgoing.get(componentId) ?? []).flatMap((rel) => {
       const target = index.byId.get(rel.target);
       if (!target) return [];
-      const entry: { target: ArchitecturalComponent; kind?: string; title?: string } = { target };
+      const entry: ComponentRelationship = { target };
       if (rel.kind) entry.kind = rel.kind;
       if (rel.title) entry.title = rel.title;
       return [entry];

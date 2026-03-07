@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, type MockInstance } from 'vitest';
-import { ErodeError, ErrorCode } from '@erode/core';
+import { ErodeError, ErrorCode } from '@erode-app/core';
 
 vi.mock('../cli-helpers.js', () => ({
   Logger: {

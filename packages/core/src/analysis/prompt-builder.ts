@@ -3,6 +3,7 @@ import type {
   ComponentSelectionPromptData,
   DriftAnalysisPromptData,
 } from './analysis-types.js';
+import type { ChangeContextVars } from './prompt-variables.js';
 import { TemplateEngine } from './template-engine.js';
 import { ErodeError, ErrorCode } from '../errors.js';
 import {
@@ -115,7 +116,33 @@ export const PromptBuilder = {
       ? formatChangedFiles(data.files)
       : 'No file list available.';
 
+    const isLocal = changeRequest.source === 'local' || changeRequest.number === 0;
+    const changeContext: ChangeContextVars = isLocal
+      ? {
+          label: 'local changes',
+          headerPrefix: 'LOCAL CHANGES',
+          refLabel: 'Changes:',
+          inSuffix: '',
+          considerations: [
+            "- Evaluate if the changes align with the component's architectural role",
+            '- Consider whether new dependencies should be declared in the model',
+            '- Provide recommendations before these changes are committed',
+          ].join('\n'),
+        }
+      : {
+          label: 'a pull request',
+          headerPrefix: 'PULL REQUEST',
+          refLabel: `PR #${String(changeRequest.number)}:`,
+          inSuffix: ' IN THIS PR',
+          considerations: [
+            "- Consider the PR's stated goals and description",
+            "- Evaluate if the architectural changes align with the PR's purpose",
+            '- Provide recommendations for the PR review',
+          ].join('\n'),
+        };
+
     return TemplateEngine.loadDriftAnalysisPrompt({
+      changeContext,
       changeRequest: {
         number: changeRequest.number,
         title: changeRequest.title,

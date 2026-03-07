@@ -1,8 +1,14 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 import * as dotenv from 'dotenv';
 import { z } from 'zod';
 import { ConfigurationError } from '../errors.js';
 dotenv.config();
-const ConfigSchema = z.object({
+
+export const RC_FILENAME = '.eroderc.json';
+
+export const ConfigSchema = z.object({
   ai: z.object({
     provider: z.enum(['gemini', 'anthropic', 'openai']).default('gemini'),
   }),
@@ -12,7 +18,10 @@ const ConfigSchema = z.object({
     maxContextChars: z.number().int().min(1000).max(100000).default(10000),
   }),
   adapter: z.object({
-    format: z.string().default('likec4'),
+    format: z.enum(['likec4', 'structurizr']).default('likec4'),
+    modelPath: z.string().optional(),
+    modelRepo: z.string().optional(),
+    modelRef: z.string().default('main'),
     likec4: z.object({
       excludePaths: z.array(z.string()).default([]),
       excludeTags: z.array(z.string()).default([]),
@@ -63,38 +72,57 @@ const ConfigSchema = z.object({
     version: z.string().default('0.1.0'),
   }),
 });
-type Config = z.infer<typeof ConfigSchema>;
+export type Config = z.infer<typeof ConfigSchema>;
+
+export const ENV_VAR_NAMES = {
+  aiProvider: 'ERODE_AI_PROVIDER',
+  geminiApiKey: 'ERODE_GEMINI_API_KEY',
+  anthropicApiKey: 'ERODE_ANTHROPIC_API_KEY',
+  openaiApiKey: 'ERODE_OPENAI_API_KEY',
+  githubToken: 'ERODE_GITHUB_TOKEN',
+  gitlabToken: 'ERODE_GITLAB_TOKEN',
+  bitbucketToken: 'ERODE_BITBUCKET_TOKEN',
+  structurizrCliPath: 'ERODE_STRUCTURIZR_CLI_PATH',
+  modelRepoPrToken: 'ERODE_MODEL_REPO_PR_TOKEN',
+  modelPath: 'ERODE_MODEL_PATH',
+  modelRepo: 'ERODE_MODEL_REPO',
+  modelRef: 'ERODE_MODEL_REF',
+} as const;
 
 const ENV_MAP: Record<string, string> = {
-  AI_PROVIDER: 'ai.provider',
-  ANTHROPIC_API_KEY: 'anthropic.apiKey',
-  GEMINI_API_KEY: 'gemini.apiKey',
-  GEMINI_TIMEOUT: 'gemini.timeout',
-  GITHUB_TOKEN: 'github.token',
-  MODEL_FORMAT: 'adapter.format',
-  LIKEC4_EXCLUDE_PATHS: 'adapter.likec4.excludePaths',
-  LIKEC4_EXCLUDE_TAGS: 'adapter.likec4.excludeTags',
-  STRUCTURIZR_CLI_PATH: 'adapter.structurizr.cliPath',
-  MODEL_REPO_PR_TOKEN: 'github.modelRepoPrToken',
-  DEBUG_MODE: 'debug.enabled',
-  VERBOSE: 'debug.verbose',
-  MAX_FILES_PER_DIFF: 'constraints.maxFilesPerDiff',
-  MAX_LINES_PER_DIFF: 'constraints.maxLinesPerDiff',
-  MAX_CONTEXT_CHARS: 'constraints.maxContextChars',
-  GITHUB_TIMEOUT: 'github.defaultTimeout',
-  GITLAB_TOKEN: 'gitlab.token',
-  GITLAB_BASE_URL: 'gitlab.baseUrl',
-  BITBUCKET_TOKEN: 'bitbucket.token',
-  BITBUCKET_BASE_URL: 'bitbucket.baseUrl',
-  ANTHROPIC_TIMEOUT: 'anthropic.timeout',
-  ANTHROPIC_FAST_MODEL: 'anthropic.fastModel',
-  ANTHROPIC_ADVANCED_MODEL: 'anthropic.advancedModel',
-  GEMINI_FAST_MODEL: 'gemini.fastModel',
-  GEMINI_ADVANCED_MODEL: 'gemini.advancedModel',
-  OPENAI_API_KEY: 'openai.apiKey',
-  OPENAI_TIMEOUT: 'openai.timeout',
-  OPENAI_FAST_MODEL: 'openai.fastModel',
-  OPENAI_ADVANCED_MODEL: 'openai.advancedModel',
+  ERODE_AI_PROVIDER: 'ai.provider',
+  ERODE_ANTHROPIC_API_KEY: 'anthropic.apiKey',
+  ERODE_ANTHROPIC_TIMEOUT: 'anthropic.timeout',
+  ERODE_ANTHROPIC_FAST_MODEL: 'anthropic.fastModel',
+  ERODE_ANTHROPIC_ADVANCED_MODEL: 'anthropic.advancedModel',
+  ERODE_GEMINI_API_KEY: 'gemini.apiKey',
+  ERODE_GEMINI_TIMEOUT: 'gemini.timeout',
+  ERODE_GEMINI_FAST_MODEL: 'gemini.fastModel',
+  ERODE_GEMINI_ADVANCED_MODEL: 'gemini.advancedModel',
+  ERODE_OPENAI_API_KEY: 'openai.apiKey',
+  ERODE_OPENAI_TIMEOUT: 'openai.timeout',
+  ERODE_OPENAI_FAST_MODEL: 'openai.fastModel',
+  ERODE_OPENAI_ADVANCED_MODEL: 'openai.advancedModel',
+  ERODE_GITHUB_TOKEN: 'github.token',
+  ERODE_GITHUB_TIMEOUT: 'github.defaultTimeout',
+  ERODE_GITHUB_BASE_URL: 'github.baseUrl',
+  ERODE_GITLAB_TOKEN: 'gitlab.token',
+  ERODE_GITLAB_BASE_URL: 'gitlab.baseUrl',
+  ERODE_BITBUCKET_TOKEN: 'bitbucket.token',
+  ERODE_BITBUCKET_BASE_URL: 'bitbucket.baseUrl',
+  ERODE_MODEL_FORMAT: 'adapter.format',
+  ERODE_MODEL_PATH: 'adapter.modelPath',
+  ERODE_MODEL_REPO: 'adapter.modelRepo',
+  ERODE_MODEL_REF: 'adapter.modelRef',
+  ERODE_MODEL_REPO_PR_TOKEN: 'github.modelRepoPrToken',
+  ERODE_LIKEC4_EXCLUDE_PATHS: 'adapter.likec4.excludePaths',
+  ERODE_LIKEC4_EXCLUDE_TAGS: 'adapter.likec4.excludeTags',
+  ERODE_STRUCTURIZR_CLI_PATH: 'adapter.structurizr.cliPath',
+  ERODE_MAX_FILES_PER_DIFF: 'constraints.maxFilesPerDiff',
+  ERODE_MAX_LINES_PER_DIFF: 'constraints.maxLinesPerDiff',
+  ERODE_MAX_CONTEXT_CHARS: 'constraints.maxContextChars',
+  ERODE_DEBUG_MODE: 'debug.enabled',
+  ERODE_VERBOSE: 'debug.verbose',
 };
 
 type Coercer = (raw: string) => unknown;
@@ -142,8 +170,8 @@ function setNestedValue(obj: Record<string, unknown>, dotPath: string, value: un
   }
 }
 
-function loadConfigFromEnv(): Record<string, unknown> {
-  const config: Record<string, unknown> = {
+function buildConfigSkeleton(): Record<string, unknown> {
+  return {
     ai: {},
     constraints: {},
     adapter: { likec4: {}, structurizr: {} },
@@ -156,6 +184,71 @@ function loadConfigFromEnv(): Record<string, unknown> {
     debug: {},
     app: {},
   };
+}
+
+/** Find `.eroderc.json` in cwd or home directory. Returns the path or undefined. */
+export function findConfigFile(): string | undefined {
+  const cwdPath = path.join(process.cwd(), RC_FILENAME);
+  if (fs.existsSync(cwdPath)) return cwdPath;
+
+  const homePath = path.join(os.homedir(), RC_FILENAME);
+  if (fs.existsSync(homePath)) return homePath;
+
+  return undefined;
+}
+
+const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+export function deepMerge(
+  target: Record<string, unknown>,
+  source: Record<string, unknown>
+): Record<string, unknown> {
+  const result = { ...target };
+  for (const key of Object.keys(source)) {
+    if (UNSAFE_KEYS.has(key)) continue;
+    const srcVal = source[key];
+    const tgtVal = result[key];
+    if (
+      srcVal &&
+      typeof srcVal === 'object' &&
+      !Array.isArray(srcVal) &&
+      tgtVal &&
+      typeof tgtVal === 'object' &&
+      !Array.isArray(tgtVal)
+    ) {
+      result[key] = deepMerge(tgtVal as Record<string, unknown>, srcVal as Record<string, unknown>);
+    } else {
+      result[key] = srcVal;
+    }
+  }
+  return result;
+}
+
+/** Load and parse a `.eroderc.json` config file, merging onto the skeleton for defaults. */
+export function loadConfigFromFile(filePath: string): Record<string, unknown> {
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const raw: unknown = JSON.parse(content);
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      throw new ConfigurationError(
+        `Config file must contain a JSON object: ${filePath}`,
+        'configFile'
+      );
+    }
+    const parsed = raw as Record<string, unknown>;
+    return deepMerge(buildConfigSkeleton(), parsed);
+  } catch (error) {
+    if (error instanceof ConfigurationError) throw error;
+    const message = error instanceof Error ? error.message : String(error);
+    throw new ConfigurationError(
+      `Failed to load config file ${filePath}: ${message}`,
+      'configFile'
+    );
+  }
+}
+
+export function loadConfigFromEnv(): Record<string, unknown> {
+  const config = buildConfigSkeleton();
 
   for (const [envVar, dotPath] of Object.entries(ENV_MAP)) {
     const raw = process.env[envVar];
@@ -172,11 +265,17 @@ function validateRequiredConfig(config: Config): void {
   if (!config.debug.enabled) {
     const provider = config.ai.provider;
     if (provider === 'gemini' && !config.gemini.apiKey) {
-      errors.push('GEMINI_API_KEY must be set when AI_PROVIDER is gemini');
+      errors.push(
+        'Set gemini.apiKey in .eroderc.json or ERODE_GEMINI_API_KEY as an environment variable'
+      );
     } else if (provider === 'anthropic' && !config.anthropic.apiKey) {
-      errors.push('ANTHROPIC_API_KEY must be set when AI_PROVIDER is anthropic');
+      errors.push(
+        'Set anthropic.apiKey in .eroderc.json or ERODE_ANTHROPIC_API_KEY as an environment variable'
+      );
     } else if (provider === 'openai' && !config.openai.apiKey) {
-      errors.push('OPENAI_API_KEY must be set when AI_PROVIDER is openai');
+      errors.push(
+        'Set openai.apiKey in .eroderc.json or ERODE_OPENAI_API_KEY as an environment variable'
+      );
     }
   }
   if (errors.length > 0) {
@@ -186,8 +285,11 @@ function validateRequiredConfig(config: Config): void {
 
 function createConfig(): Config {
   try {
+    const configFile = findConfigFile();
+    const fileConfig = configFile ? loadConfigFromFile(configFile) : buildConfigSkeleton();
     const envConfig = loadConfigFromEnv();
-    const config = ConfigSchema.parse(envConfig);
+    const rawConfig = deepMerge(fileConfig, envConfig);
+    const config = ConfigSchema.parse(rawConfig);
     validateRequiredConfig(config);
     return config;
   } catch (error) {
@@ -195,7 +297,7 @@ function createConfig(): Config {
       const summary = error.issues
         .map((issue, idx) => `${String(idx + 1)}. ${issue.path.join('.')}: ${issue.message}`)
         .join('; ');
-      throw new ConfigurationError(`Config validation failed — ${summary}`, 'validation');
+      throw new ConfigurationError(`Config validation failed: ${summary}`, 'validation');
     }
     throw error;
   }

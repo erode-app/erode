@@ -1,3 +1,6 @@
+import type { ChangeRequestResult } from '../platforms/source-platform.js';
+import type { ComponentSummary } from '../adapters/architecture-types.js';
+
 /**
  * Structured output format for CI/CD pipelines
  */
@@ -72,17 +75,8 @@ export interface StructuredAnalysisOutput {
   /** Component ID selected by AI when multiple candidates were found in the repository */
   selectedComponentId?: string;
   /** All candidate components that were provided for selection */
-  candidateComponents?: {
-    id: string;
-    name: string;
-    type: string;
-  }[];
+  candidateComponents?: ComponentSummary[];
   /** Architecture model format used for analysis (e.g. "LikeC4", "Structurizr") */
   modelFormat: string;
-  generatedChangeRequest?: {
-    url: string;
-    number: number;
-    action: 'created' | 'updated';
-    branch: string;
-  };
+  generatedChangeRequest?: ChangeRequestResult;
 }

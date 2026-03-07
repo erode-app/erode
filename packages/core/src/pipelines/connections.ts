@@ -1,6 +1,7 @@
 import type { ProgressReporter } from './progress.js';
 import { SilentProgress } from './progress.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
+import type { ComponentSummary } from '../adapters/architecture-types.js';
 import { validatePath } from '../utils/validation.js';
 
 export interface ConnectionsOptions {
@@ -10,24 +11,9 @@ export interface ConnectionsOptions {
 }
 
 export interface ComponentConnections {
-  component: {
-    id: string;
-    name: string;
-    type: string;
-    repository?: string;
-  };
-  dependencies: {
-    id: string;
-    name: string;
-    type: string;
-    repository?: string;
-  }[];
-  dependents: {
-    id: string;
-    name: string;
-    type: string;
-    repository?: string;
-  }[];
+  component: ComponentSummary & { repository?: string };
+  dependencies: (ComponentSummary & { repository?: string })[];
+  dependents: (ComponentSummary & { repository?: string })[];
   relationships: {
     targetId: string;
     targetName: string;
@@ -54,7 +40,7 @@ export async function runConnections(
 
   if (components.length === 0) {
     p.warn(`No components found for repository: ${options.repo}`);
-    p.info('Run "erode validate <model-path>" to check which components have repository links.');
+    p.info('Run "erode validate [model-path]" to check which components have repository links.');
     return [];
   }
   p.succeed(`Found ${String(components.length)} component(s)`);

@@ -27,7 +27,7 @@ export const AnalyzeOptionsSchema = z.object({
   format: z.enum(['console', 'json']).optional().default('console'),
   openPr: z.boolean().optional(),
   modelRepo: z.string().optional(),
-  modelRef: z.string().optional().default('main'),
+  modelRef: z.string().optional(),
   patchLocal: z.boolean().optional(),
   dryRun: z.boolean().optional(),
   draft: BooleanStringSchema.optional().default(true),
@@ -51,4 +51,20 @@ export const ConnectionsOptionsSchema = z.object({
   modelFormat: z.string().default('likec4'),
   repo: RepositoryUrlSchema,
   output: z.enum(['console', 'json']).default('console'),
+});
+
+export const CheckOptionsSchema = z.object({
+  repo: z.url().optional(),
+  modelFormat: z.string().default('likec4'),
+  staged: z.boolean().optional().default(false),
+  branch: z
+    .string()
+    .regex(/^[a-zA-Z0-9._/-]+$/, 'Invalid branch name')
+    .optional(),
+  component: z.string().optional(),
+  format: z.enum(['console', 'json']).optional().default('console'),
+  failOnViolations: z.boolean().optional().default(false),
+  skipFileFiltering: z.boolean().optional().default(false),
+  modelRepo: z.string().optional(),
+  modelRef: z.string().optional(),
 });

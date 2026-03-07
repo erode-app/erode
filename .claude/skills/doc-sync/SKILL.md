@@ -23,6 +23,7 @@ Suggest running this skill when you detect changes to any of these files
 ### CLI interface
 
 - `packages/cli/src/commands/analyze.ts`
+- `packages/cli/src/commands/check.ts`
 - `packages/cli/src/commands/validate.ts`
 - `packages/cli/src/commands/components.ts`
 - `packages/cli/src/commands/connections.ts`
@@ -79,6 +80,7 @@ When any of these appear in changes, say:
 | Doc file                                                            | What it documents                                                                           |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `packages/web/src/content/docs/docs/guides/cli-usage.md`            | CLI commands, arguments, flags                                                              |
+| `packages/web/src/content/docs/docs/guides/claude-code.md`          | Claude Code skill setup and hook configuration                                              |
 | `packages/web/src/content/docs/docs/guides/configuration.md`        | Environment variables, defaults                                                             |
 | `packages/web/src/content/docs/docs/ci/github-actions.md`           | GH Action inputs, outputs, CI setup                                                         |
 | `packages/web/src/content/docs/docs/getting-started.md`             | Quick-start examples                                                                        |
@@ -90,6 +92,7 @@ When any of these appear in changes, say:
 | `packages/architecture/core.c4`                                     | Core internals: pipeline stages, providers, adapters, platforms, modules, dependency arrows |
 | `packages/architecture/externals.c4`                                | External APIs and libraries (Anthropic, Gemini, GitHub, GitLab, LikeC4)                     |
 | `README.md`                                                         | Commands, flags, env vars, examples                                                         |
+| `packages/core/schemas/eroderc.schema.json`                         | Generated JSON Schema from `ConfigSchema`; must match `packages/core/src/utils/config.ts`   |
 
 ## Workflow
 
@@ -199,7 +202,7 @@ Check `externals.c4` against actual `package.json` dependencies and API usage.
 
 **Known intentional differences** (do NOT flag as bugs):
 
-- `action.yml` defaults `ai-provider` to `anthropic`, but `config.ts` defaults `AI_PROVIDER` to `gemini` — these are different interfaces with different defaults
+- `action.yml` defaults `ai-provider` to `anthropic`, but `config.ts` defaults `ERODE_AI_PROVIDER` to `gemini` — these are different interfaces with different defaults
 - `packages/architecture/` is a meta-package for diagrams — may or may not be in `model.c4`
 
 ### Step 3: Report

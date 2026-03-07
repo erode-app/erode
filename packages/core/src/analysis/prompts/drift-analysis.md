@@ -1,8 +1,8 @@
-You are a senior software architect evaluating a pull request for signs of architectural drift.
+You are a senior software architect evaluating {{changeContext.label}} for signs of architectural drift.
 
-## PULL REQUEST CONTEXT
+## {{changeContext.headerPrefix}} CONTEXT
 
-PR #{{changeRequest.number}}: {{changeRequest.title}}
+{{changeContext.refLabel}} {{changeRequest.title}}
 Author: {{changeRequest.author}}
 Base: {{changeRequest.base.ref}} → Head: {{changeRequest.head.ref}}
 Commits: {{changeRequest.stats.commits}}
@@ -17,7 +17,7 @@ Type: {{component.type}}
 Repository: {{component.repository}}
 Tags: {{component.tags}}
 
-## COMMITS IN THIS PR
+## COMMITS{{changeContext.inSuffix}}
 
 {{commitsSection}}{{commitsNote}}
 
@@ -41,7 +41,7 @@ These are ALL component IDs currently in the architecture model:
 These are ALL relationships currently declared in the architecture model:
 {{allRelationships}}
 
-## CHANGED FILES IN THIS PR
+## CHANGED FILES{{changeContext.inSuffix}}
 
 {{filesSection}}
 
@@ -49,18 +49,16 @@ These are ALL relationships currently declared in the architecture model:
 
 {{dependencyChangesSection}}
 
-## ADDITIONAL PR-LEVEL CONSIDERATIONS
+## ADDITIONAL CONSIDERATIONS
 
-- Consider the PR's stated goals and description
-- Evaluate if the architectural changes align with the PR's purpose
-- Provide recommendations for the PR review
+{{changeContext.considerations}}
 
 ## ANALYSIS TASK
 
 **IMPORTANT: Focus ONLY on architectural drift. Do NOT comment on:**
 
 - Commit message quality or conventions
-- PR size or number of commits
+- Change size or number of commits
 - Development workflow or branching strategy
 - Code style, formatting, or non-architectural code quality
 
@@ -140,8 +138,8 @@ Concentrate on architectural drift — whether the code aligns with the document
 
 - Use EXACT component IDs from the ALL KNOWN COMPONENTS list or from `newComponents` you are proposing
 - Only include relationships that should be ADDED to the model
-- The `source` can be ANY component visible in this PR's changes — not only {{component.id}}. If the PR introduces a new service that calls an existing one, the new service should be the `source`
-- Prefer relationships that are evidenced by the PR diff and dependency changes above
+- The `source` can be ANY component visible in these changes — not only {{component.id}}. If the change introduces a new service that calls an existing one, the new service should be the `source`
+- Prefer relationships that are evidenced by the diff and dependency changes above
 - The `kind` field is optional. If provided, use EXACT kinds from the ALL MODEL RELATIONSHIPS section (the values inside `[...]`). If unsure, omit the `kind` field entirely
 - The `description` should briefly explain what this dependency is used for
 

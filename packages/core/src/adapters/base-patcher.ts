@@ -1,7 +1,12 @@
 import { readFileSync, realpathSync } from 'fs';
 import { dirname, relative } from 'path';
 import { execFileSync } from 'child_process';
-import type { ModelPatcher, PatchResult, DslValidationResult } from './model-patcher.js';
+import type {
+  ModelPatcher,
+  ModelPatchOptions,
+  PatchResult,
+  DslValidationResult,
+} from './model-patcher.js';
 import type { StructuredRelationship, NewComponent } from '../analysis/analysis-types.js';
 import type { ModelRelationship, ComponentIndex } from './architecture-types.js';
 import type { AIProvider } from '../providers/ai-provider.js';
@@ -35,14 +40,7 @@ export abstract class BasePatcher implements ModelPatcher {
     }
   }
 
-  async patch(options: {
-    modelPath: string;
-    relationships: StructuredRelationship[];
-    existingRelationships: ModelRelationship[];
-    componentIndex: ComponentIndex;
-    provider: AIProvider;
-    newComponents?: NewComponent[];
-  }): Promise<PatchResult | null> {
+  async patch(options: ModelPatchOptions): Promise<PatchResult | null> {
     const { modelPath, relationships, existingRelationships, componentIndex, provider } = options;
     const skipped: PatchResult['skipped'] = [];
 

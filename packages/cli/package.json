@@ -1,5 +1,5 @@
 {
-  "name": "@erode/cli",
+  "name": "@erode-app/cli",
   "version": "0.0.1",
   "description": "Interactive CLI for erode architecture drift detection",
   "type": "module",
@@ -7,6 +7,10 @@
   "bin": {
     "erode": "./dist/cli.js"
   },
+  "files": [
+    "dist",
+    "!dist/**/__tests__"
+  ],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
@@ -20,15 +24,20 @@
     "test:watch": "vitest",
     "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\" \"npm:build\""
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/erode-app/erode.git",
+    "directory": "packages/cli"
+  },
   "license": "MIT",
   "dependencies": {
-    "@erode/core": "*",
+    "@erode-app/core": "*",
     "chalk": "^5.3.0",
     "commander": "^14.0.2",
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "@erode/eslint-config": "*",
+    "@erode-app/eslint-config": "*",
     "@types/node": "^24.11.0",
     "concurrently": "^9.2.1",
     "eslint": "^10.0.2",
@@ -36,6 +45,9 @@
     "rimraf": "^6.1.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.14"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "engines": {
     "node": ">=24.0.0"

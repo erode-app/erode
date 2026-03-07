@@ -33,8 +33,8 @@ For any CI platform, use the published container image:
 
 ```bash
 docker run --rm \
-  -e GITHUB_TOKEN="$GITHUB_TOKEN" \
-  -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+  -e ERODE_GITHUB_TOKEN="$GITHUB_TOKEN" \
+  -e ERODE_ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
   ghcr.io/erode-app/erode:0 \
   analyze /model --url "$PR_URL" --comment --fail-on-violations
 ```
@@ -44,8 +44,8 @@ Mount a local model directory if the model is not in a remote repository:
 ```bash
 docker run --rm \
   -v ./architecture:/model \
-  -e GITHUB_TOKEN="$GITHUB_TOKEN" \
-  -e GEMINI_API_KEY="$GEMINI_API_KEY" \
+  -e ERODE_GITHUB_TOKEN="$GITHUB_TOKEN" \
+  -e ERODE_GEMINI_API_KEY="$GEMINI_API_KEY" \
   ghcr.io/erode-app/erode:0 \
   analyze /model --url "$PR_URL" --comment
 ```
@@ -62,8 +62,8 @@ analyze:
       --url "$PR_URL"
       --comment --fail-on-violations
   variables:
-    GITHUB_TOKEN: $MY_GITHUB_TOKEN
-    ANTHROPIC_API_KEY: $MY_ANTHROPIC_KEY
+    ERODE_GITHUB_TOKEN: $MY_GITHUB_TOKEN
+    ERODE_ANTHROPIC_API_KEY: $MY_ANTHROPIC_KEY
 ```
 
 Override the entrypoint to call the CI entry point directly. The image includes Node.js and the built Erode package at `/app/packages/core/dist/ci-entry.js`.
@@ -81,8 +81,8 @@ npm install && npm run build
 Then run the analysis:
 
 ```bash
-export GITHUB_TOKEN="..."
-export ANTHROPIC_API_KEY="..."
+export ERODE_GITHUB_TOKEN="..."
+export ERODE_ANTHROPIC_API_KEY="..."
 
 node packages/cli/dist/cli.js analyze ./path/to/model \
   --url "https://github.com/org/repo/pull/42" \

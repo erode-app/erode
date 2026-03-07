@@ -1,5 +1,5 @@
 {
-  "name": "@erode/core",
+  "name": "@erode-app/core",
   "version": "0.0.1",
   "description": "Architecture erosion detection",
   "type": "module",
@@ -13,8 +13,13 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist",
+    "!dist/**/__tests__"
+  ],
   "scripts": {
-    "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\"",
+    "check:ci": "concurrently --group \"npm:lint\" \"npm:typecheck\" \"npm:format:check\" \"npm:check:schema\"",
+    "check:schema": "tsx scripts/generate-schema.ts --check",
     "build": "tsc && npm run copy-assets",
     "copy-assets": "bash scripts/copy-assets.sh",
     "dev": "tsx watch src/ci-entry.ts",
@@ -27,15 +32,24 @@
     "prebuild": "npm run clean",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate:schema": "tsx scripts/generate-schema.ts"
   },
   "keywords": [
     "architecture",
     "erode",
     "c4-model"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/erode-app/erode.git",
+    "directory": "packages/core"
+  },
   "author": "Anders Hassis",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=24.0.0"
   },
@@ -51,7 +65,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "@erode/eslint-config": "*",
+    "@erode-app/eslint-config": "*",
     "@types/node": "^24.11.0",
     "concurrently": "^9.2.1",
     "eslint": "^10.0.2",

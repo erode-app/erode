@@ -60,7 +60,14 @@ export {
 } from './output/ci-output.js';
 
 // Config
-export { CONFIG } from './utils/config.js';
+export {
+  CONFIG,
+  ENV_VAR_NAMES,
+  findConfigFile,
+  RC_FILENAME,
+  ConfigSchema,
+} from './utils/config.js';
+export type { Config } from './utils/config.js';
 
 // Errors
 export { ErodeError, ConfigurationError, ApiError, AdapterError, ErrorCode } from './errors.js';
@@ -87,6 +94,8 @@ export { runValidate } from './pipelines/validate.js';
 export type { ValidateOptions, ValidateResult } from './pipelines/validate.js';
 export { runConnections } from './pipelines/connections.js';
 export type { ConnectionsOptions, ComponentConnections } from './pipelines/connections.js';
+export { runCheck } from './pipelines/check.js';
+export type { CheckOptions, CheckResult } from './pipelines/check.js';
 export type { ProgressReporter } from './pipelines/progress.js';
 export { SilentProgress } from './pipelines/progress.js';
 export { createModelPr, closeModelPr, modelPrBranchName } from './pipelines/pr-creation.js';
@@ -101,3 +110,27 @@ export type { ModelPatcher, PatchResult, DslValidationResult } from './adapters/
 // Model source resolution
 export { resolveModelSource } from './utils/model-source.js';
 export type { ResolvedModelSource } from './utils/model-source.js';
+
+// Git diff (local check)
+export {
+  generateGitDiff,
+  parseRepoFromRemote,
+  normalizeToHttps,
+  getRemoteUrl,
+  parseFilesFromDiff,
+  filterDiffByFiles,
+} from './utils/git-diff.js';
+export type { GitDiffOptions, GitDiffResult, GitDiffFile } from './utils/git-diff.js';
+
+// Pipeline shared helpers
+export {
+  loadArchitectureModel,
+  buildArchitecturalContext,
+  buildEmptyResult,
+  runDriftStage,
+} from './pipelines/pipeline-shared.js';
+export type {
+  ArchitecturalContext,
+  EmptyResultOptions,
+  EmptyCheckResult,
+} from './pipelines/pipeline-shared.js';

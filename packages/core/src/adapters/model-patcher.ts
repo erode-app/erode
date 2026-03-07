@@ -6,6 +6,19 @@ import { StructurizrPatcher } from './structurizr/patcher.js';
 import { ErodeError, ErrorCode } from '../errors.js';
 export { quickValidatePatch } from './base-patcher.js';
 
+export interface SkippedRelationship {
+  source: string;
+  target: string;
+  reason: string;
+}
+
+export interface PatchNewComponent {
+  id: string;
+  kind: string;
+  name: string;
+  insertedLines: string[];
+}
+
 export interface PatchResult {
   /** Repo-relative path to the patched file */
   filePath: string;
@@ -18,9 +31,9 @@ export interface PatchResult {
   /** Only the relationship DSL lines (subset of insertedLines, excludes component DSL) */
   relationshipLines?: string[];
   /** Relationships skipped (unknown IDs, duplicates) */
-  skipped: { source: string; target: string; reason: string }[];
+  skipped: SkippedRelationship[];
   /** New components that were added to the model */
-  newComponents?: { id: string; kind: string; name: string; insertedLines: string[] }[];
+  newComponents?: PatchNewComponent[];
   /** true when DSL validation tooling was unavailable and validation was skipped */
   validationSkipped?: boolean;
 }
@@ -32,15 +45,17 @@ export interface DslValidationResult {
   skipped?: boolean;
 }
 
+export interface ModelPatchOptions {
+  modelPath: string;
+  relationships: StructuredRelationship[];
+  existingRelationships: ModelRelationship[];
+  componentIndex: ComponentIndex;
+  provider: AIProvider;
+  newComponents?: NewComponent[];
+}
+
 export interface ModelPatcher {
-  patch(options: {
-    modelPath: string;
-    relationships: StructuredRelationship[];
-    existingRelationships: ModelRelationship[];
-    componentIndex: ComponentIndex;
-    provider: AIProvider;
-    newComponents?: NewComponent[];
-  }): Promise<PatchResult | null>;
+  patch(options: ModelPatchOptions): Promise<PatchResult | null>;
 }
 
 export function createModelPatcher(format: string): ModelPatcher {

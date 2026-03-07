@@ -3,13 +3,14 @@ import { runAnalyze } from './pipelines/analyze.js';
 import type { AnalyzeOptions } from './pipelines/analyze.js';
 import { createPlatformReader, createPlatformWriter } from './platforms/platform-factory.js';
 import { formatErrorAsComment, COMMENT_MARKER } from './output.js';
+import { CONFIG } from './utils/config.js';
 
 function parseArgs(argv: string[]): AnalyzeOptions {
   const args = argv.slice(2);
-  // args[0] = 'analyze', args[1] = modelPath
-  const modelPath = args[1];
+  // args[0] = 'analyze', args[1] = modelPath (skip if it looks like a flag)
+  const modelPath = args[1] && !args[1].startsWith('-') ? args[1] : CONFIG.adapter.modelPath;
   if (!modelPath) {
-    console.error('Usage: erode-ci analyze <model-path> --url <url> [flags]');
+    console.error('Usage: erode-ci analyze [model-path] --url <url> [flags]');
     process.exit(2);
   }
 
@@ -37,8 +38,8 @@ function parseArgs(argv: string[]): AnalyzeOptions {
     failOnViolations: hasFlag('--fail-on-violations'),
     skipFileFiltering: hasFlag('--skip-file-filtering'),
     draft: !hasFlag('--no-draft'),
-    modelRepo: getFlag('--model-repo'),
-    modelRef: getFlag('--model-ref'),
+    modelRepo: getFlag('--model-repo') ?? CONFIG.adapter.modelRepo,
+    modelRef: getFlag('--model-ref') ?? CONFIG.adapter.modelRef,
   };
 }
 

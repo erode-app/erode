@@ -38,24 +38,25 @@ export interface ChangeRequestFile {
   patch?: string;
 }
 
+export interface ChangeAuthor {
+  login: string;
+  name?: string;
+}
+
+export interface BranchRef {
+  ref: string;
+  sha: string;
+}
+
 /** Data returned when fetching a change request. */
 export interface ChangeRequestData {
   number: number;
   title: string;
   body: string | null;
   state: string;
-  author: {
-    login: string;
-    name?: string;
-  };
-  base: {
-    ref: string;
-    sha: string;
-  };
-  head: {
-    ref: string;
-    sha: string;
-  };
+  author: ChangeAuthor;
+  base: BranchRef;
+  head: BranchRef;
   commits: number;
   additions: number;
   deletions: number;

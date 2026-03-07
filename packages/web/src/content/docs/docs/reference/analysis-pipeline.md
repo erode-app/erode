@@ -21,7 +21,7 @@ head:
 | **Input**      | Repository metadata, architecture model with multiple matching components |
 | **Output**     | Selected component ID                                                     |
 
-When a repository maps to multiple components in the architecture model, this stage uses AI to determine which component is most relevant to the current pull request. The fast model evaluates the repo context against each candidate component and selects the best match.
+When a repository maps to multiple components in the architecture model, this stage uses AI to determine which component is most relevant to the current changes. The fast model evaluates the repo context against each candidate component and selects the best match. This stage runs for both `analyze` (PR) and `check` (local) commands.
 
 This stage is **skipped entirely** when only one component matches the repository.
 
@@ -33,11 +33,11 @@ This stage is **skipped entirely** when only one component matches the repositor
 | **Input**      | PR diff, selected component context                          |
 | **Output**     | Structured list of added, removed, and modified dependencies |
 
-The PR diff is analyzed to extract dependency changes. The fast model identifies new integrations, removed connections, and modified interactions between components. The output is a structured dependency list that serves as input to the analysis stage.
+The diff (from a PR or local git state) is analyzed to extract dependency changes. The fast model identifies new integrations, removed connections, and modified interactions between components. The output is a structured dependency list that serves as input to the analysis stage.
 
 This keeps the analysis stage focused on dependency changes rather than the full diff.
 
-## Stage 3 -- PR analysis
+## Stage 3 -- Drift analysis
 
 |                |                                                                          |
 | -------------- | ------------------------------------------------------------------------ |
@@ -86,7 +86,7 @@ Each stage loads a markdown prompt template from `src/analysis/prompts/` at runt
 Erode detects API errors automatically across all stages. The pipeline handles:
 
 - **Rate limiting**: Detected from provider response headers and status codes. Reported with retry guidance.
-- **Timeouts**: Controlled by `GEMINI_TIMEOUT`, `OPENAI_TIMEOUT`, and `ANTHROPIC_TIMEOUT` environment variables.
+- **Timeouts**: Controlled by `ERODE_GEMINI_TIMEOUT`, `ERODE_OPENAI_TIMEOUT`, and `ERODE_ANTHROPIC_TIMEOUT` environment variables.
 - **Acceleration limits**: Provider-specific quota errors are identified and reported with context.
 
 The pipeline wraps all errors in structured error types that carry an error code, a user-facing message, and metadata about the failed request.

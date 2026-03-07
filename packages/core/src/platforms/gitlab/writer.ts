@@ -1,5 +1,5 @@
 import { Gitlab } from '@gitbeaker/rest';
-import { CONFIG } from '../../utils/config.js';
+import { CONFIG, ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import { ErodeError, ErrorCode } from '../../errors.js';
 import type {
   SourcePlatformWriter,
@@ -25,7 +25,7 @@ export class GitLabWriter implements SourcePlatformWriter {
       throw new ErodeError(
         'A GitLab token is needed to create merge requests',
         ErrorCode.AUTH_KEY_MISSING,
-        'Provide GITLAB_TOKEN to create merge requests.'
+        `Provide ${ENV_VAR_NAMES.gitlabToken} in your environment or ${RC_FILENAME} to create merge requests.`
       );
     }
     this.api = new Gitlab({ token, host: CONFIG.gitlab.baseUrl });

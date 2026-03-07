@@ -1,0 +1,10 @@
+{
+  "$schema": "https://erode.dev/schemas/v0/eroderc.schema.json",
+  "ai": {
+    "provider": "gemini"
+  },
+  "adapter": {
+    "format": "likec4",
+    "modelPath": "./architecture"
+  }
+}

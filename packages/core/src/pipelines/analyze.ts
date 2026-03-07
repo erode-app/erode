@@ -7,8 +7,15 @@ import { createPlatformReader } from '../platforms/platform-factory.js';
 import type { ChangeRequestFile } from '../platforms/source-platform.js';
 import { createAIProvider } from '../providers/provider-factory.js';
 import { buildStructuredOutput, writeOutputToFile } from '../output.js';
-import { validatePath } from '../utils/validation.js';
 import { ErodeError, ErrorCode } from '../errors.js';
+import {
+  loadArchitectureModel,
+  buildArchitecturalContext,
+  runDriftStage,
+  selectComponentWithAI,
+  resolveAndCloneModel,
+  findComponentsForRepo,
+} from './pipeline-shared.js';
 import { CONFIG } from '../utils/config.js';
 import { loadSkipPatterns, applySkipPatterns } from '../utils/skip-patterns.js';
 import { createModelPatcher } from '../adapters/model-patcher.js';
@@ -17,7 +24,6 @@ import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
 import type { DriftAnalysisPromptData, DriftAnalysisResult } from '../analysis/analysis-types.js';
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import type { StructuredAnalysisOutput } from '../output/structured-output.js';
-import { resolveModelSource } from '../utils/model-source.js';
 
 function buildDiffFromFiles(files: ChangeRequestFile[]): string {
   return files
@@ -75,25 +81,18 @@ export async function runAnalyze(
   const adapter = createAdapter(options.modelFormat);
 
   // ── Resolve model source (clone if remote) ───────────────────────────
-  if (options.modelRepo) {
-    p.start('Cloning model repository');
-  }
-  const resolvedSource = await resolveModelSource(options.modelPath, options.modelRepo, {
-    ref: options.modelRef,
-  });
-  if (options.modelRepo) {
-    p.succeed(`Model repository cloned (${resolvedSource.repoSlug ?? options.modelRepo})`);
-  }
+  const resolvedSource = await resolveAndCloneModel(
+    options.modelPath,
+    options.modelRepo,
+    { ref: options.modelRef },
+    p
+  );
   const effectiveModelPath = resolvedSource.localPath;
   const effectiveModelRepo = resolvedSource.repoSlug ?? options.modelRepo;
 
   try {
     // ── Load architecture model ──────────────────────────────────────────
-    p.section(`Preparing ${adapter.metadata.displayName} Architecture Model`);
-    validatePath(effectiveModelPath, 'directory');
-    p.start('Reading architecture model');
-    const architectureModel = await adapter.loadFromPath(effectiveModelPath);
-    p.succeed('Architecture model ready');
+    const architectureModel = await loadArchitectureModel(adapter, effectiveModelPath, p);
 
     // ── Initialise AI provider ───────────────────────────────────────────
     p.start('Setting up AI provider');
@@ -127,51 +126,25 @@ export async function runAnalyze(
 
     // ── Find components for this repository ──────────────────────────────
     const repoUrl = ref.repositoryUrl;
-    p.start('Locating components for repository');
-    const components = adapter.findAllComponentsByRepository(repoUrl);
-
-    if (components.length === 0) {
-      p.warn(`No components matched repository: ${repoUrl}`);
-      for (const line of adapter.metadata.noComponentHelpLines) {
-        p.info(line.replace('{{repoUrl}}', repoUrl));
-      }
-      // Return an empty-ish result so callers don't have to handle undefined
-      const emptyResult: DriftAnalysisResult = {
-        hasViolations: false,
-        violations: [],
-        summary: `No components found matching repository: ${repoUrl}`,
-        metadata: {
-          number: prData.number,
-          title: prData.title,
-          description: prData.body,
-          repository: ref.repositoryUrl.replace(/^https?:\/\/[^/]+\//, ''),
-          author: prData.author,
-          base: prData.base,
-          head: prData.head,
-          stats: {
-            commits: prData.commits,
-            additions: prData.additions,
-            deletions: prData.deletions,
-            files_changed: prData.changed_files,
-          },
-          commits: [],
-        },
-        component: { id: '', name: '', tags: [], type: '' },
-        dependencyChanges: { dependencies: [], summary: '' },
-      };
-      return {
-        analysisResult: emptyResult,
-        hasViolations: false,
-      };
-    }
-    p.succeed(`Located ${String(components.length)} component(s) for repository`);
-
-    // Guaranteed non-empty since we checked components.length === 0 above
-    const defaultComponent = components[0];
-    if (!defaultComponent) {
-      // This should never happen, but satisfies strict TS
-      throw new Error('Unexpected: components array was non-empty but first element was undefined');
-    }
+    const prMetadata = {
+      number: prData.number,
+      title: prData.title,
+      description: prData.body,
+      repository: ref.repositoryUrl.replace(/^https?:\/\/[^/]+\//, ''),
+      author: prData.author,
+      base: prData.base,
+      head: prData.head,
+      stats: {
+        commits: prData.commits,
+        additions: prData.additions,
+        deletions: prData.deletions,
+        files_changed: prData.changed_files,
+      },
+      commits: [],
+    };
+    const lookup = findComponentsForRepo(adapter, repoUrl, prMetadata, p);
+    if (!('found' in lookup)) return lookup;
+    const { components, defaultComponent } = lookup;
 
     // ── Pipeline context accumulator ───────────────────────────────────
     const ctx: PipelineContext = {
@@ -187,22 +160,14 @@ export async function runAnalyze(
       ctx.selectedComponentId = defaultComponent.id;
     } else {
       p.section('Stage 1: Component Selection');
-      p.start('Asking the model to pick the best-matching component');
-      if (!provider.selectComponent) {
-        p.warn(`Provider lacks component selection, defaulting to: ${defaultComponent.name}`);
-      } else {
-        const componentId = await provider.selectComponent({
-          components,
-          files: prData.files.map((f) => ({ filename: f.filename })),
-        });
-        if (componentId) {
-          ctx.selectedComponent = components.find((c) => c.id === componentId) ?? defaultComponent;
-          ctx.selectedComponentId = componentId;
-          p.succeed(`Chosen component: ${ctx.selectedComponent.name} (${componentId})`);
-        } else {
-          p.warn(`AI was unable to pick a component, defaulting to: ${defaultComponent.name}`);
-        }
-      }
+      ctx.selectedComponent = await selectComponentWithAI(
+        provider,
+        components,
+        prData.files.map((f) => ({ filename: f.filename })),
+        defaultComponent,
+        p
+      );
+      ctx.selectedComponentId = ctx.selectedComponent.id;
     }
 
     // ── Stage 2: Dependency extraction ───────────────────────────────────
@@ -240,25 +205,11 @@ export async function runAnalyze(
     }
 
     // ── Build prompt data for drift analysis ─────────────────────────────
-    const dependencies = adapter.getComponentDependencies(selectedComponent.id);
-    const dependents = adapter.getComponentDependents(selectedComponent.id);
-    const relationships = adapter.getComponentRelationships(selectedComponent.id);
+    const architectural = buildArchitecturalContext(adapter, selectedComponent.id);
 
     const promptData: DriftAnalysisPromptData = {
       changeRequest: {
-        number: prData.number,
-        title: prData.title,
-        description: prData.body,
-        repository: ref.repositoryUrl.replace(/^https?:\/\/[^/]+\//, ''),
-        author: prData.author,
-        base: prData.base,
-        head: prData.head,
-        stats: {
-          commits: prData.commits,
-          additions: prData.additions,
-          deletions: prData.deletions,
-          files_changed: prData.changed_files,
-        },
+        ...prMetadata,
         commits: commits.map((c) => ({
           sha: c.sha,
           message: c.message,
@@ -268,34 +219,13 @@ export async function runAnalyze(
       component: selectedComponent,
       dependencies: ctx.extractedDeps,
       files: prData.files.map((f) => ({ filename: f.filename, status: f.status })),
-      architectural: {
-        dependencies: dependencies.map((d) => ({ ...d, repository: d.repository })),
-        dependents: dependents.map((d) => ({ ...d, repository: d.repository })),
-        relationships: relationships.map((r) => ({
-          target: { id: r.target.id, name: r.target.name },
-          kind: r.kind,
-          title: r.title,
-        })),
-      },
+      architectural,
       allComponentIds: Array.from(architectureModel.componentIndex.byId.keys()),
       allRelationships: adapter.getAllRelationships(),
     };
 
     // ── Stage 3: Drift analysis ──────────────────────────────────────────
-    p.section('Stage 3: Drift Analysis');
-    p.start('Evaluating the change request for architectural drift');
-    ctx.analysisResult = await provider.analyzeDrift(promptData);
-    p.succeed('Drift analysis finished');
-
-    if (CONFIG.debug.verbose) {
-      console.error(
-        '[Stage 3] Drift analysis:',
-        JSON.stringify({
-          violations: ctx.analysisResult.violations.length,
-          hasModelUpdates: !!ctx.analysisResult.modelUpdates?.relationships?.length,
-        })
-      );
-    }
+    ctx.analysisResult = await runDriftStage(provider, promptData, p);
 
     // ── Build structured output ──────────────────────────────────────────
     p.section('Output');

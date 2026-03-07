@@ -3,27 +3,23 @@ title: CLI Usage
 description: Run Erode from the command line.
 ---
 
-Erode provides four commands for working with architecture models and analyzing change requests.
+Erode provides five commands for working with architecture models and analyzing change requests.
 
 ## Installation
 
-Erode is not yet published as an npm package. Clone the repository and build from source:
-
 ```bash
-git clone https://github.com/erode-app/erode.git
-cd core
-npm install && npm run build
+npm install -g @erode-app/cli
 ```
 
-The built CLI is at `packages/cli/dist/cli.js`. Run it with Node.js:
+Or run directly with npx:
 
 ```bash
-node packages/cli/dist/cli.js --help
+npx @erode-app/cli --help
 ```
 
 ## Commands
 
-### `analyze <model-path>`
+### `analyze [model-path]`
 
 Analyze a change request for architecture drift.
 
@@ -66,7 +62,40 @@ erode analyze ./model --url https://bitbucket.org/workspace/repo/pull-requests/4
 Relationship removals are informational only. The PR body lists relationships that may need removal, but the reviewer must remove them manually.
 :::
 
-### `components <model-path>`
+### `check [model-path]`
+
+Check local changes for architectural drift before pushing. Uses the same AI pipeline as `analyze` (Stages 1-3) but operates on local git diffs instead of fetching PR data from a platform API.
+
+```bash
+erode check ./model --repo https://github.com/org/repo
+erode check ./model --staged
+erode check ./model --branch main
+```
+
+| Flag                    | Description                                               | Default   |
+| ----------------------- | --------------------------------------------------------- | --------- |
+| `--repo <url>`          | Repository URL (auto-detected from git remote if omitted) |           |
+| `--model-format <fmt>`  | Architecture model format                                 | `likec4`  |
+| `--staged`              | Only check staged changes                                 | `false`   |
+| `--branch <branch>`     | Compare against a branch (e.g. `main`)                    |           |
+| `--component <id>`      | Component ID to analyze (skips AI component selection)    |           |
+| `--format <fmt>`        | Output format: `console`, `json`                          | `console` |
+| `--fail-on-violations`  | Exit with code 1 when violations are found                |           |
+| `--skip-file-filtering` | Analyze all changed files (skip pattern-based filtering)  |           |
+
+When no flags are passed, `check` analyzes unstaged changes (`git diff`). Use `--staged` for pre-commit hooks and `--branch main` for pre-push hooks.
+
+#### Git hook integration
+
+```bash
+# .husky/pre-commit
+erode check ./architecture --staged --fail-on-violations
+
+# .husky/pre-push
+erode check ./architecture --branch main --fail-on-violations
+```
+
+### `components [model-path]`
 
 List components from an architecture model.
 
@@ -80,7 +109,7 @@ erode components ./model --format json
 | `--model-format <fmt>` | Architecture model format              | `likec4` |
 | `--format <fmt>`       | Output format: `table`, `json`, `yaml` | `table`  |
 
-### `connections <model-path>`
+### `connections [model-path]`
 
 Show component connections from an architecture model.
 
@@ -95,7 +124,7 @@ erode connections ./model --repo https://gitlab.com/group/project
 | `--model-format <fmt>` | Architecture model format        | `likec4`  |
 | `--output <fmt>`       | Output format: `console`, `json` | `console` |
 
-### `validate <model-path>`
+### `validate [model-path]`
 
 Check that all components in an architecture model have repository links.
 
@@ -115,21 +144,23 @@ Exits with code 1 if any components are missing repository links.
 
 Set these before running any command:
 
-| Variable                                                   | Description                                                                                                                   |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `GITHUB_TOKEN`                                             | Required for GitHub PRs. See [Configuration](/docs/guides/configuration/#github) for required permissions.                    |
-| `GITLAB_TOKEN`                                             | Required for GitLab MRs. Requires `api` scope.                                                                                |
-| `BITBUCKET_TOKEN`                                          | Required for Bitbucket PRs. See [Configuration](/docs/guides/configuration/#bitbucket-experimental) for required permissions. |
-| `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY` | API key for your chosen AI provider.                                                                                          |
-| `AI_PROVIDER`                                              | `gemini` (default), `openai`, or `anthropic`.                                                                                 |
+| Variable                                                                     | Description                                                                                                                   |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `ERODE_GITHUB_TOKEN`                                                         | Required for GitHub PRs. See [Configuration](/docs/guides/configuration/#github) for required permissions.                    |
+| `ERODE_GITLAB_TOKEN`                                                         | Required for GitLab MRs. Requires `api` scope.                                                                                |
+| `ERODE_BITBUCKET_TOKEN`                                                      | Required for Bitbucket PRs. See [Configuration](/docs/guides/configuration/#bitbucket-experimental) for required permissions. |
+| `ERODE_GEMINI_API_KEY`, `ERODE_OPENAI_API_KEY`, or `ERODE_ANTHROPIC_API_KEY` | API key for your chosen AI provider.                                                                                          |
+| `ERODE_AI_PROVIDER`                                                          | `gemini` (default), `openai`, or `anthropic`.                                                                                 |
+
+You can also configure these values in a `.eroderc.json` file. See [Configuration](/docs/guides/configuration/#configuration-file) for details.
 
 See [Configuration](/docs/guides/configuration/) for the full list of environment variables including diff limits, timeouts, and model overrides.
 
 ## Example
 
 ```bash
-export GITHUB_TOKEN="ghp_..."
-export GEMINI_API_KEY="AIza..."
+export ERODE_GITHUB_TOKEN="ghp_..."
+export ERODE_GEMINI_API_KEY="AIza..."
 
 node packages/cli/dist/cli.js analyze ./architecture \
   --url https://github.com/acme/backend/pull/42 \

@@ -198,6 +198,56 @@ describe('PromptBuilder', () => {
       expect(result).toContain('No architectural dependency changes');
     });
 
+    it('should use PR context labels when number > 0', () => {
+      const result = PromptBuilder.buildDriftAnalysisPrompt({
+        changeRequest: {
+          number: 42,
+          title: 'Add payments',
+          description: null,
+          repository: 'org/repo',
+          author: { login: 'dev' },
+          base: { ref: 'main', sha: 'base' },
+          head: { ref: 'feature', sha: 'head' },
+          stats: { commits: 1, additions: 1, deletions: 0, files_changed: 1 },
+          commits: [],
+        },
+        component: { id: 'comp.api', name: 'API', type: 'service', tags: [] },
+        dependencies: { dependencies: [], summary: '' },
+        architectural: { dependencies: [], dependents: [], relationships: [] },
+      });
+
+      // Template vars are JSON-serialized in test env (template file not on disk)
+      expect(result).toContain('a pull request');
+      expect(result).toContain('PULL REQUEST');
+      expect(result).toContain('PR #42:');
+      expect(result).toContain('IN THIS PR');
+    });
+
+    it('should use local context labels when number is 0', () => {
+      const result = PromptBuilder.buildDriftAnalysisPrompt({
+        changeRequest: {
+          number: 0,
+          title: 'Local changes',
+          description: null,
+          repository: 'org/repo',
+          author: { login: 'local' },
+          base: { ref: 'HEAD', sha: '' },
+          head: { ref: 'working-tree', sha: '' },
+          stats: { commits: 0, additions: 5, deletions: 2, files_changed: 3 },
+          commits: [],
+        },
+        component: { id: 'comp.api', name: 'API', type: 'service', tags: [] },
+        dependencies: { dependencies: [], summary: '' },
+        architectural: { dependencies: [], dependents: [], relationships: [] },
+      });
+
+      expect(result).toContain('local changes');
+      expect(result).toContain('LOCAL CHANGES');
+      expect(result).toContain('Changes:');
+      expect(result).not.toContain('IN THIS PR');
+      expect(result).not.toContain('PULL REQUEST');
+    });
+
     it('should format added/modified/removed dependencies through buildDriftAnalysisPrompt', () => {
       const result = PromptBuilder.buildDriftAnalysisPrompt({
         changeRequest: {

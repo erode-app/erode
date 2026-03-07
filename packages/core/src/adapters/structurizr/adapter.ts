@@ -11,6 +11,7 @@ import type { ArchitectureModelAdapter } from '../architecture-adapter.js';
 import type {
   ArchitecturalComponent,
   ComponentIndex,
+  ComponentRelationship,
   ModelRelationship,
   ArchitectureModel,
   SimpleComponent,
@@ -260,13 +261,11 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
     return dependents;
   }
 
-  getComponentRelationships(
-    componentId: string
-  ): { target: ArchitecturalComponent; kind?: string; title?: string }[] {
+  getComponentRelationships(componentId: string): ComponentRelationship[] {
     if (!this.componentIndex || !this.relationships) {
       throw AdapterError.notLoaded('structurizr');
     }
-    const result: { target: ArchitecturalComponent; kind?: string; title?: string }[] = [];
+    const result: ComponentRelationship[] = [];
     for (const relation of this.relationships) {
       if (relation.source === componentId) {
         const targetComponent = this.componentIndex.byId.get(relation.target);

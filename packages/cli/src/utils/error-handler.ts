@@ -1,4 +1,4 @@
-import { ErodeError, AdapterError, ErrorCode } from '@erode/core';
+import { ErodeError, AdapterError, ErrorCode, ENV_VAR_NAMES, RC_FILENAME } from '@erode-app/core';
 import { Logger } from './cli-helpers.js';
 
 interface RetryOptions {
@@ -18,10 +18,11 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
 function provideSuggestions(error: ErodeError): void {
   const suggestions: Partial<Record<ErrorCode, string[]>> = {
     [ErrorCode.AUTH_KEY_MISSING]: [
-      'Provide an AI provider key: ANTHROPIC_API_KEY or GEMINI_API_KEY',
-      'Store the key in a .env file',
+      `Provide an AI provider key: ${ENV_VAR_NAMES.anthropicApiKey}, ${ENV_VAR_NAMES.geminiApiKey}, or ${ENV_VAR_NAMES.openaiApiKey}`,
+      `Store the key in your environment or ${RC_FILENAME}`,
       'Obtain an Anthropic key at https://console.anthropic.com/',
       'Obtain a Gemini key at https://aistudio.google.com/apikey',
+      'Obtain an OpenAI key at https://platform.openai.com/',
     ],
     [ErrorCode.PROVIDER_SAFETY_BLOCK]: [
       'Content was rejected by the AI provider safety filters',
@@ -29,7 +30,7 @@ function provideSuggestions(error: ErodeError): void {
       'Check the content for sensitive material',
     ],
     [ErrorCode.AUTH_PLATFORM_FAILURE]: [
-      'Confirm your GITHUB_TOKEN or GITLAB_TOKEN is still valid',
+      `Confirm your ${ENV_VAR_NAMES.githubToken}, ${ENV_VAR_NAMES.gitlabToken}, or ${ENV_VAR_NAMES.bitbucketToken} is still valid`,
       'Verify the token has the required repository permissions',
       'Consider generating a new access token',
     ],
@@ -41,6 +42,10 @@ function provideSuggestions(error: ErodeError): void {
     [ErrorCode.IO_DIR_NOT_FOUND]: [
       'Confirm the directory path is valid',
       'Ensure the model workspace is properly configured',
+    ],
+    [ErrorCode.IO_EXEC_FAILED]: [
+      'Verify that git is installed and available on your PATH',
+      'Make sure you are inside a git repository',
     ],
     [ErrorCode.NET_ERROR]: [
       'Verify your network connection',
@@ -153,6 +158,7 @@ export const ErrorHandler = {
         case ErrorCode.IO_FILE_NOT_FOUND:
         case ErrorCode.IO_DIR_NOT_FOUND:
         case ErrorCode.IO_PERMISSION_DENIED:
+        case ErrorCode.IO_EXEC_FAILED:
           return 3;
         case ErrorCode.NET_ERROR:
         case ErrorCode.PROVIDER_ERROR:

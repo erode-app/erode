@@ -15,9 +15,9 @@ PR_URL="https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/pull
 
 # ── 2. Export env vars for the CLI ──
 
-export AI_PROVIDER="${AI_PROVIDER:-anthropic}"
-export MODEL_FORMAT="${ERODE_MODEL_FORMAT:-likec4}"
-# ANTHROPIC_API_KEY, GEMINI_API_KEY, BITBUCKET_TOKEN should be set as repository variables
+export ERODE_AI_PROVIDER="${ERODE_AI_PROVIDER:-anthropic}"
+export ERODE_MODEL_FORMAT="${ERODE_MODEL_FORMAT:-likec4}"
+# ERODE_ANTHROPIC_API_KEY, ERODE_GEMINI_API_KEY, ERODE_BITBUCKET_TOKEN should be set as repository variables
 
 # ── 3. Clone model repository (if separate from source) ──
 
@@ -25,7 +25,11 @@ MODEL_DIR="${ERODE_MODEL_PATH:-.}"
 
 if [ -n "${ERODE_MODEL_REPO:-}" ]; then
   MODEL_CLONE_DIR="/tmp/model-repo"
-  CLONE_TOKEN="${ERODE_MODEL_REPO_TOKEN:-$BITBUCKET_TOKEN}"
+  CLONE_TOKEN="${ERODE_MODEL_REPO_TOKEN:-${ERODE_BITBUCKET_TOKEN:-}}"
+  if [ -z "$CLONE_TOKEN" ]; then
+    echo "ERROR: ERODE_MODEL_REPO_TOKEN or ERODE_BITBUCKET_TOKEN must be set when ERODE_MODEL_REPO is provided."
+    exit 1
+  fi
 
   # Build the askpass token value.
   # App passwords use username:app_password format (Basic auth).
@@ -57,7 +61,7 @@ fi
 CORE_ARGS=(
   analyze "$MODEL_DIR"
   --url "$PR_URL"
-  --model-format "$MODEL_FORMAT"
+  --model-format "$ERODE_MODEL_FORMAT"
   --format json
   --comment
 )

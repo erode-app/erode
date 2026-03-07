@@ -1,15 +1,10 @@
+import type { CommitInfo } from './analysis-types.js';
+import type { RepoIdentifier } from '../utils/git-diff.js';
+
 export interface DependencyExtractionPromptVars {
   diff: string;
-  commit: {
-    sha: string;
-    message: string;
-    author: string;
-  };
-  repository: {
-    owner: string;
-    repo: string;
-    url: string;
-  };
+  commit: CommitInfo;
+  repository: RepoIdentifier & { url: string };
   componentsContext: string;
 }
 
@@ -18,7 +13,21 @@ export interface ComponentSelectionPromptVars {
   files: string;
 }
 
+export interface ChangeContextVars {
+  /** "a pull request" or "local changes" */
+  label: string;
+  /** "PULL REQUEST" or "LOCAL CHANGES" */
+  headerPrefix: string;
+  /** "PR #42:" or "Changes:" */
+  refLabel: string;
+  /** " IN THIS PR" or "" */
+  inSuffix: string;
+  /** Considerations paragraph for the template */
+  considerations: string;
+}
+
 export interface DriftAnalysisPromptVars {
+  changeContext: ChangeContextVars;
   changeRequest: {
     number: number;
     title: string;

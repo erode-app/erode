@@ -1,0 +1,259 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Erode Configuration",
+  "description": "Configuration file for erode (.eroderc.json)",
+  "type": "object",
+  "properties": {
+    "ai": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "default": "gemini",
+          "type": "string",
+          "enum": [
+            "gemini",
+            "anthropic",
+            "openai"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "maxFilesPerDiff": {
+          "default": 50,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "maxLinesPerDiff": {
+          "default": 5000,
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 50000
+        },
+        "maxContextChars": {
+          "default": 10000,
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 100000
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapter": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "default": "likec4",
+          "type": "string",
+          "enum": [
+            "likec4",
+            "structurizr"
+          ]
+        },
+        "modelPath": {
+          "type": "string"
+        },
+        "modelRepo": {
+          "type": "string"
+        },
+        "modelRef": {
+          "default": "main",
+          "type": "string"
+        },
+        "likec4": {
+          "type": "object",
+          "properties": {
+            "excludePaths": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "excludeTags": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "structurizr": {
+          "type": "object",
+          "properties": {
+            "cliPath": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "github": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "modelRepoPrToken": {
+          "type": "string"
+        },
+        "defaultTimeout": {
+          "default": 30000,
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 300000
+        },
+        "baseUrl": {
+          "default": "https://api.github.com",
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": false
+    },
+    "gitlab": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "baseUrl": {
+          "default": "https://gitlab.com",
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": false
+    },
+    "bitbucket": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "baseUrl": {
+          "default": "https://api.bitbucket.org/2.0",
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": false
+    },
+    "anthropic": {
+      "type": "object",
+      "properties": {
+        "apiKey": {
+          "type": "string"
+        },
+        "timeout": {
+          "default": 60000,
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 300000
+        },
+        "fastModel": {
+          "default": "claude-haiku-4-5-20251001",
+          "type": "string"
+        },
+        "advancedModel": {
+          "default": "claude-sonnet-4-5-20250929",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "gemini": {
+      "type": "object",
+      "properties": {
+        "apiKey": {
+          "type": "string"
+        },
+        "timeout": {
+          "default": 60000,
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 300000
+        },
+        "fastModel": {
+          "default": "gemini-2.5-flash",
+          "type": "string"
+        },
+        "advancedModel": {
+          "default": "gemini-2.5-flash",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "openai": {
+      "type": "object",
+      "properties": {
+        "apiKey": {
+          "type": "string"
+        },
+        "timeout": {
+          "default": 60000,
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 300000
+        },
+        "fastModel": {
+          "default": "gpt-4.1-mini",
+          "type": "string"
+        },
+        "advancedModel": {
+          "default": "gpt-4.1",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "debug": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "outputDir": {
+          "default": "prompts",
+          "type": "string",
+          "minLength": 1
+        },
+        "verbose": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "app": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "default": "erode",
+          "type": "string"
+        },
+        "version": {
+          "default": "0.1.0",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "JSON Schema reference"
+    }
+  },
+  "additionalProperties": false
+}

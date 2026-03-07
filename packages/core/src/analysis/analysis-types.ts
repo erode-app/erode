@@ -2,6 +2,9 @@ import type { ArchitecturalComponent, ModelRelationship } from '../adapters/arch
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import type { StructuredRelationshipSchema, NewComponentSchema } from '../schemas/common.schema.js';
 import type { z } from 'zod';
+import type { GitDiffFile } from '../utils/git-diff.js';
+import type { BranchRef, ChangeAuthor } from '../platforms/source-platform.js';
+import type { RepoIdentifier } from '../utils/git-diff.js';
 
 export type StructuredRelationship = z.infer<typeof StructuredRelationshipSchema>;
 export type NewComponent = z.infer<typeof NewComponentSchema>;
@@ -15,18 +18,23 @@ export interface ComponentSelectionPromptData {
   files: { filename: string }[];
 }
 
+export interface CommitInfo {
+  sha: string;
+  message: string;
+  author: string;
+}
+
+/** Narrowed relationship reference used in prompt data and pipeline context. */
+export interface ComponentRelationshipRef {
+  target: { id: string; name: string };
+  kind?: string;
+  title?: string;
+}
+
 export interface DependencyExtractionPromptData {
   diff: string;
-  commit: {
-    sha: string;
-    message: string;
-    author: string;
-  };
-  repository: {
-    owner: string;
-    repo: string;
-    url: string;
-  };
+  commit: CommitInfo;
+  repository: RepoIdentifier & { url: string };
   components?: {
     id: string;
     name: string;
@@ -58,32 +66,21 @@ export interface DriftViolation {
  */
 export interface ChangeRequestMetadata {
   number: number;
+  /** Discriminant: 'local' for erode check, 'pr' for erode analyze. */
+  source?: 'local' | 'pr';
   title: string;
   description: string | null;
   repository: string; // owner/repo format
-  author: {
-    login: string;
-    name?: string;
-  };
-  base: {
-    ref: string;
-    sha: string;
-  };
-  head: {
-    ref: string;
-    sha: string;
-  };
+  author: ChangeAuthor;
+  base: BranchRef;
+  head: BranchRef;
   stats: {
     commits: number;
     additions: number;
     deletions: number;
     files_changed: number;
   };
-  commits: {
-    sha: string;
-    message: string;
-    author: string;
-  }[];
+  commits: CommitInfo[];
 }
 /**
  * Result of analyzing a change request
@@ -128,17 +125,10 @@ export interface DriftAnalysisPromptData {
   architectural: {
     dependencies: (ArchitecturalComponent & { repository?: string })[];
     dependents: (ArchitecturalComponent & { repository?: string })[];
-    relationships: {
-      target: {
-        id: string;
-        name: string;
-      };
-      kind?: string;
-      title?: string;
-    }[];
+    relationships: ComponentRelationshipRef[];
   };
   /** Changed files in the PR with their status */
-  files?: { filename: string; status: string }[];
+  files?: GitDiffFile[];
   /** All component IDs in the architecture model */
   allComponentIds?: string[];
   /** All relationships in the architecture model */
