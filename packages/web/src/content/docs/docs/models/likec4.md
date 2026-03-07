@@ -82,7 +82,7 @@ Point the GitHub Action at this repository using `model-repo`:
     gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
 
-See [GitHub Actions](/docs/ci/github-actions/) for all model repository options including `model-path`, `model-ref`, and `model-repo-token`.
+See [GitHub Actions](/docs/integrations/github-actions/) for all model repository options including `model-path`, `model-ref`, and `model-repo-token`.
 
 ## How Erode uses the model
 
@@ -97,4 +97,4 @@ The more accurately the model reflects the dependencies that matter, the better 
 
 ## Version requirements
 
-Erode uses the `likec4` npm package `^1.45.0`. The Docker image and GitHub Action bundle it automatically — no local installation needed.
+Erode uses the `likec4` npm package `^1.45.0`. The Docker image and GitHub Action bundle it automatically. No local installation needed.

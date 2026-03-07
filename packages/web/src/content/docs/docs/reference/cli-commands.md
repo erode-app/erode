@@ -1,5 +1,5 @@
 ---
-title: CLI Usage
+title: CLI Commands
 description: Run Erode from the command line.
 ---
 
@@ -82,6 +82,8 @@ erode check ./model --branch main
 | `--format <fmt>`        | Output format: `console`, `json`                          | `console` |
 | `--fail-on-violations`  | Exit with code 1 when violations are found                |           |
 | `--skip-file-filtering` | Analyze all changed files (skip pattern-based filtering)  |           |
+| `--model-repo <repo>`   | Clone architecture model from this repository             |           |
+| `--model-ref <ref>`     | Branch or tag to clone from model repository              |           |
 
 When no flags are passed, `check` analyzes unstaged changes (`git diff`). Use `--staged` for pre-commit hooks and `--branch main` for pre-push hooks.
 
@@ -142,19 +144,7 @@ Exits with code 1 if any components are missing repository links.
 
 ## Environment variables
 
-Set these before running any command:
-
-| Variable                                                                     | Description                                                                                                                   |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `ERODE_GITHUB_TOKEN`                                                         | Required for GitHub PRs. See [Configuration](/docs/guides/configuration/#github) for required permissions.                    |
-| `ERODE_GITLAB_TOKEN`                                                         | Required for GitLab MRs. Requires `api` scope.                                                                                |
-| `ERODE_BITBUCKET_TOKEN`                                                      | Required for Bitbucket PRs. See [Configuration](/docs/guides/configuration/#bitbucket-experimental) for required permissions. |
-| `ERODE_GEMINI_API_KEY`, `ERODE_OPENAI_API_KEY`, or `ERODE_ANTHROPIC_API_KEY` | API key for your chosen AI provider.                                                                                          |
-| `ERODE_AI_PROVIDER`                                                          | `gemini` (default), `openai`, or `anthropic`.                                                                                 |
-
-You can also configure these values in a `.eroderc.json` file. See [Configuration](/docs/guides/configuration/#configuration-file) for details.
-
-See [Configuration](/docs/guides/configuration/) for the full list of environment variables including diff limits, timeouts, and model overrides.
+Erode reads configuration from environment variables and `.eroderc.json`. Set your platform token and AI provider API key before running any command. See [Configuration](/docs/reference/configuration/) for the full reference and [Authentication](/docs/reference/authentication/) for token permission requirements.
 
 ## Example
 
@@ -170,6 +160,6 @@ node packages/cli/dist/cli.js analyze ./architecture \
 
 ## What's next
 
-- [Configuration](/docs/guides/configuration/) — environment variables for tuning diff limits, timeouts, and model overrides
-- [CI Integration](/docs/ci/) — run Erode automatically on every pull request
-- [AI Providers](/docs/reference/ai-providers/) — supported providers and model selection
+- [Configuration](/docs/reference/configuration/): environment variables for tuning diff limits, timeouts, and model overrides
+- [Integrations](/docs/integrations/): run Erode automatically on every pull request
+- [AI Providers](/docs/reference/ai-providers/): supported providers and model selection

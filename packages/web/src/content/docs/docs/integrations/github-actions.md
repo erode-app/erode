@@ -31,7 +31,7 @@ See the [playground repository](https://github.com/erode-app/playground) for a c
 
 The `if` guard skips dependabot PRs and draft PRs. Since Erode uses AI tokens on every run, this avoids spending them on automated dependency bumps and work-in-progress PRs that rarely introduce architectural drift. Remove the guard if you want Erode to run on all PRs.
 
-The action runs in a Docker container that clones the model repository directly — you do not need an `actions/checkout` step.
+The action runs in a Docker container that clones the model repository directly. You do not need an `actions/checkout` step.
 
 ## Remote model repository
 
@@ -231,4 +231,4 @@ The `owner` field ensures the token covers all repositories the App is installed
 - Start with the Gemini provider during evaluation. It is cheaper per request. OpenAI is another good option for production workflows.
 - Keep your architecture model up to date. Erode can only detect drift against what is declared in the model.
 - Set `fail-on-violations: 'true'` to block PRs that introduce undeclared dependencies.
-- See [Configuration](/docs/guides/configuration/) for tuning diff limits, timeouts, and model overrides.
+- See [Configuration](/docs/reference/configuration/) for tuning diff limits, timeouts, and model overrides.

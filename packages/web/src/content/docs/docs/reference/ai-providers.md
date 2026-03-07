@@ -51,26 +51,11 @@ Anthropic support is experimental and may not produce consistent results across 
 
 ## Overriding models
 
-You can override the default models with environment variables:
+Override the default models per provider with environment variables. See [Configuration: Provider model overrides](/docs/reference/configuration/#provider-model-overrides) for the full list.
 
-| Variable                         | Description                                                  |
-| -------------------------------- | ------------------------------------------------------------ |
-| `ERODE_GEMINI_FAST_MODEL`        | Gemini model for fast tier (Stages 1–2 and model updates)    |
-| `ERODE_GEMINI_ADVANCED_MODEL`    | Gemini model for advanced tier (Stage 3)                     |
-| `ERODE_OPENAI_FAST_MODEL`        | OpenAI model for fast tier (Stages 1–2 and model updates)    |
-| `ERODE_OPENAI_ADVANCED_MODEL`    | OpenAI model for advanced tier (Stage 3)                     |
-| `ERODE_ANTHROPIC_FAST_MODEL`     | Anthropic model for fast tier (Stages 1–2 and model updates) |
-| `ERODE_ANTHROPIC_ADVANCED_MODEL` | Anthropic model for advanced tier (Stage 3)                  |
+## Timeouts
 
-## Timeout configuration
-
-| Variable                  | Default    |
-| ------------------------- | ---------- |
-| `ERODE_GEMINI_TIMEOUT`    | `60000` ms |
-| `ERODE_OPENAI_TIMEOUT`    | `60000` ms |
-| `ERODE_ANTHROPIC_TIMEOUT` | `60000` ms |
-
-These control the maximum wait time for each API request. Increase them if you experience timeouts with large diffs.
+Each provider has a configurable request timeout (default: 60 seconds). Increase them if you experience timeouts with large diffs. See [Configuration: Timeouts](/docs/reference/configuration/#timeouts) for all timeout variables.
 
 ## Choosing a provider
 
