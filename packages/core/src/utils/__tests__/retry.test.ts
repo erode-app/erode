@@ -67,7 +67,7 @@ describe('withRetry', () => {
     const error = new ErodeError('fail', ErrorCode.CONFIG_INVALID, undefined, {}, false);
     const operation = vi.fn().mockRejectedValue(error);
 
-    await expect(withRetry(operation, FAST_POLICY)).rejects.toThrow(error);
+    await expect(withRetry(operation, FAST_POLICY)).rejects.toBe(error);
     expect(operation).toHaveBeenCalledTimes(1);
   });
 
