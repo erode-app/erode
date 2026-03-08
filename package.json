@@ -13,6 +13,7 @@
     "build": "npm run build --workspace=packages/core && npm run build --workspace=packages/cli",
     "build:ci": "npm run build --workspace=packages/core",
     "test": "npm run test --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "format": "prettier --write .",

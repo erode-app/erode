@@ -57,7 +57,6 @@ export class AnthropicProvider extends BaseProvider {
         );
       }
 
-      // Check for truncation
       if (response.stop_reason === 'max_tokens') {
         throw new ErodeError(
           'Anthropic response was cut short (max_tokens reached)',

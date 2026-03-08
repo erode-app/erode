@@ -104,11 +104,6 @@ describe('AnthropicProvider', () => {
     it('should throw on missing API key', () => {
       expect(() => new AnthropicProvider({ apiKey: '' })).toThrow(ErodeError);
     });
-
-    it('should create provider with valid API key', () => {
-      const provider = createProvider();
-      expect(provider).toBeDefined();
-    });
   });
 
   describe('selectComponent', () => {

@@ -164,7 +164,6 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
       });
     };
 
-    // Collect from all elements
     this.walkElements((element) => {
       if (element.relationships) {
         for (const rel of element.relationships) {
@@ -173,7 +172,6 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
       }
     });
 
-    // Collect model-level relationships
     const modelRels = this.workspace.model?.relationships;
     if (modelRels) {
       for (const rel of modelRels) {
@@ -307,8 +305,6 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
     return false;
   }
 
-  // --- Private helpers ---
-
   private resolveWorkspacePath(inputPath: string): string {
     try {
       if (!statSync(inputPath).isDirectory()) {
@@ -341,10 +337,8 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
       const localId = element.id ?? this.toSnakeCase(element.name ?? '');
       const resolvedId = this.resolveElementId(element, localId, parentPath);
 
-      // Map local identifier to resolved ID
       map.set(localId, resolvedId);
 
-      // Map full dotted path to resolved ID
       const dottedPath = parentPath ? `${parentPath}.${localId}` : localId;
       if (dottedPath !== localId) {
         map.set(dottedPath, resolvedId);
@@ -364,7 +358,6 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
         const resolvedId = this.resolveElementId(element, localId, parentPath);
         callback(element, parentPath);
 
-        // Walk children
         const sys = element as StructurizrSoftwareSystem;
         if (sys.containers) walk(sys.containers, resolvedId);
         const container = element as StructurizrContainer;
@@ -386,13 +379,10 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
       return element.properties['erode.id'];
     }
 
-    // Priority 2: DSL identifier (already in localId)
-    // Priority 3: snake_case fallback (already in localId from toSnakeCase)
     return parentPath ? `${parentPath}.${localId}` : localId;
   }
 
   private resolveIdentifier(ref: string): string | undefined {
-    // Try direct lookup
     const resolved = this.identifierMap.get(ref);
     if (resolved) return resolved;
 
@@ -426,7 +416,6 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
     const container = element as StructurizrContainer;
     if (container.components) return 'container';
 
-    // Check if this is a person
     if (
       this.workspace?.model?.people?.some((p) => p.id === element.id && p.name === element.name)
     ) {

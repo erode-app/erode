@@ -7,5 +7,12 @@ export default defineConfig({
     },
     exclude: ['dist/**', 'node_modules/**'],
     passWithNoTests: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov', 'json-summary'],
+      reportsDirectory: 'coverage',
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/__tests__/**', 'src/**/index.ts', 'src/**/*.d.ts'],
+    },
   },
 });

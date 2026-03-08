@@ -38,7 +38,6 @@ export class StructurizrPatcher extends BasePatcher {
   protected findTargetFile(modelPath: string): string | null {
     const resolvedPath = resolve(modelPath);
 
-    // If it's a file, use it directly
     try {
       if (!statSync(resolvedPath).isDirectory()) {
         return resolvedPath;
@@ -48,12 +47,10 @@ export class StructurizrPatcher extends BasePatcher {
       return null;
     }
 
-    // Look for .dsl files in the directory
     const dslFiles = readdirSync(resolvedPath)
       .filter((f) => f.endsWith('.dsl'))
       .map((f) => join(resolvedPath, f));
 
-    // Prefer workspace.dsl
     const workspaceDsl = dslFiles.find((f) => f.endsWith('workspace.dsl'));
     if (workspaceDsl) return workspaceDsl;
 

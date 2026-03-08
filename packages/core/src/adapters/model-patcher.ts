@@ -24,9 +24,7 @@ export interface PatchResult {
   filePath: string;
   /** Absolute path to the patched file, for local writes */
   absolutePath: string;
-  /** Complete patched file content */
   content: string;
-  /** Lines that were inserted */
   insertedLines: string[];
   /** Only the relationship DSL lines (subset of insertedLines, excludes component DSL) */
   relationshipLines?: string[];

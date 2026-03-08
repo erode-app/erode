@@ -266,7 +266,6 @@ export abstract class BasePatcher implements ModelPatcher {
     const contentLines = content.split('\n');
     let insertIndex = -1;
 
-    // Find the model block and its closing brace
     let inModel = false;
     let braceDepth = 0;
     for (let i = 0; i < contentLines.length; i++) {
@@ -306,18 +305,15 @@ export abstract class BasePatcher implements ModelPatcher {
       return content + '\n' + lines.join('\n') + '\n';
     }
 
-    // Detect indentation from the line above the closing brace
     const lineAbove = contentLines[insertIndex - 1] ?? '';
     const match = /^(\s*)/.exec(lineAbove);
     const indent = match?.[1] ?? this.defaultIndent;
 
-    // Re-indent lines to match
     const indentedLines = lines.map((line) => {
       const trimmed = line.trimStart();
       return indent + trimmed;
     });
 
-    // Insert lines before the closing brace
     contentLines.splice(insertIndex, 0, '', ...indentedLines);
 
     return contentLines.join('\n');
@@ -342,7 +338,6 @@ export function quickValidatePatch(
   patched: string,
   insertedLines: string[]
 ): boolean {
-  // Check all original non-empty lines are preserved
   const originalLines = original.split('\n').filter((l) => l.trim().length > 0);
   for (const line of originalLines) {
     if (!patched.includes(line)) {
@@ -353,7 +348,6 @@ export function quickValidatePatch(
     }
   }
 
-  // Check inserted lines are present
   for (const line of insertedLines) {
     if (!patched.includes(line.trim())) {
       if (CONFIG.debug.verbose) {
@@ -363,7 +357,6 @@ export function quickValidatePatch(
     }
   }
 
-  // Check brace balance
   const openBraces = (patched.match(/\{/g) ?? []).length;
   const closeBraces = (patched.match(/\}/g) ?? []).length;
   if (openBraces !== closeBraces) {

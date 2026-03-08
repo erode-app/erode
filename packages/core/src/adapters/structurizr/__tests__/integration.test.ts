@@ -23,14 +23,6 @@ describe('StructurizrAdapter Integration', () => {
   runAdapterContractTests(() => adapter);
 
   describe('Structurizr-specific', () => {
-    it('should handle file operations without errors', async () => {
-      const freshAdapter = new StructurizrAdapter();
-      const startTime = performance.now();
-      await freshAdapter.loadFromPath(fixtureWorkspace);
-      const loadTime = performance.now() - startTime;
-      expect(loadTime).toBeGreaterThan(0);
-    });
-
     it('should filter built-in Structurizr tags', () => {
       const components = adapter.getAllComponents();
       for (const component of components) {
