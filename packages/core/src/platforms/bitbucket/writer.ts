@@ -53,7 +53,6 @@ export class BitbucketWriter implements SourcePlatformWriter {
       // Bitbucket has no native draft PRs — the draft option is ignored.
       const repoPath = `/repositories/${this.workspace}/${this.repoSlug}`;
 
-      // Check if branch exists
       let branchExists = false;
       try {
         await this.api.requestVoid(`${repoPath}/refs/branches/${encodeURIComponent(branchName)}`);
@@ -63,7 +62,6 @@ export class BitbucketWriter implements SourcePlatformWriter {
       }
 
       if (!branchExists) {
-        // Get the base branch hash to use as the new branch target
         const baseBranchInfo = await this.api.request(
           `${repoPath}/refs/branches/${encodeURIComponent(baseBranch)}`,
           z.object({ target: z.object({ hash: z.string() }) }).loose()
@@ -78,7 +76,6 @@ export class BitbucketWriter implements SourcePlatformWriter {
         });
       }
 
-      // Commit files via the source endpoint (multipart form data)
       if (fileChanges.length > 0) {
         const formData = new FormData();
         formData.append('branch', branchName);
@@ -92,7 +89,6 @@ export class BitbucketWriter implements SourcePlatformWriter {
         });
       }
 
-      // Check for an existing open PR from this branch
       const existingPrs = await this.api.request(
         `${repoPath}/pullrequests?q=${encodeURIComponent(`source.branch.name="${branchName}" AND state="OPEN"`)}`,
         BitbucketPrListResponseSchema
@@ -117,7 +113,6 @@ export class BitbucketWriter implements SourcePlatformWriter {
         };
       }
 
-      // Create a new PR
       const pr = await this.api.request(
         `${repoPath}/pullrequests`,
         BitbucketPrWriteResponseSchema,

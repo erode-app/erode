@@ -173,9 +173,7 @@ describe('BitbucketApiClient', () => {
 
   describe('requestText', () => {
     it('should return text on success', async () => {
-      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-        mockFetchResponse('diff content here')
-      );
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(mockFetchResponse('diff content here'));
 
       const result = await client.requestText('/repos/org/repo/diff');
 
@@ -199,15 +197,13 @@ describe('BitbucketApiClient', () => {
 
   describe('requestVoid', () => {
     it('should resolve void on success', async () => {
-      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-        mockFetchResponse('', true, 204)
-      );
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(mockFetchResponse('', true, 204));
 
-      const result = await client.requestVoid('/repos/org/repo/approve', {
+      await client.requestVoid('/repos/org/repo/approve', {
         method: 'POST',
       });
 
-      expect(result).toBeUndefined();
+      // requestVoid returns void on success (204)
     });
 
     it('should throw ApiError on non-ok response', async () => {

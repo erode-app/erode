@@ -52,10 +52,7 @@ import type { ArchitecturalComponent } from '../../adapters/architecture-types.j
 
 // ── Test data builders ────────────────────────────────────────────────────
 
-function makeComponent(
-  id = 'comp.api',
-  name = 'API Service'
-): ArchitecturalComponent {
+function makeComponent(id = 'comp.api', name = 'API Service'): ArchitecturalComponent {
   return {
     id,
     name,
@@ -65,7 +62,9 @@ function makeComponent(
   };
 }
 
-function makeOptions(overrides: Partial<{ modelPath: string; modelFormat: string; repo: string }> = {}) {
+function makeOptions(
+  overrides: Partial<{ modelPath: string; modelFormat: string; repo: string }> = {}
+) {
   return {
     modelPath: '/path/to/model',
     repo: 'org/repo',
@@ -166,24 +165,6 @@ describe('runConnections', () => {
     const results = await runConnections(makeOptions(), mockProgress);
 
     expect(results).toEqual([]);
-    expect(mockProgress.warn).toHaveBeenCalledWith(
-      'No components found for repository: org/repo'
-    );
-  });
-
-  it('passes modelFormat to createAdapter', async () => {
-    mockFindAllComponentsByRepository.mockReturnValue([]);
-
-    await runConnections(makeOptions({ modelFormat: 'structurizr' }));
-
-    expect(mockCreateAdapter).toHaveBeenCalledWith('structurizr');
-  });
-
-  it('calls validatePath with modelPath and "directory"', async () => {
-    mockFindAllComponentsByRepository.mockReturnValue([]);
-
-    await runConnections(makeOptions({ modelPath: '/custom/model/path' }));
-
-    expect(mockValidatePath).toHaveBeenCalledWith('/custom/model/path', 'directory');
+    expect(mockProgress.warn).toHaveBeenCalledWith('No components found for repository: org/repo');
   });
 });

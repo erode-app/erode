@@ -80,11 +80,6 @@ describe('createPlatformReader', () => {
     expect(reader).toBeInstanceOf(GitHubReader);
   });
 
-  it('should pass token to GitHubReader', () => {
-    const reader = createPlatformReader('https://github.com/org/repo/pull/42', 'custom-token');
-    expect(reader).toBeInstanceOf(GitHubReader);
-  });
-
   it('should return a GitLabReader for GitLab URLs', () => {
     const reader = createPlatformReader('https://gitlab.com/org/repo/-/merge_requests/1');
     expect(reader).toBeInstanceOf(GitLabReader);

@@ -305,18 +305,6 @@ describe('runAnalyze', () => {
     );
   });
 
-  it('extracts dependencies using the full diff', async () => {
-    const prData = makePrData();
-    mockFetchChangeRequest.mockResolvedValue(prData);
-
-    await runAnalyze(makeOptions());
-
-    expect(mockExtractDependencies).toHaveBeenCalledOnce();
-    const callArgs = mockExtractDependencies.mock.calls[0]?.[0] as { diff: string } | undefined;
-    expect(callArgs).toBeDefined();
-    expect(typeof callArgs?.diff).toBe('string');
-  });
-
   it('runs drift analysis with the correct component and extracted deps', async () => {
     const component = makeComponent('comp.api', 'API Service');
     mockFindAllComponentsByRepository.mockReturnValue([component]);

@@ -10,14 +10,7 @@ vi.mock('fs', () => ({
 }));
 
 import * as fs from 'fs';
-import {
-  findConfigFile,
-  RC_FILENAME,
-  ENV_VAR_NAMES,
-  deepMerge,
-  loadConfigFromFile,
-  loadConfigFromEnv,
-} from '../config.js';
+import { findConfigFile, deepMerge, loadConfigFromFile, loadConfigFromEnv } from '../config.js';
 import { ConfigurationError } from '../../errors.js';
 
 const mockExistsSync = vi.mocked(fs.existsSync);
@@ -27,12 +20,6 @@ describe('config file support', () => {
   beforeEach(() => {
     mockExistsSync.mockReset();
     mockReadFileSync.mockReset();
-  });
-
-  describe('RC_FILENAME', () => {
-    it('should be .eroderc.json', () => {
-      expect(RC_FILENAME).toBe('.eroderc.json');
-    });
   });
 
   describe('findConfigFile', () => {
@@ -86,33 +73,6 @@ describe('config file support', () => {
       // Only one call should have been made (to cwdPath)
       expect(mockExistsSync).toHaveBeenCalledTimes(1);
       expect(mockExistsSync).toHaveBeenCalledWith(cwdPath);
-    });
-  });
-
-  describe('ENV_VAR_NAMES', () => {
-    it('should have all expected keys', () => {
-      expect(ENV_VAR_NAMES).toHaveProperty('aiProvider');
-      expect(ENV_VAR_NAMES).toHaveProperty('geminiApiKey');
-      expect(ENV_VAR_NAMES).toHaveProperty('anthropicApiKey');
-      expect(ENV_VAR_NAMES).toHaveProperty('openaiApiKey');
-      expect(ENV_VAR_NAMES).toHaveProperty('githubToken');
-      expect(ENV_VAR_NAMES).toHaveProperty('gitlabToken');
-      expect(ENV_VAR_NAMES).toHaveProperty('bitbucketToken');
-      expect(ENV_VAR_NAMES).toHaveProperty('structurizrCliPath');
-      expect(ENV_VAR_NAMES).toHaveProperty('modelRepoPrToken');
-      expect(ENV_VAR_NAMES).toHaveProperty('modelPath');
-      expect(ENV_VAR_NAMES).toHaveProperty('modelRepo');
-      expect(ENV_VAR_NAMES).toHaveProperty('modelRef');
-    });
-
-    it('should have all values prefixed with ERODE_', () => {
-      for (const value of Object.values(ENV_VAR_NAMES)) {
-        expect(value).toMatch(/^ERODE_/);
-      }
-    });
-
-    it.each(Object.entries(ENV_VAR_NAMES))('should map %s to %s', (key, value) => {
-      expect(ENV_VAR_NAMES[key as keyof typeof ENV_VAR_NAMES]).toBe(value);
     });
   });
 

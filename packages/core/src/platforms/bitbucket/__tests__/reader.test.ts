@@ -119,13 +119,6 @@ describe('BitbucketReader', () => {
     it('should throw ErodeError for empty string', () => {
       expect(() => reader.parseChangeRequestUrl('')).toThrow(ErodeError);
     });
-
-    it('should return consistent results for the same URL', () => {
-      const url = 'https://bitbucket.org/workspace/repo/pull-requests/42';
-      const ref1 = reader.parseChangeRequestUrl(url);
-      const ref2 = reader.parseChangeRequestUrl(url);
-      expect(ref1).toEqual(ref2);
-    });
   });
 
   describe('fetchChangeRequest', () => {

@@ -24,7 +24,6 @@ export function validatePath(path: string, type: 'file' | 'directory' = 'directo
     );
   }
 
-  // Verify the path matches the expected type
   const stats = statSync(path);
   if (type === 'file' && !stats.isFile()) {
     throw new ErodeError(

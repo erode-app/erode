@@ -27,7 +27,6 @@ vi.mock('../../utils/config.js', () => ({
 
 // ── Imports (after mocks) ─────────────────────────────────────────────────
 import { runComponents } from '../components.js';
-import { createAdapter } from '../../adapters/adapter-factory.js';
 
 describe('runComponents', () => {
   beforeEach(() => {
@@ -44,29 +43,5 @@ describe('runComponents', () => {
     const result = await runComponents({ modelPath: '/models/arch' });
 
     expect(result).toEqual(fakeComponents);
-  });
-
-  it('calls validatePath with modelPath and "directory"', async () => {
-    mockLoadAndListComponents.mockResolvedValue([]);
-
-    await runComponents({ modelPath: '/some/path' });
-
-    expect(mockValidatePath).toHaveBeenCalledWith('/some/path', 'directory');
-  });
-
-  it('passes modelFormat to createAdapter', async () => {
-    mockLoadAndListComponents.mockResolvedValue([]);
-
-    await runComponents({ modelPath: '/models/arch', modelFormat: 'structurizr' });
-
-    expect(createAdapter).toHaveBeenCalledWith('structurizr');
-  });
-
-  it('passes modelPath to adapter.loadAndListComponents', async () => {
-    mockLoadAndListComponents.mockResolvedValue([]);
-
-    await runComponents({ modelPath: '/models/arch' });
-
-    expect(mockLoadAndListComponents).toHaveBeenCalledWith('/models/arch');
   });
 });

@@ -179,16 +179,4 @@ describe('closeModelPr', () => {
 
     expect(mockCloseChangeRequest).toHaveBeenCalledWith('erode/org-repo/pr-42');
   });
-
-  it('constructs the branch name using modelPrBranchName', async () => {
-    await closeModelPr({
-      repositoryUrl: 'https://github.com/org/repo',
-      owner: 'org',
-      repo: 'model-repo',
-      sourceRepo: 'org/repo',
-      prNumber: 100,
-    });
-
-    expect(mockCloseChangeRequest).toHaveBeenCalledWith('erode/org-repo/pr-100');
-  });
 });

@@ -64,13 +64,7 @@ describe('withRetry', () => {
   });
 
   it('throws immediately for non-recoverable ErodeError without custom shouldRetry', async () => {
-    const error = new ErodeError(
-      'fail',
-      ErrorCode.CONFIG_INVALID,
-      undefined,
-      {},
-      false
-    );
+    const error = new ErodeError('fail', ErrorCode.CONFIG_INVALID, undefined, {}, false);
     const operation = vi.fn().mockRejectedValue(error);
 
     await expect(withRetry(operation, FAST_POLICY)).rejects.toThrow(error);
@@ -80,9 +74,9 @@ describe('withRetry', () => {
   it('throws last error after exhausting all retries', async () => {
     const operation = vi.fn().mockRejectedValue(new Error('always fails'));
 
-    await expect(
-      withRetry(operation, { ...FAST_POLICY, retries: 1 })
-    ).rejects.toThrow('always fails');
+    await expect(withRetry(operation, { ...FAST_POLICY, retries: 1 })).rejects.toThrow(
+      'always fails'
+    );
 
     // 1 initial attempt + 1 retry = 2 calls
     expect(operation).toHaveBeenCalledTimes(2);
@@ -90,26 +84,24 @@ describe('withRetry', () => {
 
   it('logs retry message when CONFIG.debug.verbose is true', async () => {
     mockConfig.debug.verbose = true;
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const operation = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('transient'))
-      .mockResolvedValue('ok');
+    const consoleSpy = vi
+      .spyOn(console, 'error')
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      .mockImplementation(() => {});
+    const operation = vi.fn().mockRejectedValueOnce(new Error('transient')).mockResolvedValue('ok');
 
     await withRetry(operation, FAST_POLICY);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[Retry]')
-    );
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('[Retry]'));
   });
 
   it('does not log when verbose is false', async () => {
     mockConfig.debug.verbose = false;
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const operation = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('transient'))
-      .mockResolvedValue('ok');
+    const consoleSpy = vi
+      .spyOn(console, 'error')
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      .mockImplementation(() => {});
+    const operation = vi.fn().mockRejectedValueOnce(new Error('transient')).mockResolvedValue('ok');
 
     await withRetry(operation, FAST_POLICY);
 

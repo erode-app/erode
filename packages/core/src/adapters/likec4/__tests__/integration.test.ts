@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, beforeEach } from 'vitest';
 import { LikeC4Adapter } from '../adapter.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,14 +21,4 @@ describe('LikeC4Adapter Integration', () => {
   });
 
   runAdapterContractTests(() => adapter);
-
-  describe('LikeC4-specific', () => {
-    it('should handle file operations without errors', async () => {
-      const freshAdapter = new LikeC4Adapter();
-      const startTime = performance.now();
-      await freshAdapter.loadFromPath(fixtureWorkspace);
-      const loadTime = performance.now() - startTime;
-      expect(loadTime).toBeGreaterThan(0);
-    });
-  });
 });

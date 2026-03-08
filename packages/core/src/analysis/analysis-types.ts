@@ -48,17 +48,12 @@ export interface DependencyExtractionPromptData {
  * Violation found in a PR with commit context
  */
 export interface DriftViolation {
-  /** Severity of the violation */
   severity: 'high' | 'medium' | 'low';
-  /** Description of the violation */
   description: string;
-  /** File where the violation occurred */
   file?: string | null;
-  /** Line number if applicable */
   line?: number | null;
   /** Commit SHA where this violation was introduced */
   commit?: string | null;
-  /** Suggested fix */
   suggestion?: string;
 }
 /**
@@ -86,15 +81,13 @@ export interface ChangeRequestMetadata {
  * Result of analyzing a change request
  */
 export interface DriftAnalysisResult {
-  /** Whether any violations were found */
   hasViolations: boolean;
-  /** List of violations across all commits */
+  /** Violations across all commits */
   violations: DriftViolation[];
-  /** Architectural improvements or positive findings */
+  /** Positive architectural findings */
   improvements?: string[];
-  /** Warnings that are not critical violations */
+  /** Not critical violations */
   warnings?: string[];
-  /** Summary of the analysis */
   summary: string;
   /** Recommended model updates */
   modelUpdates?: {
@@ -104,9 +97,7 @@ export interface DriftAnalysisResult {
     relationships?: StructuredRelationship[];
     newComponents?: NewComponent[];
   };
-  /** Change request metadata */
   metadata: ChangeRequestMetadata;
-  /** Component that was analyzed */
   component: ArchitecturalComponent;
   /** Aggregated dependency changes across all commits */
   dependencyChanges: DependencyExtractionResult;
@@ -115,11 +106,9 @@ export interface DriftAnalysisResult {
  * Input data for change request analysis prompt
  */
 export interface DriftAnalysisPromptData {
-  /** Change request metadata */
   changeRequest: ChangeRequestMetadata;
-  /** Component being analyzed */
   component: ArchitecturalComponent;
-  /** Aggregated dependency changes */
+  /** Aggregated dependency changes across all commits */
   dependencies: DependencyExtractionResult;
   /** Architectural context */
   architectural: {
@@ -127,7 +116,7 @@ export interface DriftAnalysisPromptData {
     dependents: (ArchitecturalComponent & { repository?: string })[];
     relationships: ComponentRelationshipRef[];
   };
-  /** Changed files in the PR with their status */
+  /** Changed files with their status */
   files?: GitDiffFile[];
   /** All component IDs in the architecture model */
   allComponentIds?: string[];
