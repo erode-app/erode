@@ -15,6 +15,7 @@ import {
   selectComponentWithAI,
   resolveAndCloneModel,
   findComponentsForRepo,
+  toAllComponentsParam,
 } from './pipeline-shared.js';
 import { CONFIG } from '../utils/config.js';
 import { loadSkipPatterns, applySkipPatterns } from '../utils/skip-patterns.js';
@@ -197,8 +198,8 @@ export async function runAnalyze(
         url: repoUrl,
       },
       components: [selectedComponent],
-      allComponents:
-        components.length > 1 ? components.map((c) => ({ id: c.id, name: c.name })) : undefined,
+      allComponents: toAllComponentsParam(components),
+      files: prData.files.map((f) => ({ filename: f.filename })),
     });
     p.succeed(`Found ${String(ctx.extractedDeps.dependencies.length)} dependency change(s)`);
 

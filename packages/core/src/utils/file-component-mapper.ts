@@ -1,3 +1,5 @@
+import type { ArchitecturalComponent } from '../adapters/architecture-types.js';
+
 export interface ComponentFileMapping {
   componentId: string;
   componentName: string;
@@ -10,12 +12,9 @@ export interface FileOwnershipMap {
   unmapped: string[];
 }
 
-interface Component {
-  id: string;
-  name: string;
-}
+type ComponentRef = Pick<ArchitecturalComponent, 'id' | 'name'>;
 
-function deriveBaseSegments(component: Component): string[] {
+function deriveBaseSegments(component: ComponentRef): string[] {
   const bases: string[] = [];
 
   const idSegment = component.id.split('.').pop();
@@ -43,8 +42,8 @@ function generateNormalizedVariants(base: string): string[] {
   return variants;
 }
 
-function buildPrefixMap(allComponents: Component[]): Map<string, Component> {
-  const prefixMap = new Map<string, Component>();
+function buildPrefixMap(allComponents: ComponentRef[]): Map<string, ComponentRef> {
+  const prefixMap = new Map<string, ComponentRef>();
 
   for (const component of allComponents) {
     const bases = deriveBaseSegments(component);
@@ -63,8 +62,8 @@ function buildPrefixMap(allComponents: Component[]): Map<string, Component> {
 
 function findComponentForFile(
   filename: string,
-  prefixMap: Map<string, Component>
-): Component | null {
+  prefixMap: Map<string, ComponentRef>
+): ComponentRef | null {
   const segments = filename.split('/');
   for (const segment of segments) {
     const match = prefixMap.get(segment);
@@ -77,12 +76,12 @@ function findComponentForFile(
 
 export function mapFilesToComponents(
   files: { filename: string }[],
-  allComponents: { id: string; name: string }[],
+  allComponents: ComponentRef[],
   selectedComponentId: string
 ): FileOwnershipMap {
   const prefixMap = buildPrefixMap(allComponents);
 
-  const componentFilesMap = new Map<string, { component: Component; files: string[] }>();
+  const componentFilesMap = new Map<string, { component: ComponentRef; files: string[] }>();
   const unmapped: string[] = [];
 
   for (const file of files) {

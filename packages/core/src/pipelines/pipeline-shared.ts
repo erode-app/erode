@@ -194,3 +194,10 @@ export function findComponentsForRepo(
 type ComponentLookupResult =
   | { found: true; components: ArchitecturalComponent[]; defaultComponent: ArchitecturalComponent }
   | EmptyCheckResult;
+
+/** Map components to `{ id, name }` refs for file-ownership context, or undefined if single-component. */
+export function toAllComponentsParam(
+  components: ArchitecturalComponent[]
+): Pick<ArchitecturalComponent, 'id' | 'name'>[] | undefined {
+  return components.length > 1 ? components.map((c) => ({ id: c.id, name: c.name })) : undefined;
+}

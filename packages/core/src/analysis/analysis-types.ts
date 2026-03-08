@@ -43,10 +43,9 @@ export interface DependencyExtractionPromptData {
     description?: string;
   }[];
   /** All components mapped to this repository (for file ownership context in monorepos). */
-  allComponents?: {
-    id: string;
-    name: string;
-  }[];
+  allComponents?: Pick<ArchitecturalComponent, 'id' | 'name'>[];
+  /** Pre-parsed changed files (avoids re-parsing the diff for file ownership mapping). */
+  files?: { filename: string }[];
 }
 
 /**

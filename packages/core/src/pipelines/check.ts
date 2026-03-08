@@ -25,6 +25,7 @@ import {
   selectComponentWithAI,
   resolveAndCloneModel,
   findComponentsForRepo,
+  toAllComponentsParam,
 } from './pipeline-shared.js';
 
 export interface CheckOptions {
@@ -193,8 +194,8 @@ export async function runCheck(
         url: options.repo,
       },
       components: [selectedComponent],
-      allComponents:
-        components.length > 1 ? components.map((c) => ({ id: c.id, name: c.name })) : undefined,
+      allComponents: toAllComponentsParam(components),
+      files,
     });
     p.succeed(`Found ${String(extractedDeps.dependencies.length)} dependency change(s)`);
 

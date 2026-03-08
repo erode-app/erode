@@ -136,6 +136,7 @@ describe('PromptBuilder', () => {
           { id: 'system.api', name: 'API' },
           { id: 'system.orders', name: 'Orders' },
         ],
+        files: [{ filename: 'api/index.ts' }, { filename: 'orders/handler.ts' }],
       };
       const result = PromptBuilder.buildDependencyExtractionPrompt(data);
       const parsed = JSON.parse(result) as DependencyExtractionPromptVars;
