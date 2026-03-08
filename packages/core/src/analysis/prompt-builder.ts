@@ -15,7 +15,10 @@ import {
   formatComponentContext,
   formatComponentList,
   formatCommits,
+  formatFileOwnership,
 } from './section-formatters.js';
+import { mapFilesToComponents } from '../utils/file-component-mapper.js';
+import { parseFilesFromDiff } from '../utils/git-diff.js';
 
 export const PromptBuilder = {
   /** Extract the first JSON object from an AI response text, or null if none found. */
@@ -78,11 +81,22 @@ export const PromptBuilder = {
       componentsContext = formatComponentContext(comp);
     }
 
+    let fileOwnership = '';
+    const selectedComp = components?.[0];
+    if (data.allComponents && data.allComponents.length > 1 && selectedComp) {
+      const files = parseFilesFromDiff(diff);
+      const ownershipMap = mapFilesToComponents(files, data.allComponents, selectedComp.id);
+      if (ownershipMap.otherComponents.length > 0) {
+        fileOwnership = formatFileOwnership(ownershipMap);
+      }
+    }
+
     return TemplateEngine.loadDependencyExtractionPrompt({
       diff,
       commit,
       repository,
       componentsContext,
+      fileOwnership,
     });
   },
   /**

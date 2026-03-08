@@ -125,6 +125,42 @@ describe('PromptBuilder', () => {
       });
       expect(result).toContain('Node.js');
     });
+
+    it('should include file ownership context when allComponents has multiple entries', () => {
+      const data = {
+        diff: 'diff --git a/api/index.ts b/api/index.ts\n+import fetch\ndiff --git a/orders/handler.ts b/orders/handler.ts\n+export handler',
+        commit: { sha: 'abc', message: 'Add orders', author: 'dev' },
+        repository: { owner: 'org', repo: 'monorepo', url: 'https://github.com/org/monorepo' },
+        components: [{ id: 'system.api', name: 'API', type: 'service' }],
+        allComponents: [
+          { id: 'system.api', name: 'API' },
+          { id: 'system.orders', name: 'Orders' },
+        ],
+      };
+      const result = PromptBuilder.buildDependencyExtractionPrompt(data);
+      const parsed = JSON.parse(result) as DependencyExtractionPromptVars;
+      expect(parsed.fileOwnership).toContain('FILE OWNERSHIP');
+      expect(parsed.fileOwnership).toContain('OTHER components');
+    });
+
+    it('should produce empty fileOwnership when allComponents is undefined', () => {
+      const result = PromptBuilder.buildDependencyExtractionPrompt({
+        ...baseData,
+        components: [{ id: 'comp.api', name: 'API', type: 'service' }],
+      });
+      const parsed = JSON.parse(result) as DependencyExtractionPromptVars;
+      expect(parsed.fileOwnership).toBe('');
+    });
+
+    it('should produce empty fileOwnership when allComponents has only one entry', () => {
+      const result = PromptBuilder.buildDependencyExtractionPrompt({
+        ...baseData,
+        components: [{ id: 'comp.api', name: 'API', type: 'service' }],
+        allComponents: [{ id: 'comp.api', name: 'API' }],
+      });
+      const parsed = JSON.parse(result) as DependencyExtractionPromptVars;
+      expect(parsed.fileOwnership).toBe('');
+    });
   });
 
   describe('buildComponentSelectionPrompt', () => {
@@ -169,6 +205,13 @@ describe('PromptBuilder', () => {
       const template = readFileSync(join(templateDir, 'dependency-extraction.md'), 'utf-8');
       expect(template).toContain('EXCEPTION');
       expect(template).toContain('outbound HTTP calls');
+    });
+
+    it('should include monorepo rule and fileOwnership placeholder', () => {
+      const templateDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'prompts');
+      const template = readFileSync(join(templateDir, 'dependency-extraction.md'), 'utf-8');
+      expect(template).toContain('{{fileOwnership}}');
+      expect(template).toContain('MONOREPO RULE');
     });
   });
 

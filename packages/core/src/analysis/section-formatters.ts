@@ -1,6 +1,7 @@
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import type { CommitInfo, ComponentRelationshipRef } from './analysis-types.js';
 import type { GitDiffFile } from '../utils/git-diff.js';
+import type { FileOwnershipMap } from '../utils/file-component-mapper.js';
 
 export function formatAllowedDependencies(architectural: {
   relationships?: ComponentRelationshipRef[];
@@ -133,4 +134,40 @@ export function formatCommits(commits: CommitInfo[]): {
     .join('\n');
   const note = commits.length > 10 ? `\n  ... and ${String(commits.length - 10)} more commits` : '';
   return { section, note };
+}
+
+export function formatFileOwnership(ownership: FileOwnershipMap): string {
+  if (ownership.otherComponents.length === 0) {
+    return '';
+  }
+  const lines: string[] = ['## FILE OWNERSHIP (Monorepo Context)', ''];
+
+  if (ownership.thisComponent) {
+    lines.push(
+      `### THIS component: ${ownership.thisComponent.componentName} (${ownership.thisComponent.componentId})`
+    );
+    for (const f of ownership.thisComponent.files) {
+      lines.push(`- ${f}`);
+    }
+    lines.push('');
+  }
+
+  lines.push('### OTHER components in the same repository:', '');
+  for (const other of ownership.otherComponents) {
+    lines.push(`**${other.componentName}** (${other.componentId}):`);
+    for (const f of other.files) {
+      lines.push(`- ${f}`);
+    }
+    lines.push('');
+  }
+
+  if (ownership.unmapped.length > 0) {
+    lines.push('### Shared / unmapped files:', '');
+    for (const f of ownership.unmapped) {
+      lines.push(`- ${f}`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n');
 }

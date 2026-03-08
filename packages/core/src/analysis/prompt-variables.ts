@@ -6,6 +6,7 @@ export interface DependencyExtractionPromptVars {
   commit: CommitInfo;
   repository: RepoIdentifier & { url: string };
   componentsContext: string;
+  fileOwnership: string;
 }
 
 export interface ComponentSelectionPromptVars {

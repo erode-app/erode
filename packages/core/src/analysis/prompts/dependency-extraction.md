@@ -5,6 +5,7 @@ You are a senior software architect tasked with inspecting code changes to surfa
 Repository: {{repository.url}}
 Owner/Repo: {{repository.owner}}/{{repository.repo}}
 {{componentsContext}}
+{{fileOwnership}}
 
 ## CHANGE INFORMATION
 
@@ -19,6 +20,8 @@ Review the git diff below and extract ONLY **EXTERNAL architectural dependencies
 ⚠️ CRITICAL: FOCUS ON CROSS-SYSTEM BOUNDARIES ONLY
 
 The goal is to detect when this component begins or ceases to depend on EXTERNAL systems. Internal changes (new classes, methods, database columns, role hierarchies) are NOT architectural dependencies.
+
+⚠️ MONOREPO RULE: If the FILE OWNERSHIP section above lists files under "OTHER components", then outbound calls from THIS component's files to services or APIs provided by those OTHER components are **EXTERNAL architectural dependencies** — even though they live in the same git repository. The repository boundary is NOT the component boundary. Treat calls crossing component boundaries exactly like calls to a separate external service.
 
 ## WHAT TO EXTRACT (External Dependencies)
 

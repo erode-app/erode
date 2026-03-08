@@ -42,6 +42,11 @@ export interface DependencyExtractionPromptData {
     technology?: string;
     description?: string;
   }[];
+  /** All components mapped to this repository (for file ownership context in monorepos). */
+  allComponents?: {
+    id: string;
+    name: string;
+  }[];
 }
 
 /**

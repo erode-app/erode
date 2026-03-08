@@ -8,6 +8,7 @@ import {
   formatComponentContext,
   formatComponentList,
   formatCommits,
+  formatFileOwnership,
 } from '../section-formatters.js';
 
 describe('section-formatters', () => {
@@ -258,6 +259,86 @@ describe('section-formatters', () => {
       const { section, note } = formatCommits(commits);
       expect(section.split('\n')).toHaveLength(10);
       expect(note).toBe('');
+    });
+  });
+
+  describe('formatFileOwnership', () => {
+    it('should return empty string when no other components', () => {
+      const result = formatFileOwnership({
+        thisComponent: {
+          componentId: 'comp.api',
+          componentName: 'API',
+          files: ['src/index.ts'],
+        },
+        otherComponents: [],
+        unmapped: ['README.md'],
+      });
+      expect(result).toBe('');
+    });
+
+    it('should format full ownership map with all sections', () => {
+      const result = formatFileOwnership({
+        thisComponent: {
+          componentId: 'comp.api',
+          componentName: 'API',
+          files: ['packages/api/src/index.ts', 'packages/api/src/routes.ts'],
+        },
+        otherComponents: [
+          {
+            componentId: 'comp.web',
+            componentName: 'Web',
+            files: ['packages/web/src/app.tsx'],
+          },
+        ],
+        unmapped: ['package.json'],
+      });
+      expect(result).toContain('## FILE OWNERSHIP (Monorepo Context)');
+      expect(result).toContain('### THIS component: API (comp.api)');
+      expect(result).toContain('- packages/api/src/index.ts');
+      expect(result).toContain('- packages/api/src/routes.ts');
+      expect(result).toContain('### OTHER components in the same repository:');
+      expect(result).toContain('**Web** (comp.web):');
+      expect(result).toContain('- packages/web/src/app.tsx');
+      expect(result).toContain('### Shared / unmapped files:');
+      expect(result).toContain('- package.json');
+    });
+
+    it('should handle no thisComponent (all files in other components)', () => {
+      const result = formatFileOwnership({
+        thisComponent: null,
+        otherComponents: [
+          {
+            componentId: 'comp.web',
+            componentName: 'Web',
+            files: ['packages/web/src/app.tsx'],
+          },
+        ],
+        unmapped: [],
+      });
+      expect(result).toContain('## FILE OWNERSHIP (Monorepo Context)');
+      expect(result).not.toContain('### THIS component');
+      expect(result).toContain('**Web** (comp.web):');
+      expect(result).toContain('- packages/web/src/app.tsx');
+    });
+
+    it('should include unmapped section only when unmapped files exist', () => {
+      const result = formatFileOwnership({
+        thisComponent: {
+          componentId: 'comp.api',
+          componentName: 'API',
+          files: ['src/index.ts'],
+        },
+        otherComponents: [
+          {
+            componentId: 'comp.web',
+            componentName: 'Web',
+            files: ['packages/web/src/app.tsx'],
+          },
+        ],
+        unmapped: [],
+      });
+      expect(result).toContain('## FILE OWNERSHIP (Monorepo Context)');
+      expect(result).not.toContain('### Shared / unmapped files:');
     });
   });
 });

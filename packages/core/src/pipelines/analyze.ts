@@ -197,6 +197,8 @@ export async function runAnalyze(
         url: repoUrl,
       },
       components: [selectedComponent],
+      allComponents:
+        components.length > 1 ? components.map((c) => ({ id: c.id, name: c.name })) : undefined,
     });
     p.succeed(`Found ${String(ctx.extractedDeps.dependencies.length)} dependency change(s)`);
 
