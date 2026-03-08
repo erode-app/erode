@@ -15,13 +15,6 @@ updates:
       - dependency-name: '@types/node'
         update-types:
           - 'version-update:semver-major'
-    groups:
-      non-major-updates:
-        patterns:
-          - '*'
-        update-types:
-          - 'minor'
-          - 'patch'
     commit-message:
       prefix: 'build(deps)'
       prefix-development: 'build(deps-dev)'
