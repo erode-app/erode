@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.0](https://github.com/erode-app/erode/compare/0.6.0...0.7.0) (2026-03-08)
+
+
+### Features
+
+* **core:** use gemini-2.5-pro as default advanced model ([#52](https://github.com/erode-app/erode/issues/52)) ([42178c9](https://github.com/erode-app/erode/commit/42178c9be2b214b893c0e57674ab3c8cf69035b9))
+
+
+### Build System
+
+* **deps-dev:** bump knip from 5.85.0 to 5.86.0 ([#51](https://github.com/erode-app/erode/issues/51)) ([ee831c6](https://github.com/erode-app/erode/commit/ee831c605c9a047f21b198aca16a7120137b3e8d))
+* **deps:** bump the non-major-updates group with 4 updates ([#44](https://github.com/erode-app/erode/issues/44)) ([5dd8c76](https://github.com/erode-app/erode/commit/5dd8c766d2fe29397de7c7ababf16357df304f96))
+
 ## [0.6.0](https://github.com/erode-app/erode/compare/0.5.0...0.6.0) (2026-03-07)
 
 
