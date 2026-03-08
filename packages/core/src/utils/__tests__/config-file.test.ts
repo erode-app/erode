@@ -18,6 +18,7 @@ import {
   loadConfigFromFile,
   loadConfigFromEnv,
 } from '../config.js';
+import { ConfigurationError } from '../../errors.js';
 
 const mockExistsSync = vi.mocked(fs.existsSync);
 const mockReadFileSync = vi.mocked(fs.readFileSync);
@@ -212,6 +213,38 @@ describe('config file support', () => {
           process.env['ERODE_AI_PROVIDER'] = original;
         }
       }
+    });
+  });
+
+  describe('loadConfigFromFile error handling', () => {
+    it('throws ConfigurationError when file contains invalid JSON', () => {
+      mockReadFileSync.mockReturnValue('not valid json {');
+
+      expect(() => loadConfigFromFile('/fake/path')).toThrow(ConfigurationError);
+      expect(() => {
+        mockReadFileSync.mockReturnValue('not valid json {');
+        return loadConfigFromFile('/fake/path');
+      }).toThrow(/Failed to load config file/);
+    });
+
+    it('throws ConfigurationError when file contains an array', () => {
+      mockReadFileSync.mockReturnValue('[1, 2, 3]');
+
+      expect(() => loadConfigFromFile('/fake/path')).toThrow(ConfigurationError);
+      expect(() => {
+        mockReadFileSync.mockReturnValue('[1, 2, 3]');
+        return loadConfigFromFile('/fake/path');
+      }).toThrow(/must contain a JSON object/);
+    });
+
+    it('throws ConfigurationError when file contains null', () => {
+      mockReadFileSync.mockReturnValue('null');
+
+      expect(() => loadConfigFromFile('/fake/path')).toThrow(ConfigurationError);
+      expect(() => {
+        mockReadFileSync.mockReturnValue('null');
+        return loadConfigFromFile('/fake/path');
+      }).toThrow(/must contain a JSON object/);
     });
   });
 });

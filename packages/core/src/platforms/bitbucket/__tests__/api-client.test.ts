@@ -170,4 +170,54 @@ describe('BitbucketApiClient', () => {
       }
     });
   });
+
+  describe('requestText', () => {
+    it('should return text on success', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        mockFetchResponse('diff content here')
+      );
+
+      const result = await client.requestText('/repos/org/repo/diff');
+
+      expect(result).toBe('diff content here');
+    });
+
+    it('should throw ApiError on non-ok response', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        mockFetchResponse('Not found', false, 404)
+      );
+
+      try {
+        await client.requestText('/repos/org/repo/diff');
+        expect.fail('Expected ApiError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).statusCode).toBe(404);
+      }
+    });
+  });
+
+  describe('requestVoid', () => {
+    it('should resolve void on success', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        mockFetchResponse('', true, 204)
+      );
+
+      const result = await client.requestVoid('/repos/org/repo/approve', {
+        method: 'POST',
+      });
+
+      expect(result).toBeUndefined();
+    });
+
+    it('should throw ApiError on non-ok response', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        mockFetchResponse('Server Error', false, 500)
+      );
+
+      await expect(
+        client.requestVoid('/repos/org/repo/approve', { method: 'POST' })
+      ).rejects.toThrow(ApiError);
+    });
+  });
 });

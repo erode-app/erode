@@ -149,6 +149,24 @@ describe('LikeC4Adapter', () => {
     });
   });
 
+  describe('Relationship queries', () => {
+    it('should return all relationships via getAllRelationships', () => {
+      const relationships = adapter.getAllRelationships();
+      expect(relationships).toHaveLength(7);
+    });
+
+    it('should return empty array for component with no outgoing relationships', () => {
+      const rels = adapter.getComponentRelationships('database');
+      expect(rels).toEqual([]);
+    });
+
+    it('should return outgoing relationships with resolved targets', () => {
+      const rels = adapter.getComponentRelationships('frontend');
+      expect(rels).toHaveLength(1);
+      expect(rels[0]?.target.id).toBe('api_gateway');
+    });
+  });
+
   describe('Repository-based lookup', () => {
     it('should find components by repository URL', () => {
       const component = adapter.findComponentByRepository(
@@ -313,6 +331,48 @@ describe('LikeC4Adapter - Model not loaded guard', () => {
     expect(() => adapter.getAllComponents()).toThrow(AdapterError);
     try {
       adapter.getAllComponents();
+    } catch (error) {
+      expect(error).toBeInstanceOf(AdapterError);
+      const adapterError = error as AdapterError;
+      expect(adapterError.code).toBe(ErrorCode.MODEL_NOT_INITIALIZED);
+      expect(adapterError.adapterType).toBe('likec4');
+    }
+  });
+
+  it('should throw AdapterError when getComponentRelationships is called before load', () => {
+    const adapter = new LikeC4Adapter();
+
+    expect(() => adapter.getComponentRelationships('any')).toThrow(AdapterError);
+    try {
+      adapter.getComponentRelationships('any');
+    } catch (error) {
+      expect(error).toBeInstanceOf(AdapterError);
+      const adapterError = error as AdapterError;
+      expect(adapterError.code).toBe(ErrorCode.MODEL_NOT_INITIALIZED);
+      expect(adapterError.adapterType).toBe('likec4');
+    }
+  });
+
+  it('should throw AdapterError when getComponentDependents is called before load', () => {
+    const adapter = new LikeC4Adapter();
+
+    expect(() => adapter.getComponentDependents('any')).toThrow(AdapterError);
+    try {
+      adapter.getComponentDependents('any');
+    } catch (error) {
+      expect(error).toBeInstanceOf(AdapterError);
+      const adapterError = error as AdapterError;
+      expect(adapterError.code).toBe(ErrorCode.MODEL_NOT_INITIALIZED);
+      expect(adapterError.adapterType).toBe('likec4');
+    }
+  });
+
+  it('should throw AdapterError when getAllRelationships is called before load', () => {
+    const adapter = new LikeC4Adapter();
+
+    expect(() => adapter.getAllRelationships()).toThrow(AdapterError);
+    try {
+      adapter.getAllRelationships();
     } catch (error) {
       expect(error).toBeInstanceOf(AdapterError);
       const adapterError = error as AdapterError;

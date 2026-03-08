@@ -10,6 +10,9 @@ const mockMrAll = vi.fn();
 const mockMrEdit = vi.fn();
 const mockMrCreate = vi.fn();
 const mockMrNotesCreate = vi.fn();
+const mockMrNotesAll = vi.fn();
+const mockMrNotesEdit = vi.fn();
+const mockMrNotesRemove = vi.fn();
 
 vi.mock('@gitbeaker/rest', () => ({
   Gitlab: class MockGitlab {
@@ -27,6 +30,9 @@ vi.mock('@gitbeaker/rest', () => ({
     };
     MergeRequestNotes = {
       create: mockMrNotesCreate,
+      all: mockMrNotesAll,
+      edit: mockMrNotesEdit,
+      remove: mockMrNotesRemove,
     };
   },
 }));
@@ -278,6 +284,86 @@ describe('GitLabWriter', () => {
       const ref = makeRef();
 
       await expect(writer.commentOnChangeRequest(ref, 'test')).rejects.toBe(erodeError);
+    });
+
+    it('should update existing note via .edit when upsertMarker matches', async () => {
+      mockMrNotesAll.mockResolvedValue([{ id: 10, body: 'old content <!-- erode-marker -->' }]);
+      mockMrNotesEdit.mockResolvedValue({});
+      const ref = makeRef();
+
+      await writer.commentOnChangeRequest(ref, 'new content', {
+        upsertMarker: '<!-- erode-marker -->',
+      });
+
+      expect(mockMrNotesEdit).toHaveBeenCalledWith('org/repo', 42, 10, { body: 'new content' });
+      expect(mockMrNotesCreate).not.toHaveBeenCalled();
+    });
+
+    it('should create new note when upsertMarker not found', async () => {
+      mockMrNotesAll.mockResolvedValue([{ id: 10, body: 'unrelated note' }]);
+      mockMrNotesCreate.mockResolvedValue({});
+      const ref = makeRef();
+
+      await writer.commentOnChangeRequest(ref, 'new content', {
+        upsertMarker: '<!-- erode-marker -->',
+      });
+
+      expect(mockMrNotesCreate).toHaveBeenCalledWith('org/repo', 42, 'new content');
+      expect(mockMrNotesEdit).not.toHaveBeenCalled();
+    });
+
+    it('should create new note when no notes exist', async () => {
+      mockMrNotesAll.mockResolvedValue([]);
+      mockMrNotesCreate.mockResolvedValue({});
+      const ref = makeRef();
+
+      await writer.commentOnChangeRequest(ref, 'new content', {
+        upsertMarker: '<!-- erode-marker -->',
+      });
+
+      expect(mockMrNotesCreate).toHaveBeenCalledWith('org/repo', 42, 'new content');
+    });
+  });
+
+  describe('deleteComment', () => {
+    it('should remove note matching marker', async () => {
+      mockMrNotesAll.mockResolvedValue([{ id: 20, body: '<!-- erode-marker --> content' }]);
+      mockMrNotesRemove.mockResolvedValue({});
+      const ref = makeRef();
+
+      await writer.deleteComment(ref, '<!-- erode-marker -->');
+
+      expect(mockMrNotesRemove).toHaveBeenCalledWith('org/repo', 42, 20);
+    });
+
+    it('should no-op when no note matches marker', async () => {
+      mockMrNotesAll.mockResolvedValue([{ id: 20, body: 'unrelated' }]);
+      const ref = makeRef();
+
+      await writer.deleteComment(ref, '<!-- erode-marker -->');
+
+      expect(mockMrNotesRemove).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('closeChangeRequest', () => {
+    it('should close open MR via .edit with stateEvent close', async () => {
+      mockMrAll.mockResolvedValue([
+        { iid: 42, web_url: 'https://gitlab.com/org/repo/-/merge_requests/42' },
+      ]);
+      mockMrEdit.mockResolvedValue({});
+
+      await writer.closeChangeRequest('feature-branch');
+
+      expect(mockMrEdit).toHaveBeenCalledWith('org/repo', 42, { stateEvent: 'close' });
+    });
+
+    it('should no-op when no open MR exists', async () => {
+      mockMrAll.mockResolvedValue([]);
+
+      await writer.closeChangeRequest('feature-branch');
+
+      expect(mockMrEdit).not.toHaveBeenCalled();
     });
   });
 });
