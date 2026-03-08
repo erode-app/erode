@@ -29,7 +29,7 @@ Each provider uses two model tiers to balance cost and quality:
 | Tier     | Default model      |
 | -------- | ------------------ |
 | Fast     | `gemini-2.5-flash` |
-| Advanced | `gemini-2.5-flash` |
+| Advanced | `gemini-2.5-pro`   |
 
 ### OpenAI
 
