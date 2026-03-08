@@ -44,7 +44,7 @@ This keeps the analysis stage focused on dependency changes rather than the full
 
 ## Stage 3 -- Analyze
 
-A stronger model (Sonnet for Anthropic, GPT-4.1 for OpenAI, Flash for Gemini) compares the extracted dependency changes against the declared architecture model and produces violation findings, each with:
+A stronger model (Sonnet for Anthropic, GPT-4.1 for OpenAI, Pro for Gemini) compares the extracted dependency changes against the declared architecture model and produces violation findings, each with:
 
 - A **severity level** (high, medium, or low)
 - A description of the drift

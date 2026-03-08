@@ -4,6 +4,9 @@ import * as os from 'os';
 import * as dotenv from 'dotenv';
 import { z } from 'zod';
 import { ConfigurationError } from '../errors.js';
+import { ANTHROPIC_MODELS } from '../providers/anthropic/models.js';
+import { GEMINI_MODELS } from '../providers/gemini/models.js';
+import { OPENAI_MODELS } from '../providers/openai/models.js';
 dotenv.config();
 
 export const RC_FILENAME = '.eroderc.json';
@@ -47,20 +50,20 @@ export const ConfigSchema = z.object({
   anthropic: z.object({
     apiKey: z.string().optional(),
     timeout: z.number().int().min(1000).max(300000).default(60000),
-    fastModel: z.string().default('claude-haiku-4-5-20251001'),
-    advancedModel: z.string().default('claude-sonnet-4-5-20250929'),
+    fastModel: z.string().default(ANTHROPIC_MODELS.FAST),
+    advancedModel: z.string().default(ANTHROPIC_MODELS.ADVANCED),
   }),
   gemini: z.object({
     apiKey: z.string().optional(),
     timeout: z.number().int().min(1000).max(300000).default(60000),
-    fastModel: z.string().default('gemini-2.5-flash'),
-    advancedModel: z.string().default('gemini-2.5-flash'),
+    fastModel: z.string().default(GEMINI_MODELS.FAST),
+    advancedModel: z.string().default(GEMINI_MODELS.ADVANCED),
   }),
   openai: z.object({
     apiKey: z.string().optional(),
     timeout: z.number().int().min(1000).max(300000).default(60000),
-    fastModel: z.string().default('gpt-4.1-mini'),
-    advancedModel: z.string().default('gpt-4.1'),
+    fastModel: z.string().default(OPENAI_MODELS.FAST),
+    advancedModel: z.string().default(OPENAI_MODELS.ADVANCED),
   }),
   debug: z.object({
     enabled: z.boolean().default(false),
