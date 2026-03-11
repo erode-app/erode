@@ -81,9 +81,9 @@ it, and eventually it is just in the way.
 The higher levels (systems, their boundaries, and how they depend on each other)
 change far less often and carry most of the value. A model at that level takes little
 effort to maintain, answers the questions people actually ask ("what calls what?" and
-"who owns this?"), and stays accurate long enough to be worth consulting. All Erode
-needs is nodes and connections. It does not care which format or framework defines
-them.
+"who owns this?"), and stays accurate long enough to be worth consulting. All Erode needs from your architecture model is components and their
+connections. LikeC4 and Structurizr provide that today. Any format that does the
+same can plug in through an adapter.
 
 Start there. You can always add detail where it earns its keep.
 
