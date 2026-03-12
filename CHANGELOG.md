@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.7.1](https://github.com/erode-app/erode/compare/0.7.0...0.7.1) (2026-03-12)
+
+
+### Build System
+
+* **deps-dev:** bump @astrojs/check from 0.9.6 to 0.9.7 ([#57](https://github.com/erode-app/erode/issues/57)) ([d741392](https://github.com/erode-app/erode/commit/d7413924d0c39c623169ec0cd1aff460b3042eb5))
+* **deps:** bump likec4 from 1.51.0 to 1.52.0 ([#55](https://github.com/erode-app/erode/issues/55)) ([59a3fd8](https://github.com/erode-app/erode/commit/59a3fd80ea956389603eee79cdd02fbaa98acb89))
+* **deps:** bump typescript-eslint from 8.56.1 to 8.57.0 ([#53](https://github.com/erode-app/erode/issues/53)) ([9749e10](https://github.com/erode-app/erode/commit/9749e100afc6a623cdfc6a9b8a6f79e9adc04a61))
+* **web:** upgrade to Astro v6 ([#61](https://github.com/erode-app/erode/issues/61)) ([4879f17](https://github.com/erode-app/erode/commit/4879f1761fc0ad9d9b82cc1ab7302c25dc3659b4))
+
 ## [0.7.0](https://github.com/erode-app/erode/compare/0.6.0...0.7.0) (2026-03-08)
 
 
