@@ -1,23 +1,10 @@
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightBlog from 'starlight-blog';
 import starlightLinksValidator from 'starlight-links-validator';
 
-// Resolve zod to Astro's bundled version to avoid conflicts with root zod@4
-const require = createRequire(import.meta.url);
-const astroDir = dirname(require.resolve('astro/package.json'));
-const zodEntry = join(astroDir, 'node_modules', 'zod', 'index.js');
-
 export default defineConfig({
   site: 'https://erode.dev',
-  output: 'static',
-  vite: {
-    resolve: {
-      alias: [{ find: 'zod', replacement: zodEntry }],
-    },
-  },
   integrations: [
     starlight({
       plugins: [
