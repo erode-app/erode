@@ -62,7 +62,7 @@
     "dotenv": "^17.2.3",
     "likec4": "^1.52.0",
     "minimatch": "^10.2.4",
-    "openai": "^6.27.0",
+    "openai": "^6.29.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {
