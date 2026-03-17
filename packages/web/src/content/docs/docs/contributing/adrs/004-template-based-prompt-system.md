@@ -4,7 +4,7 @@ description: Markdown prompt templates with variable substitution, copied to dis
 ---
 
 **Status:** Accepted\
-**Date:** 2026-03-04\
+**Date:** 2026-02-24\
 **Authors:** Anders Hassis
 
 ## Context

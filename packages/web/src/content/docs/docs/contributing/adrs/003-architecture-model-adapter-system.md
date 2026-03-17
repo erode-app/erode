@@ -4,7 +4,7 @@ description: ArchitectureModelAdapter interface supporting LikeC4 and Structuriz
 ---
 
 **Status:** Accepted\
-**Date:** 2026-03-04\
+**Date:** 2026-02-27\
 **Authors:** Anders Hassis
 
 ## Context
@@ -12,6 +12,8 @@ description: ArchitectureModelAdapter interface supporting LikeC4 and Structuriz
 Architecture models can be written in different formats. LikeC4 uses a custom DSL (`.c4` files). Structurizr uses its own workspace format. Teams choose based on existing tooling, team preferences, or ecosystem compatibility.
 
 Erode needs to load, query, and patch architecture models regardless of format. Hardcoding support for a single format would limit adoption.
+
+Structurizr support was initially implemented with a custom recursive-descent DSL parser (~567 lines). This was replaced by wrapping the official Structurizr CLI for reliability and reduced maintenance burden.
 
 ## Decision
 

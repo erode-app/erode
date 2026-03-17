@@ -4,7 +4,7 @@ description: Three-stage pipeline using cheaper models for extraction and strong
 ---
 
 **Status:** Accepted\
-**Date:** 2026-03-04\
+**Date:** 2026-02-24\
 **Authors:** Anders Hassis
 
 ## Context
@@ -12,6 +12,8 @@ description: Three-stage pipeline using cheaper models for extraction and strong
 Erode analyzes pull requests for architectural drift by comparing code changes against a declared architecture model. This requires multiple distinct AI tasks: identifying which component a repo maps to, extracting dependency changes from diffs, and evaluating those changes for violations.
 
 Running all tasks on a single powerful model wastes money on simple extraction work. Running everything on a cheap model produces poor analysis quality. The system needs to balance cost and accuracy across different task complexities.
+
+Stages were originally numbered 0-2 but renumbered to 1-3 for clarity in user-facing messages and documentation (commit `48e0e42` on 2026-02-26).
 
 ## Decision
 

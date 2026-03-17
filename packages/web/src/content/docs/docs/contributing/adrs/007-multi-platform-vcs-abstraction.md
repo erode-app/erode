@@ -4,7 +4,7 @@ description: SourcePlatformReader and SourcePlatformWriter interfaces for GitHub
 ---
 
 **Status:** Accepted\
-**Date:** 2026-03-04\
+**Date:** 2026-02-26\
 **Authors:** Anders Hassis
 
 ## Context

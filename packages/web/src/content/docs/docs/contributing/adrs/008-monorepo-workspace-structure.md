@@ -4,12 +4,14 @@ description: npm workspaces separating core library, CLI, documentation, archite
 ---
 
 **Status:** Accepted\
-**Date:** 2026-03-04\
+**Date:** 2026-02-25\
 **Authors:** Anders Hassis
 
 ## Context
 
 Erode has multiple concerns: the analysis engine, the interactive CLI, CI platform entrypoints, a documentation site, an architecture model of itself, and shared ESLint rules. These concerns have different build targets, different dependencies, and different release cadences.
+
+The codebase started as a single package combining CLI, analysis engine, and web concerns. It was split into a workspace structure on 2026-02-25. The CLI package originally used Ink (React-based terminal UI) for interactive rendering, which was later replaced with plain console output (commit `aa616fd` on 2026-03-04) to reduce complexity.
 
 A single-package structure would mix CLI dependencies with web dependencies and couple the analysis engine to the terminal interface.
 

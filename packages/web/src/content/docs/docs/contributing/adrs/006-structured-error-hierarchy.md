@@ -4,7 +4,7 @@ description: ErodeError base class with categorized error codes and specialized 
 ---
 
 **Status:** Accepted\
-**Date:** 2026-03-04\
+**Date:** 2026-02-27\
 **Authors:** Anders Hassis
 
 ## Context
@@ -12,6 +12,8 @@ description: ErodeError base class with categorized error codes and specialized 
 Erode interacts with multiple external systems: AI provider APIs, version control platform APIs, file system operations, and architecture model parsers. Each can fail in different ways. Users need clear, actionable error messages. The CLI error handler needs to distinguish between recoverable failures (rate limits) and terminal ones (missing API key).
 
 Generic `Error` objects do not carry enough context for either need.
+
+Error codes were initially flat identifiers. They were later refactored to use categorized prefixes (`CONFIG_*`, `AUTH_*`, etc.) to enable the CLI error handler to format messages differently per category without inspecting error strings (commit `02cf0a5` on 2026-02-27).
 
 ## Decision
 

@@ -4,7 +4,7 @@ description: Multi-platform Docker image with platform-specific entrypoints and 
 ---
 
 **Status:** Accepted\
-**Date:** 2026-03-04\
+**Date:** 2026-02-24\
 **Authors:** Anders Hassis
 
 ## Context

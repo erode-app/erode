@@ -4,7 +4,7 @@ description: Three-layer config precedence with Zod schema validation and enviro
 ---
 
 **Status:** Accepted\
-**Date:** 2026-03-04\
+**Date:** 2026-02-25\
 **Authors:** Anders Hassis
 
 ## Context
