@@ -3,8 +3,8 @@ title: 'ADR-001: Multi-stage AI analysis pipeline'
 description: Three-stage pipeline using cheaper models for extraction and stronger models for drift analysis.
 ---
 
-**Status:** Accepted
-**Date:** 2026-03-04
+**Status:** Accepted\
+**Date:** 2026-03-04\
 **Authors:** Anders Hassis
 
 ## Context

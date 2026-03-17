@@ -3,8 +3,8 @@ title: 'ADR-007: Multi-platform VCS abstraction'
 description: SourcePlatformReader and SourcePlatformWriter interfaces for GitHub, GitLab, and Bitbucket.
 ---
 
-**Status:** Accepted
-**Date:** 2026-03-04
+**Status:** Accepted\
+**Date:** 2026-03-04\
 **Authors:** Anders Hassis
 
 ## Context

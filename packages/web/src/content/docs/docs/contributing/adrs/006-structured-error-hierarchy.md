@@ -3,8 +3,8 @@ title: 'ADR-006: Structured error hierarchy'
 description: ErodeError base class with categorized error codes and specialized subclasses.
 ---
 
-**Status:** Accepted
-**Date:** 2026-03-04
+**Status:** Accepted\
+**Date:** 2026-03-04\
 **Authors:** Anders Hassis
 
 ## Context

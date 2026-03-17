@@ -3,8 +3,8 @@ title: 'ADR-004: Template-based prompt system'
 description: Markdown prompt templates with variable substitution, copied to dist at build time.
 ---
 
-**Status:** Accepted
-**Date:** 2026-03-04
+**Status:** Accepted\
+**Date:** 2026-03-04\
 **Authors:** Anders Hassis
 
 ## Context

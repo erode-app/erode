@@ -3,8 +3,8 @@ title: 'ADR-010: Local diff check command'
 description: New check pipeline for pre-push drift detection on local git diffs, with shared pipeline extraction.
 ---
 
-**Status:** Accepted
-**Date:** 2026-03-07
+**Status:** Accepted\
+**Date:** 2026-03-07\
 **Authors:** Anders Hassis
 
 ## Context

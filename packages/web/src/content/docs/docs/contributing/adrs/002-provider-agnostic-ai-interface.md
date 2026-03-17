@@ -3,8 +3,8 @@ title: 'ADR-002: Provider-agnostic AI interface'
 description: AIProvider interface with BaseProvider abstract class and factory pattern for multi-provider support.
 ---
 
-**Status:** Accepted
-**Date:** 2026-03-04
+**Status:** Accepted\
+**Date:** 2026-03-04\
 **Authors:** Anders Hassis
 
 ## Context

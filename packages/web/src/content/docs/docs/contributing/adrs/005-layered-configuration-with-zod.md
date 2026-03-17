@@ -3,8 +3,8 @@ title: 'ADR-005: Layered configuration with Zod'
 description: Three-layer config precedence with Zod schema validation and environment variable overrides.
 ---
 
-**Status:** Accepted
-**Date:** 2026-03-04
+**Status:** Accepted\
+**Date:** 2026-03-04\
 **Authors:** Anders Hassis
 
 ## Context

@@ -3,8 +3,8 @@ title: 'ADR-009: Docker and GitHub Action deployment'
 description: Multi-platform Docker image with platform-specific entrypoints and GitHub Action wrapper.
 ---
 
-**Status:** Accepted
-**Date:** 2026-03-04
+**Status:** Accepted\
+**Date:** 2026-03-04\
 **Authors:** Anders Hassis
 
 ## Context

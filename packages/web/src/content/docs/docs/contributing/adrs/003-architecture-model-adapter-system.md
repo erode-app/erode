@@ -3,8 +3,8 @@ title: 'ADR-003: Architecture model adapter system'
 description: ArchitectureModelAdapter interface supporting LikeC4 and Structurizr model formats.
 ---
 
-**Status:** Accepted
-**Date:** 2026-03-04
+**Status:** Accepted\
+**Date:** 2026-03-04\
 **Authors:** Anders Hassis
 
 ## Context

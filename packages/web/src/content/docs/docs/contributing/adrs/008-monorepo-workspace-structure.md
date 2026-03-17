@@ -3,8 +3,8 @@ title: 'ADR-008: Monorepo workspace structure'
 description: npm workspaces separating core library, CLI, documentation, architecture model, and shared config.
 ---
 
-**Status:** Accepted
-**Date:** 2026-03-04
+**Status:** Accepted\
+**Date:** 2026-03-04\
 **Authors:** Anders Hassis
 
 ## Context
