@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.7.1](https://github.com/erode-app/erode/compare/0.7.0...0.7.1) (2026-03-16)
+
+
+### Build System
+
+* **deps-dev:** bump @astrojs/check from 0.9.6 to 0.9.7 ([#57](https://github.com/erode-app/erode/issues/57)) ([d741392](https://github.com/erode-app/erode/commit/d7413924d0c39c623169ec0cd1aff460b3042eb5))
+* **deps-dev:** bump vitest from 4.0.18 to 4.1.0 ([#63](https://github.com/erode-app/erode/issues/63)) ([037c8bf](https://github.com/erode-app/erode/commit/037c8bff5cd21a90280e0c94bf5624db2e53a647))
+* **deps:** bump @google/genai from 1.44.0 to 1.45.0 ([#64](https://github.com/erode-app/erode/issues/64)) ([11cc26f](https://github.com/erode-app/erode/commit/11cc26f76d62427965ba80d37f0c29ce11e50955))
+* **deps:** bump astro from 6.0.3 to 6.0.4 ([#65](https://github.com/erode-app/erode/issues/65)) ([6b94595](https://github.com/erode-app/erode/commit/6b945953f13f1d2a76fb05eed3a9183c0cdc5472))
+* **deps:** bump likec4 from 1.51.0 to 1.52.0 ([#55](https://github.com/erode-app/erode/issues/55)) ([59a3fd8](https://github.com/erode-app/erode/commit/59a3fd80ea956389603eee79cdd02fbaa98acb89))
+* **deps:** bump openai from 6.27.0 to 6.29.0 ([#67](https://github.com/erode-app/erode/issues/67)) ([773dd23](https://github.com/erode-app/erode/commit/773dd2300f0817ba9f14dad2a82e82c72add5165))
+* **deps:** bump starlight-blog from 0.26.0 to 0.26.1 ([#66](https://github.com/erode-app/erode/issues/66)) ([c0f50f5](https://github.com/erode-app/erode/commit/c0f50f580c5c5e8f88295a6402c28af5ea4630d2))
+* **deps:** bump typescript-eslint from 8.56.1 to 8.57.0 ([#53](https://github.com/erode-app/erode/issues/53)) ([9749e10](https://github.com/erode-app/erode/commit/9749e100afc6a623cdfc6a9b8a6f79e9adc04a61))
+* **web:** upgrade to Astro v6 ([#61](https://github.com/erode-app/erode/issues/61)) ([4879f17](https://github.com/erode-app/erode/commit/4879f1761fc0ad9d9b82cc1ab7302c25dc3659b4))
+
 ## [0.7.0](https://github.com/erode-app/erode/compare/0.6.0...0.7.0) (2026-03-08)
 
 
