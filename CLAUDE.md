@@ -67,6 +67,10 @@ The recommended configuration method is `.eroderc.json` (validated by Zod via `p
 
 Custom error hierarchy in `packages/core/src/errors.ts`: `ErodeError` (base) → `ConfigurationError`, `ApiError`, `AdapterError`. All errors carry an `ErrorCode` enum with categorized prefixes (`CONFIG_*`, `AUTH_*`, `IO_*`, `NET_*`, `PROVIDER_*`, `PLATFORM_*`, `MODEL_*`, `INPUT_*`, `INTERNAL_*`), a user-facing message, and context metadata. `ApiError` classifies HTTP errors via `classifyHttpError()` to detect rate limiting, timeouts, and acceleration limits.
 
+## Architecture Decision Records
+
+ADRs live in `packages/web/src/content/docs/docs/contributing/adrs/`. Read the ADR index before making structural changes to understand prior decisions and their trade-offs. Create a new ADR (via the `adr` skill) when adding, changing, or removing a key abstraction, interface, or system boundary.
+
 ## Conventions
 
 - **File/folder naming**: kebab-case enforced by `eslint-plugin-check-file`
