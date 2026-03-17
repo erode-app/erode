@@ -6,7 +6,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 # Architecture Decision Records
 
-Create and manage ADRs in `docs/adr/` to document significant architectural decisions.
+Create and manage ADRs in `packages/web/src/content/docs/docs/contributing/adrs/` to document significant architectural decisions. ADRs are published on the docs site under Contributing.
 
 ## Instructions
 
@@ -27,23 +27,26 @@ Skip ADR suggestion for:
 
 ### Creating an ADR
 
-1. Find the next ADR number by listing `docs/adr/`
+1. Find the next ADR number by listing `packages/web/src/content/docs/docs/contributing/adrs/`
 2. Check recent plan files in `~/.claude/plans/` for context
 3. Analyze recent commits: `git log --since="7 days ago" --oneline`
 4. Extract Context, Decision, and Rationale from plans/commits
-5. Create the ADR file using the template below
-6. Update `docs/adr/README.md` index
+5. Create the ADR file using the template below in `packages/web/src/content/docs/docs/contributing/adrs/`
+6. Update the index page at `packages/web/src/content/docs/docs/contributing/adrs/index.md`
 
 ### Listing ADRs
 
-List existing ADRs: `ls -1 docs/adr/*.md | grep -v README`
+List existing ADRs: `ls -1 packages/web/src/content/docs/docs/contributing/adrs/*.md | grep -v index`
 
 ## Template
 
-Use Michael Nygard format in `docs/adr/NNN-kebab-case-title.md`:
+Use Michael Nygard format in `packages/web/src/content/docs/docs/contributing/adrs/NNN-kebab-case-title.md`:
 
 ```markdown
-# ADR-XXX: Title
+---
+title: 'ADR-XXX: Title'
+description: One-sentence summary of the decision.
+---
 
 **Status:** Accepted
 **Date:** YYYY-MM-DD

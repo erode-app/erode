@@ -95,7 +95,10 @@ export default defineConfig({
             { slug: 'docs/reference/analysis-pipeline' },
           ],
         },
-        { label: 'Contributing', items: [{ slug: 'docs/contributing' }] },
+        {
+          label: 'Contributing',
+          items: [{ slug: 'docs/contributing' }, { label: 'ADRs', slug: 'docs/contributing/adrs' }],
+        },
       ],
     }),
   ],
