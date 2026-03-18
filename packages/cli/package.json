@@ -40,7 +40,7 @@
   "devDependencies": {
     "@erode-app/eslint-config": "*",
     "@types/node": "^24.12.0",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.0",
     "concurrently": "^9.2.1",
     "eslint": "^10.0.3",
     "prettier": "^3.7.3",
