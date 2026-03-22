@@ -28,6 +28,7 @@ export const ConfigSchema = z.object({
     likec4: z.object({
       excludePaths: z.array(z.string()).default([]),
       excludeTags: z.array(z.string()).default([]),
+      formatAfterPatch: z.boolean().default(true),
     }),
     structurizr: z.object({
       cliPath: z.string().optional(),
@@ -120,6 +121,7 @@ const ENV_MAP: Record<string, string> = {
   ERODE_MODEL_REPO_PR_TOKEN: 'github.modelRepoPrToken',
   ERODE_LIKEC4_EXCLUDE_PATHS: 'adapter.likec4.excludePaths',
   ERODE_LIKEC4_EXCLUDE_TAGS: 'adapter.likec4.excludeTags',
+  ERODE_LIKEC4_FORMAT_AFTER_PATCH: 'adapter.likec4.formatAfterPatch',
   ERODE_STRUCTURIZR_CLI_PATH: 'adapter.structurizr.cliPath',
   ERODE_MAX_FILES_PER_DIFF: 'constraints.maxFilesPerDiff',
   ERODE_MAX_LINES_PER_DIFF: 'constraints.maxLinesPerDiff',
@@ -154,6 +156,7 @@ const COERCE_MAP: Record<string, Coercer> = {
   'openai.timeout': toNumber,
   'adapter.likec4.excludePaths': toStringArray,
   'adapter.likec4.excludeTags': toStringArray,
+  'adapter.likec4.formatAfterPatch': toBoolean,
 };
 
 function setNestedValue(obj: Record<string, unknown>, dotPath: string, value: unknown): void {

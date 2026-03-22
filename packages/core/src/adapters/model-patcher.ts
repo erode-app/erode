@@ -34,6 +34,8 @@ export interface PatchResult {
   newComponents?: PatchNewComponent[];
   /** true when DSL validation tooling was unavailable and validation was skipped */
   validationSkipped?: boolean;
+  /** true when post-patch formatting was applied */
+  formatted?: boolean;
 }
 
 export interface DslValidationResult {

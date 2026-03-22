@@ -34,6 +34,10 @@ export abstract class BasePatcher implements ModelPatcher {
     content: string
   ): Promise<DslValidationResult>;
 
+  protected postFormat(content: string, _modelPath: string, _targetFile: string): Promise<string> {
+    return Promise.resolve(content);
+  }
+
   protected debugLog(msg: string, data?: unknown): void {
     if (CONFIG.debug.verbose) {
       console.error(`[${this.formatName}] ${msg}`, data !== undefined ? JSON.stringify(data) : '');
@@ -138,7 +142,12 @@ export abstract class BasePatcher implements ModelPatcher {
       return null;
     }
 
-    // 7. Compute repo-relative path
+    // 7. Optional post-processing (e.g., formatting)
+    const preFormatContent = finalContent;
+    finalContent = await this.postFormat(finalContent, modelPath, targetFile);
+    const formatted = finalContent !== preFormatContent;
+
+    // 8. Compute repo-relative path
     const repoRelativePath = this.getRepoRelativePath(targetFile);
 
     return {
@@ -158,6 +167,7 @@ export abstract class BasePatcher implements ModelPatcher {
             }))
           : undefined,
       validationSkipped: validationSkipped || undefined,
+      formatted: formatted || undefined,
     };
   }
 

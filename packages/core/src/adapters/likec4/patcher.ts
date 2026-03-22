@@ -2,9 +2,11 @@ import { readFileSync, readdirSync } from 'fs';
 import { join, resolve } from 'path';
 import { BasePatcher } from '../base-patcher.js';
 import { validateLikeC4Dsl } from './dsl-validator.js';
+import { formatLikeC4Dsl } from './dsl-formatter.js';
 import type { StructuredRelationship, NewComponent } from '../../analysis/analysis-types.js';
 import type { ModelRelationship } from '../architecture-types.js';
 import type { DslValidationResult } from '../model-patcher.js';
+import { CONFIG } from '../../utils/config.js';
 
 export class LikeC4Patcher extends BasePatcher {
   protected readonly formatName = 'LikeC4Patcher';
@@ -83,5 +85,27 @@ export class LikeC4Patcher extends BasePatcher {
     content: string
   ): Promise<DslValidationResult> {
     return validateLikeC4Dsl(workspace, file, content);
+  }
+
+  protected override async postFormat(
+    content: string,
+    modelPath: string,
+    targetFile: string
+  ): Promise<string> {
+    if (!CONFIG.adapter.likec4.formatAfterPatch) {
+      this.debugLog('Post-patch formatting disabled by config');
+      return content;
+    }
+    const result = await formatLikeC4Dsl(modelPath, targetFile, content);
+    if (result.formatted && result.content) {
+      this.debugLog('Post-patch formatting applied');
+      return result.content;
+    }
+    if (result.skipped) {
+      this.debugLog('Post-patch formatting skipped (SDK unavailable)');
+    } else if (result.error) {
+      this.debugLog('Post-patch formatting failed', result.error);
+    }
+    return content;
   }
 }
