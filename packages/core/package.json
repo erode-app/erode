@@ -60,7 +60,7 @@
     "@google/genai": "^1.45.0",
     "@octokit/rest": "^22.0.1",
     "dotenv": "^17.2.3",
-    "likec4": "^1.52.0",
+    "likec4": "^1.53.0",
     "minimatch": "^10.2.4",
     "openai": "^6.29.0",
     "zod": "^4.1.13"

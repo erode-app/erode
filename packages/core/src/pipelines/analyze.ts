@@ -282,6 +282,9 @@ export async function runAnalyze(
         if (ctx.patchResult.validationSkipped) {
           p.warn('DSL validation skipped: validation tooling unavailable');
         }
+        if (ctx.patchResult.formatted) {
+          p.info('Patched model formatted with LikeC4 formatter');
+        }
         // Write in-place when --patch without --open-pr
         if (options.patchLocal && !options.openPr && !options.dryRun) {
           await writeFile(ctx.patchResult.absolutePath, ctx.patchResult.content, 'utf8');

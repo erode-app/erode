@@ -80,6 +80,10 @@
               "items": {
                 "type": "string"
               }
+            },
+            "formatAfterPatch": {
+              "default": true,
+              "type": "boolean"
             }
           },
           "additionalProperties": false

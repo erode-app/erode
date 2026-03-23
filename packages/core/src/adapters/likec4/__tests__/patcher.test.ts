@@ -24,6 +24,10 @@ vi.mock('../dsl-validator.js', () => ({
   validateLikeC4Dsl: vi.fn().mockResolvedValue({ valid: true }),
 }));
 
+vi.mock('../dsl-formatter.js', () => ({
+  formatLikeC4Dsl: vi.fn().mockResolvedValue({ formatted: false, skipped: true }),
+}));
+
 import { readFileSync, readdirSync } from 'fs';
 import { validateLikeC4Dsl } from '../dsl-validator.js';
 
