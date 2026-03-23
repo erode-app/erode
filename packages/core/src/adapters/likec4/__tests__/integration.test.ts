@@ -1,4 +1,4 @@
-import { describe, beforeEach } from 'vitest';
+import { describe, beforeAll } from 'vitest';
 import { LikeC4Adapter } from '../adapter.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -11,7 +11,7 @@ describe('LikeC4Adapter Integration', () => {
   const fixtureWorkspace = path.join(__dirname, 'fixtures', 'sample-workspace');
   let adapter: LikeC4Adapter;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const configModule = await import('../../../utils/config.js');
     configModule.CONFIG.adapter.likec4.excludePaths = [];
     configModule.CONFIG.adapter.likec4.excludeTags = [];
