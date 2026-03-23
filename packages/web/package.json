@@ -20,7 +20,7 @@
     "starlight-links-validator": "^0.20.1"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.7",
+    "@astrojs/check": "^0.9.8",
     "@erode-app/eslint-config": "*",
     "eslint": "^10.1.0",
     "eslint-plugin-astro": "^1.6.0",
