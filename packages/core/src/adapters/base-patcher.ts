@@ -144,8 +144,17 @@ export abstract class BasePatcher implements ModelPatcher {
 
     // 7. Optional post-processing (e.g., formatting)
     const preFormatContent = finalContent;
-    finalContent = await this.postFormat(finalContent, modelPath, targetFile);
-    const formatted = finalContent !== preFormatContent;
+    let formatted = false;
+    try {
+      const postFormatted = await this.postFormat(finalContent, modelPath, targetFile);
+      formatted = postFormatted !== preFormatContent;
+      finalContent = postFormatted;
+    } catch (error) {
+      this.debugLog(
+        'Post-processing failed; proceeding with unformatted patch',
+        error instanceof Error ? error.message : String(error)
+      );
+    }
 
     // 8. Compute repo-relative path
     const repoRelativePath = this.getRepoRelativePath(targetFile);

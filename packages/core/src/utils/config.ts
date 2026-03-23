@@ -91,6 +91,7 @@ export const ENV_VAR_NAMES = {
   modelPath: 'ERODE_MODEL_PATH',
   modelRepo: 'ERODE_MODEL_REPO',
   modelRef: 'ERODE_MODEL_REF',
+  likec4FormatAfterPatch: 'ERODE_LIKEC4_FORMAT_AFTER_PATCH',
 } as const;
 
 const ENV_MAP: Record<string, string> = {

@@ -1,4 +1,6 @@
+import { pathToFileURL } from 'node:url';
 import { withTempWorkspaceCopy } from '../dsl-validation.js';
+import { CONFIG } from '../../utils/config.js';
 
 interface FormatResult {
   formatted: boolean;
@@ -25,7 +27,7 @@ export async function formatLikeC4Dsl(
           if (typeof likec4.format !== 'function') {
             return { formatted: false, skipped: true };
           }
-          const targetUri = `file://${tmpTarget}`;
+          const targetUri = pathToFileURL(tmpTarget).href;
           const result = await likec4.format({ documentUris: [targetUri] });
           const formatted = result.get(targetUri);
           if (formatted !== undefined) {
@@ -37,7 +39,13 @@ export async function formatLikeC4Dsl(
         }
       }
     );
-  } catch {
+  } catch (err) {
+    if (CONFIG.debug.verbose) {
+      console.error(
+        '[formatLikeC4Dsl] Formatting skipped due to error:',
+        err instanceof Error ? err.message : String(err)
+      );
+    }
     return { formatted: false, skipped: true };
   }
 }
