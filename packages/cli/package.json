@@ -46,7 +46,7 @@
     "prettier": "^3.7.3",
     "rimraf": "^6.1.2",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.1"
   },
   "publishConfig": {
     "access": "public"
