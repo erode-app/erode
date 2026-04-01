@@ -204,7 +204,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
   }
 
   protected buildComponentIndex(components: ArchitecturalComponent[]): ComponentIndex {
-    return components.reduce<ComponentIndex>(
+    return components.reduce(
       (idx, comp) => {
         idx.byId.set(comp.id, comp);
         if (comp.repository) idx.byRepository.set(comp.repository, comp);
