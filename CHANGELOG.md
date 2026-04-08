@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.8.2](https://github.com/erode-app/erode/compare/0.8.1...0.8.2) (2026-04-08)
+
+
+### Build System
+
+* **deps-dev:** bump @types/node from 24.12.0 to 24.12.2 ([#115](https://github.com/erode-app/erode/issues/115)) ([54710b2](https://github.com/erode-app/erode/commit/54710b2a40947150c5532981c2707219dcaf930d))
+* **deps-dev:** bump eslint from 10.1.0 to 10.2.0 ([#116](https://github.com/erode-app/erode/issues/116)) ([a2f8d2e](https://github.com/erode-app/erode/commit/a2f8d2e8a5a45923d984f7a2325b05e8ef6b37b2))
+* **deps-dev:** bump knip from 6.1.1 to 6.2.0 ([#107](https://github.com/erode-app/erode/issues/107)) ([ae8f736](https://github.com/erode-app/erode/commit/ae8f73622a5263b248a66e4c0d45e53f33fefa7d))
+* **deps-dev:** bump knip from 6.2.0 to 6.3.0 ([#113](https://github.com/erode-app/erode/issues/113)) ([18b944d](https://github.com/erode-app/erode/commit/18b944d1065a56b3ec837cb8cb3c4bd1613ef8fa))
+* **deps:** bump @anthropic-ai/sdk from 0.81.0 to 0.82.0 ([#111](https://github.com/erode-app/erode/issues/111)) ([fb0e4ac](https://github.com/erode-app/erode/commit/fb0e4acef4cb3e4ee5ad19bd4bb90cd21253466f))
+* **deps:** bump @google/genai from 1.47.0 to 1.48.0 ([#108](https://github.com/erode-app/erode/issues/108)) ([0b8e6ea](https://github.com/erode-app/erode/commit/0b8e6eaf83635b342054e4d19a495fce75ed7c5b))
+* **deps:** bump astro from 6.1.2 to 6.1.4 ([#114](https://github.com/erode-app/erode/issues/114)) ([79924f8](https://github.com/erode-app/erode/commit/79924f8045fbedd16f7e9e30a719d5bc0fa0eb94))
+* **deps:** bump dotenv from 17.3.1 to 17.4.0 ([#110](https://github.com/erode-app/erode/issues/110)) ([a36fbab](https://github.com/erode-app/erode/commit/a36fbab3c934f02f929a0262bda019ab706aa733))
+* **deps:** bump dotenv from 17.4.0 to 17.4.1 ([#117](https://github.com/erode-app/erode/issues/117)) ([e616364](https://github.com/erode-app/erode/commit/e616364d36a8e5a727b57739d530042d1a020c6d))
+* **deps:** bump openai from 6.32.0 to 6.33.0 ([#109](https://github.com/erode-app/erode/issues/109)) ([64552ac](https://github.com/erode-app/erode/commit/64552ac91d0b1fffc3c6a234d2b916bdd9eda099))
+* **web:** downgrade typescript to ^5.8.3 for audit fix ([#118](https://github.com/erode-app/erode/issues/118)) ([d6cc975](https://github.com/erode-app/erode/commit/d6cc975e681ec2421fb24b85fe7029740377c469))
+
 ## [0.8.1](https://github.com/erode-app/erode/compare/0.8.0...0.8.1) (2026-04-01)
 
 
