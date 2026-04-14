@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "erode-check",
+      "type": "skill-md",
+      "description": "Use this skill whenever code changes introduce new imports, API calls, database connections, message queues, or service-to-service communication. Also use before any commit or push. Catches undeclared dependencies and architecture violations using Erode.",
+      "url": "https://erode.dev/.well-known/agent-skills/erode-check/SKILL.md",
+      "digest": "sha256:38d58a62ee88a9fc73284dc60fbeff51ed02a78efcdb39569e160f2a687e7707"
+    }
+  ]
+}

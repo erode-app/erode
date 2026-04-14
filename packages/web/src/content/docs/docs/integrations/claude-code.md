@@ -195,6 +195,14 @@ This runs `erode check` after every edit to a source file and feeds the output b
 The hook approach runs on every edit, which triggers multiple AI API calls each time. This adds up quickly during active sessions. The skill approach above is recommended for most users. It only runs when Claude Code judges that new integrations were introduced.
 :::
 
+## Agent Skills Discovery
+
+The erode-check skill is published at
+[`erode.dev/.well-known/agent-skills/`](https://erode.dev/.well-known/agent-skills/index.json)
+following the [Agent Skills Discovery RFC](https://github.com/cloudflare/agent-skills-discovery-rfc).
+Agents that support the protocol can discover and load the skill automatically
+without manual setup.
+
 ## What's next
 
 - [CLI Commands](/docs/reference/cli-commands/): all `erode check` flags and options
