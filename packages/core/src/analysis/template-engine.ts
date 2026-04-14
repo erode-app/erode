@@ -76,6 +76,7 @@ export const TemplateEngine = {
     return replaceVariables(template, variables);
   },
   loadSyntaxGuide(name: string): string {
-    return loadTemplate(name);
+    const guidePath = join(__dirname, '..', 'adapters', 'likec4', 'prompts', `${name}.md`);
+    return readFileSync(guidePath, 'utf-8');
   },
 } as const;
