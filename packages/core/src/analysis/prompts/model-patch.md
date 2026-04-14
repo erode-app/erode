@@ -21,7 +21,7 @@ You are a code editor. Your task is to insert relationship lines into an existin
 ## INSTRUCTIONS
 
 1. Insert the lines above into the appropriate location in the file
-2. For LikeC4 (.c4) files: insert component definitions (blocks with `= service/webapp/...`) INSIDE the `model { }` block, BEFORE standalone relationship lines. Insert relationship lines near existing relationship declarations.
+2. For LikeC4 (.c4) files: insert element definitions (`IDENTIFIER = KIND 'title' { ... }`) INSIDE the `model { }` block, BEFORE top-level relationship lines. Insert relationship lines near existing relationship declarations. Follow the syntax guide above.
 3. For Structurizr (.dsl) files: insert component definitions INSIDE the `model { }` block, BEFORE relationship lines. Insert relationship lines near existing relationship declarations.
 4. Match the indentation style of the surrounding code
 5. Do NOT modify any existing lines
