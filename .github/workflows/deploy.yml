@@ -42,6 +42,7 @@ jobs:
       - uses: actions/upload-pages-artifact@v4
         with:
           path: packages/web/dist
+          include-hidden-files: true
 
   deploy:
     needs: build
