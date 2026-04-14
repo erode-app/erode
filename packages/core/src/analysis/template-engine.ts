@@ -7,12 +7,26 @@ import type {
 } from './prompt-variables.js';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { ErodeError, ErrorCode } from '../errors.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+function readMarkdownFile(filePath: string): string {
+  try {
+    return readFileSync(filePath, 'utf-8');
+  } catch {
+    throw new ErodeError(
+      `Failed to read template: ${filePath}`,
+      ErrorCode.IO_FILE_NOT_FOUND,
+      'Could not load a required prompt template. This may indicate a broken installation.',
+      { filePath }
+    );
+  }
+}
+
 function loadTemplate(templateName: string): string {
   const templatePath = join(__dirname, 'prompts', `${templateName}.md`);
-  return readFileSync(templatePath, 'utf-8');
+  return readMarkdownFile(templatePath);
 }
 
 function resolveVariable(variables: object, path: string): unknown {
@@ -74,5 +88,9 @@ export const TemplateEngine = {
   loadModelPatchPrompt(variables: ModelPatchPromptVars): string {
     const template = loadTemplate('model-patch');
     return replaceVariables(template, variables);
+  },
+  loadSyntaxGuide(adapterDir: string, name: string): string {
+    const guidePath = join(__dirname, '..', 'adapters', adapterDir, 'prompts', `${name}.md`);
+    return readMarkdownFile(guidePath);
   },
 } as const;
