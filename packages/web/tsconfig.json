@@ -1,4 +1,10 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "src/**/*", "astro.config.mjs", "eslint.config.mjs"]
+  "include": [
+    ".astro/types.d.ts",
+    "src/**/*",
+    "scripts/**/*",
+    "astro.config.mjs",
+    "eslint.config.mjs"
+  ]
 }

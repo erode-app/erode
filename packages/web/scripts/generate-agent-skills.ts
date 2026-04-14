@@ -24,17 +24,17 @@ interface SkillIndex {
 function parseFrontMatter(
   content: string
 ): { name: string; description: string } | { error: string } {
-  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  const match = /^---\n([\s\S]*?)\n---/.exec(content);
   if (!match) return { error: 'no YAML front matter (missing --- delimiters)' };
 
   const yaml = match[1];
-  const nameMatch = yaml.match(/^name:\s*(.+)$/m);
+  const nameMatch = /^name:\s*(.+)$/m.exec(yaml);
   const name = nameMatch?.[1]?.trim();
   if (!name) return { error: 'missing "name" field in front matter' };
 
   // Handle YAML folded scalars (> and >-). Literal block scalars (|)
   // and quoted strings are not supported.
-  const descMatch = yaml.match(/^description:\s*>-?\n((?:\s+.+\n?)+)/m);
+  const descMatch = /^description:\s*>-?\n((?:\s+.+\n?)+)/m.exec(yaml);
 
   let description: string | undefined;
   if (descMatch) {
@@ -44,7 +44,7 @@ function parseFrontMatter(
       .filter(Boolean)
       .join(' ');
   } else {
-    const singleMatch = yaml.match(/^description:\s*(?!>)(.+)$/m);
+    const singleMatch = /^description:\s*(?!>)(.+)$/m.exec(yaml);
     description = singleMatch?.[1]?.trim();
   }
 
@@ -124,7 +124,7 @@ function main() {
   }
 
   fs.writeFileSync(outPath, json);
-  console.log(`index.json written with ${skills.length} skill(s):`);
+  console.log(`index.json written with ${String(skills.length)} skill(s):`);
   for (const skill of skills) {
     console.log(`  - ${skill.name}: ${skill.digest}`);
   }

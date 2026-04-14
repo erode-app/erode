@@ -6,6 +6,6 @@ export default [
   ...createBaseConfig(import.meta.dirname),
   ...eslintPluginAstro.configs.recommended,
   {
-    ignores: ['astro.config.mjs', '.astro/', 'src/content/', 'public/architecture/', 'scripts/**'],
+    ignores: ['astro.config.mjs', '.astro/', 'src/content/', 'public/architecture/'],
   },
 ];

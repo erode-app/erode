@@ -8,11 +8,10 @@
     "dev": "npm run prebuild:diagrams && astro dev",
     "prebuild:diagrams": "cd ../architecture && npm run build && cd ../web && rm -rf public/architecture && cp -r ../architecture/dist public/architecture",
     "generate:skills": "npx tsx scripts/generate-agent-skills.ts",
-    "check:skills": "npx tsx scripts/generate-agent-skills.ts --check",
     "build": "npm run prebuild:diagrams && npm run generate:skills && astro check && astro build",
     "preview": "astro preview",
-    "typecheck": "astro check --minimumFailingSeverity hint",
-    "check:ci": "npm run check:skills && astro check && astro build",
+    "typecheck": "npx tsx scripts/generate-agent-skills.ts --check && astro check --minimumFailingSeverity hint",
+    "check:ci": "npm run typecheck && astro build",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
