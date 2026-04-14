@@ -63,4 +63,5 @@ export interface ModelPatchPromptVars {
   fileContent: string;
   linesToInsert: string;
   modelFormat: string;
+  syntaxGuide: string;
 }

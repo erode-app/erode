@@ -4,6 +4,8 @@ You are a code editor. Your task is to insert relationship lines into an existin
 
 {{modelFormat}}
 
+{{syntaxGuide}}
+
 ## CURRENT FILE CONTENT
 
 ```text
