@@ -21,16 +21,20 @@ interface SkillIndex {
   skills: SkillEntry[];
 }
 
-function parseFrontMatter(content: string): { description: string; name: string } | null {
+function parseFrontMatter(
+  content: string
+): { name: string; description: string } | { error: string } {
   const match = content.match(/^---\n([\s\S]*?)\n---/);
-  if (!match) return null;
+  if (!match) return { error: 'no YAML front matter (missing --- delimiters)' };
 
   const yaml = match[1];
   const nameMatch = yaml.match(/^name:\s*(.+)$/m);
-
-  // Handle multi-line YAML folded scalar (>-) and single-line descriptions
-  const descMatch = yaml.match(/^description:\s*>-?\n((?:\s+.+\n?)+)/m);
   const name = nameMatch?.[1]?.trim();
+  if (!name) return { error: 'missing "name" field in front matter' };
+
+  // Handle YAML folded scalars (> and >-). Literal block scalars (|)
+  // and quoted strings are not supported.
+  const descMatch = yaml.match(/^description:\s*>-?\n((?:\s+.+\n?)+)/m);
 
   let description: string | undefined;
   if (descMatch) {
@@ -44,7 +48,7 @@ function parseFrontMatter(content: string): { description: string; name: string 
     description = singleMatch?.[1]?.trim();
   }
 
-  if (!name || !description) return null;
+  if (!description) return { error: 'missing "description" field in front matter' };
   return { name, description };
 }
 
@@ -54,6 +58,12 @@ function computeDigest(content: string): string {
 }
 
 function discoverSkills(): SkillEntry[] {
+  if (!fs.existsSync(SKILLS_DIR)) {
+    console.error(`Skills directory not found: ${SKILLS_DIR}`);
+    console.error('Create it with at least one skill subdirectory containing a SKILL.md file.');
+    process.exit(1);
+  }
+
   const entries: SkillEntry[] = [];
   const dirs = fs.readdirSync(SKILLS_DIR, { withFileTypes: true });
 
@@ -64,8 +74,8 @@ function discoverSkills(): SkillEntry[] {
 
     const content = fs.readFileSync(skillPath, 'utf-8');
     const meta = parseFrontMatter(content);
-    if (!meta) {
-      console.warn(`Skipping ${dir.name}: missing or invalid front matter`);
+    if ('error' in meta) {
+      console.warn(`Skipping ${dir.name}: ${meta.error}`);
       continue;
     }
 
