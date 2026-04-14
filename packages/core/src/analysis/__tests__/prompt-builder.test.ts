@@ -7,6 +7,7 @@ import type {
   DependencyExtractionPromptVars,
   ComponentSelectionPromptVars,
   DriftAnalysisPromptVars,
+  ModelPatchPromptVars,
 } from '../prompt-variables.js';
 
 // Mock the TemplateEngine to avoid filesystem reads
@@ -19,6 +20,10 @@ vi.mock('../template-engine.js', () => ({
       JSON.stringify(vars)
     ),
     loadDriftAnalysisPrompt: vi.fn((vars: DriftAnalysisPromptVars) => JSON.stringify(vars)),
+    loadModelPatchPrompt: vi.fn((vars: ModelPatchPromptVars) => JSON.stringify(vars)),
+    loadSyntaxGuide: vi.fn(
+      (_name: string) => '## LikeC4 DSL SYNTAX REFERENCE\nMocked syntax guide content'
+    ),
   },
 }));
 
@@ -289,6 +294,42 @@ describe('PromptBuilder', () => {
       expect(result).toContain('redis');
       expect(result).toContain('REMOVED');
       expect(result).toContain('memcached');
+    });
+  });
+
+  describe('buildModelPatchPrompt', () => {
+    it('should include syntax guide for likec4 format', () => {
+      // The mock returns JSON.stringify(vars), so we can parse and check
+      const result = PromptBuilder.buildModelPatchPrompt({
+        fileContent: 'model { }',
+        linesToInsert: ['  api -> db'],
+        modelFormat: 'likec4',
+      });
+      const parsed = JSON.parse(result) as Record<string, unknown>;
+      expect(parsed).toHaveProperty('modelFormat', 'likec4');
+      expect(parsed).toHaveProperty('syntaxGuide');
+      expect(parsed['syntaxGuide']).toContain('LikeC4 DSL SYNTAX REFERENCE');
+    });
+
+    it('should pass empty syntax guide for structurizr format', () => {
+      const result = PromptBuilder.buildModelPatchPrompt({
+        fileContent: 'workspace { }',
+        linesToInsert: ['  api -> db'],
+        modelFormat: 'structurizr',
+      });
+      const parsed = JSON.parse(result) as Record<string, unknown>;
+      expect(parsed).toHaveProperty('modelFormat', 'structurizr');
+      expect(parsed).toHaveProperty('syntaxGuide', '');
+    });
+
+    it('should join multiple lines to insert', () => {
+      const result = PromptBuilder.buildModelPatchPrompt({
+        fileContent: 'model { }',
+        linesToInsert: ['  api -> db', '  api -> cache'],
+        modelFormat: 'likec4',
+      });
+      const parsed = JSON.parse(result) as Record<string, unknown>;
+      expect(parsed).toHaveProperty('linesToInsert', '  api -> db\n  api -> cache');
     });
   });
 });

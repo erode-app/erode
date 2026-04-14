@@ -179,10 +179,13 @@ export const PromptBuilder = {
     linesToInsert: string[];
     modelFormat: string;
   }): string {
+    const syntaxGuide =
+      data.modelFormat === 'likec4' ? TemplateEngine.loadSyntaxGuide('likec4-syntax-guide') : '';
     return TemplateEngine.loadModelPatchPrompt({
       fileContent: data.fileContent,
       linesToInsert: data.linesToInsert.join('\n'),
       modelFormat: data.modelFormat,
+      syntaxGuide,
     });
   },
 } as const;

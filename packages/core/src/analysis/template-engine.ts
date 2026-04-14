@@ -75,4 +75,7 @@ export const TemplateEngine = {
     const template = loadTemplate('model-patch');
     return replaceVariables(template, variables);
   },
+  loadSyntaxGuide(name: string): string {
+    return loadTemplate(name);
+  },
 } as const;
