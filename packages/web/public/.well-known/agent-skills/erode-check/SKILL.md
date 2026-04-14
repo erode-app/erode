@@ -5,6 +5,7 @@ description: >-
   database connections, message queues, or service-to-service communication.
   Also use before any commit or push. Catches undeclared dependencies and
   architecture violations using Erode.
+allowed-tools: Bash, Read, Glob, Grep
 ---
 
 # Architecture Drift Check
