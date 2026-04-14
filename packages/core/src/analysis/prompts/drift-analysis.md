@@ -147,7 +147,7 @@ Concentrate on architectural drift — whether the code aligns with the document
 
 - Review the CHANGED FILES section above for brand-new services, applications, or systems that are NOT in the ALL KNOWN COMPONENTS list
 - Look for: new directories/packages (e.g., a new `packages/order-service/`), new entry points (`src/index.ts` in a new directory), new Dockerfiles, new service configuration
-- The `id` must use snake_case (e.g., `order_service`, `payment_gateway`)
+- The `id` must match the identifier style of existing components in the ALL KNOWN COMPONENTS list (e.g., if they use `snake_case` like `order_service`, follow that; if they use `kebab-case` like `order-service`, follow that)
 - The `kind` must be one of the element types from the architecture specification
 - If a relationship references a component not in the model, you MUST add it to `newComponents` AND include the relationship in `relationships`
 - Do NOT create new components for external third-party services
