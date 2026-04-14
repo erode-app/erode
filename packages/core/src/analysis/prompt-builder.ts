@@ -180,7 +180,9 @@ export const PromptBuilder = {
     modelFormat: string;
   }): string {
     const syntaxGuide =
-      data.modelFormat === 'likec4' ? TemplateEngine.loadSyntaxGuide('likec4-syntax-guide') : '';
+      data.modelFormat === 'likec4'
+        ? TemplateEngine.loadSyntaxGuide('likec4', 'likec4-syntax-guide')
+        : '';
     return TemplateEngine.loadModelPatchPrompt({
       fileContent: data.fileContent,
       linesToInsert: data.linesToInsert.join('\n'),

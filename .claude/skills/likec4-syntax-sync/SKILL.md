@@ -59,7 +59,6 @@ Apply changes to the local file following these rules:
 ## Step 4: Verify
 
 ```bash
-cd packages/core && npx vitest run src/analysis/__tests__/prompt-builder.test.ts
 npm run test
 ```
 

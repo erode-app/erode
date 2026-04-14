@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { ErodeError, ErrorCode } from '../../errors.js';
 import type {
   DependencyExtractionPromptVars,
@@ -22,14 +22,20 @@ vi.mock('../template-engine.js', () => ({
     loadDriftAnalysisPrompt: vi.fn((vars: DriftAnalysisPromptVars) => JSON.stringify(vars)),
     loadModelPatchPrompt: vi.fn((vars: ModelPatchPromptVars) => JSON.stringify(vars)),
     loadSyntaxGuide: vi.fn(
-      (_name: string) => '## LikeC4 DSL SYNTAX REFERENCE\nMocked syntax guide content'
+      (_adapterDir: string, _name: string) =>
+        '## LikeC4 DSL SYNTAX REFERENCE\nMocked syntax guide content'
     ),
   },
 }));
 
 import { PromptBuilder } from '../prompt-builder.js';
+import { TemplateEngine } from '../template-engine.js';
 
 describe('PromptBuilder', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('extractJson', () => {
     it('should extract JSON from markdown code block', () => {
       const input = '```json\n{"key": "value"}\n```';
@@ -309,6 +315,8 @@ describe('PromptBuilder', () => {
       expect(parsed).toHaveProperty('modelFormat', 'likec4');
       expect(parsed).toHaveProperty('syntaxGuide');
       expect(parsed['syntaxGuide']).toContain('LikeC4 DSL SYNTAX REFERENCE');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(TemplateEngine.loadSyntaxGuide).toHaveBeenCalledWith('likec4', 'likec4-syntax-guide');
     });
 
     it('should pass empty syntax guide for structurizr format', () => {
@@ -320,6 +328,8 @@ describe('PromptBuilder', () => {
       const parsed = JSON.parse(result) as Record<string, unknown>;
       expect(parsed).toHaveProperty('modelFormat', 'structurizr');
       expect(parsed).toHaveProperty('syntaxGuide', '');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(TemplateEngine.loadSyntaxGuide).not.toHaveBeenCalled();
     });
 
     it('should join multiple lines to insert', () => {
