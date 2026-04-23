@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.9.1](https://github.com/erode-app/erode/compare/0.9.0...0.9.1) (2026-04-23)
+
+
+### Build System
+
+* **deps-dev:** bump @vitest/coverage-v8 from 4.1.3 to 4.1.5 ([#144](https://github.com/erode-app/erode/issues/144)) ([ce00993](https://github.com/erode-app/erode/commit/ce0099303be1a047c17081757f0a8c48291a5b7e))
+* **deps-dev:** bump eslint from 10.2.0 to 10.2.1 ([#142](https://github.com/erode-app/erode/issues/142)) ([0eb4797](https://github.com/erode-app/erode/commit/0eb4797d6e9389e065517d1e472f5a0184ca0766))
+* **deps-dev:** bump knip from 6.3.0 to 6.4.1 ([#139](https://github.com/erode-app/erode/issues/139)) ([e3a87c9](https://github.com/erode-app/erode/commit/e3a87c91d2f635a8414439f823501b9b59a15db1))
+* **deps-dev:** bump knip from 6.4.1 to 6.6.1 ([#145](https://github.com/erode-app/erode/issues/145)) ([51ad966](https://github.com/erode-app/erode/commit/51ad9660192f368483a3704dfde9f01e83cff11b))
+* **deps:** bump @anthropic-ai/sdk from 0.88.0 to 0.89.0 ([#138](https://github.com/erode-app/erode/issues/138)) ([9955217](https://github.com/erode-app/erode/commit/99552176209e7aceb759a0577928046c657a7b0a))
+* **deps:** bump @google/genai from 1.50.0 to 1.50.1 ([#141](https://github.com/erode-app/erode/issues/141)) ([29fad4b](https://github.com/erode-app/erode/commit/29fad4b1beacf46920b4febb28786359c3ce0089))
+* **deps:** bump @rollup/rollup-linux-x64-gnu from 4.60.1 to 4.60.2 ([#146](https://github.com/erode-app/erode/issues/146)) ([57ce1fb](https://github.com/erode-app/erode/commit/57ce1fbf8ce173dc925c2ba83c43f45f009e387f))
+* **deps:** bump dotenv from 17.4.1 to 17.4.2 ([#136](https://github.com/erode-app/erode/issues/136)) ([9ee5f25](https://github.com/erode-app/erode/commit/9ee5f2580b216e5851305f32ef3883098227326c))
+* **deps:** bump fast-xml-parser from 5.5.10 to 5.7.1 ([#148](https://github.com/erode-app/erode/issues/148)) ([f3618be](https://github.com/erode-app/erode/commit/f3618be0ad75d4ea2d5b53f5347ce9238b4aa9a6))
+* **deps:** bump openai from 6.33.0 to 6.34.0 ([#135](https://github.com/erode-app/erode/issues/135)) ([3ced357](https://github.com/erode-app/erode/commit/3ced35794052fe1459698db119a218d00b8ec5a6))
+* **deps:** bump protobufjs from 7.5.4 to 7.5.5 ([#147](https://github.com/erode-app/erode/issues/147)) ([3ee4d48](https://github.com/erode-app/erode/commit/3ee4d484bea03f02a3e46000a846231cb9588c94))
+* **deps:** bump typescript-eslint from 8.58.1 to 8.58.2 ([#137](https://github.com/erode-app/erode/issues/137)) ([b94e389](https://github.com/erode-app/erode/commit/b94e389a80d74dd99bd9f9d3a003fe8af08372f7))
+
 ## [0.9.0](https://github.com/erode-app/erode/compare/0.8.2...0.9.0) (2026-04-14)
 
 
