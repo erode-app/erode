@@ -7,6 +7,9 @@ import type {
   StructurizrRelationship,
 } from '../../schemas/structurizr.schema.js';
 
+/**
+ * @public
+ */
 export type {
   StructurizrWorkspace,
   StructurizrSoftwareSystem,

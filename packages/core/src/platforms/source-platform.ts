@@ -1,11 +1,11 @@
-export interface CommitStats {
+interface CommitStats {
   total: number;
   additions: number;
   deletions: number;
 }
 
 /** Platform-specific identifiers for the repository. */
-export interface PlatformId {
+interface PlatformId {
   owner: string;
   repo: string;
 }
