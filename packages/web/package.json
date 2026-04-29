@@ -15,10 +15,10 @@
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.38.2",
+    "@astrojs/starlight": "^0.38.4",
     "astro": "^6.1.6",
     "starlight-blog": "^0.26.1",
-    "starlight-links-validator": "^0.23.0"
+    "starlight-links-validator": "^0.24.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
