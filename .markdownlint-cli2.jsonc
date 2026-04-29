@@ -3,6 +3,7 @@
     "**/node_modules",
     "**/dist",
     "packages/core/src/**/prompts/",
+    ".agents/",
     ".claude/",
     "CHANGELOG.md",
   ],
