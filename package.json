@@ -35,6 +35,6 @@
     "@commitlint/config-conventional": "^20.5.0",
     "knip": "^6.9.0",
     "markdownlint-cli2": "^0.22.1",
-    "prettier": "^3.7.3"
+    "prettier": "^3.8.3"
   }
 }
