@@ -26,6 +26,6 @@
     "eslint": "^10.2.1",
     "eslint-plugin-astro": "^1.7.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.8.3"
+    "typescript": "^6.0.3"
   }
 }
