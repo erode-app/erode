@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.9.2](https://github.com/erode-app/erode/compare/0.9.1...0.9.2) (2026-04-30)
+
+
+### Build System
+
+* **deps-dev:** bump @astrojs/check from 0.9.8 to 0.9.9 ([#161](https://github.com/erode-app/erode/issues/161)) ([dcbddac](https://github.com/erode-app/erode/commit/dcbddac0399df782111559db580a72701b5f202a))
+* **deps-dev:** bump knip from 6.6.1 to 6.9.0 ([#154](https://github.com/erode-app/erode/issues/154)) ([a595e7f](https://github.com/erode-app/erode/commit/a595e7fbc899cb9f9567a2430f5000ac50523aab))
+* **deps-dev:** bump prettier from 3.8.1 to 3.8.3 ([#159](https://github.com/erode-app/erode/issues/159)) ([e3317ae](https://github.com/erode-app/erode/commit/e3317aefdd310a3282c06cca9436aa6d84602dee))
+* **deps-dev:** bump typescript from 5.9.3 to 6.0.3 ([#143](https://github.com/erode-app/erode/issues/143)) ([096c270](https://github.com/erode-app/erode/commit/096c270cc9c2c31232bf52116879615a1d1a75a3))
+* **deps:** bump @anthropic-ai/sdk from 0.89.0 to 0.91.1 ([#152](https://github.com/erode-app/erode/issues/152)) ([e68c0c6](https://github.com/erode-app/erode/commit/e68c0c601a02662ce6216373248239ea6a101dfb))
+* **deps:** bump @astrojs/starlight from 0.38.2 to 0.38.4 ([#153](https://github.com/erode-app/erode/issues/153)) ([d7e60ac](https://github.com/erode-app/erode/commit/d7e60ac0be17e4533408239e24a181eec5cdd71d))
+* **deps:** bump astro from 6.1.6 to 6.1.10 ([#163](https://github.com/erode-app/erode/issues/163)) ([7fa6d64](https://github.com/erode-app/erode/commit/7fa6d6460a2d9a11ff5fd51fa1df3a0abf613dd5))
+* **deps:** bump openai from 6.34.0 to 6.35.0 ([#162](https://github.com/erode-app/erode/issues/162)) ([64a3fb4](https://github.com/erode-app/erode/commit/64a3fb4a9d956809bf8bda76f081fcb0f15dd493))
+* **deps:** bump postcss from 8.5.6 to 8.5.12 ([#157](https://github.com/erode-app/erode/issues/157)) ([565ee09](https://github.com/erode-app/erode/commit/565ee096662750863d0c2eb54a63dc60f356e95d))
+* **deps:** bump smol-toml and markdownlint-cli2 ([#149](https://github.com/erode-app/erode/issues/149)) ([4ea7584](https://github.com/erode-app/erode/commit/4ea7584969b5eb0fd7d47f7dc51c05f08b14180a))
+* **deps:** bump starlight-links-validator from 0.23.0 to 0.24.0 ([#156](https://github.com/erode-app/erode/issues/156)) ([3b4e043](https://github.com/erode-app/erode/commit/3b4e0439bfde1bec8003785ad7925ae9fd0b299c))
+* **deps:** bump typescript-eslint from 8.58.2 to 8.59.1 ([#155](https://github.com/erode-app/erode/issues/155)) ([31cf028](https://github.com/erode-app/erode/commit/31cf028ca6c9004f72dbbb12d601501433fa03c7))
+* **deps:** bump zod from 4.3.6 to 4.4.1 ([#160](https://github.com/erode-app/erode/issues/160)) ([b2a5ba8](https://github.com/erode-app/erode/commit/b2a5ba8886f7ae37e248df2f34a131f3613b8c26))
+
 ## [0.9.1](https://github.com/erode-app/erode/compare/0.9.0...0.9.1) (2026-04-23)
 
 
