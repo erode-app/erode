@@ -10,9 +10,41 @@ const {
   MockAnthropicProvider,
   mockConfig,
 } = vi.hoisted(() => {
+  type ProviderName = 'gemini' | 'anthropic' | 'openai';
+  interface ProviderConfig {
+    apiKey: string | undefined;
+    fastModel: string;
+    advancedModel: string;
+  }
+  interface MockConfig {
+    ai: { provider: ProviderName };
+    gemini: ProviderConfig;
+    openai: ProviderConfig;
+    anthropic: ProviderConfig;
+  }
+
   const geminiInstance = { type: 'gemini' };
   const openaiInstance = { type: 'openai' };
   const anthropicInstance = { type: 'anthropic' };
+  const mockConfig: MockConfig = {
+    ai: { provider: 'gemini' },
+    gemini: {
+      apiKey: 'test-gemini-key',
+      fastModel: 'gemini-flash',
+      advancedModel: 'gemini-pro',
+    },
+    openai: {
+      apiKey: 'test-openai-key',
+      fastModel: 'gpt-4.1-mini',
+      advancedModel: 'gpt-4.1',
+    },
+    anthropic: {
+      apiKey: 'test-anthropic-key',
+      fastModel: 'claude-haiku',
+      advancedModel: 'claude-sonnet',
+    },
+  };
+
   return {
     mockGeminiInstance: geminiInstance,
     mockOpenAIInstance: openaiInstance,
@@ -26,24 +58,7 @@ const {
     MockAnthropicProvider: vi.fn(function () {
       return anthropicInstance;
     }),
-    mockConfig: {
-      ai: { provider: 'gemini' as 'gemini' | 'openai' | 'anthropic' },
-      gemini: {
-        apiKey: 'test-gemini-key' as string | undefined,
-        fastModel: 'gemini-flash',
-        advancedModel: 'gemini-pro',
-      },
-      openai: {
-        apiKey: 'test-openai-key' as string | undefined,
-        fastModel: 'gpt-4.1-mini',
-        advancedModel: 'gpt-4.1',
-      },
-      anthropic: {
-        apiKey: 'test-anthropic-key' as string | undefined,
-        fastModel: 'claude-haiku',
-        advancedModel: 'claude-sonnet',
-      },
-    },
+    mockConfig,
   };
 });
 

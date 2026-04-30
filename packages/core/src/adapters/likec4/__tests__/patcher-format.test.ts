@@ -45,7 +45,7 @@ function makeProvider(): AIProvider {
   return {
     extractDependencies: vi.fn(),
     analyzeDrift: vi.fn(),
-  } as unknown as AIProvider;
+  };
 }
 
 const SAMPLE_C4 = `specification {
