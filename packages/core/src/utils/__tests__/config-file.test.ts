@@ -80,30 +80,21 @@ describe('config file support', () => {
     it('should override target values with source values', () => {
       const target = { ai: { provider: 'gemini' } };
       const source = { ai: { provider: 'anthropic' } };
-      const result = deepMerge(
-        target as Record<string, unknown>,
-        source as Record<string, unknown>
-      );
+      const result = deepMerge(target, source);
       expect(result).toEqual({ ai: { provider: 'anthropic' } });
     });
 
     it('should preserve target values when source has no matching key', () => {
       const target = { ai: { provider: 'gemini' }, gemini: { apiKey: 'key123' } };
       const source = { ai: {} };
-      const result = deepMerge(
-        target as Record<string, unknown>,
-        source as Record<string, unknown>
-      );
+      const result = deepMerge(target, source);
       expect(result).toEqual({ ai: { provider: 'gemini' }, gemini: { apiKey: 'key123' } });
     });
 
     it('should merge nested objects recursively', () => {
       const target = { adapter: { format: 'likec4', likec4: { excludePaths: [] } } };
       const source = { adapter: { format: 'structurizr' } };
-      const result = deepMerge(
-        target as Record<string, unknown>,
-        source as Record<string, unknown>
-      );
+      const result = deepMerge(target, source);
       expect(result).toEqual({
         adapter: { format: 'structurizr', likec4: { excludePaths: [] } },
       });
@@ -112,10 +103,7 @@ describe('config file support', () => {
     it('should replace arrays instead of merging them', () => {
       const target = { adapter: { likec4: { excludePaths: ['a', 'b'] } } };
       const source = { adapter: { likec4: { excludePaths: ['c'] } } };
-      const result = deepMerge(
-        target as Record<string, unknown>,
-        source as Record<string, unknown>
-      );
+      const result = deepMerge(target, source);
       expect(result).toEqual({ adapter: { likec4: { excludePaths: ['c'] } } });
     });
   });
@@ -153,7 +141,7 @@ describe('config file support', () => {
         app: {},
       };
 
-      const merged = deepMerge(fileConfig, envConfig as Record<string, unknown>);
+      const merged = deepMerge(fileConfig, envConfig);
       // Env var wins for ai.provider
       expect(merged).toMatchObject({ ai: { provider: 'anthropic' } });
       // File value preserved for gemini.apiKey (env skeleton has empty gemini object)

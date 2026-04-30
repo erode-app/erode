@@ -44,7 +44,7 @@ function makeProvider(patchResult?: string): AIProvider {
     extractDependencies: vi.fn(),
     analyzeDrift: vi.fn(),
     patchModel: patchResult !== undefined ? vi.fn().mockResolvedValue(patchResult) : undefined,
-  } as unknown as AIProvider;
+  };
 }
 
 const SAMPLE_DSL = `workspace {

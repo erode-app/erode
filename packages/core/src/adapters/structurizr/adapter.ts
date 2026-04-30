@@ -358,10 +358,12 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
         const resolvedId = this.resolveElementId(element, localId, parentPath);
         callback(element, parentPath);
 
-        const sys = element as StructurizrSoftwareSystem;
-        if (sys.containers) walk(sys.containers, resolvedId);
-        const container = element as StructurizrContainer;
-        if (container.components) walk(container.components, resolvedId);
+        if ('containers' in element && Array.isArray(element.containers)) {
+          walk(element.containers as StructurizrElement[], resolvedId);
+        }
+        if ('components' in element && Array.isArray(element.components)) {
+          walk(element.components as StructurizrElement[], resolvedId);
+        }
       }
     };
 
@@ -411,10 +413,8 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
 
   private getElementType(element: StructurizrElement, parentPath: string): string {
     // Infer from position in hierarchy or explicit type from parser
-    const sys = element as StructurizrSoftwareSystem;
-    if (sys.containers) return 'softwareSystem';
-    const container = element as StructurizrContainer;
-    if (container.components) return 'container';
+    if ('containers' in element && element.containers) return 'softwareSystem';
+    if ('components' in element && element.components) return 'container';
 
     if (
       this.workspace?.model?.people?.some((p) => p.id === element.id && p.name === element.name)

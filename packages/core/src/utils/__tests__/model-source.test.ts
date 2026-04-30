@@ -195,7 +195,7 @@ describe('resolveModelSource', () => {
     vi.mocked(mkdtemp).mockResolvedValue(tmpDir);
     vi.mocked(execFile).mockImplementation((...args: unknown[]) => {
       const cb = args[args.length - 1] as ExecFileCallback | undefined;
-      if (cb) cb(new Error('remote not found') as ExecFileException, '', '');
+      if (cb) cb(new Error('remote not found'), '', '');
       return undefined as never;
     });
 
@@ -311,9 +311,7 @@ describe('resolveModelSource', () => {
       const cb = args[args.length - 1] as ExecFileCallback | undefined;
       if (cb) {
         cb(
-          new Error(
-            'fatal: could not read from https://x-access-token@github.com/bad/repo.git'
-          ) as ExecFileException,
+          new Error('fatal: could not read from https://x-access-token@github.com/bad/repo.git'),
           '',
           ''
         );
