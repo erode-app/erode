@@ -310,7 +310,7 @@ describe('OpenAIProvider', () => {
 
       expect(mockCreate).toHaveBeenCalled();
       const callArg = mockCreate.mock.calls[0]?.[0] as { model?: string } | undefined;
-      expect(callArg?.model).toBe('gpt-5.3-mini');
+      expect(callArg?.model).toBe('gpt-5-mini');
     });
 
     it('should return patched content', async () => {

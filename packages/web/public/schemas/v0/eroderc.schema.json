@@ -210,11 +210,11 @@
           "maximum": 300000
         },
         "fastModel": {
-          "default": "gpt-5.3-mini",
+          "default": "gpt-5-mini",
           "type": "string"
         },
         "advancedModel": {
-          "default": "gpt-5.3",
+          "default": "gpt-5",
           "type": "string"
         }
       },

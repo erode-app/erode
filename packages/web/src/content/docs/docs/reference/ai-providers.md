@@ -33,10 +33,10 @@ Each provider uses two model tiers to balance cost and quality:
 
 ### OpenAI
 
-| Tier     | Default model  |
-| -------- | -------------- |
-| Fast     | `gpt-5.3-mini` |
-| Advanced | `gpt-5.3`      |
+| Tier     | Default model |
+| -------- | ------------- |
+| Fast     | `gpt-5-mini`  |
+| Advanced | `gpt-5`       |
 
 ### Anthropic (experimental)
 

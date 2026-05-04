@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { BaseProvider, type ProviderConfig } from '../base-provider.js';
 import { ErodeError, ErrorCode, ApiError } from '../../errors.js';
 import { ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
-import type { AnalysisPhase } from '../analysis-phase.js';
+import { AnalysisPhase } from '../analysis-phase.js';
 import { OPENAI_MODELS } from './models.js';
 
 export class OpenAIProvider extends BaseProvider {
@@ -30,47 +30,44 @@ export class OpenAIProvider extends BaseProvider {
     maxTokens: number
   ): Promise<string> {
     try {
-      const response = await this.client.chat.completions.create({
+      const response = await this.client.responses.create({
         model,
-        max_tokens: maxTokens,
-        messages: [{ role: 'user', content: prompt }],
+        input: prompt,
+        max_output_tokens: maxTokens,
+
+        reasoning: {
+          effort: getReasoningEffort(phase),
+        },
       });
 
-      const choice = response.choices[0];
-      if (!choice) {
-        throw new ErodeError(
-          'OpenAI returned an empty response',
-          ErrorCode.PROVIDER_INVALID_RESPONSE,
-          'The OpenAI API returned no content',
-          { model, phase }
-        );
-      }
+      if (
+        response.status === 'incomplete' &&
+        response.incomplete_details?.reason === 'max_output_tokens'
+      ) {
+        // Optional: retry once with higher budget
+        if (maxTokens < 1000) {
+          return await this.callModel(model, prompt, phase, maxTokens * 2);
+        }
 
-      if (choice.finish_reason === 'content_filter') {
         throw new ErodeError(
-          'OpenAI safety filters blocked the response',
-          ErrorCode.PROVIDER_SAFETY_BLOCK,
-          'Content was blocked by the AI provider safety filters. Try simplifying the input.',
-          { model, phase }
-        );
-      }
-
-      const text = choice.message.content;
-      if (!text) {
-        throw new ErodeError(
-          'OpenAI returned an empty response',
+          'Model ran out of tokens before producing output',
           ErrorCode.PROVIDER_INVALID_RESPONSE,
-          'The OpenAI API returned no content',
-          { model, phase }
-        );
-      }
-
-      if (choice.finish_reason === 'length') {
-        throw new ErodeError(
-          'OpenAI response was cut short (max_tokens reached)',
-          ErrorCode.PROVIDER_INVALID_RESPONSE,
-          'The AI response was truncated. The output may be partial.',
+          'The AI used all tokens for reasoning. Increase max_output_tokens or reduce reasoning effort.',
           { model, phase, maxTokens }
+        );
+      }
+
+      const text = extractText(response);
+
+      if (!text) {
+        console.error('response');
+        console.error(response);
+
+        throw new ErodeError(
+          'OpenAI returned an empty response',
+          ErrorCode.PROVIDER_INVALID_RESPONSE,
+          'The OpenAI API returned no content',
+          { model, phase }
         );
       }
 
@@ -80,6 +77,41 @@ export class OpenAIProvider extends BaseProvider {
         throw error;
       }
       throw ApiError.fromOpenAIError(error);
+    }
+
+    function extractText(response: OpenAI.Responses.Response): string {
+      if (response.output_text.length > 0) {
+        return response.output_text;
+      }
+
+      let result = '';
+
+      for (const item of response.output) {
+        // ✅ Narrow to message items only
+        if (item.type !== 'message') continue;
+
+        for (const content of item.content) {
+          if (content.type === 'output_text') {
+            result += content.text;
+          }
+        }
+      }
+      return result;
+    }
+
+    function getReasoningEffort(phase: AnalysisPhase) {
+      switch (phase) {
+        case AnalysisPhase.COMPONENT_RESOLUTION:
+          return 'low';
+        case AnalysisPhase.CHANGE_ANALYSIS:
+          return 'low';
+        case AnalysisPhase.DEPENDENCY_SCAN:
+          return 'low';
+        case AnalysisPhase.MODEL_UPDATE:
+          return 'medium';
+        default:
+          return 'low';
+      }
     }
   }
 }
