@@ -164,11 +164,11 @@
           "maximum": 300000
         },
         "fastModel": {
-          "default": "claude-haiku-4-5-20251001",
+          "default": "claude-haiku-4-5",
           "type": "string"
         },
         "advancedModel": {
-          "default": "claude-sonnet-4-5-20250929",
+          "default": "claude-sonnet-4-6",
           "type": "string"
         }
       },
@@ -210,11 +210,11 @@
           "maximum": 300000
         },
         "fastModel": {
-          "default": "gpt-4.1-mini",
+          "default": "gpt-5.3-mini",
           "type": "string"
         },
         "advancedModel": {
-          "default": "gpt-4.1",
+          "default": "gpt-5.3",
           "type": "string"
         }
       },

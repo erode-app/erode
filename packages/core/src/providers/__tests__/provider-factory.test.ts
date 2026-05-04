@@ -35,8 +35,8 @@ const {
     },
     openai: {
       apiKey: 'test-openai-key',
-      fastModel: 'gpt-4.1-mini',
-      advancedModel: 'gpt-4.1',
+      fastModel: 'gpt-5.3-mini',
+      advancedModel: 'gpt-5.3',
     },
     anthropic: {
       apiKey: 'test-anthropic-key',
@@ -94,8 +94,8 @@ describe('createAIProvider', () => {
     mockConfig.gemini.fastModel = 'gemini-flash';
     mockConfig.gemini.advancedModel = 'gemini-pro';
     mockConfig.openai.apiKey = 'test-openai-key';
-    mockConfig.openai.fastModel = 'gpt-4.1-mini';
-    mockConfig.openai.advancedModel = 'gpt-4.1';
+    mockConfig.openai.fastModel = 'gpt-5.3-mini';
+    mockConfig.openai.advancedModel = 'gpt-5.3';
     mockConfig.anthropic.apiKey = 'test-anthropic-key';
     mockConfig.anthropic.fastModel = 'claude-haiku';
     mockConfig.anthropic.advancedModel = 'claude-sonnet';
@@ -122,8 +122,8 @@ describe('createAIProvider', () => {
     expect(result).toBe(mockOpenAIInstance);
     expect(OpenAIProvider).toHaveBeenCalledWith({
       apiKey: 'test-openai-key',
-      fastModel: 'gpt-4.1-mini',
-      advancedModel: 'gpt-4.1',
+      fastModel: 'gpt-5.3-mini',
+      advancedModel: 'gpt-5.3',
     });
   });
 

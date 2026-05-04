@@ -35,15 +35,15 @@ Each provider uses two model tiers to balance cost and quality:
 
 | Tier     | Default model  |
 | -------- | -------------- |
-| Fast     | `gpt-4.1-mini` |
-| Advanced | `gpt-4.1`      |
+| Fast     | `gpt-5.3-mini` |
+| Advanced | `gpt-5.3`      |
 
 ### Anthropic (experimental)
 
-| Tier     | Default model                |
-| -------- | ---------------------------- |
-| Fast     | `claude-haiku-4-5-20251001`  |
-| Advanced | `claude-sonnet-4-5-20250929` |
+| Tier     | Default model       |
+| -------- | ------------------- |
+| Fast     | `claude-haiku-4-5`  |
+| Advanced | `claude-sonnet-4-6` |
 
 :::caution
 Anthropic support is experimental and may not produce consistent results across all codebases. Use Gemini or OpenAI for production workflows.

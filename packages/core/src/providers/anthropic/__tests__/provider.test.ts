@@ -312,7 +312,7 @@ describe('AnthropicProvider', () => {
 
       expect(mockCreate).toHaveBeenCalled();
       const callArg = mockCreate.mock.calls[0]?.[0] as { model?: string } | undefined;
-      expect(callArg?.model).toBe('claude-haiku-4-5-20251001');
+      expect(callArg?.model).toBe('claude-haiku-4-5');
     });
 
     it('should return patched content', async () => {

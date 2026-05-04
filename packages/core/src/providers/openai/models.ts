@@ -1,4 +1,4 @@
 export const OPENAI_MODELS = {
-  FAST: 'gpt-4.1-mini',
-  ADVANCED: 'gpt-4.1',
+  FAST: 'gpt-5.3-mini',
+  ADVANCED: 'gpt-5.3',
 } as const;
