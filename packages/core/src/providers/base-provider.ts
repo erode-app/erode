@@ -15,11 +15,20 @@ import { ErodeError, ErrorCode, ApiError } from '../errors.js';
 import { withRetry } from '../utils/retry.js';
 import { AnalysisPhase } from './analysis-phase.js';
 import { CONFIG } from '../utils/config.js';
+import { getGenerationProfileForPhase, type GenerationProfile } from './generation-profile.js';
 
 function debugLog(msg: string, data?: unknown): void {
   if (CONFIG.debug.verbose) {
     console.error(`[AI] ${msg}`, data !== undefined ? JSON.stringify(data) : '');
   }
+}
+
+function formatDuration(startedAt: bigint): string {
+  const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
+  if (elapsedMs < 1000) {
+    return `${String(Math.round(elapsedMs))}ms`;
+  }
+  return `${(elapsedMs / 1000).toFixed(2)}s`;
 }
 
 export interface ProviderConfig {
@@ -48,26 +57,35 @@ export abstract class BaseProvider implements AIProvider {
    * @param model - The model identifier to use
    * @param prompt - The prompt text to send
    * @param phase - The analysis phase (for error context)
-   * @param maxTokens - Maximum tokens for the response (some providers may ignore this)
+   * @param generationProfile - Provider-agnostic output intent
    * @returns The text content of the model response
    */
   protected abstract callModel(
     model: string,
     prompt: string,
     phase: AnalysisPhase,
-    maxTokens: number
+    generationProfile: GenerationProfile
   ): Promise<string>;
 
   async selectComponent(data: ComponentSelectionPromptData): Promise<string | null> {
     const prompt = PromptBuilder.buildComponentSelectionPrompt(data);
 
+    debugLog('selectComponent using model', this.fastModel);
+    const startedAt = process.hrtime.bigint();
     const responseText = await withRetry(
-      () => this.callModel(this.fastModel, prompt, AnalysisPhase.COMPONENT_RESOLUTION, 256),
+      () =>
+        this.callModel(
+          this.fastModel,
+          prompt,
+          AnalysisPhase.COMPONENT_RESOLUTION,
+          getGenerationProfileForPhase(AnalysisPhase.COMPONENT_RESOLUTION)
+        ),
       {
         retries: 2,
         shouldRetry: (error) => this.isRetryableError(error),
       }
     );
+    debugLog('selectComponent completed in', formatDuration(startedAt));
 
     if (!responseText) {
       return null;
@@ -89,7 +107,6 @@ export abstract class BaseProvider implements AIProvider {
       prompt: PromptBuilder.buildDependencyExtractionPrompt(data),
       schema: DependencyExtractionResultSchema,
       schemaName: 'DependencyExtractionResult',
-      maxTokens: 4096,
     });
   }
 
@@ -100,7 +117,6 @@ export abstract class BaseProvider implements AIProvider {
       prompt: PromptBuilder.buildDriftAnalysisPrompt(data),
       schema: DriftAnalysisResponseSchema,
       schemaName: 'DriftAnalysisResponse',
-      maxTokens: 8192,
     });
 
     return {
@@ -121,17 +137,23 @@ export abstract class BaseProvider implements AIProvider {
       linesToInsert,
       modelFormat,
     });
-    // Estimate tokens: ~4 chars per token, add 20% headroom for inserted lines
-    const estimatedTokens = Math.ceil(fileContent.length / 4) + linesToInsert.length * 50;
-    const maxTokens = Math.max(4096, Math.ceil(estimatedTokens * 1.2));
     debugLog('patchModel using model', this.fastModel);
+    const startedAt = process.hrtime.bigint();
     return withRetry(
-      () => this.callModel(this.fastModel, prompt, AnalysisPhase.MODEL_UPDATE, maxTokens),
+      () =>
+        this.callModel(
+          this.fastModel,
+          prompt,
+          AnalysisPhase.MODEL_UPDATE,
+          getGenerationProfileForPhase(AnalysisPhase.MODEL_UPDATE)
+        ),
       {
         retries: 2,
         shouldRetry: (error) => this.isRetryableError(error),
       }
-    );
+    ).finally(() => {
+      debugLog('patchModel completed in', formatDuration(startedAt));
+    });
   }
 
   private async executeStage<T>(config: {
@@ -140,16 +162,20 @@ export abstract class BaseProvider implements AIProvider {
     prompt: string;
     schema: z.ZodType<T>;
     schemaName: string;
-    maxTokens: number;
+    generationProfile?: GenerationProfile;
   }): Promise<T> {
     debugLog(`executeStage ${config.phase} using model`, config.model);
+    const generationProfile =
+      config.generationProfile ?? getGenerationProfileForPhase(config.phase);
+    const startedAt = process.hrtime.bigint();
     const responseText = await withRetry(
-      () => this.callModel(config.model, config.prompt, config.phase, config.maxTokens),
+      () => this.callModel(config.model, config.prompt, config.phase, generationProfile),
       {
         retries: 2,
         shouldRetry: (error) => this.isRetryableError(error),
       }
     );
+    debugLog(`executeStage ${config.phase} completed in`, formatDuration(startedAt));
 
     const jsonStr = PromptBuilder.extractJson(responseText);
     if (!jsonStr) {

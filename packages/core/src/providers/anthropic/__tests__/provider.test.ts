@@ -117,6 +117,12 @@ describe('AnthropicProvider', () => {
         makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBe('comp.backend');
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'claude-haiku-4-5',
+          max_tokens: 600,
+        })
+      );
     });
 
     it('should return null when no component matches', async () => {
@@ -167,6 +173,12 @@ describe('AnthropicProvider', () => {
       expect(result.dependencies).toHaveLength(1);
       expect(result.dependencies[0]?.dependency).toBe('redis');
       expect(result.summary).toBe('Added Redis dependency');
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'claude-haiku-4-5',
+          max_tokens: 600,
+        })
+      );
     });
 
     it('should throw on non-JSON response', async () => {
@@ -208,6 +220,12 @@ describe('AnthropicProvider', () => {
       expect(result.metadata).toBe(data.changeRequest);
       expect(result.component).toBe(data.component);
       expect(result.dependencyChanges).toBe(data.dependencies);
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1500,
+        })
+      );
     });
   });
 
@@ -311,8 +329,11 @@ describe('AnthropicProvider', () => {
       await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
 
       expect(mockCreate).toHaveBeenCalled();
-      const callArg = mockCreate.mock.calls[0]?.[0] as { model?: string } | undefined;
+      const callArg = mockCreate.mock.calls[0]?.[0] as
+        | { max_tokens?: number; model?: string }
+        | undefined;
       expect(callArg?.model).toBe('claude-haiku-4-5');
+      expect(callArg?.max_tokens).toBe(1500);
     });
 
     it('should return patched content', async () => {

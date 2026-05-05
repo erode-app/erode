@@ -11,7 +11,7 @@
     "build": "npm run prebuild:diagrams && npm run generate:skills && astro check && astro build",
     "preview": "astro preview",
     "typecheck": "npx tsx scripts/generate-agent-skills.ts --check && astro check --minimumFailingSeverity hint",
-    "check:ci": "npm run typecheck && astro build",
+    "check:ci": "npm run lint && npm run typecheck && astro build",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {

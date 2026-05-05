@@ -6,7 +6,7 @@ const mockCreate = vi.fn();
 vi.mock('openai', () => {
   return {
     default: class MockOpenAI {
-      chat = { completions: { create: mockCreate } };
+      responses = { create: mockCreate };
     },
   };
 });
@@ -78,9 +78,39 @@ function makePrAnalysisData(): DriftAnalysisPromptData {
   };
 }
 
-function makeOpenAIResponse(content: string | null, finishReason = 'stop') {
+function makeOpenAIResponse(content: string) {
   return {
-    choices: [{ message: { content }, finish_reason: finishReason }],
+    status: 'completed',
+    incomplete_details: null,
+    output_text: content,
+    output: [],
+  };
+}
+
+function makeOpenAIMessageResponse(content: string) {
+  return {
+    status: 'completed',
+    incomplete_details: null,
+    output_text: '',
+    output: [
+      {
+        type: 'reasoning',
+        content: [{ type: 'output_text', text: 'ignore me' }],
+      },
+      {
+        type: 'message',
+        content: [{ type: 'output_text', text: content }],
+      },
+    ],
+  };
+}
+
+function makeIncompleteOpenAIResponse(reason: 'max_output_tokens' | 'content_filter') {
+  return {
+    status: 'incomplete',
+    incomplete_details: { reason },
+    output_text: '',
+    output: [],
   };
 }
 
@@ -110,6 +140,13 @@ describe('OpenAIProvider', () => {
         makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBe('comp.backend');
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gpt-5-mini',
+          max_output_tokens: 1500,
+          reasoning: { effort: 'minimal' },
+        })
+      );
     });
 
     it('should return null when no component matches', async () => {
@@ -123,7 +160,7 @@ describe('OpenAIProvider', () => {
     });
 
     it('should throw on empty response', async () => {
-      mockCreate.mockResolvedValueOnce(makeOpenAIResponse(null));
+      mockCreate.mockResolvedValueOnce(makeOpenAIResponse(''));
 
       const provider = createProvider();
       await expect(provider.selectComponent(makeStage1Data(['comp.frontend']))).rejects.toThrow(
@@ -156,6 +193,13 @@ describe('OpenAIProvider', () => {
       expect(result.dependencies).toHaveLength(1);
       expect(result.dependencies[0]?.dependency).toBe('redis');
       expect(result.summary).toBe('Added Redis dependency');
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gpt-5-mini',
+          max_output_tokens: 1500,
+          reasoning: { effort: 'minimal' },
+        })
+      );
     });
 
     it('should throw on non-JSON response', async () => {
@@ -195,12 +239,19 @@ describe('OpenAIProvider', () => {
       expect(result.metadata).toBe(data.changeRequest);
       expect(result.component).toBe(data.component);
       expect(result.dependencyChanges).toBe(data.dependencies);
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gpt-5',
+          max_output_tokens: 6000,
+          reasoning: { effort: 'minimal' },
+        })
+      );
     });
   });
 
   describe('safety filter handling', () => {
     it('should throw PROVIDER_SAFETY_BLOCK on content_filter', async () => {
-      mockCreate.mockResolvedValueOnce(makeOpenAIResponse('blocked', 'content_filter'));
+      mockCreate.mockResolvedValueOnce(makeIncompleteOpenAIResponse('content_filter'));
 
       const provider = createProvider();
       try {
@@ -214,8 +265,8 @@ describe('OpenAIProvider', () => {
   });
 
   describe('truncation handling', () => {
-    it('should throw PROVIDER_INVALID_RESPONSE on length', async () => {
-      mockCreate.mockResolvedValueOnce(makeOpenAIResponse('partial...', 'length'));
+    it('should throw PROVIDER_INVALID_RESPONSE on max_output_tokens', async () => {
+      mockCreate.mockResolvedValueOnce(makeIncompleteOpenAIResponse('max_output_tokens'));
 
       const provider = createProvider();
       try {
@@ -223,8 +274,30 @@ describe('OpenAIProvider', () => {
         expect.fail('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ErodeError);
-        expect((error as ErodeError).code).toBe(ErrorCode.PROVIDER_INVALID_RESPONSE);
+        const erodeError = error as ErodeError;
+        expect(erodeError.code).toBe(ErrorCode.PROVIDER_INVALID_RESPONSE);
+        expect(erodeError.userMessage).toContain('output budget');
       }
+    });
+  });
+
+  describe('response text extraction', () => {
+    it('should read fallback output text from message items only', async () => {
+      mockCreate.mockResolvedValueOnce(makeOpenAIMessageResponse('comp.api'));
+
+      const provider = createProvider();
+      const result = await provider.selectComponent(makeStage1Data(['comp.api']));
+
+      expect(result).toBe('comp.api');
+    });
+
+    it('should throw on empty output after fallback', async () => {
+      mockCreate.mockResolvedValueOnce(makeOpenAIMessageResponse(''));
+
+      const provider = createProvider();
+      await expect(provider.selectComponent(makeStage1Data(['comp.api']))).rejects.toThrow(
+        ErodeError
+      );
     });
   });
 
@@ -309,8 +382,12 @@ describe('OpenAIProvider', () => {
       await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
 
       expect(mockCreate).toHaveBeenCalled();
-      const callArg = mockCreate.mock.calls[0]?.[0] as { model?: string } | undefined;
+      const callArg = mockCreate.mock.calls[0]?.[0] as
+        | { max_output_tokens?: number; model?: string; reasoning?: { effort?: string } }
+        | undefined;
       expect(callArg?.model).toBe('gpt-5-mini');
+      expect(callArg?.max_output_tokens).toBe(6000);
+      expect(callArg?.reasoning?.effort).toBe('medium');
     });
 
     it('should return patched content', async () => {

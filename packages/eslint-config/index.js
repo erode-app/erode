@@ -1,1 +1,1 @@
-export { createBaseConfig, ignores } from './base.js';
+export { createBaseConfig, disableTypeChecked, ignores } from './base.js';

@@ -121,6 +121,12 @@ describe('GeminiProvider', () => {
         makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBe('comp.backend');
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-2.5-flash',
+          config: { maxOutputTokens: 600 },
+        })
+      );
     });
 
     it('should return null when no component matches', async () => {
@@ -177,6 +183,12 @@ describe('GeminiProvider', () => {
       expect(result.dependencies).toHaveLength(1);
       expect(result.dependencies[0]?.dependency).toBe('redis');
       expect(result.summary).toBe('Added Redis dependency');
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-2.5-flash',
+          config: { maxOutputTokens: 600 },
+        })
+      );
     });
 
     it('should throw on non-JSON response', async () => {
@@ -224,6 +236,12 @@ describe('GeminiProvider', () => {
       expect(result.metadata).toBe(data.changeRequest);
       expect(result.component).toBe(data.component);
       expect(result.dependencyChanges).toBe(data.dependencies);
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-2.5-pro',
+          config: { maxOutputTokens: 1500 },
+        })
+      );
     });
   });
 

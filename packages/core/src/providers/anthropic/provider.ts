@@ -3,7 +3,14 @@ import { BaseProvider, type ProviderConfig } from '../base-provider.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
 import { ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import type { AnalysisPhase } from '../analysis-phase.js';
+import type { GenerationProfile, OutputSize } from '../generation-profile.js';
 import { ANTHROPIC_MODELS } from './models.js';
+
+const MAX_TOKENS_BY_OUTPUT_SIZE = {
+  small: 600,
+  medium: 1500,
+  large: 3000,
+} satisfies Record<OutputSize, number>;
 
 export class AnthropicProvider extends BaseProvider {
   private readonly client: Anthropic;
@@ -27,12 +34,14 @@ export class AnthropicProvider extends BaseProvider {
     model: string,
     prompt: string,
     phase: AnalysisPhase,
-    maxTokens: number
+    generationProfile: GenerationProfile
   ): Promise<string> {
+    const outputTokenLimit = MAX_TOKENS_BY_OUTPUT_SIZE[generationProfile.outputSize];
+
     try {
       const response = await this.client.messages.create({
         model,
-        max_tokens: maxTokens,
+        max_tokens: outputTokenLimit,
         messages: [{ role: 'user', content: prompt }],
       });
 
@@ -62,7 +71,7 @@ export class AnthropicProvider extends BaseProvider {
           'Anthropic response was cut short (max_tokens reached)',
           ErrorCode.PROVIDER_INVALID_RESPONSE,
           'The AI response was truncated. The output may be partial.',
-          { model, phase, maxTokens }
+          { model, phase, outputTokenLimit }
         );
       }
 

@@ -3,7 +3,14 @@ import { BaseProvider, type ProviderConfig } from '../base-provider.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
 import { ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import type { AnalysisPhase } from '../analysis-phase.js';
+import type { GenerationProfile, OutputSize } from '../generation-profile.js';
 import { GEMINI_MODELS } from './models.js';
+
+const MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE = {
+  small: 600,
+  medium: 1500,
+  large: 3000,
+} satisfies Record<OutputSize, number>;
 
 export class GeminiProvider extends BaseProvider {
   private readonly client: GoogleGenAI;
@@ -27,12 +34,15 @@ export class GeminiProvider extends BaseProvider {
     model: string,
     prompt: string,
     phase: AnalysisPhase,
-    _maxTokens: number
+    generationProfile: GenerationProfile
   ): Promise<string> {
+    const maxOutputTokens = MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE[generationProfile.outputSize];
+
     try {
       const response = await this.client.models.generateContent({
         model,
         contents: prompt,
+        config: { maxOutputTokens },
       });
 
       const candidate = response.candidates?.[0];
