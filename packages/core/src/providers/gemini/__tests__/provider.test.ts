@@ -23,6 +23,11 @@ vi.mock('@google/genai', () => {
       SPII: 'SPII',
       MALFORMED_FUNCTION_CALL: 'MALFORMED_FUNCTION_CALL',
     },
+    ThinkingLevel: {
+      LOW: 'LOW',
+      MEDIUM: 'MEDIUM',
+      HIGH: 'HIGH',
+    },
   };
 });
 
@@ -239,7 +244,68 @@ describe('GeminiProvider', () => {
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gemini-2.5-pro',
-          config: { maxOutputTokens: 3000, thinkingConfig: { thinkingBudget: 0 } },
+          config: { maxOutputTokens: 3000, thinkingConfig: { thinkingBudget: -1 } },
+        })
+      );
+    });
+  });
+
+  describe('patchModel', () => {
+    it('should use 2.5 Flash thinking budgets and dynamic output headroom for patching', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockGenerateContent.mockResolvedValueOnce({
+        text: patchedContent,
+        candidates: [{ finishReason: 'STOP' }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
+      });
+
+      const provider = createProvider();
+      await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-2.5-flash',
+          config: { maxOutputTokens: 4096, thinkingConfig: { thinkingBudget: -1 } },
+        })
+      );
+    });
+
+    it('should increase the output budget for large model files', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockGenerateContent.mockResolvedValueOnce({
+        text: patchedContent,
+        candidates: [{ finishReason: 'STOP' }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
+      });
+
+      const provider = createProvider();
+      await provider.patchModel('x'.repeat(40_000), ['  comp.a -> comp.b'], 'likec4');
+
+      const callArg = mockGenerateContent.mock.calls[0]?.[0] as
+        | { config?: { maxOutputTokens?: number } }
+        | undefined;
+      expect(callArg?.config?.maxOutputTokens).toBeGreaterThan(4096);
+    });
+
+    it('should use thinkingLevel for Gemini 3 style models', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockGenerateContent.mockResolvedValueOnce({
+        text: patchedContent,
+        candidates: [{ finishReason: 'STOP' }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
+      });
+
+      const provider = new GeminiProvider({
+        apiKey: 'test-api-key',
+        fastModel: 'gemini-3-flash-preview',
+        advancedModel: 'gemini-3-pro-preview',
+      });
+      await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-3-flash-preview',
+          config: { maxOutputTokens: 4096, thinkingConfig: { thinkingLevel: 'MEDIUM' } },
         })
       );
     });

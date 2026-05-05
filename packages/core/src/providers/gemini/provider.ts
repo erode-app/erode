@@ -36,8 +36,8 @@ export class GeminiProvider extends BaseProvider {
     phase: AnalysisPhase,
     generationProfile: GenerationProfile
   ): Promise<string> {
-    const maxOutputTokens = MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE[generationProfile.outputSize];
-    const thinkingConfig = getThinkingConfig(generationProfile.reasoningEffort);
+    const maxOutputTokens = getMaxOutputTokens(generationProfile);
+    const thinkingConfig = getThinkingConfig(model, generationProfile.reasoningEffort);
 
     try {
       const response = await this.client.models.generateContent({
@@ -83,18 +83,84 @@ export class GeminiProvider extends BaseProvider {
       throw ApiError.fromGeminiError(error);
     }
 
-    function getThinkingConfig(reasoningIntent: ReasoningEffort | undefined): ThinkingConfig {
+    function getMaxOutputTokens(profile: GenerationProfile): number {
+      const profileLimit = MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE[profile.outputSize];
+      const hintedLimit = profile.outputContentHint
+        ? Math.ceil(profile.outputContentHint.characters / 4)
+        : 0;
+
+      return Math.max(profileLimit, hintedLimit);
+    }
+
+    function getThinkingConfig(
+      thinkingModel: string,
+      reasoningIntent: ReasoningEffort | undefined
+    ): ThinkingConfig {
+      if (isGemini25Model(thinkingModel)) {
+        return getGemini25ThinkingConfig(thinkingModel, reasoningIntent);
+      }
+
+      if (isGemini3Model(thinkingModel)) {
+        return getGemini3ThinkingConfig(thinkingModel, reasoningIntent);
+      }
+
+      return {};
+    }
+
+    function getGemini25ThinkingConfig(
+      thinkingModel: string,
+      reasoningIntent: ReasoningEffort | undefined
+    ): ThinkingConfig {
+      if (isGemini25ProModel(thinkingModel)) {
+        return { thinkingBudget: -1 };
+      }
+
       switch (reasoningIntent) {
         case 'high':
-          return { thinkingLevel: ThinkingLevel.HIGH };
         case 'medium':
-          return { thinkingLevel: ThinkingLevel.MEDIUM };
+          return { thinkingBudget: -1 };
         case 'low':
         case undefined:
           return { thinkingBudget: 0 };
         default:
           return { thinkingBudget: 0 };
       }
+    }
+
+    function getGemini3ThinkingConfig(
+      thinkingModel: string,
+      reasoningIntent: ReasoningEffort | undefined
+    ): ThinkingConfig {
+      switch (reasoningIntent) {
+        case 'high':
+          return { thinkingLevel: ThinkingLevel.HIGH };
+        case 'medium':
+          if (isGemini3ProModel(thinkingModel)) {
+            return { thinkingLevel: ThinkingLevel.HIGH };
+          }
+          return { thinkingLevel: ThinkingLevel.MEDIUM };
+        case 'low':
+        case undefined:
+          return { thinkingLevel: ThinkingLevel.LOW };
+        default:
+          return { thinkingLevel: ThinkingLevel.LOW };
+      }
+    }
+
+    function isGemini25Model(thinkingModel: string): boolean {
+      return thinkingModel.startsWith('gemini-2.5-');
+    }
+
+    function isGemini25ProModel(thinkingModel: string): boolean {
+      return thinkingModel.startsWith('gemini-2.5-pro');
+    }
+
+    function isGemini3Model(thinkingModel: string): boolean {
+      return thinkingModel.startsWith('gemini-3-');
+    }
+
+    function isGemini3ProModel(thinkingModel: string): boolean {
+      return thinkingModel.startsWith('gemini-3-pro');
     }
   }
 }

@@ -390,6 +390,17 @@ describe('OpenAIProvider', () => {
       expect(callArg?.reasoning?.effort).toBe('medium');
     });
 
+    it('should increase the output budget for large model files', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockCreate.mockResolvedValueOnce(makeOpenAIResponse(patchedContent));
+
+      const provider = createProvider();
+      await provider.patchModel('x'.repeat(40_000), ['  comp.a -> comp.b'], 'likec4');
+
+      const callArg = mockCreate.mock.calls[0]?.[0] as { max_output_tokens?: number } | undefined;
+      expect(callArg?.max_output_tokens).toBeGreaterThan(6000);
+    });
+
     it('should return patched content', async () => {
       const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
       mockCreate.mockResolvedValueOnce(makeOpenAIResponse(patchedContent));

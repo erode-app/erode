@@ -36,7 +36,7 @@ export class AnthropicProvider extends BaseProvider {
     phase: AnalysisPhase,
     generationProfile: GenerationProfile
   ): Promise<string> {
-    const outputTokenLimit = MAX_TOKENS_BY_OUTPUT_SIZE[generationProfile.outputSize];
+    const outputTokenLimit = getOutputTokenLimit(generationProfile);
 
     try {
       const response = await this.client.messages.create({
@@ -81,6 +81,15 @@ export class AnthropicProvider extends BaseProvider {
         throw error;
       }
       throw ApiError.fromAnthropicError(error);
+    }
+
+    function getOutputTokenLimit(profile: GenerationProfile): number {
+      const profileLimit = MAX_TOKENS_BY_OUTPUT_SIZE[profile.outputSize];
+      const hintedLimit = profile.outputContentHint
+        ? Math.ceil(profile.outputContentHint.characters / 4)
+        : 0;
+
+      return Math.max(profileLimit, hintedLimit);
     }
   }
 }

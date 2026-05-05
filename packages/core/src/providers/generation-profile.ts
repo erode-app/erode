@@ -6,6 +6,9 @@ export type ReasoningEffort = 'low' | 'medium' | 'high';
 export interface GenerationProfile {
   outputSize: OutputSize;
   reasoningEffort?: ReasoningEffort;
+  outputContentHint?: {
+    characters: number;
+  };
 }
 
 export function getGenerationProfileForPhase(phase: AnalysisPhase): GenerationProfile {
@@ -20,4 +23,21 @@ export function getGenerationProfileForPhase(phase: AnalysisPhase): GenerationPr
     default:
       return { outputSize: 'small', reasoningEffort: 'low' };
   }
+}
+
+export function getGenerationProfileForModelPatch(
+  fileContent: string,
+  linesToInsert: string[]
+): GenerationProfile {
+  const insertedLineCharacters = linesToInsert.length * 200;
+  const estimatedCharacters = Math.ceil((fileContent.length + insertedLineCharacters) * 1.2);
+  const minimumCharacters = 4096 * 4;
+
+  return {
+    outputSize: 'medium',
+    reasoningEffort: 'medium',
+    outputContentHint: {
+      characters: Math.max(minimumCharacters, estimatedCharacters),
+    },
+  };
 }

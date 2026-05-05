@@ -333,7 +333,18 @@ describe('AnthropicProvider', () => {
         | { max_tokens?: number; model?: string }
         | undefined;
       expect(callArg?.model).toBe('claude-haiku-4-5');
-      expect(callArg?.max_tokens).toBe(1500);
+      expect(callArg?.max_tokens).toBe(4096);
+    });
+
+    it('should increase the output budget for large model files', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockCreate.mockResolvedValueOnce(makeAnthropicResponse(patchedContent));
+
+      const provider = createProvider();
+      await provider.patchModel('x'.repeat(40_000), ['  comp.a -> comp.b'], 'likec4');
+
+      const callArg = mockCreate.mock.calls[0]?.[0] as { max_tokens?: number } | undefined;
+      expect(callArg?.max_tokens).toBeGreaterThan(4096);
     });
 
     it('should return patched content', async () => {

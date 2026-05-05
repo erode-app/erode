@@ -15,7 +15,11 @@ import { ErodeError, ErrorCode, ApiError } from '../errors.js';
 import { withRetry } from '../utils/retry.js';
 import { AnalysisPhase } from './analysis-phase.js';
 import { CONFIG } from '../utils/config.js';
-import { getGenerationProfileForPhase, type GenerationProfile } from './generation-profile.js';
+import {
+  getGenerationProfileForModelPatch,
+  getGenerationProfileForPhase,
+  type GenerationProfile,
+} from './generation-profile.js';
 
 function debugLog(msg: string, data?: unknown): void {
   if (CONFIG.debug.verbose) {
@@ -145,7 +149,7 @@ export abstract class BaseProvider implements AIProvider {
           this.fastModel,
           prompt,
           AnalysisPhase.MODEL_UPDATE,
-          getGenerationProfileForPhase(AnalysisPhase.MODEL_UPDATE)
+          getGenerationProfileForModelPatch(fileContent, linesToInsert)
         ),
       {
         retries: 2,

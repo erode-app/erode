@@ -38,7 +38,7 @@ export class OpenAIProvider extends BaseProvider {
     phase: AnalysisPhase,
     generationProfile: GenerationProfile
   ): Promise<string> {
-    const maxOutputTokens = MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE[generationProfile.outputSize];
+    const maxOutputTokens = getMaxOutputTokens(generationProfile);
     const reasoningEffort = getOpenAIReasoningEffort(generationProfile.reasoningEffort);
 
     try {
@@ -146,6 +146,15 @@ export class OpenAIProvider extends BaseProvider {
         default:
           return 'minimal';
       }
+    }
+
+    function getMaxOutputTokens(profile: GenerationProfile): number {
+      const profileLimit = MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE[profile.outputSize];
+      const hintedLimit = profile.outputContentHint
+        ? Math.ceil(profile.outputContentHint.characters / 4)
+        : 0;
+
+      return Math.max(profileLimit, hintedLimit);
     }
   }
 }
