@@ -93,6 +93,24 @@ describe('section-formatters', () => {
       expect(result).toContain('Added Redis');
     });
 
+    it('should include code evidence when present', () => {
+      const result = formatDependencyChanges({
+        dependencies: [
+          {
+            type: 'added',
+            file: 'src/gateway.ts',
+            dependency: 'Order Service',
+            description: 'External order service via HTTP',
+            code: 'const ORDER_SERVICE = "http://order-service:3005";',
+          },
+        ],
+        summary: '',
+      });
+
+      expect(result).toContain('Evidence: const ORDER_SERVICE');
+      expect(result).toContain('http://order-service:3005');
+    });
+
     it('should format modified dependencies', () => {
       const result = formatDependencyChanges({
         dependencies: [

@@ -301,6 +301,65 @@ describe('PromptBuilder', () => {
       expect(result).toContain('REMOVED');
       expect(result).toContain('memcached');
     });
+
+    it('should preserve dependency evidence for drift analysis', () => {
+      const result = PromptBuilder.buildDriftAnalysisPrompt({
+        changeRequest: {
+          number: 1,
+          title: 'Add service dependency',
+          description: null,
+          repository: 'org/repo',
+          author: { login: 'dev' },
+          base: { ref: 'main', sha: 'base' },
+          head: { ref: 'feature', sha: 'head' },
+          stats: { commits: 1, additions: 10, deletions: 0, files_changed: 2 },
+          commits: [{ sha: 'head', message: 'Test', author: 'dev' }],
+        },
+        component: { id: 'api_gateway', name: 'API Gateway', type: 'service', tags: [] },
+        dependencies: {
+          dependencies: [
+            {
+              type: 'added',
+              file: 'packages/api-gateway/src/index.ts',
+              dependency: 'Order Service',
+              description: 'Existing component calls newly introduced service',
+              code: 'const ORDER_SERVICE = "http://order-service:3005";',
+            },
+            {
+              type: 'added',
+              file: 'packages/order-service/src/index.ts',
+              dependency: 'Product Service',
+              description: 'Newly introduced service calls existing component',
+              code: 'const PRODUCT_SERVICE = "http://product-service:3002";',
+            },
+            {
+              type: 'added',
+              file: 'packages/product-service/src/index.ts',
+              dependency: 'User Service',
+              description: 'Existing component calls existing component',
+              code: 'const USER_SERVICE = "http://user-service:3001";',
+            },
+          ],
+          summary: 'Added service relationships',
+        },
+        architectural: { dependencies: [], dependents: [], relationships: [] },
+        allRelationships: [],
+      });
+
+      expect(result).toContain('Evidence: const ORDER_SERVICE');
+      expect(result).toContain('Evidence: const PRODUCT_SERVICE');
+      expect(result).toContain('Evidence: const USER_SERVICE');
+    });
+
+    it('should instruct drift analysis to account for every added dependency', () => {
+      const templateDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'prompts');
+      const template = readFileSync(join(templateDir, 'drift-analysis.md'), 'utf-8');
+
+      expect(template).toContain('For every ADDED dependency');
+      expect(template).toContain('Classify each dependency');
+      expect(template).toContain('New component plus relationship to add');
+      expect(template).toContain('Do not let one dependency that created a new component');
+    });
   });
 
   describe('buildModelPatchPrompt', () => {

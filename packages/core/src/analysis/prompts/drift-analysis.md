@@ -64,6 +64,23 @@ These are ALL relationships currently declared in the architecture model:
 
 Cross-reference the dependency changes above against the architecture model and assess:
 
+### Dependency Coverage
+
+For every ADDED dependency in the DEPENDENCY CHANGES DETECTED section, account for it
+explicitly. Classify each dependency as one of:
+
+- Already declared in the model
+- New relationship to add
+- New component plus relationship to add
+- External package or third-party dependency that should not be modeled
+- Ignored with a brief reason
+
+If an existing modeled component gains a dependency on a newly introduced component,
+include both the new component and that relationship. If a newly introduced component
+depends on an existing modeled component, include both the new component and that
+relationship. Do not let one dependency that created a new component hide other
+relationships to or from that component.
+
 ### 1. New Dependencies NOT in Model (Potential Drift)
 
 - Are there new dependencies that aren't in the allowed dependencies list?

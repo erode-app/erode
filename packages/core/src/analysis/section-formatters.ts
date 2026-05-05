@@ -57,7 +57,10 @@ export function formatDependencyChanges(dependencies: DependencyExtractionResult
     if (items && items.length > 0) {
       section += `**${label} Dependencies:**\n`;
       section += items
-        .map((dep) => `- ${dep.dependency} (${dep.file})\n  ${dep.description}`)
+        .map((dep) => {
+          const evidence = dep.code.trim() ? `\n  Evidence: ${dep.code.trim()}` : '';
+          return `- ${dep.dependency} (${dep.file})\n  ${dep.description}${evidence}`;
+        })
         .join('\n');
       section += '\n\n';
     }
