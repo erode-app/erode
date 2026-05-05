@@ -124,7 +124,7 @@ describe('GeminiProvider', () => {
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gemini-2.5-flash',
-          config: { maxOutputTokens: 600 },
+          config: { maxOutputTokens: 1500, thinkingConfig: { thinkingBudget: 0 } },
         })
       );
     });
@@ -186,7 +186,7 @@ describe('GeminiProvider', () => {
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gemini-2.5-flash',
-          config: { maxOutputTokens: 600 },
+          config: { maxOutputTokens: 1500, thinkingConfig: { thinkingBudget: 0 } },
         })
       );
     });
@@ -239,7 +239,7 @@ describe('GeminiProvider', () => {
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gemini-2.5-pro',
-          config: { maxOutputTokens: 1500 },
+          config: { maxOutputTokens: 3000, thinkingConfig: { thinkingBudget: 0 } },
         })
       );
     });
@@ -260,6 +260,27 @@ describe('GeminiProvider', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ErodeError);
         expect((error as ErodeError).code).toBe(ErrorCode.PROVIDER_SAFETY_BLOCK);
+      }
+    });
+  });
+
+  describe('truncation handling', () => {
+    it('should throw PROVIDER_INVALID_RESPONSE on max tokens', async () => {
+      mockGenerateContent.mockResolvedValueOnce({
+        text: '```json\n{"dependencies": [',
+        candidates: [{ finishReason: 'MAX_TOKENS' }],
+        usageMetadata: { promptTokenCount: 500, candidatesTokenCount: 1500 },
+      });
+
+      const provider = createProvider();
+      try {
+        await provider.extractDependencies(makePreprocessingData());
+        expect.fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ErodeError);
+        const erodeError = error as ErodeError;
+        expect(erodeError.code).toBe(ErrorCode.PROVIDER_INVALID_RESPONSE);
+        expect(erodeError.userMessage).toContain('output budget');
       }
     });
   });
