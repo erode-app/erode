@@ -51,8 +51,8 @@ use medium reasoning because they generate a concrete patch.
 ### Negative
 
 - Output profile names become a shared contract that providers must translate.
-- Large model patch outputs may need provider-local tuning if medium output is too
-  small for some repositories.
+- Dynamic output hints can still affect provider cost, latency, quota usage, or model
+  output caps.
 
 ## Related commits
 
