@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.9.3](https://github.com/erode-app/erode/compare/0.9.2...0.9.3) (2026-05-06)
+
+
+### Bug Fixes
+
+* **core:** tune provider generation and drift coverage ([#170](https://github.com/erode-app/erode/issues/170)) ([6d37ad3](https://github.com/erode-app/erode/commit/6d37ad38d9df001509f1f626b0a6f34e1ff9c01a))
+
+
+### Build System
+
+* **deps-dev:** bump @commitlint/config-conventional from 20.5.0 to 20.5.3 ([#165](https://github.com/erode-app/erode/issues/165)) ([0857f24](https://github.com/erode-app/erode/commit/0857f2423c6a7c405d14447281303cf0ec339de7))
+* **deps-dev:** bump eslint from 10.2.1 to 10.3.0 ([#167](https://github.com/erode-app/erode/issues/167)) ([8175c0f](https://github.com/erode-app/erode/commit/8175c0f8d2169167e6945d4ef86a9dbc8fc6cc8c))
+* **deps:** bump @anthropic-ai/sdk from 0.91.1 to 0.92.0 ([#164](https://github.com/erode-app/erode/issues/164)) ([b903b1e](https://github.com/erode-app/erode/commit/b903b1ece5f633d492ad87d2a533110ab459bb41))
+* **deps:** bump @google/genai from 1.50.1 to 1.51.0 ([#168](https://github.com/erode-app/erode/issues/168)) ([18d8a4e](https://github.com/erode-app/erode/commit/18d8a4eff7f7be2762f291cc5874058a58770159))
+* **deps:** bump likec4 from 1.54.0 to 1.56.0 ([#166](https://github.com/erode-app/erode/issues/166)) ([33e5433](https://github.com/erode-app/erode/commit/33e5433d935d1dfc69e280ae9444612b01794c28))
+
 ## [0.9.2](https://github.com/erode-app/erode/compare/0.9.1...0.9.2) (2026-04-30)
 
 
