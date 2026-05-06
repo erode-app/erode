@@ -155,9 +155,11 @@ export abstract class BaseProvider implements AIProvider {
         retries: 2,
         shouldRetry: (error) => this.isRetryableError(error),
       }
-    ).finally(() => {
-      debugLog('patchModel completed in', formatDuration(startedAt));
-    });
+    )
+      .then((response) => unwrapModelPatchResponse(response))
+      .finally(() => {
+        debugLog('patchModel completed in', formatDuration(startedAt));
+      });
   }
 
   private async executeStage<T>(config: {
@@ -202,4 +204,17 @@ export abstract class BaseProvider implements AIProvider {
   private isRetryableError(error: unknown): boolean {
     return error instanceof ApiError && (error.isRateLimited || error.isTimeout);
   }
+}
+
+function unwrapModelPatchResponse(response: string): string {
+  const trimmed = response.trim();
+  const lines = trimmed.split(/\r?\n/);
+  const firstLine = lines[0];
+  const lastLine = lines.at(-1);
+
+  if (firstLine?.startsWith('```') && lastLine === '```') {
+    return lines.slice(1, -1).join('\n');
+  }
+
+  return response;
 }

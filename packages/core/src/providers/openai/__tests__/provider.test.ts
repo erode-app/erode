@@ -457,6 +457,18 @@ describe('OpenAIProvider', () => {
       expect(result).toBe(patchedContent);
     });
 
+    it('should unwrap markdown fences from patched content', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}';
+      mockCreate.mockResolvedValueOnce(
+        makeOpenAIResponse(`\`\`\`likec4\n${patchedContent}\n\`\`\``)
+      );
+
+      const provider = createProvider();
+      const result = await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(result).toBe(patchedContent);
+    });
+
     it('should retry on rate limit', async () => {
       const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
       const rateLimitError = new ApiError('Rate limited', 429);
