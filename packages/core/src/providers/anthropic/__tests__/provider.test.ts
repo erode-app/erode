@@ -117,6 +117,12 @@ describe('AnthropicProvider', () => {
         makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBe('comp.backend');
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'claude-haiku-4-5',
+          max_tokens: 600,
+        })
+      );
     });
 
     it('should return null when no component matches', async () => {
@@ -167,6 +173,12 @@ describe('AnthropicProvider', () => {
       expect(result.dependencies).toHaveLength(1);
       expect(result.dependencies[0]?.dependency).toBe('redis');
       expect(result.summary).toBe('Added Redis dependency');
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'claude-haiku-4-5',
+          max_tokens: 600,
+        })
+      );
     });
 
     it('should throw on non-JSON response', async () => {
@@ -208,6 +220,12 @@ describe('AnthropicProvider', () => {
       expect(result.metadata).toBe(data.changeRequest);
       expect(result.component).toBe(data.component);
       expect(result.dependencyChanges).toBe(data.dependencies);
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 8192,
+        })
+      );
     });
   });
 
@@ -226,6 +244,23 @@ describe('AnthropicProvider', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ErodeError);
         expect((error as ErodeError).code).toBe(ErrorCode.PROVIDER_SAFETY_BLOCK);
+      }
+    });
+  });
+
+  describe('truncation handling', () => {
+    it('should explain output budget exhaustion on max_tokens', async () => {
+      mockCreate.mockResolvedValueOnce(makeAnthropicResponse('partial response', 'max_tokens'));
+
+      const provider = createProvider();
+      try {
+        await provider.selectComponent(makeStage1Data(['comp.api']));
+        expect.fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ErodeError);
+        const erodeError = error as ErodeError;
+        expect(erodeError.code).toBe(ErrorCode.PROVIDER_INVALID_RESPONSE);
+        expect(erodeError.userMessage).toContain('output budget');
       }
     });
   });
@@ -311,8 +346,22 @@ describe('AnthropicProvider', () => {
       await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
 
       expect(mockCreate).toHaveBeenCalled();
-      const callArg = mockCreate.mock.calls[0]?.[0] as { model?: string } | undefined;
-      expect(callArg?.model).toBe('claude-haiku-4-5-20251001');
+      const callArg = mockCreate.mock.calls[0]?.[0] as
+        | { max_tokens?: number; model?: string }
+        | undefined;
+      expect(callArg?.model).toBe('claude-haiku-4-5');
+      expect(callArg?.max_tokens).toBe(4096);
+    });
+
+    it('should increase the output budget for large model files', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockCreate.mockResolvedValueOnce(makeAnthropicResponse(patchedContent));
+
+      const provider = createProvider();
+      await provider.patchModel('x'.repeat(40_000), ['  comp.a -> comp.b'], 'likec4');
+
+      const callArg = mockCreate.mock.calls[0]?.[0] as { max_tokens?: number } | undefined;
+      expect(callArg?.max_tokens).toBeGreaterThan(4096);
     });
 
     it('should return patched content', async () => {

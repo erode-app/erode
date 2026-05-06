@@ -3,7 +3,18 @@ import { BaseProvider, type ProviderConfig } from '../base-provider.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
 import { ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import type { AnalysisPhase } from '../analysis-phase.js';
+import {
+  resolveOutputTokenLimit,
+  type GenerationProfile,
+  type OutputSize,
+} from '../generation-profile.js';
 import { ANTHROPIC_MODELS } from './models.js';
+
+const MAX_TOKENS_BY_OUTPUT_SIZE = {
+  small: 600,
+  medium: 1500,
+  large: 8192,
+} satisfies Record<OutputSize, number>;
 
 export class AnthropicProvider extends BaseProvider {
   private readonly client: Anthropic;
@@ -27,12 +38,14 @@ export class AnthropicProvider extends BaseProvider {
     model: string,
     prompt: string,
     phase: AnalysisPhase,
-    maxTokens: number
+    generationProfile: GenerationProfile
   ): Promise<string> {
+    const outputTokenLimit = resolveOutputTokenLimit(generationProfile, MAX_TOKENS_BY_OUTPUT_SIZE);
+
     try {
       const response = await this.client.messages.create({
         model,
-        max_tokens: maxTokens,
+        max_tokens: outputTokenLimit,
         messages: [{ role: 'user', content: prompt }],
       });
 
@@ -61,8 +74,8 @@ export class AnthropicProvider extends BaseProvider {
         throw new ErodeError(
           'Anthropic response was cut short (max_tokens reached)',
           ErrorCode.PROVIDER_INVALID_RESPONSE,
-          'The AI response was truncated. The output may be partial.',
-          { model, phase, maxTokens }
+          'The Anthropic response used the available output budget before completion. Try a smaller change or tune the provider output budget.',
+          { model, phase, outputTokenLimit }
         );
       }
 

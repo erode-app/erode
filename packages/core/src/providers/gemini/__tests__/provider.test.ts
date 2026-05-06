@@ -23,6 +23,11 @@ vi.mock('@google/genai', () => {
       SPII: 'SPII',
       MALFORMED_FUNCTION_CALL: 'MALFORMED_FUNCTION_CALL',
     },
+    ThinkingLevel: {
+      LOW: 'LOW',
+      MEDIUM: 'MEDIUM',
+      HIGH: 'HIGH',
+    },
   };
 });
 
@@ -121,6 +126,12 @@ describe('GeminiProvider', () => {
         makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBe('comp.backend');
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-2.5-flash',
+          config: { maxOutputTokens: 1500, thinkingConfig: { thinkingBudget: 0 } },
+        })
+      );
     });
 
     it('should return null when no component matches', async () => {
@@ -177,6 +188,12 @@ describe('GeminiProvider', () => {
       expect(result.dependencies).toHaveLength(1);
       expect(result.dependencies[0]?.dependency).toBe('redis');
       expect(result.summary).toBe('Added Redis dependency');
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-2.5-flash',
+          config: { maxOutputTokens: 1500, thinkingConfig: { thinkingBudget: 0 } },
+        })
+      );
     });
 
     it('should throw on non-JSON response', async () => {
@@ -224,6 +241,119 @@ describe('GeminiProvider', () => {
       expect(result.metadata).toBe(data.changeRequest);
       expect(result.component).toBe(data.component);
       expect(result.dependencyChanges).toBe(data.dependencies);
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-2.5-pro',
+          config: { maxOutputTokens: 6000, thinkingConfig: { thinkingBudget: -1 } },
+        })
+      );
+    });
+  });
+
+  describe('patchModel', () => {
+    it('should use 2.5 Flash thinking budgets and dynamic output headroom for patching', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockGenerateContent.mockResolvedValueOnce({
+        text: patchedContent,
+        candidates: [{ finishReason: 'STOP' }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
+      });
+
+      const provider = createProvider();
+      await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-2.5-flash',
+          config: { maxOutputTokens: 4096, thinkingConfig: { thinkingBudget: -1 } },
+        })
+      );
+    });
+
+    it('should increase the output budget for large model files', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockGenerateContent.mockResolvedValueOnce({
+        text: patchedContent,
+        candidates: [{ finishReason: 'STOP' }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
+      });
+
+      const provider = createProvider();
+      await provider.patchModel('x'.repeat(40_000), ['  comp.a -> comp.b'], 'likec4');
+
+      const callArg = mockGenerateContent.mock.calls[0]?.[0] as
+        | { config?: { maxOutputTokens?: number } }
+        | undefined;
+      expect(callArg?.config?.maxOutputTokens).toBeGreaterThan(4096);
+    });
+
+    it('should use thinkingLevel for Gemini 3 style models', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockGenerateContent.mockResolvedValueOnce({
+        text: patchedContent,
+        candidates: [{ finishReason: 'STOP' }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
+      });
+
+      const provider = new GeminiProvider({
+        apiKey: 'test-api-key',
+        fastModel: 'gemini-3-flash-preview',
+        advancedModel: 'gemini-3-pro-preview',
+      });
+      await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-3-flash-preview',
+          config: { maxOutputTokens: 4096, thinkingConfig: { thinkingLevel: 'MEDIUM' } },
+        })
+      );
+    });
+
+    it('should use thinkingLevel for Gemini 3 point-release style models', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockGenerateContent.mockResolvedValueOnce({
+        text: patchedContent,
+        candidates: [{ finishReason: 'STOP' }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
+      });
+
+      const provider = new GeminiProvider({
+        apiKey: 'test-api-key',
+        fastModel: 'gemini-3.5-flash',
+        advancedModel: 'gemini-3.5-pro',
+      });
+      await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-3.5-flash',
+          config: { maxOutputTokens: 4096, thinkingConfig: { thinkingLevel: 'MEDIUM' } },
+        })
+      );
+    });
+
+    it('should preserve medium thinkingLevel for Gemini 3 point-release Pro models', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockGenerateContent.mockResolvedValueOnce({
+        text: patchedContent,
+        candidates: [{ finishReason: 'STOP' }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
+      });
+
+      const provider = new GeminiProvider({
+        apiKey: 'test-api-key',
+        fastModel: 'gemini-3.1-pro-preview',
+        advancedModel: 'gemini-3.1-pro-preview',
+      });
+      await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-3.1-pro-preview',
+          config: { maxOutputTokens: 4096, thinkingConfig: { thinkingLevel: 'MEDIUM' } },
+        })
+      );
     });
   });
 
@@ -242,6 +372,27 @@ describe('GeminiProvider', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ErodeError);
         expect((error as ErodeError).code).toBe(ErrorCode.PROVIDER_SAFETY_BLOCK);
+      }
+    });
+  });
+
+  describe('truncation handling', () => {
+    it('should throw PROVIDER_INVALID_RESPONSE on max tokens', async () => {
+      mockGenerateContent.mockResolvedValueOnce({
+        text: '```json\n{"dependencies": [',
+        candidates: [{ finishReason: 'MAX_TOKENS' }],
+        usageMetadata: { promptTokenCount: 500, candidatesTokenCount: 1500 },
+      });
+
+      const provider = createProvider();
+      try {
+        await provider.extractDependencies(makePreprocessingData());
+        expect.fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ErodeError);
+        const erodeError = error as ErodeError;
+        expect(erodeError.code).toBe(ErrorCode.PROVIDER_INVALID_RESPONSE);
+        expect(erodeError.userMessage).toContain('output budget');
       }
     });
   });

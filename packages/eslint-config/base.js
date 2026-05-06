@@ -43,3 +43,5 @@ export function createBaseConfig(tsconfigRootDir) {
 export const ignores = {
   ignores: ['dist/', 'node_modules/'],
 };
+
+export const disableTypeChecked = tseslint.configs.disableTypeChecked;

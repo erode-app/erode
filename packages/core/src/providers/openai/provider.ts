@@ -3,7 +3,21 @@ import { BaseProvider, type ProviderConfig } from '../base-provider.js';
 import { ErodeError, ErrorCode, ApiError } from '../../errors.js';
 import { ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import type { AnalysisPhase } from '../analysis-phase.js';
+import {
+  resolveOutputTokenLimit,
+  type GenerationProfile,
+  type OutputSize,
+  type ReasoningEffort,
+} from '../generation-profile.js';
 import { OPENAI_MODELS } from './models.js';
+
+type OpenAIReasoningEffort = 'minimal' | 'low' | 'medium' | 'high';
+
+const MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE = {
+  small: 1500,
+  medium: 6000,
+  large: 10000,
+} satisfies Record<OutputSize, number>;
 
 export class OpenAIProvider extends BaseProvider {
   private readonly client: OpenAI;
@@ -27,35 +41,35 @@ export class OpenAIProvider extends BaseProvider {
     model: string,
     prompt: string,
     phase: AnalysisPhase,
-    maxTokens: number
+    generationProfile: GenerationProfile
   ): Promise<string> {
+    const maxOutputTokens = resolveOutputTokenLimit(
+      generationProfile,
+      MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE
+    );
+    const reasoningEffort = getOpenAIReasoningEffort(generationProfile.reasoningEffort);
+
     try {
-      const response = await this.client.chat.completions.create({
+      const response = await this.client.responses.create({
         model,
-        max_tokens: maxTokens,
-        messages: [{ role: 'user', content: prompt }],
+        input: prompt,
+        max_output_tokens: maxOutputTokens,
+        ...(supportsReasoningEffort(model) ? { reasoning: { effort: reasoningEffort } } : {}),
       });
 
-      const choice = response.choices[0];
-      if (!choice) {
-        throw new ErodeError(
-          'OpenAI returned an empty response',
-          ErrorCode.PROVIDER_INVALID_RESPONSE,
-          'The OpenAI API returned no content',
-          { model, phase }
+      if (response.status === 'incomplete') {
+        handleIncompleteResponse(
+          response,
+          model,
+          phase,
+          maxOutputTokens,
+          generationProfile,
+          reasoningEffort
         );
       }
 
-      if (choice.finish_reason === 'content_filter') {
-        throw new ErodeError(
-          'OpenAI safety filters blocked the response',
-          ErrorCode.PROVIDER_SAFETY_BLOCK,
-          'Content was blocked by the AI provider safety filters. Try simplifying the input.',
-          { model, phase }
-        );
-      }
+      const text = extractText(response);
 
-      const text = choice.message.content;
       if (!text) {
         throw new ErodeError(
           'OpenAI returned an empty response',
@@ -65,21 +79,103 @@ export class OpenAIProvider extends BaseProvider {
         );
       }
 
-      if (choice.finish_reason === 'length') {
-        throw new ErodeError(
-          'OpenAI response was cut short (max_tokens reached)',
-          ErrorCode.PROVIDER_INVALID_RESPONSE,
-          'The AI response was truncated. The output may be partial.',
-          { model, phase, maxTokens }
-        );
-      }
-
       return text;
     } catch (error) {
       if (error instanceof ErodeError) {
         throw error;
       }
       throw ApiError.fromOpenAIError(error);
+    }
+
+    function handleIncompleteResponse(
+      response: OpenAI.Responses.Response,
+      incompleteModel: string,
+      incompletePhase: AnalysisPhase,
+      incompleteMaxOutputTokens: number,
+      incompleteGenerationProfile: GenerationProfile,
+      incompleteReasoningEffort: OpenAIReasoningEffort
+    ): void {
+      if (response.incomplete_details?.reason === 'max_output_tokens') {
+        throw new ErodeError(
+          'Model ran out of output budget before producing a complete response',
+          ErrorCode.PROVIDER_INVALID_RESPONSE,
+          'The AI response used the available output budget before completion. Try a smaller change or tune the provider output budget or reasoning effort.',
+          {
+            model: incompleteModel,
+            phase: incompletePhase,
+            maxOutputTokens: incompleteMaxOutputTokens,
+            outputSize: incompleteGenerationProfile.outputSize,
+            reasoningEffort: incompleteGenerationProfile.reasoningEffort,
+            providerReasoningEffort: incompleteReasoningEffort,
+          }
+        );
+      }
+
+      if (response.incomplete_details?.reason === 'content_filter') {
+        throw new ErodeError(
+          'OpenAI safety filters blocked the response',
+          ErrorCode.PROVIDER_SAFETY_BLOCK,
+          'Content was blocked by the AI provider safety filters. Try simplifying the input.',
+          { model: incompleteModel, phase: incompletePhase }
+        );
+      }
+
+      throw new ErodeError(
+        'OpenAI returned an incomplete response',
+        ErrorCode.PROVIDER_INVALID_RESPONSE,
+        'The OpenAI response was incomplete for an unknown provider reason. Try again or tune the provider output budget.',
+        {
+          model: incompleteModel,
+          phase: incompletePhase,
+          reason: response.incomplete_details?.reason,
+          maxOutputTokens: incompleteMaxOutputTokens,
+          outputSize: incompleteGenerationProfile.outputSize,
+        }
+      );
+    }
+
+    function extractText(response: OpenAI.Responses.Response): string {
+      if (response.output_text.length > 0) {
+        return response.output_text;
+      }
+
+      return response.output
+        .filter((item) => item.type === 'message')
+        .flatMap((item) => item.content)
+        .filter((content) => content.type === 'output_text')
+        .map((content) => content.text)
+        .join('');
+    }
+
+    function supportsReasoningEffort(reasoningModel: string): boolean {
+      if (reasoningModel.includes('chat')) {
+        return false;
+      }
+
+      if (reasoningModel.startsWith('gpt-5')) {
+        return true;
+      }
+
+      return ['o1', 'o3', 'o4'].some((prefix) => {
+        return reasoningModel === prefix || reasoningModel.startsWith(`${prefix}-`);
+      });
+    }
+
+    function getOpenAIReasoningEffort(
+      reasoningIntent: ReasoningEffort | undefined
+    ): OpenAIReasoningEffort {
+      switch (reasoningIntent) {
+        case 'high':
+          return 'high';
+        case 'medium':
+          return 'medium';
+        case 'low':
+          return 'low';
+        case undefined:
+          return 'minimal';
+        default:
+          return 'minimal';
+      }
     }
   }
 }

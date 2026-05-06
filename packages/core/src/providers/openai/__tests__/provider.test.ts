@@ -6,7 +6,7 @@ const mockCreate = vi.fn();
 vi.mock('openai', () => {
   return {
     default: class MockOpenAI {
-      chat = { completions: { create: mockCreate } };
+      responses = { create: mockCreate };
     },
   };
 });
@@ -78,9 +78,39 @@ function makePrAnalysisData(): DriftAnalysisPromptData {
   };
 }
 
-function makeOpenAIResponse(content: string | null, finishReason = 'stop') {
+function makeOpenAIResponse(content: string) {
   return {
-    choices: [{ message: { content }, finish_reason: finishReason }],
+    status: 'completed',
+    incomplete_details: null,
+    output_text: content,
+    output: [],
+  };
+}
+
+function makeOpenAIMessageResponse(content: string) {
+  return {
+    status: 'completed',
+    incomplete_details: null,
+    output_text: '',
+    output: [
+      {
+        type: 'reasoning',
+        content: [{ type: 'output_text', text: 'ignore me' }],
+      },
+      {
+        type: 'message',
+        content: [{ type: 'output_text', text: content }],
+      },
+    ],
+  };
+}
+
+function makeIncompleteOpenAIResponse(reason: string) {
+  return {
+    status: 'incomplete',
+    incomplete_details: { reason },
+    output_text: '',
+    output: [],
   };
 }
 
@@ -110,6 +140,44 @@ describe('OpenAIProvider', () => {
         makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBe('comp.backend');
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gpt-5-mini',
+          max_output_tokens: 1500,
+          reasoning: { effort: 'low' },
+        })
+      );
+    });
+
+    it('should omit reasoning for chat-tuned GPT-5 models', async () => {
+      mockCreate.mockResolvedValueOnce(makeOpenAIResponse('comp.backend'));
+
+      const provider = new OpenAIProvider({
+        apiKey: 'test-api-key',
+        fastModel: 'gpt-5-chat-latest',
+        advancedModel: 'gpt-5',
+      });
+      await provider.selectComponent(makeStage1Data(['comp.backend']));
+
+      const callArg = mockCreate.mock.calls[0]?.[0] as { reasoning?: unknown } | undefined;
+      expect(callArg).not.toHaveProperty('reasoning');
+    });
+
+    it('should send reasoning for GPT-5 family models', async () => {
+      mockCreate.mockResolvedValueOnce(makeOpenAIResponse('comp.backend'));
+
+      const provider = new OpenAIProvider({
+        apiKey: 'test-api-key',
+        fastModel: 'gpt-5o-mini',
+        advancedModel: 'gpt-5',
+      });
+      await provider.selectComponent(makeStage1Data(['comp.backend']));
+
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reasoning: { effort: 'low' },
+        })
+      );
     });
 
     it('should return null when no component matches', async () => {
@@ -123,7 +191,7 @@ describe('OpenAIProvider', () => {
     });
 
     it('should throw on empty response', async () => {
-      mockCreate.mockResolvedValueOnce(makeOpenAIResponse(null));
+      mockCreate.mockResolvedValueOnce(makeOpenAIResponse(''));
 
       const provider = createProvider();
       await expect(provider.selectComponent(makeStage1Data(['comp.frontend']))).rejects.toThrow(
@@ -156,6 +224,13 @@ describe('OpenAIProvider', () => {
       expect(result.dependencies).toHaveLength(1);
       expect(result.dependencies[0]?.dependency).toBe('redis');
       expect(result.summary).toBe('Added Redis dependency');
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gpt-5-mini',
+          max_output_tokens: 1500,
+          reasoning: { effort: 'low' },
+        })
+      );
     });
 
     it('should throw on non-JSON response', async () => {
@@ -195,12 +270,19 @@ describe('OpenAIProvider', () => {
       expect(result.metadata).toBe(data.changeRequest);
       expect(result.component).toBe(data.component);
       expect(result.dependencyChanges).toBe(data.dependencies);
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gpt-5',
+          max_output_tokens: 10000,
+          reasoning: { effort: 'low' },
+        })
+      );
     });
   });
 
   describe('safety filter handling', () => {
     it('should throw PROVIDER_SAFETY_BLOCK on content_filter', async () => {
-      mockCreate.mockResolvedValueOnce(makeOpenAIResponse('blocked', 'content_filter'));
+      mockCreate.mockResolvedValueOnce(makeIncompleteOpenAIResponse('content_filter'));
 
       const provider = createProvider();
       try {
@@ -214,8 +296,8 @@ describe('OpenAIProvider', () => {
   });
 
   describe('truncation handling', () => {
-    it('should throw PROVIDER_INVALID_RESPONSE on length', async () => {
-      mockCreate.mockResolvedValueOnce(makeOpenAIResponse('partial...', 'length'));
+    it('should throw PROVIDER_INVALID_RESPONSE on max_output_tokens', async () => {
+      mockCreate.mockResolvedValueOnce(makeIncompleteOpenAIResponse('max_output_tokens'));
 
       const provider = createProvider();
       try {
@@ -223,8 +305,45 @@ describe('OpenAIProvider', () => {
         expect.fail('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ErodeError);
-        expect((error as ErodeError).code).toBe(ErrorCode.PROVIDER_INVALID_RESPONSE);
+        const erodeError = error as ErodeError;
+        expect(erodeError.code).toBe(ErrorCode.PROVIDER_INVALID_RESPONSE);
+        expect(erodeError.userMessage).toContain('output budget');
       }
+    });
+
+    it('should throw PROVIDER_INVALID_RESPONSE on unknown incomplete reasons', async () => {
+      mockCreate.mockResolvedValueOnce(makeIncompleteOpenAIResponse('system_error'));
+
+      const provider = createProvider();
+      try {
+        await provider.selectComponent(makeStage1Data(['comp.api']));
+        expect.fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ErodeError);
+        const erodeError = error as ErodeError;
+        expect(erodeError.code).toBe(ErrorCode.PROVIDER_INVALID_RESPONSE);
+        expect(erodeError.userMessage).toContain('unknown provider reason');
+      }
+    });
+  });
+
+  describe('response text extraction', () => {
+    it('should read fallback output text from message items only', async () => {
+      mockCreate.mockResolvedValueOnce(makeOpenAIMessageResponse('comp.api'));
+
+      const provider = createProvider();
+      const result = await provider.selectComponent(makeStage1Data(['comp.api']));
+
+      expect(result).toBe('comp.api');
+    });
+
+    it('should throw on empty output after fallback', async () => {
+      mockCreate.mockResolvedValueOnce(makeOpenAIMessageResponse(''));
+
+      const provider = createProvider();
+      await expect(provider.selectComponent(makeStage1Data(['comp.api']))).rejects.toThrow(
+        ErodeError
+      );
     });
   });
 
@@ -309,13 +428,40 @@ describe('OpenAIProvider', () => {
       await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
 
       expect(mockCreate).toHaveBeenCalled();
-      const callArg = mockCreate.mock.calls[0]?.[0] as { model?: string } | undefined;
-      expect(callArg?.model).toBe('gpt-4.1-mini');
+      const callArg = mockCreate.mock.calls[0]?.[0] as
+        | { max_output_tokens?: number; model?: string; reasoning?: { effort?: string } }
+        | undefined;
+      expect(callArg?.model).toBe('gpt-5-mini');
+      expect(callArg?.max_output_tokens).toBe(6000);
+      expect(callArg?.reasoning?.effort).toBe('medium');
+    });
+
+    it('should increase the output budget for large model files', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockCreate.mockResolvedValueOnce(makeOpenAIResponse(patchedContent));
+
+      const provider = createProvider();
+      await provider.patchModel('x'.repeat(40_000), ['  comp.a -> comp.b'], 'likec4');
+
+      const callArg = mockCreate.mock.calls[0]?.[0] as { max_output_tokens?: number } | undefined;
+      expect(callArg?.max_output_tokens).toBeGreaterThan(6000);
     });
 
     it('should return patched content', async () => {
       const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
       mockCreate.mockResolvedValueOnce(makeOpenAIResponse(patchedContent));
+
+      const provider = createProvider();
+      const result = await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(result).toBe(patchedContent);
+    });
+
+    it('should unwrap markdown fences from patched content', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}';
+      mockCreate.mockResolvedValueOnce(
+        makeOpenAIResponse(`\`\`\`likec4\n${patchedContent}\n\`\`\``)
+      );
 
       const provider = createProvider();
       const result = await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
