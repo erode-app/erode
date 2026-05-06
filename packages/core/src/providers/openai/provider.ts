@@ -3,7 +3,12 @@ import { BaseProvider, type ProviderConfig } from '../base-provider.js';
 import { ErodeError, ErrorCode, ApiError } from '../../errors.js';
 import { ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import type { AnalysisPhase } from '../analysis-phase.js';
-import type { GenerationProfile, OutputSize, ReasoningEffort } from '../generation-profile.js';
+import {
+  resolveOutputTokenLimit,
+  type GenerationProfile,
+  type OutputSize,
+  type ReasoningEffort,
+} from '../generation-profile.js';
 import { OPENAI_MODELS } from './models.js';
 
 type OpenAIReasoningEffort = 'minimal' | 'low' | 'medium' | 'high';
@@ -38,7 +43,10 @@ export class OpenAIProvider extends BaseProvider {
     phase: AnalysisPhase,
     generationProfile: GenerationProfile
   ): Promise<string> {
-    const maxOutputTokens = getMaxOutputTokens(generationProfile);
+    const maxOutputTokens = resolveOutputTokenLimit(
+      generationProfile,
+      MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE
+    );
     const reasoningEffort = getOpenAIReasoningEffort(generationProfile.reasoningEffort);
 
     try {
@@ -162,20 +170,12 @@ export class OpenAIProvider extends BaseProvider {
         case 'medium':
           return 'medium';
         case 'low':
+          return 'low';
         case undefined:
           return 'minimal';
         default:
           return 'minimal';
       }
-    }
-
-    function getMaxOutputTokens(profile: GenerationProfile): number {
-      const profileLimit = MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE[profile.outputSize];
-      const hintedLimit = profile.outputContentHint
-        ? Math.ceil(profile.outputContentHint.characters / 4)
-        : 0;
-
-      return Math.max(profileLimit, hintedLimit);
     }
   }
 }

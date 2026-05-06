@@ -41,3 +41,15 @@ export function getGenerationProfileForModelPatch(
     },
   };
 }
+
+export function resolveOutputTokenLimit(
+  profile: GenerationProfile,
+  sizeTable: Record<OutputSize, number>
+): number {
+  const profileLimit = sizeTable[profile.outputSize];
+  const hintedLimit = profile.outputContentHint
+    ? Math.ceil(profile.outputContentHint.characters / 4)
+    : 0;
+
+  return Math.max(profileLimit, hintedLimit);
+}

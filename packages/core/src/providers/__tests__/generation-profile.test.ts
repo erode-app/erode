@@ -3,6 +3,7 @@ import { AnalysisPhase } from '../analysis-phase.js';
 import {
   getGenerationProfileForModelPatch,
   getGenerationProfileForPhase,
+  resolveOutputTokenLimit,
 } from '../generation-profile.js';
 
 describe('getGenerationProfileForPhase', () => {
@@ -39,5 +40,18 @@ describe('getGenerationProfileForPhase', () => {
       reasoningEffort: 'medium',
     });
     expect(profile.outputContentHint?.characters).toBeGreaterThan(16_384);
+  });
+
+  it('resolves output token limits from profile size and content hints', () => {
+    expect(
+      resolveOutputTokenLimit(
+        { outputSize: 'medium', outputContentHint: { characters: 40_000 } },
+        { small: 600, medium: 1500, large: 3000 }
+      )
+    ).toBe(10_000);
+
+    expect(
+      resolveOutputTokenLimit({ outputSize: 'medium' }, { small: 600, medium: 1500, large: 3000 })
+    ).toBe(1500);
   });
 });

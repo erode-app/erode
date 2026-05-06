@@ -332,6 +332,29 @@ describe('GeminiProvider', () => {
         })
       );
     });
+
+    it('should preserve medium thinkingLevel for Gemini 3 point-release Pro models', async () => {
+      const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
+      mockGenerateContent.mockResolvedValueOnce({
+        text: patchedContent,
+        candidates: [{ finishReason: 'STOP' }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
+      });
+
+      const provider = new GeminiProvider({
+        apiKey: 'test-api-key',
+        fastModel: 'gemini-3.1-pro-preview',
+        advancedModel: 'gemini-3.1-pro-preview',
+      });
+      await provider.patchModel('model {\n}\n', ['  comp.a -> comp.b'], 'likec4');
+
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-3.1-pro-preview',
+          config: { maxOutputTokens: 4096, thinkingConfig: { thinkingLevel: 'MEDIUM' } },
+        })
+      );
+    });
   });
 
   describe('safety filter handling', () => {

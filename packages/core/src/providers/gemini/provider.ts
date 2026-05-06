@@ -3,7 +3,12 @@ import { BaseProvider, type ProviderConfig } from '../base-provider.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
 import { ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import type { AnalysisPhase } from '../analysis-phase.js';
-import type { GenerationProfile, OutputSize, ReasoningEffort } from '../generation-profile.js';
+import {
+  resolveOutputTokenLimit,
+  type GenerationProfile,
+  type OutputSize,
+  type ReasoningEffort,
+} from '../generation-profile.js';
 import { GEMINI_MODELS } from './models.js';
 
 const MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE = {
@@ -36,7 +41,10 @@ export class GeminiProvider extends BaseProvider {
     phase: AnalysisPhase,
     generationProfile: GenerationProfile
   ): Promise<string> {
-    const maxOutputTokens = getMaxOutputTokens(generationProfile);
+    const maxOutputTokens = resolveOutputTokenLimit(
+      generationProfile,
+      MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE
+    );
     const thinkingConfig = getThinkingConfig(model, generationProfile.reasoningEffort);
 
     try {
@@ -83,15 +91,6 @@ export class GeminiProvider extends BaseProvider {
       throw ApiError.fromGeminiError(error);
     }
 
-    function getMaxOutputTokens(profile: GenerationProfile): number {
-      const profileLimit = MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE[profile.outputSize];
-      const hintedLimit = profile.outputContentHint
-        ? Math.ceil(profile.outputContentHint.characters / 4)
-        : 0;
-
-      return Math.max(profileLimit, hintedLimit);
-    }
-
     function getThinkingConfig(
       thinkingModel: string,
       reasoningIntent: ReasoningEffort | undefined
@@ -135,7 +134,7 @@ export class GeminiProvider extends BaseProvider {
         case 'high':
           return { thinkingLevel: ThinkingLevel.HIGH };
         case 'medium':
-          if (isGemini3ProModel(thinkingModel)) {
+          if (isLegacyGemini3ProModel(thinkingModel)) {
             return { thinkingLevel: ThinkingLevel.HIGH };
           }
           return { thinkingLevel: ThinkingLevel.MEDIUM };
@@ -159,8 +158,8 @@ export class GeminiProvider extends BaseProvider {
       return thinkingModel.startsWith('gemini-3-') || thinkingModel.startsWith('gemini-3.');
     }
 
-    function isGemini3ProModel(thinkingModel: string): boolean {
-      return thinkingModel.startsWith('gemini-3-pro') || /^gemini-3\.[^-]+-pro/.test(thinkingModel);
+    function isLegacyGemini3ProModel(thinkingModel: string): boolean {
+      return thinkingModel.startsWith('gemini-3-pro');
     }
   }
 }

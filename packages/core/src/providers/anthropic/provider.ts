@@ -3,7 +3,11 @@ import { BaseProvider, type ProviderConfig } from '../base-provider.js';
 import { ApiError, ErodeError, ErrorCode } from '../../errors.js';
 import { ENV_VAR_NAMES, RC_FILENAME } from '../../utils/config.js';
 import type { AnalysisPhase } from '../analysis-phase.js';
-import type { GenerationProfile, OutputSize } from '../generation-profile.js';
+import {
+  resolveOutputTokenLimit,
+  type GenerationProfile,
+  type OutputSize,
+} from '../generation-profile.js';
 import { ANTHROPIC_MODELS } from './models.js';
 
 const MAX_TOKENS_BY_OUTPUT_SIZE = {
@@ -36,7 +40,7 @@ export class AnthropicProvider extends BaseProvider {
     phase: AnalysisPhase,
     generationProfile: GenerationProfile
   ): Promise<string> {
-    const outputTokenLimit = getOutputTokenLimit(generationProfile);
+    const outputTokenLimit = resolveOutputTokenLimit(generationProfile, MAX_TOKENS_BY_OUTPUT_SIZE);
 
     try {
       const response = await this.client.messages.create({
@@ -81,15 +85,6 @@ export class AnthropicProvider extends BaseProvider {
         throw error;
       }
       throw ApiError.fromAnthropicError(error);
-    }
-
-    function getOutputTokenLimit(profile: GenerationProfile): number {
-      const profileLimit = MAX_TOKENS_BY_OUTPUT_SIZE[profile.outputSize];
-      const hintedLimit = profile.outputContentHint
-        ? Math.ceil(profile.outputContentHint.characters / 4)
-        : 0;
-
-      return Math.max(profileLimit, hintedLimit);
     }
   }
 }

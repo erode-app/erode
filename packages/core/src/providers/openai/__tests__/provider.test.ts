@@ -144,7 +144,7 @@ describe('OpenAIProvider', () => {
         expect.objectContaining({
           model: 'gpt-5-mini',
           max_output_tokens: 1500,
-          reasoning: { effort: 'minimal' },
+          reasoning: { effort: 'low' },
         })
       );
     });
@@ -175,7 +175,7 @@ describe('OpenAIProvider', () => {
 
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          reasoning: { effort: 'minimal' },
+          reasoning: { effort: 'low' },
         })
       );
     });
@@ -228,7 +228,7 @@ describe('OpenAIProvider', () => {
         expect.objectContaining({
           model: 'gpt-5-mini',
           max_output_tokens: 1500,
-          reasoning: { effort: 'minimal' },
+          reasoning: { effort: 'low' },
         })
       );
     });
@@ -274,7 +274,7 @@ describe('OpenAIProvider', () => {
         expect.objectContaining({
           model: 'gpt-5',
           max_output_tokens: 6000,
-          reasoning: { effort: 'minimal' },
+          reasoning: { effort: 'low' },
         })
       );
     });
