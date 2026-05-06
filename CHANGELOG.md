@@ -7,6 +7,23 @@
 
 * **core:** tune provider generation and drift coverage ([#170](https://github.com/erode-app/erode/issues/170)) ([6d37ad3](https://github.com/erode-app/erode/commit/6d37ad38d9df001509f1f626b0a6f34e1ff9c01a))
 
+### Notes
+
+* Provider calls now use shared generation profiles instead of raw stage-level token
+  counts. Each provider maps the same intent to its own output budget and reasoning
+  settings.
+* OpenAI now uses the Responses API with `gpt-5-mini` and `gpt-5` as the default
+  fast and advanced models. Anthropic defaults were updated to `claude-haiku-4-5`
+  and `claude-sonnet-4-6`.
+* Gemini and OpenAI now tune reasoning by phase. Extraction stays cheap, model
+  updates get more room, and drift analysis keeps the stronger model without
+  spending extra reasoning by default.
+* Drift analysis now has to account for every added dependency and includes code
+  evidence in the dependency section. This makes missed relationships and new
+  component links easier to spot in review.
+* Provider truncation errors now name the output budget that ran out, so failures are
+  easier to diagnose and retry with a smaller change.
+
 
 ### Build System
 
