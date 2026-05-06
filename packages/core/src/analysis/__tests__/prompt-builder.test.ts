@@ -346,9 +346,10 @@ describe('PromptBuilder', () => {
         allRelationships: [],
       });
 
-      expect(result).toContain('Evidence: const ORDER_SERVICE');
-      expect(result).toContain('Evidence: const PRODUCT_SERVICE');
-      expect(result).toContain('Evidence: const USER_SERVICE');
+      const vars = JSON.parse(result) as DriftAnalysisPromptVars;
+      expect(vars.dependencyChangesSection).toContain('Evidence:\n    const ORDER_SERVICE');
+      expect(vars.dependencyChangesSection).toContain('Evidence:\n    const PRODUCT_SERVICE');
+      expect(vars.dependencyChangesSection).toContain('Evidence:\n    const USER_SERVICE');
     });
 
     it('should instruct drift analysis to account for every added dependency', () => {

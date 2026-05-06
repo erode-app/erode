@@ -248,6 +248,23 @@ describe('AnthropicProvider', () => {
     });
   });
 
+  describe('truncation handling', () => {
+    it('should explain output budget exhaustion on max_tokens', async () => {
+      mockCreate.mockResolvedValueOnce(makeAnthropicResponse('partial response', 'max_tokens'));
+
+      const provider = createProvider();
+      try {
+        await provider.selectComponent(makeStage1Data(['comp.api']));
+        expect.fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ErodeError);
+        const erodeError = error as ErodeError;
+        expect(erodeError.code).toBe(ErrorCode.PROVIDER_INVALID_RESPONSE);
+        expect(erodeError.userMessage).toContain('output budget');
+      }
+    });
+  });
+
   describe('retry on rate limit', () => {
     it('should retry on 429 and eventually succeed', async () => {
       const rateLimitError = new ApiError('Rate limited', 429);

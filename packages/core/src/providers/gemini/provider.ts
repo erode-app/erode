@@ -156,11 +156,11 @@ export class GeminiProvider extends BaseProvider {
     }
 
     function isGemini3Model(thinkingModel: string): boolean {
-      return thinkingModel.startsWith('gemini-3-');
+      return thinkingModel.startsWith('gemini-3-') || thinkingModel.startsWith('gemini-3.');
     }
 
     function isGemini3ProModel(thinkingModel: string): boolean {
-      return thinkingModel.startsWith('gemini-3-pro');
+      return thinkingModel.startsWith('gemini-3-pro') || /^gemini-3\.[^-]+-pro/.test(thinkingModel);
     }
   }
 }

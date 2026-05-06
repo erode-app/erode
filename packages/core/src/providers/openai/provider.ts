@@ -111,6 +111,19 @@ export class OpenAIProvider extends BaseProvider {
           { model: incompleteModel, phase: incompletePhase }
         );
       }
+
+      throw new ErodeError(
+        'OpenAI returned an incomplete response',
+        ErrorCode.PROVIDER_INVALID_RESPONSE,
+        'The OpenAI response was incomplete for an unknown provider reason. Try again or tune the provider output budget.',
+        {
+          model: incompleteModel,
+          phase: incompletePhase,
+          reason: response.incomplete_details?.reason,
+          maxOutputTokens: incompleteMaxOutputTokens,
+          outputSize: incompleteGenerationProfile.outputSize,
+        }
+      );
     }
 
     function extractText(response: OpenAI.Responses.Response): string {
@@ -127,7 +140,15 @@ export class OpenAIProvider extends BaseProvider {
     }
 
     function supportsReasoningEffort(reasoningModel: string): boolean {
-      return ['gpt-5', 'o1', 'o3', 'o4'].some((prefix) => {
+      if (reasoningModel.includes('chat')) {
+        return false;
+      }
+
+      if (reasoningModel.startsWith('gpt-5')) {
+        return true;
+      }
+
+      return ['o1', 'o3', 'o4'].some((prefix) => {
         return reasoningModel === prefix || reasoningModel.startsWith(`${prefix}-`);
       });
     }

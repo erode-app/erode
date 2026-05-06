@@ -107,8 +107,33 @@ describe('section-formatters', () => {
         summary: '',
       });
 
-      expect(result).toContain('Evidence: const ORDER_SERVICE');
+      expect(result).toContain('Evidence:\n    const ORDER_SERVICE');
       expect(result).toContain('http://order-service:3005');
+    });
+
+    it('should keep multiline code evidence indented under the dependency bullet', () => {
+      const result = formatDependencyChanges({
+        dependencies: [
+          {
+            type: 'added',
+            file: 'src/gateway.ts',
+            dependency: 'Order Service',
+            description: 'External order service via HTTP',
+            code: 'const ORDER_SERVICE = "http://order-service:3005";\nawait fetch(ORDER_SERVICE);',
+          },
+        ],
+        summary: '',
+      });
+
+      expect(result).toContain(
+        [
+          '- Order Service (src/gateway.ts)',
+          '  External order service via HTTP',
+          '  Evidence:',
+          '    const ORDER_SERVICE = "http://order-service:3005";',
+          '    await fetch(ORDER_SERVICE);',
+        ].join('\n')
+      );
     });
 
     it('should format modified dependencies', () => {

@@ -105,7 +105,7 @@ function makeOpenAIMessageResponse(content: string) {
   };
 }
 
-function makeIncompleteOpenAIResponse(reason: 'max_output_tokens' | 'content_filter') {
+function makeIncompleteOpenAIResponse(reason: string) {
   return {
     status: 'incomplete',
     incomplete_details: { reason },
@@ -144,6 +144,37 @@ describe('OpenAIProvider', () => {
         expect.objectContaining({
           model: 'gpt-5-mini',
           max_output_tokens: 1500,
+          reasoning: { effort: 'minimal' },
+        })
+      );
+    });
+
+    it('should omit reasoning for chat-tuned GPT-5 models', async () => {
+      mockCreate.mockResolvedValueOnce(makeOpenAIResponse('comp.backend'));
+
+      const provider = new OpenAIProvider({
+        apiKey: 'test-api-key',
+        fastModel: 'gpt-5-chat-latest',
+        advancedModel: 'gpt-5',
+      });
+      await provider.selectComponent(makeStage1Data(['comp.backend']));
+
+      const callArg = mockCreate.mock.calls[0]?.[0] as { reasoning?: unknown } | undefined;
+      expect(callArg).not.toHaveProperty('reasoning');
+    });
+
+    it('should send reasoning for GPT-5 family models', async () => {
+      mockCreate.mockResolvedValueOnce(makeOpenAIResponse('comp.backend'));
+
+      const provider = new OpenAIProvider({
+        apiKey: 'test-api-key',
+        fastModel: 'gpt-5o-mini',
+        advancedModel: 'gpt-5',
+      });
+      await provider.selectComponent(makeStage1Data(['comp.backend']));
+
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
           reasoning: { effort: 'minimal' },
         })
       );
@@ -277,6 +308,21 @@ describe('OpenAIProvider', () => {
         const erodeError = error as ErodeError;
         expect(erodeError.code).toBe(ErrorCode.PROVIDER_INVALID_RESPONSE);
         expect(erodeError.userMessage).toContain('output budget');
+      }
+    });
+
+    it('should throw PROVIDER_INVALID_RESPONSE on unknown incomplete reasons', async () => {
+      mockCreate.mockResolvedValueOnce(makeIncompleteOpenAIResponse('system_error'));
+
+      const provider = createProvider();
+      try {
+        await provider.selectComponent(makeStage1Data(['comp.api']));
+        expect.fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ErodeError);
+        const erodeError = error as ErodeError;
+        expect(erodeError.code).toBe(ErrorCode.PROVIDER_INVALID_RESPONSE);
+        expect(erodeError.userMessage).toContain('unknown provider reason');
       }
     });
   });

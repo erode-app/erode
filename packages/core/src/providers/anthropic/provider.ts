@@ -70,7 +70,7 @@ export class AnthropicProvider extends BaseProvider {
         throw new ErodeError(
           'Anthropic response was cut short (max_tokens reached)',
           ErrorCode.PROVIDER_INVALID_RESPONSE,
-          'The AI response was truncated. The output may be partial.',
+          'The Anthropic response used the available output budget before completion. Try a smaller change or tune the provider output budget.',
           { model, phase, outputTokenLimit }
         );
       }
