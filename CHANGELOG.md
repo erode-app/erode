@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.9.4](https://github.com/erode-app/erode/compare/0.9.3...0.9.4) (2026-05-06)
+
+
+### Build System
+
+* **deps-dev:** bump @commitlint/cli from 20.5.0 to 20.5.3 ([#175](https://github.com/erode-app/erode/issues/175)) ([7b169ec](https://github.com/erode-app/erode/commit/7b169eccf8623938c071663202dab356421d04e3))
+* **deps-dev:** bump knip from 6.9.0 to 6.12.0 ([#172](https://github.com/erode-app/erode/issues/172)) ([acd0072](https://github.com/erode-app/erode/commit/acd0072e8201a01978210c5cbf592bf036bc41d9))
+* **deps:** bump @anthropic-ai/sdk from 0.92.0 to 0.95.0 ([#174](https://github.com/erode-app/erode/issues/174)) ([797c22c](https://github.com/erode-app/erode/commit/797c22c66cb552c44a356cc905afd0d19bd8cb70))
+* **deps:** bump @google/genai from 1.51.0 to 1.52.0 ([#171](https://github.com/erode-app/erode/issues/171)) ([f674a29](https://github.com/erode-app/erode/commit/f674a290551e366e7007ee29740353a54d0cfe03))
+* **deps:** bump astro from 6.1.10 to 6.2.2 ([#173](https://github.com/erode-app/erode/issues/173)) ([6844c81](https://github.com/erode-app/erode/commit/6844c81661ea7dc034a5030f115abe89026d9e8d))
+
 ## [0.9.3](https://github.com/erode-app/erode/compare/0.9.2...0.9.3) (2026-05-06)
 
 
