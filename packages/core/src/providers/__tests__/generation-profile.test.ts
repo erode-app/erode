@@ -18,9 +18,9 @@ describe('getGenerationProfileForPhase', () => {
     });
   });
 
-  it('uses medium low-effort generation for drift analysis', () => {
+  it('uses large low-effort generation for drift analysis', () => {
     expect(getGenerationProfileForPhase(AnalysisPhase.CHANGE_ANALYSIS)).toEqual({
-      outputSize: 'medium',
+      outputSize: 'large',
       reasoningEffort: 'low',
     });
   });

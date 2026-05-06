@@ -19,7 +19,7 @@ export function getGenerationProfileForPhase(phase: AnalysisPhase): GenerationPr
     case AnalysisPhase.MODEL_UPDATE:
       return { outputSize: 'medium', reasoningEffort: 'medium' };
     case AnalysisPhase.CHANGE_ANALYSIS:
-      return { outputSize: 'medium', reasoningEffort: 'low' };
+      return { outputSize: 'large', reasoningEffort: 'low' };
     default:
       return { outputSize: 'small', reasoningEffort: 'low' };
   }

@@ -244,7 +244,7 @@ describe('GeminiProvider', () => {
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gemini-2.5-pro',
-          config: { maxOutputTokens: 3000, thinkingConfig: { thinkingBudget: -1 } },
+          config: { maxOutputTokens: 6000, thinkingConfig: { thinkingBudget: -1 } },
         })
       );
     });

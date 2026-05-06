@@ -273,7 +273,7 @@ describe('OpenAIProvider', () => {
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gpt-5',
-          max_output_tokens: 6000,
+          max_output_tokens: 10000,
           reasoning: { effort: 'low' },
         })
       );

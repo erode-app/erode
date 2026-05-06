@@ -13,7 +13,7 @@ import { ANTHROPIC_MODELS } from './models.js';
 const MAX_TOKENS_BY_OUTPUT_SIZE = {
   small: 600,
   medium: 1500,
-  large: 3000,
+  large: 8192,
 } satisfies Record<OutputSize, number>;
 
 export class AnthropicProvider extends BaseProvider {

@@ -223,7 +223,7 @@ describe('AnthropicProvider', () => {
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'claude-sonnet-4-6',
-          max_tokens: 1500,
+          max_tokens: 8192,
         })
       );
     });
