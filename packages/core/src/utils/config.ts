@@ -48,6 +48,13 @@ export const ConfigSchema = z.object({
     token: z.string().optional(),
     baseUrl: z.url().default('https://api.bitbucket.org/2.0'),
   }),
+  agent: z.object({
+    enabled: z.boolean().default(false),
+    skipDrafts: z.boolean().default(true),
+    comment: z.boolean().default(true),
+    openModelPr: z.boolean().default(false),
+    failOnViolations: z.boolean().default(false),
+  }),
   anthropic: z.object({
     apiKey: z.string().optional(),
     timeout: z.number().int().min(1000).max(300000).default(60000),
@@ -92,6 +99,11 @@ export const ENV_VAR_NAMES = {
   modelRepo: 'ERODE_MODEL_REPO',
   modelRef: 'ERODE_MODEL_REF',
   likec4FormatAfterPatch: 'ERODE_LIKEC4_FORMAT_AFTER_PATCH',
+  agentEnabled: 'ERODE_AGENT_ENABLED',
+  agentSkipDrafts: 'ERODE_AGENT_SKIP_DRAFTS',
+  agentComment: 'ERODE_AGENT_COMMENT',
+  agentOpenModelPr: 'ERODE_AGENT_OPEN_MODEL_PR',
+  agentFailOnViolations: 'ERODE_AGENT_FAIL_ON_VIOLATIONS',
 } as const;
 
 const ENV_MAP: Record<string, string> = {
@@ -115,6 +127,11 @@ const ENV_MAP: Record<string, string> = {
   ERODE_GITLAB_BASE_URL: 'gitlab.baseUrl',
   ERODE_BITBUCKET_TOKEN: 'bitbucket.token',
   ERODE_BITBUCKET_BASE_URL: 'bitbucket.baseUrl',
+  ERODE_AGENT_ENABLED: 'agent.enabled',
+  ERODE_AGENT_SKIP_DRAFTS: 'agent.skipDrafts',
+  ERODE_AGENT_COMMENT: 'agent.comment',
+  ERODE_AGENT_OPEN_MODEL_PR: 'agent.openModelPr',
+  ERODE_AGENT_FAIL_ON_VIOLATIONS: 'agent.failOnViolations',
   ERODE_MODEL_FORMAT: 'adapter.format',
   ERODE_MODEL_PATH: 'adapter.modelPath',
   ERODE_MODEL_REPO: 'adapter.modelRepo',
@@ -148,6 +165,11 @@ const identity: Coercer = (raw) => raw;
 const COERCE_MAP: Record<string, Coercer> = {
   'debug.enabled': toBoolean,
   'debug.verbose': toBoolean,
+  'agent.enabled': toBoolean,
+  'agent.skipDrafts': toBoolean,
+  'agent.comment': toBoolean,
+  'agent.openModelPr': toBoolean,
+  'agent.failOnViolations': toBoolean,
   'constraints.maxFilesPerDiff': toNumber,
   'constraints.maxLinesPerDiff': toNumber,
   'constraints.maxContextChars': toNumber,
@@ -185,6 +207,7 @@ function buildConfigSkeleton(): Record<string, unknown> {
     github: {},
     gitlab: {},
     bitbucket: {},
+    agent: {},
     anthropic: {},
     gemini: {},
     openai: {},

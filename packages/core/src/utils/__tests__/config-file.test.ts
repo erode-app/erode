@@ -10,7 +10,13 @@ vi.mock('fs', () => ({
 }));
 
 import * as fs from 'fs';
-import { findConfigFile, deepMerge, loadConfigFromFile, loadConfigFromEnv } from '../config.js';
+import {
+  ConfigSchema,
+  findConfigFile,
+  deepMerge,
+  loadConfigFromFile,
+  loadConfigFromEnv,
+} from '../config.js';
 import { ConfigurationError } from '../../errors.js';
 
 const mockExistsSync = vi.mocked(fs.existsSync);
@@ -111,12 +117,43 @@ describe('config file support', () => {
   describe('config merge strategy', () => {
     it('should load values from file when no env vars are set', () => {
       mockReadFileSync.mockReturnValue(
-        JSON.stringify({ ai: { provider: 'anthropic' }, gemini: { apiKey: 'file-key' } })
+        JSON.stringify({
+          ai: { provider: 'anthropic' },
+          agent: {
+            enabled: true,
+            skipDrafts: false,
+            comment: false,
+            openModelPr: true,
+            failOnViolations: true,
+          },
+          gemini: { apiKey: 'file-key' },
+        })
       );
-      const fileConfig = loadConfigFromFile('/fake/.eroderc.json');
+      const fileConfig = ConfigSchema.parse(loadConfigFromFile('/fake/.eroderc.json'));
       expect(fileConfig).toMatchObject({
         ai: { provider: 'anthropic' },
+        agent: {
+          enabled: true,
+          skipDrafts: false,
+          comment: false,
+          openModelPr: true,
+          failOnViolations: true,
+        },
         gemini: { apiKey: 'file-key' },
+      });
+    });
+
+    it('should apply default agent config when file omits it', () => {
+      mockReadFileSync.mockReturnValue(JSON.stringify({ ai: { provider: 'openai' } }));
+
+      const fileConfig = ConfigSchema.parse(loadConfigFromFile('/fake/.eroderc.json'));
+
+      expect(fileConfig.agent).toEqual({
+        enabled: false,
+        skipDrafts: true,
+        comment: true,
+        openModelPr: false,
+        failOnViolations: false,
       });
     });
 
@@ -134,6 +171,7 @@ describe('config file support', () => {
         github: {},
         gitlab: {},
         bitbucket: {},
+        agent: {},
         anthropic: {},
         gemini: {},
         openai: {},
@@ -160,6 +198,52 @@ describe('config file support', () => {
         } else {
           process.env['ERODE_AI_PROVIDER'] = original;
         }
+      }
+    });
+
+    it('should allow agent env vars to override file values', () => {
+      mockReadFileSync.mockReturnValue(
+        JSON.stringify({
+          agent: {
+            enabled: false,
+            skipDrafts: true,
+            comment: true,
+            openModelPr: false,
+            failOnViolations: false,
+          },
+        })
+      );
+      const original = {
+        enabled: process.env['ERODE_AGENT_ENABLED'],
+        skipDrafts: process.env['ERODE_AGENT_SKIP_DRAFTS'],
+        comment: process.env['ERODE_AGENT_COMMENT'],
+        openModelPr: process.env['ERODE_AGENT_OPEN_MODEL_PR'],
+        failOnViolations: process.env['ERODE_AGENT_FAIL_ON_VIOLATIONS'],
+      };
+      process.env['ERODE_AGENT_ENABLED'] = 'true';
+      process.env['ERODE_AGENT_SKIP_DRAFTS'] = 'false';
+      process.env['ERODE_AGENT_COMMENT'] = 'false';
+      process.env['ERODE_AGENT_OPEN_MODEL_PR'] = 'true';
+      process.env['ERODE_AGENT_FAIL_ON_VIOLATIONS'] = 'true';
+
+      try {
+        const fileConfig = loadConfigFromFile('/fake/.eroderc.json');
+        const envConfig = loadConfigFromEnv();
+        const merged = ConfigSchema.parse(deepMerge(fileConfig, envConfig));
+
+        expect(merged.agent).toEqual({
+          enabled: true,
+          skipDrafts: false,
+          comment: false,
+          openModelPr: true,
+          failOnViolations: true,
+        });
+      } finally {
+        restoreEnv('ERODE_AGENT_ENABLED', original.enabled);
+        restoreEnv('ERODE_AGENT_SKIP_DRAFTS', original.skipDrafts);
+        restoreEnv('ERODE_AGENT_COMMENT', original.comment);
+        restoreEnv('ERODE_AGENT_OPEN_MODEL_PR', original.openModelPr);
+        restoreEnv('ERODE_AGENT_FAIL_ON_VIOLATIONS', original.failOnViolations);
       }
     });
   });
@@ -196,3 +280,11 @@ describe('config file support', () => {
     });
   });
 });
+
+function restoreEnv(key: string, value: string | undefined): void {
+  if (value === undefined) {
+    Reflect.deleteProperty(process.env, key);
+  } else {
+    process.env[key] = value;
+  }
+}
