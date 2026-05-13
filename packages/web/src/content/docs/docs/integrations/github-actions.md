@@ -21,6 +21,7 @@ jobs:
       - uses: erode-app/erode@0
         with:
           model-repo: your-org/architecture
+          ai-provider: gemini
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
@@ -43,6 +44,7 @@ Erode expects the architecture model to live in its own repository (or a subdire
     model-repo: your-org/architecture # required
     model-path: models/backend # subdirectory within the repo
     model-ref: v2 # branch or tag (default: main)
+    ai-provider: gemini
     github-token: ${{ secrets.GITHUB_TOKEN }}
     gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
@@ -56,29 +58,30 @@ If the model repo requires different credentials than the repository running the
   with:
     model-repo: your-org/architecture
     model-repo-token: ${{ secrets.MODEL_REPO_TOKEN }}
+    ai-provider: gemini
     github-token: ${{ secrets.GITHUB_TOKEN }}
     gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
 
-`model-repo-token` is used only for cloning the model repository. All other GitHub API calls (reading the PR diff, posting comments) use `github-token`.
+`model-repo-token` is used for cloning the model repository and creating model update PRs in that repository. GitHub API calls against the source PR use `github-token`.
 
 ## Action inputs
 
-| Input                 | Description                                                 | Required             | Default             |
-| --------------------- | ----------------------------------------------------------- | -------------------- | ------------------- |
-| `model-repo`          | Repository containing the architecture model (`owner/repo`) | Yes                  | —                   |
-| `model-path`          | Path to the model within the model repository               | No                   | `.`                 |
-| `model-ref`           | Git ref (branch/tag) of the model repository                | No                   | `main`              |
-| `model-format`        | Architecture model format                                   | No                   | `likec4`            |
-| `ai-provider`         | AI provider (`gemini`, `openai`, or `anthropic`)            | No                   | `anthropic`         |
-| `gemini-api-key`      | Gemini API key                                              | When using Gemini    | —                   |
-| `openai-api-key`      | OpenAI API key                                              | When using OpenAI    | —                   |
-| `anthropic-api-key`   | Anthropic API key (experimental)                            | When using Anthropic | —                   |
-| `github-token`        | GitHub token for reading PRs and posting comments           | Yes                  | —                   |
-| `model-repo-token`    | Separate GitHub token for cloning the model repository      | No                   | Uses `github-token` |
-| `open-pr`             | Open a PR with model updates (`true`, `false`, or `auto`)   | No                   | `false`             |
-| `fail-on-violations`  | Fail the workflow if violations are detected                | No                   | `false`             |
-| `skip-file-filtering` | Analyze all changed files instead of filtering by relevance | No                   | `false`             |
+| Input                 | Description                                                        | Required             | Default             |
+| --------------------- | ------------------------------------------------------------------ | -------------------- | ------------------- |
+| `model-repo`          | Repository containing the architecture model (`owner/repo`)        | Yes                  | —                   |
+| `model-path`          | Path to the model within the model repository                      | No                   | `.`                 |
+| `model-ref`           | Git ref (branch/tag) of the model repository                       | No                   | `main`              |
+| `model-format`        | Architecture model format                                          | No                   | `likec4`            |
+| `ai-provider`         | AI provider (`gemini`, `openai`, or `anthropic`)                   | No                   | `anthropic`         |
+| `gemini-api-key`      | Gemini API key                                                     | When using Gemini    | —                   |
+| `openai-api-key`      | OpenAI API key                                                     | When using OpenAI    | —                   |
+| `anthropic-api-key`   | Anthropic API key (experimental)                                   | When using Anthropic | —                   |
+| `github-token`        | GitHub token for reading PRs and posting comments                  | Yes                  | —                   |
+| `model-repo-token`    | Separate GitHub token for model repository clone and PR operations | No                   | Uses `github-token` |
+| `open-pr`             | Open a PR with model updates (`true`, `false`, or `auto`)          | No                   | `false`             |
+| `fail-on-violations`  | Fail the workflow if violations are detected                       | No                   | `false`             |
+| `skip-file-filtering` | Analyze all changed files instead of filtering by relevance        | No                   | `false`             |
 
 ## Action outputs
 
@@ -97,6 +100,7 @@ steps:
     id: erode
     with:
       model-repo: your-org/architecture
+      ai-provider: gemini
       github-token: ${{ secrets.GITHUB_TOKEN }}
       gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 
@@ -158,6 +162,7 @@ jobs:
         with:
           model-repo: your-org/architecture
           open-pr: ${{ github.event_name == 'issue_comment' && 'true' || 'auto' }}
+          ai-provider: gemini
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
@@ -220,6 +225,7 @@ jobs:
       - uses: erode-app/erode@0
         with:
           model-repo: your-org/architecture
+          ai-provider: gemini
           github-token: ${{ steps.app-token.outputs.token }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```

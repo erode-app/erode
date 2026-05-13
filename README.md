@@ -31,11 +31,12 @@ jobs:
       - uses: erode-app/erode@0
         with:
           model-repo: 'org/architecture-model'
+          ai-provider: gemini
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
 
-See the [GitHub Actions guide](https://erode.dev/docs/ci/github-actions/) for inputs, outputs, and advanced examples.
+See the [GitHub Actions guide](https://erode.dev/docs/integrations/github-actions/) for inputs, outputs, and advanced examples.
 
 ## Documentation
 

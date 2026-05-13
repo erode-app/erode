@@ -68,12 +68,12 @@ This stage is **skipped** when neither `--patch-local` nor `--open-pr` is set, o
 
 After the analysis stages complete, the publish phase handles all external side effects.
 
-| Action                 | Triggered by                | Description                                                                                                       |
-| ---------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| **PR creation**        | `--open-pr`                 | Creates or updates a PR on the model repository with patched relationship declarations                            |
-| **Stale PR close**     | `--open-pr` (no violations) | Closes a previously opened model PR when re-analysis finds no violations                                          |
-| **PR comment**         | `--comment`                 | Upserts an analysis summary on the source PR, or removes a stale comment when there are no findings               |
-| **GH Actions outputs** | `--github-actions`          | Writes `has-violations`, `violations-count`, `analysis-summary`, and a step summary for downstream workflow steps |
+| Action                 | Triggered by                | Description                                                                                                                       |
+| ---------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **PR creation**        | `--open-pr`                 | Creates or updates a PR on the model repository with patched relationship declarations                                            |
+| **Stale PR close**     | `--open-pr` (no violations) | Closes a previously opened model PR when re-analysis finds no violations                                                          |
+| **PR comment**         | `--comment`                 | Upserts an analysis summary on the source PR, or removes a stale comment when there are no findings                               |
+| **GH Actions outputs** | `--github-actions`          | Writes `has-violations`, `violations-count`, `model-format`, `analysis-summary`, and a step summary for downstream workflow steps |
 
 When `--model-repo` is set, PR creation and stale-PR closing target that repository instead of the analyzed one. All publish actions are skipped during `--dry-run`. The sequence diagram above shows the GitHub case; GitLab and Bitbucket follow the same flow through their respective platform adapters.
 
