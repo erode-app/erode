@@ -84,7 +84,7 @@ export default defineConfig({
             { slug: 'docs/integrations/claude-code' },
           ],
         },
-        { label: 'Model Formats', autogenerate: { directory: 'docs/models' } },
+        { label: 'Model Formats', items: [{ autogenerate: { directory: 'docs/models' } }] },
         {
           label: 'Reference',
           items: [
