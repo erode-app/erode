@@ -10,7 +10,7 @@ head:
 Erode uses a multi-stage AI pipeline to analyze code changes for architecture drift. Cheaper, faster models handle extraction and routing, while stronger models handle the analysis. The same pipeline powers both `erode analyze` (code review) and `erode check` (local pre-push detection).
 
 <div class="likec4-embed">
-<likec4-view view-id="pipeline-stages" browser="true" dynamic-variant="sequence"></likec4-view>
+<likec4-view view-id="pipeline-stages" dynamic-variant="sequence"></likec4-view>
 </div>
 
 > [Open full interactive viewer →](/architecture/#/view/pipeline-stages/)

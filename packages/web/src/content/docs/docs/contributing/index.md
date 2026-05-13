@@ -10,7 +10,7 @@ head:
 Erode is an npm workspace monorepo. The diagram below shows the package structure and their relationships.
 
 <div class="likec4-embed">
-<likec4-view view-id="packages" browser="true"></likec4-view>
+<likec4-view view-id="packages"></likec4-view>
 </div>
 
 > [Open full interactive viewer →](/architecture/#/view/packages/)

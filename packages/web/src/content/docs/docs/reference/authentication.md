@@ -67,7 +67,7 @@ For external model projects, the CI entrypoint accepts `ERODE_MODEL_REPO_TOKEN` 
 
 ## Bitbucket (experimental)
 
-`ERODE_BITBUCKET_TOKEN` handles all operations. There is no separate model-repo token. If the token contains `:` (e.g. `username:app_password`), Erode uses HTTP Basic auth; otherwise it uses Bearer auth.
+`ERODE_BITBUCKET_TOKEN` handles source pull request operations. For external model repositories, the Bitbucket Pipelines entrypoint accepts `ERODE_MODEL_REPO_TOKEN` and falls back to `ERODE_BITBUCKET_TOKEN` when it is not set. If the token contains `:` (e.g. `username:app_password`), Erode uses HTTP Basic auth; otherwise it uses Bearer auth.
 
 | Feature                              | App password scopes                       |
 | ------------------------------------ | ----------------------------------------- |

@@ -53,15 +53,16 @@ Environment variable names map to nested JSON keys. For example:
 
 ## Architecture model
 
-| Variable                     | Description                                             | Default  |
-| ---------------------------- | ------------------------------------------------------- | -------- |
-| `ERODE_MODEL_FORMAT`         | Architecture model format (`likec4` or `structurizr`)   | `likec4` |
-| `ERODE_MODEL_PATH`           | Path to the architecture model directory                | —        |
-| `ERODE_MODEL_REPO`           | Repository URL or owner/repo containing the model       | —        |
-| `ERODE_MODEL_REF`            | Branch or tag to clone from the model repository        | `main`   |
-| `ERODE_STRUCTURIZR_CLI_PATH` | Path to the Structurizr CLI WAR file (for `.dsl` files) | —        |
-| `ERODE_LIKEC4_EXCLUDE_PATHS` | Comma-separated paths to exclude from model loading     | —        |
-| `ERODE_LIKEC4_EXCLUDE_TAGS`  | Comma-separated tags to exclude from model loading      | —        |
+| Variable                          | Description                                             | Default  |
+| --------------------------------- | ------------------------------------------------------- | -------- |
+| `ERODE_MODEL_FORMAT`              | Architecture model format (`likec4` or `structurizr`)   | `likec4` |
+| `ERODE_MODEL_PATH`                | Path to the architecture model directory                | —        |
+| `ERODE_MODEL_REPO`                | Repository URL or owner/repo containing the model       | —        |
+| `ERODE_MODEL_REF`                 | Branch or tag to clone from the model repository        | `main`   |
+| `ERODE_STRUCTURIZR_CLI_PATH`      | Path to the Structurizr CLI WAR file (for `.dsl` files) | —        |
+| `ERODE_LIKEC4_EXCLUDE_PATHS`      | Comma-separated paths to exclude from model loading     | —        |
+| `ERODE_LIKEC4_EXCLUDE_TAGS`       | Comma-separated tags to exclude from model loading      | —        |
+| `ERODE_LIKEC4_FORMAT_AFTER_PATCH` | Format LikeC4 models after applying generated patches   | `true`   |
 
 ## Diff limits
 
