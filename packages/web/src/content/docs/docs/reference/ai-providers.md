@@ -10,7 +10,7 @@ head:
 Erode supports three AI providers: **Gemini** (default), **OpenAI**, and **Anthropic** (experimental). Set the provider with the `ERODE_AI_PROVIDER` environment variable.
 
 <div class="likec4-embed">
-<likec4-view view-id="providers" browser="true"></likec4-view>
+<likec4-view view-id="providers"></likec4-view>
 </div>
 
 > [Open full interactive viewer →](/architecture/#/view/providers/)

@@ -12,7 +12,7 @@ Erode runs inside your CI pipeline and analyzes every pull request against your 
 All platforms use the same Docker image and analysis engine. Only the entrypoint and platform-specific environment variables differ.
 
 <div class="likec4-embed">
-<likec4-view view-id="platforms" browser="true"></likec4-view>
+<likec4-view view-id="platforms"></likec4-view>
 </div>
 
 > [Open full interactive viewer →](/architecture/#/view/platforms/)

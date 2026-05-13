@@ -8,7 +8,7 @@ head:
 ---
 
 <div class="likec4-embed">
-<likec4-view view-id="pipeline" browser="true" dynamic-variant="sequence"></likec4-view>
+<likec4-view view-id="pipeline" dynamic-variant="sequence"></likec4-view>
 </div>
 
 > [Open full interactive viewer →](/architecture/#/view/pipeline/)
