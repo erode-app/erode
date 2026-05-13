@@ -63,7 +63,7 @@
     "likec4": "^1.56.0",
     "minimatch": "^10.2.5",
     "openai": "^6.35.0",
-    "zod": "^4.4.1"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@erode-app/eslint-config": "*",
