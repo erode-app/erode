@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.9.4](https://github.com/erode-app/erode/compare/0.9.3...0.9.4) (2026-05-13)
+
+
+### Build System
+
+* **deps-dev:** bump @commitlint/cli from 20.5.0 to 20.5.3 ([#175](https://github.com/erode-app/erode/issues/175)) ([7b169ec](https://github.com/erode-app/erode/commit/7b169eccf8623938c071663202dab356421d04e3))
+* **deps-dev:** bump knip from 6.9.0 to 6.12.0 ([#172](https://github.com/erode-app/erode/issues/172)) ([acd0072](https://github.com/erode-app/erode/commit/acd0072e8201a01978210c5cbf592bf036bc41d9))
+* **deps:** bump @anthropic-ai/sdk from 0.92.0 to 0.95.0 ([#174](https://github.com/erode-app/erode/issues/174)) ([797c22c](https://github.com/erode-app/erode/commit/797c22c66cb552c44a356cc905afd0d19bd8cb70))
+* **deps:** bump @google/genai from 1.51.0 to 1.52.0 ([#171](https://github.com/erode-app/erode/issues/171)) ([f674a29](https://github.com/erode-app/erode/commit/f674a290551e366e7007ee29740353a54d0cfe03))
+* **deps:** bump @protobufjs/utf8 from 1.1.0 to 1.1.1 ([#179](https://github.com/erode-app/erode/issues/179)) ([e79a94b](https://github.com/erode-app/erode/commit/e79a94b9c531ce3e5debf208dfbaea383e69f60d))
+* **deps:** bump astro from 6.1.10 to 6.2.2 ([#173](https://github.com/erode-app/erode/issues/173)) ([6844c81](https://github.com/erode-app/erode/commit/6844c81661ea7dc034a5030f115abe89026d9e8d))
+* **deps:** bump fast-uri from 3.1.0 to 3.1.2 ([#178](https://github.com/erode-app/erode/issues/178)) ([c0acf3b](https://github.com/erode-app/erode/commit/c0acf3b8da0d9ee9ce6bcb6015c5dcea50647168))
+* **deps:** bump fast-xml-builder from 1.1.5 to 1.2.0 ([#177](https://github.com/erode-app/erode/issues/177)) ([248ce0b](https://github.com/erode-app/erode/commit/248ce0b299093e0a447f5d5db95fa7c9ebbb8076))
+* **deps:** bump protobufjs from 7.5.5 to 7.5.8 ([#181](https://github.com/erode-app/erode/issues/181)) ([71391ea](https://github.com/erode-app/erode/commit/71391ea7cc5f0b00b098b4e3bebd9e5e013e17cd))
+
 ## [0.9.3](https://github.com/erode-app/erode/compare/0.9.2...0.9.3) (2026-05-06)
 
 
