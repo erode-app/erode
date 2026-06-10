@@ -69,7 +69,7 @@
     "@erode-app/eslint-config": "*",
     "@types/node": "^24.12.4",
     "@vitest/coverage-v8": "^4.1.6",
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.3",
     "eslint": "^10.4.1",
     "prettier": "^3.8.3",
     "rimraf": "^6.1.2",
