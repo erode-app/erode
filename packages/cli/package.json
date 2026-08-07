@@ -34,7 +34,7 @@
   "dependencies": {
     "@erode-app/core": "*",
     "chalk": "^5.3.0",
-    "commander": "^14.0.2",
+    "commander": "^15.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
