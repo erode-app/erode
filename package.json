@@ -33,7 +33,7 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.1.0",
-    "knip": "^6.20.0",
+    "knip": "^6.31.0",
     "markdownlint-cli2": "^0.23.1",
     "prettier": "^3.8.3"
   }
