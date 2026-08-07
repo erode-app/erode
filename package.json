@@ -30,6 +30,12 @@
     "dev:web": "npm run dev --workspace=packages/web",
     "dev:arch": "npm run dev --workspace=packages/architecture"
   },
+  "allowScripts": {
+    "sharp": true,
+    "esbuild": true,
+    "protobufjs": false,
+    "@google/genai": false
+  },
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.1.0",
