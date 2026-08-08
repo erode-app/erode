@@ -282,8 +282,7 @@ describe('GeminiProvider', () => {
       await provider.patchModel('x'.repeat(40_000), ['  comp.a -> comp.b'], 'likec4');
 
       const callArg = mockGenerateContent.mock.calls[0]?.[0] as
-        | { config?: { maxOutputTokens?: number } }
-        | undefined;
+        { config?: { maxOutputTokens?: number } } | undefined;
       expect(callArg?.config?.maxOutputTokens).toBeGreaterThan(4096);
     });
 

@@ -29,8 +29,7 @@ function relaxSchema(obj: Record<string, unknown>): void {
       delete section['required'];
       // Recurse into nested objects (e.g., adapter.likec4, adapter.structurizr)
       const innerProps = section['properties'] as
-        | Record<string, Record<string, unknown>>
-        | undefined;
+        Record<string, Record<string, unknown>> | undefined;
       if (!innerProps) continue;
       for (const inner of Object.values(innerProps)) {
         if (inner && typeof inner === 'object' && inner['type'] === 'object') {

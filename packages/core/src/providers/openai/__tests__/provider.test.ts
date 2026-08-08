@@ -429,8 +429,7 @@ describe('OpenAIProvider', () => {
 
       expect(mockCreate).toHaveBeenCalled();
       const callArg = mockCreate.mock.calls[0]?.[0] as
-        | { max_output_tokens?: number; model?: string; reasoning?: { effort?: string } }
-        | undefined;
+        { max_output_tokens?: number; model?: string; reasoning?: { effort?: string } } | undefined;
       expect(callArg?.model).toBe('gpt-5-mini');
       expect(callArg?.max_output_tokens).toBe(6000);
       expect(callArg?.reasoning?.effort).toBe('medium');
