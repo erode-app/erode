@@ -347,8 +347,7 @@ describe('AnthropicProvider', () => {
 
       expect(mockCreate).toHaveBeenCalled();
       const callArg = mockCreate.mock.calls[0]?.[0] as
-        | { max_tokens?: number; model?: string }
-        | undefined;
+        { max_tokens?: number; model?: string } | undefined;
       expect(callArg?.model).toBe('claude-haiku-4-5');
       expect(callArg?.max_tokens).toBe(4096);
     });

@@ -26,10 +26,7 @@ import type {
 } from './structurizr-types.js';
 
 type StructurizrElement =
-  | StructurizrPerson
-  | StructurizrSoftwareSystem
-  | StructurizrContainer
-  | StructurizrComponent;
+  StructurizrPerson | StructurizrSoftwareSystem | StructurizrContainer | StructurizrComponent;
 
 const BUILTIN_TAGS = new Set([
   'Element',
