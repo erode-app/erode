@@ -1,4 +1,4 @@
 export const GEMINI_MODELS = {
-  FAST: 'gemini-2.5-flash',
-  ADVANCED: 'gemini-2.5-pro',
+  FAST: 'gemini-3.5-flash-lite',
+  ADVANCED: 'gemini-3.6-flash',
 } as const;

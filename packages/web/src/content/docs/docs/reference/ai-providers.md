@@ -26,24 +26,24 @@ Each provider uses two model tiers to balance cost and quality:
 
 ### Gemini
 
-| Tier     | Default model      |
-| -------- | ------------------ |
-| Fast     | `gemini-2.5-flash` |
-| Advanced | `gemini-2.5-pro`   |
+| Tier     | Default model           |
+| -------- | ----------------------- |
+| Fast     | `gemini-3.5-flash-lite` |
+| Advanced | `gemini-3.6-flash`      |
 
 ### OpenAI
 
-| Tier     | Default model |
-| -------- | ------------- |
-| Fast     | `gpt-5-mini`  |
-| Advanced | `gpt-5`       |
+| Tier     | Default model  |
+| -------- | -------------- |
+| Fast     | `gpt-5.6-luna` |
+| Advanced | `gpt-5.6-sol`  |
 
 ### Anthropic (experimental)
 
-| Tier     | Default model       |
-| -------- | ------------------- |
-| Fast     | `claude-haiku-4-5`  |
-| Advanced | `claude-sonnet-4-6` |
+| Tier     | Default model      |
+| -------- | ------------------ |
+| Fast     | `claude-haiku-4-5` |
+| Advanced | `claude-sonnet-5`  |
 
 :::caution
 Anthropic support is experimental and may not produce consistent results across all codebases. Use Gemini or OpenAI for production workflows.

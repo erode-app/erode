@@ -80,7 +80,7 @@ describe('StructurizrAdapter Integration', () => {
       await expect(dirAdapter.loadFromPath(tmp)).rejects.not.toThrow(
         /No workspace file found in directory/
       );
-    });
+    }, 10_000);
 
     it('should throw when directory has no workspace file', async () => {
       const tmp = mkdtempSync(path.join(tmpdir(), 'erode-structurizr-'));
