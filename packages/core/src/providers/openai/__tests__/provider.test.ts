@@ -142,7 +142,7 @@ describe('OpenAIProvider', () => {
       expect(result).toBe('comp.backend');
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'gpt-5-mini',
+          model: 'gpt-5.6-luna',
           max_output_tokens: 1500,
           reasoning: { effort: 'low' },
         })
@@ -226,7 +226,7 @@ describe('OpenAIProvider', () => {
       expect(result.summary).toBe('Added Redis dependency');
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'gpt-5-mini',
+          model: 'gpt-5.6-luna',
           max_output_tokens: 1500,
           reasoning: { effort: 'low' },
         })
@@ -272,7 +272,7 @@ describe('OpenAIProvider', () => {
       expect(result.dependencyChanges).toBe(data.dependencies);
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'gpt-5',
+          model: 'gpt-5.6-sol',
           max_output_tokens: 10000,
           reasoning: { effort: 'low' },
         })
@@ -430,7 +430,7 @@ describe('OpenAIProvider', () => {
       expect(mockCreate).toHaveBeenCalled();
       const callArg = mockCreate.mock.calls[0]?.[0] as
         { max_output_tokens?: number; model?: string; reasoning?: { effort?: string } } | undefined;
-      expect(callArg?.model).toBe('gpt-5-mini');
+      expect(callArg?.model).toBe('gpt-5.6-luna');
       expect(callArg?.max_output_tokens).toBe(6000);
       expect(callArg?.reasoning?.effort).toBe('medium');
     });

@@ -168,7 +168,7 @@
           "type": "string"
         },
         "advancedModel": {
-          "default": "claude-sonnet-4-6",
+          "default": "claude-sonnet-5",
           "type": "string"
         }
       },
@@ -187,11 +187,11 @@
           "maximum": 300000
         },
         "fastModel": {
-          "default": "gemini-2.5-flash",
+          "default": "gemini-3.5-flash-lite",
           "type": "string"
         },
         "advancedModel": {
-          "default": "gemini-2.5-pro",
+          "default": "gemini-3.6-flash",
           "type": "string"
         }
       },
@@ -210,11 +210,11 @@
           "maximum": 300000
         },
         "fastModel": {
-          "default": "gpt-5-mini",
+          "default": "gpt-5.6-luna",
           "type": "string"
         },
         "advancedModel": {
-          "default": "gpt-5",
+          "default": "gpt-5.6-sol",
           "type": "string"
         }
       },

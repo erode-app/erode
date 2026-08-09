@@ -128,8 +128,8 @@ describe('GeminiProvider', () => {
       expect(result).toBe('comp.backend');
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'gemini-2.5-flash',
-          config: { maxOutputTokens: 1500, thinkingConfig: { thinkingBudget: 0 } },
+          model: 'gemini-3.5-flash-lite',
+          config: { maxOutputTokens: 1500, thinkingConfig: { thinkingLevel: 'LOW' } },
         })
       );
     });
@@ -190,8 +190,8 @@ describe('GeminiProvider', () => {
       expect(result.summary).toBe('Added Redis dependency');
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'gemini-2.5-flash',
-          config: { maxOutputTokens: 1500, thinkingConfig: { thinkingBudget: 0 } },
+          model: 'gemini-3.5-flash-lite',
+          config: { maxOutputTokens: 1500, thinkingConfig: { thinkingLevel: 'LOW' } },
         })
       );
     });
@@ -243,15 +243,15 @@ describe('GeminiProvider', () => {
       expect(result.dependencyChanges).toBe(data.dependencies);
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'gemini-2.5-pro',
-          config: { maxOutputTokens: 6000, thinkingConfig: { thinkingBudget: -1 } },
+          model: 'gemini-3.6-flash',
+          config: { maxOutputTokens: 6000, thinkingConfig: { thinkingLevel: 'LOW' } },
         })
       );
     });
   });
 
   describe('patchModel', () => {
-    it('should use 2.5 Flash thinking budgets and dynamic output headroom for patching', async () => {
+    it('should use fast model thinking level and dynamic output headroom for patching', async () => {
       const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
       mockGenerateContent.mockResolvedValueOnce({
         text: patchedContent,
@@ -264,8 +264,8 @@ describe('GeminiProvider', () => {
 
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'gemini-2.5-flash',
-          config: { maxOutputTokens: 4096, thinkingConfig: { thinkingBudget: -1 } },
+          model: 'gemini-3.5-flash-lite',
+          config: { maxOutputTokens: 4096, thinkingConfig: { thinkingLevel: 'MEDIUM' } },
         })
       );
     });

@@ -222,7 +222,7 @@ describe('AnthropicProvider', () => {
       expect(result.dependencyChanges).toBe(data.dependencies);
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'claude-sonnet-4-6',
+          model: 'claude-sonnet-5',
           max_tokens: 8192,
         })
       );
