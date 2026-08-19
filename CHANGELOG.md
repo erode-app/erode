@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.10.1](https://github.com/erode-app/erode/compare/0.10.0...0.10.1) (2026-08-19)
+
+
+### Build System
+
+* **deps-dev:** bump @commitlint/cli from 21.2.1 to 21.2.2 ([#285](https://github.com/erode-app/erode/issues/285)) ([7f7d6f0](https://github.com/erode-app/erode/commit/7f7d6f098413eddf0fea928b134aa861baeb3504))
+* **deps-dev:** bump concurrently from 10.0.4 to 10.0.5 ([#286](https://github.com/erode-app/erode/issues/286)) ([b789550](https://github.com/erode-app/erode/commit/b789550d6687d52c60b99baa398108ce7896adef))
+* **deps-dev:** bump eslint from 10.8.0 to 10.8.1 ([#277](https://github.com/erode-app/erode/issues/277)) ([cf51335](https://github.com/erode-app/erode/commit/cf513358bc29dc191d2c69e514e50dc52f80f2bc))
+* **deps-dev:** bump tsx from 4.23.6 to 4.23.11 ([#278](https://github.com/erode-app/erode/issues/278)) ([bfca2f0](https://github.com/erode-app/erode/commit/bfca2f018002d3927bd6ca9c41ed2364a7f4897b))
+* **deps:** bump @anthropic-ai/sdk from 0.115.0 to 0.116.0 ([#281](https://github.com/erode-app/erode/issues/281)) ([4fd9cb6](https://github.com/erode-app/erode/commit/4fd9cb6059d28d4cc9aef244f70b0c05b6e360e1))
+* **deps:** bump @anthropic-ai/sdk from 0.116.0 to 0.117.1 ([#283](https://github.com/erode-app/erode/issues/283)) ([162366a](https://github.com/erode-app/erode/commit/162366a9d7729cd8be1da76906386b81e26915d5))
+* **deps:** bump @google/genai from 2.15.0 to 2.16.0 ([#280](https://github.com/erode-app/erode/issues/280)) ([4eb289f](https://github.com/erode-app/erode/commit/4eb289f2df28186299e36b303a8a6abf0bdf3ba3))
+* **deps:** bump astro from 7.1.6 to 7.2.0 ([#279](https://github.com/erode-app/erode/issues/279)) ([06caf39](https://github.com/erode-app/erode/commit/06caf392d53cf82c74da6ffdb0e6699dfc6457b5))
+* **deps:** bump astro from 7.2.0 to 7.2.2 ([#284](https://github.com/erode-app/erode/issues/284)) ([da0de8f](https://github.com/erode-app/erode/commit/da0de8fb7d107d7d37c9450dc679718060b6917a))
+* **deps:** bump starlight-links-validator from 0.25.2 to 0.25.3 ([#287](https://github.com/erode-app/erode/issues/287)) ([cfdad94](https://github.com/erode-app/erode/commit/cfdad9488aed2dabbde340a4c8bc6835c78622e9))
+
 ## [0.10.0](https://github.com/erode-app/erode/compare/0.9.5...0.10.0) (2026-08-09)
 
 
