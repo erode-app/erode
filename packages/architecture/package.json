@@ -10,7 +10,7 @@
     "check:ci": "likec4 validate ."
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.62.5"
+    "@rollup/rollup-linux-x64-gnu": "^4.63.1"
   },
   "devDependencies": {
     "likec4": "^1.59.2"
