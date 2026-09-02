@@ -55,7 +55,7 @@
     "node": ">=24.0.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.120.0",
+    "@anthropic-ai/sdk": "^0.122.0",
     "@gitbeaker/rest": "^43.8.0",
     "@google/genai": "^2.19.0",
     "@octokit/rest": "^22.0.1",
