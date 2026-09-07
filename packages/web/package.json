@@ -15,7 +15,7 @@
     "lint": "astro sync && eslint . --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.41.7",
+    "@astrojs/starlight": "^0.42.0",
     "astro": "^7.2.4",
     "starlight-blog": "^0.29.0",
     "starlight-links-validator": "^0.25.3"
