@@ -13,6 +13,6 @@
     "@rollup/rollup-linux-x64-gnu": "^4.63.1"
   },
   "devDependencies": {
-    "likec4": "^1.59.2"
+    "likec4": "^1.59.3"
   }
 }
