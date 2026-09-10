@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.10.4](https://github.com/erode-app/erode/compare/0.10.3...0.10.4) (2026-09-10)
+
+
+### Build System
+
+* **deps-dev:** bump eslint from 10.8.1 to 10.10.0 ([#317](https://github.com/erode-app/erode/issues/317)) ([8d7ab74](https://github.com/erode-app/erode/commit/8d7ab74e33c12c01dbae1c5fb12bbd287f36b0b3))
+* **deps-dev:** bump vitest from 4.1.11 to 5.0.0 ([#316](https://github.com/erode-app/erode/issues/316)) ([6f3c44d](https://github.com/erode-app/erode/commit/6f3c44d41fc848426020d63778de0d95feb87aa9))
+* **deps:** bump @anthropic-ai/sdk from 0.122.0 to 0.124.0 ([#318](https://github.com/erode-app/erode/issues/318)) ([a35eef4](https://github.com/erode-app/erode/commit/a35eef4a8634009bda316b2c8ac3e0b5a9ddc0fb))
+
 ## [0.10.3](https://github.com/erode-app/erode/compare/0.10.2...0.10.3) (2026-09-10)
 
 
