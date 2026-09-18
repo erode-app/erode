@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.10.4](https://github.com/erode-app/erode/compare/0.10.3...0.10.4) (2026-09-18)
+
+
+### Build System
+
+* **deps-dev:** bump @types/node from 24.13.3 to 24.13.4 ([#324](https://github.com/erode-app/erode/issues/324)) ([69d66e1](https://github.com/erode-app/erode/commit/69d66e181b5e92aeee45236d6b472caf68f64220))
+* **deps-dev:** bump eslint from 10.8.1 to 10.10.0 ([#317](https://github.com/erode-app/erode/issues/317)) ([8d7ab74](https://github.com/erode-app/erode/commit/8d7ab74e33c12c01dbae1c5fb12bbd287f36b0b3))
+* **deps-dev:** bump vitest from 4.1.11 to 5.0.0 ([#316](https://github.com/erode-app/erode/issues/316)) ([6f3c44d](https://github.com/erode-app/erode/commit/6f3c44d41fc848426020d63778de0d95feb87aa9))
+* **deps:** bump @anthropic-ai/sdk from 0.122.0 to 0.124.0 ([#318](https://github.com/erode-app/erode/issues/318)) ([a35eef4](https://github.com/erode-app/erode/commit/a35eef4a8634009bda316b2c8ac3e0b5a9ddc0fb))
+* **deps:** bump @anthropic-ai/sdk from 0.124.0 to 0.125.0 ([#323](https://github.com/erode-app/erode/issues/323)) ([981d0fc](https://github.com/erode-app/erode/commit/981d0fce9655b8f1e4522921f0f927fbbedd57f4))
+* **deps:** bump @rollup/rollup-linux-x64-gnu from 4.63.1 to 4.63.2 ([#322](https://github.com/erode-app/erode/issues/322)) ([473650b](https://github.com/erode-app/erode/commit/473650b4ebee8bdd2d7445cffa562f44357a9f69))
+* **deps:** bump devalue from 5.8.1 to 5.9.2 ([#326](https://github.com/erode-app/erode/issues/326)) ([475c616](https://github.com/erode-app/erode/commit/475c616710b9ad934080f9dcbc9eb8cea00974a9))
+* **deps:** bump openai from 7.10.0 to 7.15.0 ([#325](https://github.com/erode-app/erode/issues/325)) ([9e0a164](https://github.com/erode-app/erode/commit/9e0a164c8033122d91f1acc3b1f8df230677e32a))
+* **deps:** bump typescript-eslint from 8.69.0 to 8.70.0 ([#321](https://github.com/erode-app/erode/issues/321)) ([07b65fb](https://github.com/erode-app/erode/commit/07b65fb6dcd1583c270d3a4b1f9b34ec6eed2a92))
+
 ## [0.10.3](https://github.com/erode-app/erode/compare/0.10.2...0.10.3) (2026-09-10)
 
 
