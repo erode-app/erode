@@ -2,6 +2,7 @@ import type { ProgressReporter } from './progress.js';
 import { SilentProgress } from './progress.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
 import { validatePath } from '../utils/validation.js';
+import { isRepositoryHostUrl } from '../adapters/url-utils.js';
 
 export interface ValidateOptions {
   modelPath: string;
@@ -30,14 +31,7 @@ function isRepositoryUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
-    return [
-      'github.com',
-      'www.github.com',
-      'gitlab.com',
-      'www.gitlab.com',
-      'bitbucket.org',
-      'www.bitbucket.org',
-    ].includes(parsed.hostname);
+    return isRepositoryHostUrl(url);
   } catch {
     return false;
   }
