@@ -17,6 +17,10 @@ describe('isRepositoryHostUrl', () => {
     expect(isRepositoryHostUrl('https://www.bitbucket.org/example/repo')).toBe(true);
   });
 
+  it('should accept Azure DevOps URLs', () => {
+    expect(isRepositoryHostUrl('https://dev.azure.com/org/project/_git/repo')).toBe(true);
+  });
+
   it('should reject spoofed domains', () => {
     expect(isRepositoryHostUrl('https://evil-github.com/owner/repo')).toBe(false);
     expect(isRepositoryHostUrl('https://api.github.com/repos/owner/repo')).toBe(false);
@@ -67,6 +71,21 @@ describe('normalizeRepositoryUrl', () => {
     expect(normalizeRepositoryUrl('https://www.bitbucket.org/Example/Repo')).toBe(
       'https://bitbucket.org/example/repo'
     );
+  });
+
+  it('should normalize Azure DevOps URLs', () => {
+    expect(normalizeRepositoryUrl('https://dev.azure.com/MyOrg/MyProject/_git/MyRepo')).toBe(
+      'https://dev.azure.com/myorg/myproject/_git/myrepo'
+    );
+    expect(normalizeRepositoryUrl('https://dev.azure.com/Org/Project/_git/Repo.git')).toBe(
+      'https://dev.azure.com/org/project/_git/repo'
+    );
+  });
+
+  it('should not collide different Azure repos in the same org/project', () => {
+    const first = normalizeRepositoryUrl('https://dev.azure.com/Org/Project/_git/api');
+    const second = normalizeRepositoryUrl('https://dev.azure.com/Org/Project/_git/web');
+    expect(first).not.toBe(second);
   });
 
   it('should strip trailing path segments for GitHub', () => {

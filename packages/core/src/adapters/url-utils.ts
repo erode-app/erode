@@ -5,6 +5,7 @@ const REPO_HOSTNAMES: Record<string, string> = {
   'www.gitlab.com': 'https://gitlab.com',
   'bitbucket.org': 'https://bitbucket.org',
   'www.bitbucket.org': 'https://bitbucket.org',
+  'dev.azure.com': 'https://dev.azure.com',
 };
 
 export function isRepositoryHostUrl(url: string): boolean {
@@ -35,6 +36,24 @@ export function normalizeRepositoryUrl(url: string): string {
           .map((p) => p.toLowerCase())
           .join('/');
         return `${base}/${namespace}/${repo}`;
+      }
+      return url;
+    }
+
+    // Azure DevOps uses /{org}/{project}/_git/{repo}, so the repo is the
+    // segment after `_git`, not the second path segment. Without this, two
+    // repos in the same org/project would collide on `{org}/{project}`.
+    if (base === 'https://dev.azure.com') {
+      const parts = parsed.pathname.split('/').filter(Boolean);
+      const gitIdx = parts.indexOf('_git');
+      const repoSegment = gitIdx > 0 ? parts[gitIdx + 1] : undefined;
+      if (repoSegment) {
+        const repo = repoSegment.replace(/\.git$/, '').toLowerCase();
+        const namespace = parts
+          .slice(0, gitIdx)
+          .map((p) => p.toLowerCase())
+          .join('/');
+        return `${base}/${namespace}/_git/${repo}`;
       }
       return url;
     }
