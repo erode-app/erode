@@ -19,6 +19,14 @@ describe('isRepositoryHostUrl', () => {
 
   it('should accept Azure DevOps URLs', () => {
     expect(isRepositoryHostUrl('https://dev.azure.com/org/project/_git/repo')).toBe(true);
+    expect(isRepositoryHostUrl('https://ssh.dev.azure.com/v3/org/project/repo')).toBe(true);
+  });
+
+  it('should reject an Azure DevOps URL without a repository path', () => {
+    // A bare project page is not a repository — accepting it would pass
+    // validation for a link that check can never match.
+    expect(isRepositoryHostUrl('https://dev.azure.com/org/project')).toBe(false);
+    expect(isRepositoryHostUrl('https://dev.azure.com/org')).toBe(false);
   });
 
   it('should reject spoofed domains', () => {
@@ -86,6 +94,21 @@ describe('normalizeRepositoryUrl', () => {
     const first = normalizeRepositoryUrl('https://dev.azure.com/Org/Project/_git/api');
     const second = normalizeRepositoryUrl('https://dev.azure.com/Org/Project/_git/web');
     expect(first).not.toBe(second);
+  });
+
+  it('should canonicalize an Azure SSH remote to the same URL as the web link', () => {
+    // `check` converts git@ssh.dev.azure.com:v3/org/project/repo into
+    // https://ssh.dev.azure.com/v3/org/project/repo, which must match the web link.
+    const webLink = normalizeRepositoryUrl('https://dev.azure.com/Org/Project/_git/Repo');
+    const sshRemote = normalizeRepositoryUrl('https://ssh.dev.azure.com/v3/Org/Project/Repo');
+    expect(sshRemote).toBe('https://dev.azure.com/org/project/_git/repo');
+    expect(sshRemote).toBe(webLink);
+  });
+
+  it('should leave a bare Azure project page unchanged', () => {
+    expect(normalizeRepositoryUrl('https://dev.azure.com/Org/Project')).toBe(
+      'https://dev.azure.com/Org/Project'
+    );
   });
 
   it('should strip trailing path segments for GitHub', () => {
