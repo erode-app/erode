@@ -35,7 +35,7 @@
     "@erode-app/core": "*",
     "chalk": "^6.0.0",
     "commander": "^15.0.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@erode-app/eslint-config": "*",
