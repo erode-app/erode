@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.11.2](https://github.com/erode-app/erode/compare/0.11.1...0.11.2) (2026-10-28)
+
+
+### Build System
+
+* **deps-dev:** bump @astrojs/check from 0.9.10 to 0.9.12 ([#375](https://github.com/erode-app/erode/issues/375)) ([3b7bdd6](https://github.com/erode-app/erode/commit/3b7bdd6b7176cf1012d69d28aaadcc90292dfb91))
+* **deps-dev:** bump eslint-plugin-astro from 3.1.0 to 3.2.1 ([#373](https://github.com/erode-app/erode/issues/373)) ([a8b1b70](https://github.com/erode-app/erode/commit/a8b1b70f7cae2a3b5a2d588ded2a65dd1f690917))
+* **deps:** bump @astrojs/starlight from 0.42.6 to 0.42.7 ([#371](https://github.com/erode-app/erode/issues/371)) ([731a326](https://github.com/erode-app/erode/commit/731a326990f31289fd1ed926f1a913683dc2cc8e))
+* **deps:** bump @google/genai from 2.23.0 to 2.31.0 ([#374](https://github.com/erode-app/erode/issues/374)) ([793776d](https://github.com/erode-app/erode/commit/793776dff04d490c6ee644908c8b9e692a686afd))
+* **deps:** bump chalk from 6.0.0 to 6.0.1 ([#372](https://github.com/erode-app/erode/issues/372)) ([9a39017](https://github.com/erode-app/erode/commit/9a390173401f7e8ca28f99741dd008cfb26eb115))
+* **deps:** bump fast-uri from 3.1.7 to 3.1.9 ([#368](https://github.com/erode-app/erode/issues/368)) ([1d338fb](https://github.com/erode-app/erode/commit/1d338fbc12750e1f6c49bbe29bd970cdf208c0de))
+* **deps:** bump postcss-selector-parser ([#378](https://github.com/erode-app/erode/issues/378)) ([20b7696](https://github.com/erode-app/erode/commit/20b76966769c30349616378b99146548ffc9a41f))
+* **deps:** bump qs from 6.16.0 to 6.17.0 ([#377](https://github.com/erode-app/erode/issues/377)) ([739ce90](https://github.com/erode-app/erode/commit/739ce90e00104fd21420955e75cbd75ee32e41dd))
+* **deps:** bump undici from 8.11.2 to 8.12.3 ([#369](https://github.com/erode-app/erode/issues/369)) ([690bf87](https://github.com/erode-app/erode/commit/690bf874b95a5971efb4c3403fb3b9e91a020c2f))
+
 ## [0.11.1](https://github.com/erode-app/erode/compare/0.11.0...0.11.1) (2026-10-21)
 
 
