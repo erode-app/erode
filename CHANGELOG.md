@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.3](https://github.com/erode-app/erode/compare/0.11.2...0.11.3) (2026-11-11)
+
+
+### Build System
+
+* **deps:** bump minimatch from 11.0.5 to 11.0.6 ([#384](https://github.com/erode-app/erode/issues/384)) ([6389549](https://github.com/erode-app/erode/commit/6389549090552deb26628c11fbcc63b26d6056e9))
+
 ## [0.11.2](https://github.com/erode-app/erode/compare/0.11.1...0.11.2) (2026-11-11)
 
 
