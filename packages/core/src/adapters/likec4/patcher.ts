@@ -9,6 +9,11 @@ import type { DslValidationResult } from '../model-patcher.js';
 import type { ValidationDiagnostic } from '../architecture-adapter.js';
 import { CONFIG } from '../../utils/config.js';
 
+// Backslashes first, so an input `\` cannot escape the closing quote.
+function escapeLikeC4String(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 export class LikeC4Patcher extends BasePatcher {
   protected readonly formatName = 'LikeC4Patcher';
   protected readonly formatId = 'likec4';
@@ -25,7 +30,7 @@ export class LikeC4Patcher extends BasePatcher {
     const validKinds = new Set(existing.map((r) => r.kind).filter((k): k is string => Boolean(k)));
     this.debugLog('Valid relationship kinds in model', [...validKinds]);
     return unique.map((rel) => {
-      const desc = rel.description.replace(/'/g, '');
+      const desc = escapeLikeC4String(rel.description);
       if (rel.kind && validKinds.has(rel.kind)) {
         return `  ${rel.source} -[${rel.kind}]-> ${rel.target} '${desc}'`;
       }
@@ -36,16 +41,16 @@ export class LikeC4Patcher extends BasePatcher {
   protected generateComponentDslLines(components: NewComponent[]): string[] {
     return components.map((comp) => {
       const lines: string[] = [];
-      const name = comp.name.replace(/'/g, '');
+      const name = escapeLikeC4String(comp.name);
       lines.push(`  ${comp.id} = ${comp.kind} '${name}' {`);
       if (comp.tags && comp.tags.length > 0) {
         lines.push(`    ${comp.tags.map((t) => `#${t}`).join(' ')}`);
       }
       if (comp.description) {
-        lines.push(`    description '${comp.description.replace(/'/g, '')}'`);
+        lines.push(`    description '${escapeLikeC4String(comp.description)}'`);
       }
       if (comp.technology) {
-        lines.push(`    technology '${comp.technology.replace(/'/g, '')}'`);
+        lines.push(`    technology '${escapeLikeC4String(comp.technology)}'`);
       }
       lines.push('  }');
       return lines.join('\n');
