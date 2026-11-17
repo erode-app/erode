@@ -24,6 +24,7 @@ import { LikeC4ElementSchema, LikeC4RelationshipSchema } from '../../schemas/lik
 import type { LikeC4Element, LikeC4Model } from './likec4-types.js';
 import { checkLikeC4Version } from './version-check.js';
 import { readLikeC4Warnings } from './validation-warnings.js';
+import { richTextToString } from './rich-text.js';
 
 export class LikeC4Adapter implements ArchitectureModelAdapter {
   readonly metadata = LIKEC4_METADATA;
@@ -177,12 +178,19 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     );
 
     const result = relationships
-      .map((rel) => ({
-        source: typeof rel.source === 'string' ? rel.source : rel.source.id,
-        target: typeof rel.target === 'string' ? rel.target : rel.target.id,
-        title: rel.title ?? undefined,
-        kind: rel.kind ?? undefined,
-      }))
+      .map((rel) => {
+        const entry: ModelRelationship = {
+          source: typeof rel.source === 'string' ? rel.source : rel.source.id,
+          target: typeof rel.target === 'string' ? rel.target : rel.target.id,
+          title: rel.title ?? undefined,
+          kind: rel.kind ?? undefined,
+        };
+        if (rel.technology) entry.technology = rel.technology;
+        const description = richTextToString(rel.description);
+        if (description) entry.description = description;
+        if (rel.tags && rel.tags.length > 0) entry.tags = [...rel.tags];
+        return entry;
+      })
       .filter(
         (rel) =>
           !this.isExcluded({
@@ -354,6 +362,9 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
       const entry: ComponentRelationship = { target };
       if (rel.kind) entry.kind = rel.kind;
       if (rel.title) entry.title = rel.title;
+      if (rel.technology) entry.technology = rel.technology;
+      if (rel.description) entry.description = rel.description;
+      if (rel.tags) entry.tags = rel.tags;
       return [entry];
     });
   }

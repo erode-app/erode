@@ -56,6 +56,16 @@ export const LikeC4RelationshipSchema = z
     target: z.union([z.string(), z.object({ id: z.string() })]),
     title: z.string().nullish(),
     kind: z.string().nullish(),
+    technology: z.string().nullish(),
+    description: z.unknown().optional(),
+    tags: z.array(z.string()).nullish(),
+  })
+  .loose();
+
+/** LikeC4 RichText as exposed by the computed model: `{ $source: { txt } | { md } | null }`. */
+export const LikeC4RichTextSchema = z
+  .object({
+    $source: z.object({ txt: z.string().optional(), md: z.string().optional() }).loose().nullish(),
   })
   .loose();
 

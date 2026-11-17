@@ -209,6 +209,42 @@ describe('PromptBuilder', () => {
       expect(result).toContain('No architectural dependency changes');
     });
 
+    it('should render declared relationship technology, tags and description', () => {
+      const result = PromptBuilder.buildDriftAnalysisPrompt({
+        changeRequest: {
+          number: 1,
+          title: 'Test',
+          description: null,
+          repository: 'org/repo',
+          author: { login: 'dev' },
+          base: { ref: 'main', sha: 'base' },
+          head: { ref: 'feature', sha: 'head' },
+          stats: { commits: 1, additions: 1, deletions: 0, files_changed: 1 },
+          commits: [],
+        },
+        component: { id: 'comp.api', name: 'API', type: 'service', tags: [] },
+        dependencies: { dependencies: [], summary: '' },
+        architectural: {
+          dependencies: [],
+          dependents: [],
+          relationships: [
+            {
+              target: { id: 'comp.db', name: 'Database' },
+              kind: 'database',
+              technology: 'JDBC',
+              tags: ['storage'],
+              description: 'Stores orders',
+            },
+          ],
+        },
+      });
+
+      expect(result).toContain('Database (comp.db) [via: database]');
+      expect(result).toContain('technology: JDBC');
+      expect(result).toContain('tags: #storage');
+      expect(result).toContain('description: Stores orders');
+    });
+
     it('should use PR context labels when number > 0', () => {
       const result = PromptBuilder.buildDriftAnalysisPrompt({
         changeRequest: {

@@ -25,6 +25,30 @@ describe('section-formatters', () => {
       expect(result).toContain('Cache (cache) [via: uses]');
     });
 
+    it('should add a detail line per relationship with declared metadata', () => {
+      const result = formatAllowedDependencies({
+        relationships: [
+          {
+            target: { id: 'db', name: 'Database' },
+            kind: 'uses',
+            title: 'reads orders',
+            technology: 'JDBC',
+            tags: ['storage', 'critical'],
+            description: 'Primary order store',
+          },
+          { target: { id: 'cache', name: 'Cache' }, kind: 'uses' },
+        ],
+        dependencies: [],
+      });
+      expect(result).toBe(
+        [
+          '  - Database (db) [via: uses]',
+          '    - [uses] "reads orders"; technology: JDBC; tags: #storage, #critical; description: Primary order store',
+          '  - Cache (cache) [via: uses]',
+        ].join('\n')
+      );
+    });
+
     it('should fall back to flat dependency list when no relationships', () => {
       const result = formatAllowedDependencies({
         relationships: [],
@@ -242,6 +266,13 @@ describe('section-formatters', () => {
       ]);
       expect(result).toContain('api_gateway -> product_service [uses] "routes requests"');
       expect(result).toContain('product_service -> user_service [calls]');
+    });
+
+    it('should include technology when declared', () => {
+      const result = formatAllRelationships([
+        { source: 'api', target: 'db', kind: 'uses', technology: 'JDBC' },
+      ]);
+      expect(result).toBe('  - api -> db [uses] (JDBC)');
     });
 
     it('should format relationships without kind', () => {

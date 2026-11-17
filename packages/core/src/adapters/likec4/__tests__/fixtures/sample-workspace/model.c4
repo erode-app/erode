@@ -15,7 +15,11 @@ model {
 
     -[https]-> user_service 'calls REST API'
     -[grpc]-> user_service 'calls gRPC'
-    -> product_service
+    -> product_service 'fetches catalog' {
+      #backend
+      technology 'REST/JSON'
+      description 'Reads product listings for the storefront'
+    }
   }
 
   user_service = service 'User Service' {
