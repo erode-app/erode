@@ -43,7 +43,9 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     const { excludePaths, excludeTags } = CONFIG.adapter.likec4;
 
     if (excludePaths.length > 0) {
-      const matchesPath = excludePaths.some((excludePath) => componentId.startsWith(excludePath));
+      const matchesPath = excludePaths.some(
+        (excludePath) => componentId === excludePath || componentId.startsWith(`${excludePath}.`)
+      );
       if (matchesPath) {
         return true;
       }

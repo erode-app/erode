@@ -417,6 +417,12 @@ describe('LikeC4Adapter - Component Exclusion', () => {
       expect(findId(components, 'frontend')).toBeDefined();
     });
 
+    it('should not exclude sibling IDs that merely share a prefix', async () => {
+      await setupExclusion(['api']);
+      const components = adapter.extractComponents();
+      expect(findId(components, 'api_gateway')).toBeDefined();
+    });
+
     it('should handle hierarchical component IDs', async () => {
       await setupExclusion(['azure_infrastructure']);
       const components = adapter.extractComponents();
