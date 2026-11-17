@@ -3,6 +3,7 @@ import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
+import type { LikeC4 } from 'likec4';
 import type { NewComponent } from '../../analysis/analysis-types.js';
 import { withTempWorkspaceCopy } from '../dsl-validation.js';
 
@@ -25,17 +26,22 @@ export interface ModelEditsPatch {
 export type ModelEditsOutcome =
   { ok: true; patch: ModelEditsPatch } | { ok: false; reason: string };
 
-function componentBlock(comp: NewComponent, localId: string, indent: string): string[] {
-  const name = comp.name.replace(/'/g, '');
+// Backslashes first, so an input `\` cannot escape the closing quote.
+export function escapeLikeC4String(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+export function componentBlock(comp: NewComponent, localId: string, indent: string): string[] {
+  const name = escapeLikeC4String(comp.name);
   const lines = [`${indent}${localId} = ${comp.kind} '${name}' {`];
   if (comp.tags && comp.tags.length > 0) {
     lines.push(`${indent}  ${comp.tags.map((t) => `#${t}`).join(' ')}`);
   }
   if (comp.description) {
-    lines.push(`${indent}  description '${comp.description.replace(/'/g, '')}'`);
+    lines.push(`${indent}  description '${escapeLikeC4String(comp.description)}'`);
   }
   if (comp.technology) {
-    lines.push(`${indent}  technology '${comp.technology.replace(/'/g, '')}'`);
+    lines.push(`${indent}  technology '${escapeLikeC4String(comp.technology)}'`);
   }
   lines.push(`${indent}}`);
   return lines;
@@ -75,6 +81,59 @@ function canonical(path: string): string {
   }
 }
 
+type LikeC4Instance = Awaited<ReturnType<typeof LikeC4.fromWorkspace>>;
+
+async function previewInWorkspace(
+  likec4: LikeC4Instance,
+  diffId: string,
+  tmpProposal: string,
+  tmpDir: string,
+  resolvedModel: string
+): Promise<ModelEditsOutcome> {
+  const edits = (likec4 as { modelEdits?: { preview?: unknown } }).modelEdits;
+  if (!edits || typeof edits.preview !== 'function') {
+    return { ok: false, reason: 'likec4 SDK has no modelEdits API' };
+  }
+
+  const diffs = DiffListSchema.safeParse(await likec4.modelDiffs.list());
+  if (!diffs.success || !diffs.data.some((d) => d.id === diffId)) {
+    return { ok: false, reason: `diff ${diffId} not found in workspace` };
+  }
+
+  const raw: unknown = await likec4.modelEdits.preview({
+    type: 'apply-diff',
+    diffId: diffId as never,
+    action: 'apply',
+  });
+  const preview = PreviewSchema.safeParse(raw);
+  if (!preview.success) {
+    return { ok: false, reason: 'unexpected modelEdits.preview result' };
+  }
+  if ('error' in preview.data) {
+    return { ok: false, reason: preview.data.error };
+  }
+  if (preview.data.overlaps.length > 0) {
+    return { ok: false, reason: `overlaps: ${preview.data.overlaps.join('; ')}` };
+  }
+
+  const proposal = canonical(tmpProposal);
+  const changed = preview.data.documents.filter(
+    (d) => canonical(fileURLToPath(d.uri)) !== proposal && d.before !== d.after
+  );
+  const doc = changed[0];
+  if (changed.length !== 1 || !doc) {
+    return { ok: false, reason: `expected one changed model file, got ${String(changed.length)}` };
+  }
+  if (doc.after.trim() === '') {
+    return { ok: false, reason: 'preview deletes a model file' };
+  }
+  const rel = relative(canonical(tmpDir), canonical(fileURLToPath(doc.uri)));
+  if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
+    return { ok: false, reason: 'changed file is outside the workspace' };
+  }
+  return { ok: true, patch: { targetFile: join(resolvedModel, rel), content: doc.after } };
+}
+
 /**
  * Writes the changes as a `diff` block into a temp copy of the workspace and asks LikeC4
  * to preview applying it. Nothing in the original workspace is written.
@@ -87,64 +146,18 @@ export async function previewModelEdits(
   const resolvedModel = resolve(modelPath);
   const diffId = `erode_${randomBytes(4).toString('hex')}`;
   const block = buildDiffBlock(diffId, components, relationshipLines);
-  const proposalPath = join(resolvedModel, `${diffId}.c4`);
 
   try {
     return await withTempWorkspaceCopy(
       resolvedModel,
-      proposalPath,
+      join(resolvedModel, `${diffId}.c4`),
       block,
       'erode-likec4-edits',
-      async (tmpProposal, tmpDir): Promise<ModelEditsOutcome> => {
+      async (tmpProposal, tmpDir) => {
         const { LikeC4 } = await import('likec4');
         const likec4 = await LikeC4.fromWorkspace(tmpDir, { printErrors: false });
         try {
-          const edits = (likec4 as { modelEdits?: { preview?: unknown } }).modelEdits;
-          if (!edits || typeof edits.preview !== 'function') {
-            return { ok: false, reason: 'likec4 SDK has no modelEdits API' };
-          }
-
-          const diffs = DiffListSchema.safeParse(await likec4.modelDiffs.list());
-          if (!diffs.success || !diffs.data.some((d) => d.id === diffId)) {
-            return { ok: false, reason: `diff ${diffId} not found in workspace` };
-          }
-
-          const raw: unknown = await likec4.modelEdits.preview({
-            type: 'apply-diff',
-            diffId: diffId as never,
-            action: 'apply',
-          });
-          const preview = PreviewSchema.safeParse(raw);
-          if (!preview.success) {
-            return { ok: false, reason: 'unexpected modelEdits.preview result' };
-          }
-          if ('error' in preview.data) {
-            return { ok: false, reason: preview.data.error };
-          }
-          if (preview.data.overlaps.length > 0) {
-            return { ok: false, reason: `overlaps: ${preview.data.overlaps.join('; ')}` };
-          }
-
-          const tmpRoot = canonical(tmpDir);
-          const proposal = canonical(tmpProposal);
-          const changed = preview.data.documents.filter(
-            (d) => canonical(fileURLToPath(d.uri)) !== proposal && d.before !== d.after
-          );
-          if (changed.length !== 1 || !changed[0]) {
-            return {
-              ok: false,
-              reason: `expected one changed model file, got ${String(changed.length)}`,
-            };
-          }
-          const doc = changed[0];
-          if (doc.after.trim() === '') {
-            return { ok: false, reason: 'preview deletes a model file' };
-          }
-          const rel = relative(tmpRoot, canonical(fileURLToPath(doc.uri)));
-          if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
-            return { ok: false, reason: 'changed file is outside the workspace' };
-          }
-          return { ok: true, patch: { targetFile: join(resolvedModel, rel), content: doc.after } };
+          return await previewInWorkspace(likec4, diffId, tmpProposal, tmpDir, resolvedModel);
         } finally {
           await likec4.dispose();
         }

@@ -13,10 +13,14 @@ import type { ValidationDiagnostic } from './architecture-adapter.js';
 import type { AIProvider } from '../providers/ai-provider.js';
 import { CONFIG } from '../utils/config.js';
 
-export interface AcceptedPatch {
+interface AcceptedPatch {
   content: string;
   validationSkipped: boolean;
   validationWarnings?: string[];
+}
+
+export interface PatchedFile extends AcceptedPatch {
+  targetFile: string;
 }
 
 export function acceptedValidation(dslResult: DslValidationResult): Omit<AcceptedPatch, 'content'> {
@@ -55,7 +59,7 @@ export abstract class BasePatcher implements ModelPatcher {
     _components: NewComponent[],
     _relationshipLines: string[],
     _baseline?: readonly ValidationDiagnostic[]
-  ): Promise<(AcceptedPatch & { targetFile: string }) | null> {
+  ): Promise<PatchedFile | null> {
     return Promise.resolve(null);
   }
 
@@ -137,45 +141,17 @@ export abstract class BasePatcher implements ModelPatcher {
       return null;
     });
 
-    // 5. Find target file
-    const targetFile = native?.targetFile ?? this.findTargetFile(modelPath);
-    if (!targetFile) {
-      this.debugLog(`No suitable .${this.formatId} target file found in`, modelPath);
-      return null;
-    }
-    this.debugLog('Target file', targetFile);
-
-    const originalContent = native ? '' : readFileSync(targetFile, 'utf-8');
-
-    // 6. Try LLM-based patching, 7. else deterministic fallback; both validate the DSL
-    const llmResult = native
-      ? null
-      : await this.tryLlmPatching(
-          provider,
-          originalContent,
-          insertedLines,
-          modelPath,
-          targetFile,
-          options.validationBaseline
-        ).catch(() => null);
-    const accepted =
+    // 5. Text patching: LLM with DSL validation, then deterministic fallback
+    const patched =
       native ??
-      (llmResult?.content
-        ? llmResult
-        : await this.tryDeterministicFallback(
-            originalContent,
-            insertedLines,
-            modelPath,
-            targetFile,
-            options.validationBaseline
-          ));
-
-    if (!accepted?.content) {
+      (await this.tryTextPatching(provider, insertedLines, modelPath, options.validationBaseline));
+    if (!patched) {
       return null;
     }
-    let finalContent = accepted.content;
+    const { targetFile, validationSkipped, validationWarnings } = patched;
+    let finalContent = patched.content;
 
-    // 8. Optional post-processing (e.g., formatting)
+    // 6. Optional post-processing (e.g., formatting)
     const preFormatContent = finalContent;
     let formatted = false;
     try {
@@ -189,7 +165,7 @@ export abstract class BasePatcher implements ModelPatcher {
       );
     }
 
-    // 9. Compute repo-relative path
+    // 7. Compute repo-relative path
     const repoRelativePath = this.getRepoRelativePath(targetFile);
 
     return {
@@ -208,9 +184,9 @@ export abstract class BasePatcher implements ModelPatcher {
               insertedLines: componentDslLines[i] ? [componentDslLines[i]] : [],
             }))
           : undefined,
-      validationSkipped: accepted.validationSkipped || undefined,
+      validationSkipped: validationSkipped || undefined,
       formatted: formatted || undefined,
-      validationWarnings: accepted.validationWarnings,
+      validationWarnings,
     };
   }
 
@@ -263,6 +239,40 @@ export abstract class BasePatcher implements ModelPatcher {
       }
       return !isDuplicate;
     });
+  }
+
+  private async tryTextPatching(
+    provider: AIProvider,
+    insertedLines: string[],
+    modelPath: string,
+    baseline?: readonly ValidationDiagnostic[]
+  ): Promise<PatchedFile | null> {
+    const targetFile = this.findTargetFile(modelPath);
+    if (!targetFile) {
+      this.debugLog(`No suitable .${this.formatId} target file found in`, modelPath);
+      return null;
+    }
+    this.debugLog('Target file', targetFile);
+
+    const originalContent = readFileSync(targetFile, 'utf-8');
+    const llmResult = await this.tryLlmPatching(
+      provider,
+      originalContent,
+      insertedLines,
+      modelPath,
+      targetFile,
+      baseline
+    ).catch(() => null);
+    const result = llmResult?.content
+      ? llmResult
+      : await this.tryDeterministicFallback(
+          originalContent,
+          insertedLines,
+          modelPath,
+          targetFile,
+          baseline
+        );
+    return result?.content ? { targetFile, ...result } : null;
   }
 
   protected async tryLlmPatching(

@@ -1,19 +1,15 @@
 import { readFileSync, readdirSync } from 'fs';
 import { join, resolve } from 'path';
-import { BasePatcher, acceptedValidation, type AcceptedPatch } from '../base-patcher.js';
+import { BasePatcher, acceptedValidation, type PatchedFile } from '../base-patcher.js';
 import { validateLikeC4Dsl } from './dsl-validator.js';
 import { formatLikeC4Dsl } from './dsl-formatter.js';
-import { previewModelEdits } from './model-edits.js';
+import { componentBlock, escapeLikeC4String, previewModelEdits } from './model-edits.js';
 import type { StructuredRelationship, NewComponent } from '../../analysis/analysis-types.js';
 import type { ModelRelationship } from '../architecture-types.js';
 import type { DslValidationResult } from '../model-patcher.js';
 import type { ValidationDiagnostic } from '../architecture-adapter.js';
 import { CONFIG } from '../../utils/config.js';
 
-// Backslashes first, so an input `\` cannot escape the closing quote.
-function escapeLikeC4String(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-}
 
 export class LikeC4Patcher extends BasePatcher {
   protected readonly formatName = 'LikeC4Patcher';
@@ -40,22 +36,7 @@ export class LikeC4Patcher extends BasePatcher {
   }
 
   protected generateComponentDslLines(components: NewComponent[]): string[] {
-    return components.map((comp) => {
-      const lines: string[] = [];
-      const name = escapeLikeC4String(comp.name);
-      lines.push(`  ${comp.id} = ${comp.kind} '${name}' {`);
-      if (comp.tags && comp.tags.length > 0) {
-        lines.push(`    ${comp.tags.map((t) => `#${t}`).join(' ')}`);
-      }
-      if (comp.description) {
-        lines.push(`    description '${escapeLikeC4String(comp.description)}'`);
-      }
-      if (comp.technology) {
-        lines.push(`    technology '${escapeLikeC4String(comp.technology)}'`);
-      }
-      lines.push('  }');
-      return lines.join('\n');
-    });
+    return components.map((comp) => componentBlock(comp, comp.id, '  ').join('\n'));
   }
 
   protected findTargetFile(modelPath: string): string | null {
@@ -100,7 +81,7 @@ export class LikeC4Patcher extends BasePatcher {
     components: NewComponent[],
     relationshipLines: string[],
     baseline?: readonly ValidationDiagnostic[]
-  ): Promise<(AcceptedPatch & { targetFile: string }) | null> {
+  ): Promise<PatchedFile | null> {
     if (CONFIG.adapter.likec4.patchStrategy !== 'model-edits') {
       return null;
     }
