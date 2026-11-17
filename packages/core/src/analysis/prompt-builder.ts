@@ -18,14 +18,15 @@ import {
 } from './section-formatters.js';
 
 /**
- * Matches any tag-like sequence for the untrusted block names, tolerating case, whitespace,
- * attributes and `_`/`-` variants that a lenient reader could still treat as a delimiter.
+ * Matches the `<` that opens any tag-like sequence for the untrusted block names, tolerating
+ * case, whitespace and `_`/`-` variants. Only the `<` is replaced, so the lookahead stays
+ * bounded and runs in linear time on hostile input.
  */
-const UNTRUSTED_TAG_PATTERN = /<\s*\/?\s*untrusted[_-](?:pr[_-]content|diff)[^>]*>/gi;
+const UNTRUSTED_TAG_OPEN = /<(?=\/?\s{0,20}untrusted[_-](?:pr[_-]content|diff))/gi;
 
 /** Prevents author-controlled text from closing an untrusted block early. */
 function escapeUntrusted(text: string): string {
-  return text.replace(UNTRUSTED_TAG_PATTERN, (tag) => `&lt;${tag.slice(1)}`);
+  return text.replace(UNTRUSTED_TAG_OPEN, '&lt;');
 }
 
 export const PromptBuilder = {
