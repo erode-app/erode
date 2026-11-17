@@ -51,14 +51,19 @@ function findPackageJson(startPath: string): string | null {
   return null;
 }
 
+/** Lowest version a range allows; upper bounds (`<`, `<=`) are ignored. */
 export function extractMinVersion(range: string): SemVer | null {
-  const match = /(\d+)\.(\d+)\.(\d+)/.exec(range);
-  if (!match?.[1] || !match[2] || !match[3]) return null;
-  return {
-    major: parseInt(match[1], 10),
-    minor: parseInt(match[2], 10),
-    patch: parseInt(match[3], 10),
-  };
+  let lowest: SemVer | null = null;
+  for (const match of range.matchAll(/(<=?)?\s*v?(\d+)\.(\d+)\.(\d+)/g)) {
+    if (match[1]) continue;
+    const version = {
+      major: parseInt(match[2] ?? '', 10),
+      minor: parseInt(match[3] ?? '', 10),
+      patch: parseInt(match[4] ?? '', 10),
+    };
+    if (!lowest || isVersionBelow(version, lowest)) lowest = version;
+  }
+  return lowest;
 }
 
 export function isVersionBelow(version: SemVer, minimum: SemVer): boolean {

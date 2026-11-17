@@ -74,8 +74,9 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
   private throwModelErrors(errors: { message?: string }[], skewWarning?: string): never {
     const messages = errors.map((e) => e.message ?? JSON.stringify(e));
     const hint = skewWarning ? `\n${skewWarning}` : '';
+    // The GitHub Action logs `message`, so the hint goes there too
     throw new AdapterError(
-      `LikeC4 model contains validation errors: ${messages.join('; ')}`,
+      `LikeC4 model contains validation errors: ${messages.join('; ')}${skewWarning ? ` (${skewWarning})` : ''}`,
       ErrorCode.MODEL_LOAD_FAILED,
       'likec4',
       `LikeC4 model has errors:\n${messages.map((m) => `  - ${m}`).join('\n')}${hint}`

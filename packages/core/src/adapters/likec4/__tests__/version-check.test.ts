@@ -30,6 +30,14 @@ describe('extractMinVersion', () => {
     expect(extractMinVersion('>=2.0.0')).toEqual({ major: 2, minor: 0, patch: 0 });
   });
 
+  it('ignores an upper bound listed before the lower bound', () => {
+    expect(extractMinVersion('<1.70.0 >=1.45.0')).toEqual({ major: 1, minor: 45, patch: 0 });
+  });
+
+  it('takes the lowest alternative in an OR range', () => {
+    expect(extractMinVersion('^2.0.0 || ^1.50.0')).toEqual({ major: 1, minor: 50, patch: 0 });
+  });
+
   it('parses exact version', () => {
     expect(extractMinVersion('1.45.0')).toEqual({ major: 1, minor: 45, patch: 0 });
   });
@@ -207,6 +215,11 @@ describe('checkLikeC4Version bundled version skew', () => {
     expect(result.warning).toBeUndefined();
   });
 
+  it('does not warn when the range lists an upper bound first', () => {
+    const result = checkLikeC4Version(dirWithRange('<1.70.0 >=1.45.0'), bundled);
+    expect(result.warning).toBeUndefined();
+  });
+
   it('does not warn when the bundled version is unknown', () => {
     const result = checkLikeC4Version(dirWithRange('^9.0.0'), null);
     expect(result.bundled).toBeUndefined();
@@ -222,6 +235,7 @@ describe('checkLikeC4Version bundled version skew', () => {
     expect((error as AdapterError).userMessage).toMatch(
       /Your model targets likec4 99\.0\.0, erode bundles \d+\.\d+\.\d+/
     );
+    expect((error as AdapterError).message).toMatch(/Your model targets likec4 99\.0\.0/);
   }, 60_000);
 
   it('errors rather than warns when the model is below the minimum', () => {
