@@ -19,6 +19,20 @@ describe('maskStringsAndComments', () => {
   });
 });
 
+describe('maskStringsAndComments with Structurizr options', () => {
+  const options = { quotes: ['"'], hashComments: true };
+
+  it('treats # at line start as a comment and apostrophes as plain text', () => {
+    expect(maskStringsAndComments("  # it's {\nx = \"}\" '{'", options)).toBe(
+      `${' '.repeat(10)}\nx =     '{'`
+    );
+  });
+
+  it('keeps # inside a line, such as a colour', () => {
+    expect(maskStringsAndComments('background #ff0000 }', options)).toBe('background #ff0000 }');
+  });
+});
+
 describe('findModelBlocks', () => {
   it('ignores extend blocks whose name ends in model', () => {
     const text = "model {\n  extend shop.datamodel {\n    x = service 'X'\n  }\n}";

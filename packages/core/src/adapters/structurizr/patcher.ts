@@ -23,6 +23,8 @@ export class StructurizrPatcher extends BasePatcher {
   protected readonly formatId = 'structurizr';
   protected readonly defaultIndent = '        ';
   protected readonly kindSensitiveDedup = false;
+  // Structurizr strings use double quotes only, so an apostrophe in a `#` comment opens nothing
+  protected override readonly scanOptions = { quotes: ['"'], hashComments: true };
 
   protected generateDslLines(
     unique: StructuredRelationship[],

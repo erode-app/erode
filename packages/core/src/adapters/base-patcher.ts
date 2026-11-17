@@ -14,7 +14,12 @@ import type { AIProvider } from '../providers/ai-provider.js';
 import { CONFIG } from '../utils/config.js';
 import { knownRelationshipKinds, resolveRelationshipKind } from './relationship-kind.js';
 import { selectTargetFileByLocation, type TargetFileContext } from './target-file-selection.js';
-import { countBraces, findModelBlocks, maskStringsAndComments } from './dsl-scanner.js';
+import {
+  countBraces,
+  findModelBlocks,
+  maskStringsAndComments,
+  type ScanOptions,
+} from './dsl-scanner.js';
 
 interface AcceptedPatch {
   content: string;
@@ -39,6 +44,7 @@ export abstract class BasePatcher implements ModelPatcher {
   protected abstract readonly defaultIndent: string;
   /** Whether differing relationship kinds make a same-endpoint proposal distinct. */
   protected abstract readonly kindSensitiveDedup: boolean;
+  protected readonly scanOptions: ScanOptions = {};
 
   protected abstract generateDslLines(
     unique: StructuredRelationship[],
@@ -312,7 +318,7 @@ export abstract class BasePatcher implements ModelPatcher {
     try {
       this.debugLog('Attempting LLM-based patching');
       const result = await provider.patchModel(originalContent, insertedLines, this.formatId);
-      if (quickValidatePatch(originalContent, result, insertedLines)) {
+      if (quickValidatePatch(originalContent, result, insertedLines, this.scanOptions)) {
         const dslResult = await this.validateDsl(modelPath, targetFile, result, baseline);
         if (dslResult.valid || dslResult.skipped) {
           this.debugLog('LLM patch accepted', {
@@ -357,7 +363,8 @@ export abstract class BasePatcher implements ModelPatcher {
   protected deterministicInsert(content: string, lines: string[]): string {
     // Insert before the end of the last model block, else before the last `}` in the file
     const closeAt =
-      findModelBlocks(content).at(-1)?.close ?? maskStringsAndComments(content).lastIndexOf('}');
+      findModelBlocks(content, this.scanOptions).at(-1)?.close ??
+      maskStringsAndComments(content, this.scanOptions).lastIndexOf('}');
     if (closeAt === -1) {
       return content + '\n' + lines.join('\n') + '\n';
     }
@@ -411,7 +418,8 @@ function reindent(entry: string, indent: string): string[] {
 export function quickValidatePatch(
   original: string,
   patched: string,
-  insertedLines: string[]
+  insertedLines: string[],
+  scanOptions?: ScanOptions
 ): boolean {
   const originalLines = original.split('\n').filter((l) => l.trim().length > 0);
   for (const line of originalLines) {
@@ -436,7 +444,7 @@ export function quickValidatePatch(
     }
   }
 
-  const { open: openBraces, close: closeBraces } = countBraces(patched);
+  const { open: openBraces, close: closeBraces } = countBraces(patched, scanOptions);
   if (openBraces !== closeBraces) {
     if (CONFIG.debug.verbose) {
       console.error(
