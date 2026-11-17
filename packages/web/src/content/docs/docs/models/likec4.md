@@ -97,4 +97,8 @@ The more accurately the model reflects the dependencies that matter, the better 
 
 ## Version requirements
 
-Erode uses the `likec4` npm package `^1.45.0`. The Docker image and GitHub Action bundle it automatically. No local installation needed.
+Erode bundles its own copy of the `likec4` npm package (currently `^1.61.0`) to parse your model. The Docker image and GitHub Action include it. No local installation needed.
+
+If your model repository declares `likec4` in its `package.json`, the lowest version in that range must be 1.45.0 or newer. Erode stops with an error when it is older.
+
+If that range starts above the version Erode bundles, the CLI prints a warning and Erode keeps going. Syntax added in newer LikeC4 releases may fail to parse. When parsing does fail, the error message repeats the warning so you can tell a version gap from a broken model.

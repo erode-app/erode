@@ -4,82 +4,60 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { extractMinVersion, isVersionBelow, checkLikeC4Version } from '../version-check.js';
+import { createRequire } from 'module';
+import { checkLikeC4Version, getBundledLikeC4Version } from '../version-check.js';
+import { LikeC4Adapter } from '../adapter.js';
+import { AdapterError } from '../../../errors.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-describe('extractMinVersion', () => {
-  it('parses caret range', () => {
-    expect(extractMinVersion('^1.45.0')).toEqual({ major: 1, minor: 45, patch: 0 });
+describe('checkLikeC4Version range handling', () => {
+  const bundled = '1.61.0';
+
+  function check(range: string) {
+    const dir = mkdtempSync(join(tmpdir(), 'version-range-'));
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ dependencies: { likec4: range } }));
+    return checkLikeC4Version(dir, bundled);
+  }
+
+  it.each([
+    ['^1.45.0', '1.45.0'],
+    ['~1.50.2', '1.50.2'],
+    ['>=2.0.0', '2.0.0'],
+    ['1.45.0', '1.45.0'],
+    ['<1.70.0 >=1.45.0', '1.45.0'],
+    ['>=1.50.0 >=1.30.0', '1.50.0'],
+    ['1.45.0 - 1.70.0', '1.45.0'],
+    ['^2.0.0 || ^1.50.0', '1.50.0'],
+  ])('reads %s as starting at %s', (range, version) => {
+    expect(check(range)).toMatchObject({ found: true, version, compatible: true });
   });
 
-  it('parses tilde range', () => {
-    expect(extractMinVersion('~1.50.2')).toEqual({ major: 1, minor: 50, patch: 2 });
+  it.each(['latest', '', 'not-a-range'])('ignores %j', (range) => {
+    expect(check(range).found).toBe(false);
   });
 
-  it('parses gte range', () => {
-    expect(extractMinVersion('>=2.0.0')).toEqual({ major: 2, minor: 0, patch: 0 });
+  it('accepts an upper-bound-only range that allows the bundled version, without a warning', () => {
+    const result = check('<1.70.0');
+    expect(result).toMatchObject({ found: true, version: '<1.70.0', compatible: true });
+    expect(result.warning).toBeUndefined();
   });
 
-  it('parses exact version', () => {
-    expect(extractMinVersion('1.45.0')).toEqual({ major: 1, minor: 45, patch: 0 });
+  it('rejects an upper-bound-only range below the minimum', () => {
+    expect(check('<1.40.0')).toMatchObject({ found: true, compatible: false });
   });
 
-  it('returns null for star', () => {
-    expect(extractMinVersion('*')).toBeNull();
+  it('accepts an inclusive upper bound equal to the minimum', () => {
+    expect(check('<=1.45.0').compatible).toBe(true);
   });
 
-  it('returns null for latest', () => {
-    expect(extractMinVersion('latest')).toBeNull();
+  it('does not warn when any alternative allows the bundled version', () => {
+    expect(check('<=1.61.0 || ^2.0.0').warning).toBeUndefined();
   });
 
-  it('returns null for empty string', () => {
-    expect(extractMinVersion('')).toBeNull();
-  });
-});
-
-describe('isVersionBelow', () => {
-  it('returns true when major is lower', () => {
-    expect(
-      isVersionBelow({ major: 0, minor: 99, patch: 99 }, { major: 1, minor: 0, patch: 0 })
-    ).toBe(true);
-  });
-
-  it('returns true when minor is lower', () => {
-    expect(
-      isVersionBelow({ major: 1, minor: 30, patch: 0 }, { major: 1, minor: 45, patch: 0 })
-    ).toBe(true);
-  });
-
-  it('returns true when patch is lower', () => {
-    expect(
-      isVersionBelow({ major: 1, minor: 45, patch: 0 }, { major: 1, minor: 45, patch: 1 })
-    ).toBe(true);
-  });
-
-  it('returns false when equal', () => {
-    expect(
-      isVersionBelow({ major: 1, minor: 45, patch: 0 }, { major: 1, minor: 45, patch: 0 })
-    ).toBe(false);
-  });
-
-  it('returns false when major is higher', () => {
-    expect(
-      isVersionBelow({ major: 2, minor: 0, patch: 0 }, { major: 1, minor: 45, patch: 0 })
-    ).toBe(false);
-  });
-
-  it('returns false when minor is higher', () => {
-    expect(
-      isVersionBelow({ major: 1, minor: 50, patch: 0 }, { major: 1, minor: 45, patch: 0 })
-    ).toBe(false);
-  });
-
-  it('returns false when patch is higher', () => {
-    expect(
-      isVersionBelow({ major: 1, minor: 45, patch: 5 }, { major: 1, minor: 45, patch: 0 })
-    ).toBe(false);
+  it('warns when every alternative needs a newer version', () => {
+    expect(check('^1.62.0 || ^2.0.0').warning).toContain('targets likec4 1.62.0');
   });
 });
 
@@ -160,5 +138,84 @@ describe('checkLikeC4Version', () => {
     expect(result.found).toBe(true);
     expect(result.version).toBe('1.46.0');
     expect(result.compatible).toBe(true);
+  });
+});
+
+describe('getBundledLikeC4Version', () => {
+  it('reads the installed likec4 package version', () => {
+    const installed = (createRequire(import.meta.url)('likec4/package.json') as { version: string })
+      .version;
+    expect(getBundledLikeC4Version()).toBe(installed);
+  });
+});
+
+describe('checkLikeC4Version bundled version skew', () => {
+  const bundled = '1.59.3';
+
+  function dirWithRange(range: string): string {
+    const dir = mkdtempSync(join(tmpdir(), 'version-skew-'));
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ dependencies: { likec4: range } }));
+    return dir;
+  }
+
+  it('warns but stays compatible when the model targets a newer likec4 than erode bundles', () => {
+    const result = checkLikeC4Version(dirWithRange('^1.60.0'), bundled);
+    expect(result.compatible).toBe(true);
+    expect(result.bundled).toBe('1.59.3');
+    expect(result.warning).toBe(
+      'Your model targets likec4 1.60.0, erode bundles 1.59.3; newer syntax may fail to parse.'
+    );
+  });
+
+  it('does not warn when the model targets the bundled version', () => {
+    const result = checkLikeC4Version(dirWithRange('1.59.3'), bundled);
+    expect(result.warning).toBeUndefined();
+  });
+
+  it('does not warn when the model targets an older version', () => {
+    const result = checkLikeC4Version(dirWithRange('^1.45.0'), bundled);
+    expect(result.warning).toBeUndefined();
+  });
+
+  it('does not warn when the range lists an upper bound first', () => {
+    const result = checkLikeC4Version(dirWithRange('<1.70.0 >=1.45.0'), bundled);
+    expect(result.warning).toBeUndefined();
+  });
+
+  it('does not warn for an upper-bound-only range that allows the bundled version', () => {
+    const result = checkLikeC4Version(dirWithRange('<1.70.0'), bundled);
+    expect(result.compatible).toBe(true);
+    expect(result.warning).toBeUndefined();
+  });
+
+  it('rejects an upper-bound-only range below the minimum', () => {
+    const result = checkLikeC4Version(dirWithRange('<1.40.0'), bundled);
+    expect(result.found).toBe(true);
+    expect(result.compatible).toBe(false);
+    expect(result.version).toBe('<1.40.0');
+  });
+
+  it('does not warn when the bundled version is unknown', () => {
+    const result = checkLikeC4Version(dirWithRange('^9.0.0'), null);
+    expect(result.bundled).toBeUndefined();
+    expect(result.warning).toBeUndefined();
+  });
+
+  it('adds the skew warning to LikeC4 parse errors', async () => {
+    const dir = dirWithRange('^99.0.0');
+    writeFileSync(join(dir, 'model.c4'), 'model {\n  a = \n}\n');
+    const adapter = new LikeC4Adapter();
+    const error: unknown = await adapter.loadFromPath(dir).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(AdapterError);
+    expect((error as AdapterError).userMessage).toMatch(
+      /Your model targets likec4 99\.0\.0, erode bundles \d+\.\d+\.\d+/
+    );
+    expect((error as AdapterError).message).toMatch(/Your model targets likec4 99\.0\.0/);
+  }, 60_000);
+
+  it('errors rather than warns when the model is below the minimum', () => {
+    const result = checkLikeC4Version(dirWithRange('^1.30.0'), bundled);
+    expect(result.compatible).toBe(false);
+    expect(result.warning).toBeUndefined();
   });
 });

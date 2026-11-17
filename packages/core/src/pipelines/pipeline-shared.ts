@@ -15,6 +15,16 @@ import { CONFIG } from '../utils/config.js';
 import { ErodeError, ErrorCode } from '../errors.js';
 import { resolveModelSource, type ResolvedModelSource } from '../utils/model-source.js';
 
+/** Emit the adapter's non-fatal version warning, if any. Runs before loading so it shows even when parsing fails. */
+export function warnOnModelVersionSkew(
+  adapter: ArchitectureModelAdapter,
+  modelPath: string,
+  progress: ProgressReporter
+): void {
+  const warning = adapter.checkVersion?.(modelPath).warning;
+  if (warning) progress.warn(warning);
+}
+
 /** Load and validate an architecture model, emitting progress. */
 export async function loadArchitectureModel(
   adapter: ArchitectureModelAdapter,
@@ -23,6 +33,7 @@ export async function loadArchitectureModel(
 ): Promise<ArchitectureModel> {
   progress.section(`Preparing ${adapter.metadata.displayName} Architecture Model`);
   validatePath(modelPath, 'directory');
+  warnOnModelVersionSkew(adapter, modelPath, progress);
   progress.start('Reading architecture model');
   const model = await adapter.loadFromPath(modelPath);
   progress.succeed('Architecture model ready');

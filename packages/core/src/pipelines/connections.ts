@@ -3,6 +3,7 @@ import { SilentProgress } from './progress.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
 import type { ComponentSummary } from '../adapters/architecture-types.js';
 import { validatePath } from '../utils/validation.js';
+import { warnOnModelVersionSkew } from './pipeline-shared.js';
 
 export interface ConnectionsOptions {
   modelPath: string;
@@ -31,6 +32,7 @@ export async function runConnections(
 
   p.section(`Loading ${adapter.metadata.displayName} Architecture Model`);
   validatePath(options.modelPath, 'directory');
+  warnOnModelVersionSkew(adapter, options.modelPath, p);
   p.start('Loading architecture model');
   await adapter.loadFromPath(options.modelPath);
   p.succeed('Architecture model loaded');

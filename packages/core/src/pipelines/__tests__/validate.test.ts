@@ -126,3 +126,33 @@ describe('findRepositoryLink via runValidate', () => {
     expect(result.unlinked).toBe(1);
   });
 });
+
+describe('runValidate version skew warning', () => {
+  it('reports the adapter version warning without flagging issues', async () => {
+    const warning = 'Your model targets likec4 1.60.0, erode bundles 1.59.3';
+    const mockAdapter = {
+      ...makeMockAdapter([{ id: 'service_a', links: ['https://github.com/owner/repo'] }]),
+      checkVersion: () => ({
+        found: true,
+        compatible: true,
+        version: '1.60.0',
+        minimum: '1.45.0',
+        warning,
+      }),
+    };
+    vi.mocked(createAdapter).mockReturnValue(mockAdapter as never);
+    const progress = {
+      section: vi.fn(),
+      start: vi.fn(),
+      succeed: vi.fn(),
+      fail: vi.fn(),
+      warn: vi.fn(),
+      info: vi.fn(),
+    };
+
+    const result = await runValidate({ modelPath: '/fake' }, progress);
+
+    expect(progress.warn).toHaveBeenCalledWith(warning);
+    expect(result.hasIssues).toBe(false);
+  });
+});

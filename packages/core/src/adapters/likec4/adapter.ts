@@ -71,7 +71,20 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     return false;
   }
 
-  private guardVersionCompatibility(likec4Path: string): void {
+  private throwModelErrors(errors: { message?: string }[], skewWarning?: string): never {
+    const messages = errors.map((e) => e.message ?? JSON.stringify(e));
+    const hint = skewWarning ? `\n${skewWarning}` : '';
+    // The GitHub Action logs `message`, so the hint goes there too
+    throw new AdapterError(
+      `LikeC4 model contains validation errors: ${messages.join('; ')}${skewWarning ? ` (${skewWarning})` : ''}`,
+      ErrorCode.MODEL_LOAD_FAILED,
+      'likec4',
+      `LikeC4 model has errors:\n${messages.map((m) => `  - ${m}`).join('\n')}${hint}`
+    );
+  }
+
+  /** Throws when the source repo's likec4 is below the minimum; returns any non-fatal skew warning. */
+  private guardVersionCompatibility(likec4Path: string): string | undefined {
     const result = checkLikeC4Version(likec4Path);
     if (result.found && !result.compatible) {
       throw new AdapterError(
@@ -82,6 +95,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
         { detectedVersion: result.version, minimumVersion: result.minimum }
       );
     }
+    return result.warning;
   }
 
   private isValidLikeC4Model(model: unknown): model is LikeC4Model {
@@ -105,19 +119,12 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
         { path: resolvedPath }
       );
     }
-    this.guardVersionCompatibility(resolvedPath);
+    const skewWarning = this.guardVersionCompatibility(resolvedPath);
     this.validationBaseline = undefined;
     const likec4 = await LikeC4.fromWorkspace(resolvedPath, { printErrors: false });
     try {
       if (likec4.hasErrors()) {
-        const errors = likec4.getErrors();
-        const messages = errors.map((e: { message?: string }) => e.message ?? JSON.stringify(e));
-        throw new AdapterError(
-          `LikeC4 model contains validation errors: ${messages.join('; ')}`,
-          ErrorCode.MODEL_LOAD_FAILED,
-          'likec4',
-          `LikeC4 model has errors:\n${messages.map((m: string) => `  - ${m}`).join('\n')}`
-        );
+        this.throwModelErrors(likec4.getErrors(), skewWarning);
       }
       const computedModel = await likec4.computedModel();
       if (!this.isValidLikeC4Model(computedModel)) {
@@ -267,18 +274,11 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
         { path: resolvedPath }
       );
     }
-    this.guardVersionCompatibility(resolvedPath);
+    const skewWarning = this.guardVersionCompatibility(resolvedPath);
     const likec4 = await LikeC4.fromWorkspace(resolvedPath, { printErrors: false });
     try {
       if (likec4.hasErrors()) {
-        const errors = likec4.getErrors();
-        const messages = errors.map((e: { message?: string }) => e.message ?? JSON.stringify(e));
-        throw new AdapterError(
-          `LikeC4 model contains validation errors: ${messages.join('; ')}`,
-          ErrorCode.MODEL_LOAD_FAILED,
-          'likec4',
-          `LikeC4 model has errors:\n${messages.map((m: string) => `  - ${m}`).join('\n')}`
-        );
+        this.throwModelErrors(likec4.getErrors(), skewWarning);
       }
       const computedModel = await likec4.computedModel();
       if (!this.isValidLikeC4Model(computedModel)) {
