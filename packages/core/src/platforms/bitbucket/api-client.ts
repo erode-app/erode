@@ -13,9 +13,9 @@ export class BitbucketApiClient {
   private readonly baseUrl: string;
   private readonly token: string | undefined;
 
-  constructor(token?: string) {
-    this.token = token ?? CONFIG.bitbucket.token;
-    this.baseUrl = CONFIG.bitbucket.baseUrl;
+  constructor(token?: string, baseUrl: string = CONFIG.bitbucket.baseUrl) {
+    this.token = token;
+    this.baseUrl = baseUrl;
   }
 
   private buildHeaders(extra?: Record<string, string>): Record<string, string> {

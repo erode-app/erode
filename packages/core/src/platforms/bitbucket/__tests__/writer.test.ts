@@ -19,6 +19,8 @@ vi.mock('../api-client.js', () => ({
 vi.mock('../../../utils/config.js', async (importOriginal) => ({
   ...(await importOriginal()),
   CONFIG: {
+    github: { token: 'test-token', modelRepoPrToken: null, baseUrl: 'https://api.github.com' },
+    gitlab: { token: 'test-token', baseUrl: 'https://gitlab.com' },
     bitbucket: { token: 'test-token', baseUrl: 'https://api.bitbucket.org/2.0' },
   },
 }));
@@ -40,7 +42,7 @@ describe('BitbucketWriter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    writer = new BitbucketWriter('workspace', 'repo');
+    writer = new BitbucketWriter('workspace', 'repo', 'https://bitbucket.org/workspace/repo');
   });
 
   describe('constructor', () => {
@@ -50,10 +52,12 @@ describe('BitbucketWriter', () => {
       CONFIG.bitbucket.token = undefined;
 
       try {
-        expect(() => new BitbucketWriter('workspace', 'repo')).toThrow(ErodeError);
-        expect(() => new BitbucketWriter('workspace', 'repo')).toThrow(
-          'A Bitbucket token is needed'
-        );
+        expect(
+          () => new BitbucketWriter('workspace', 'repo', 'https://bitbucket.org/workspace/repo')
+        ).toThrow(ErodeError);
+        expect(
+          () => new BitbucketWriter('workspace', 'repo', 'https://bitbucket.org/workspace/repo')
+        ).toThrow('A Bitbucket token is needed');
       } finally {
         CONFIG.bitbucket.token = originalToken;
       }

@@ -8,6 +8,7 @@ import type {
   CreateOrUpdateChangeRequestOptions,
 } from '../source-platform.js';
 import { BitbucketCommentSchema } from '../../schemas/bitbucket-api.schema.js';
+import { resolvePlatformEndpoint } from '../api-endpoint.js';
 import { BitbucketApiClient } from './api-client.js';
 import { wrapPlatformError } from '../platform-utils.js';
 
@@ -31,8 +32,9 @@ export class BitbucketWriter implements SourcePlatformWriter {
   private readonly workspace: string;
   private readonly repoSlug: string;
 
-  constructor(targetOwner: string, targetRepo: string) {
-    const token = CONFIG.bitbucket.token;
+  constructor(targetOwner: string, targetRepo: string, repositoryUrl: string) {
+    const { baseUrl, tokenApplies } = resolvePlatformEndpoint(repositoryUrl, 'bitbucket');
+    const token = tokenApplies ? CONFIG.bitbucket.token : undefined;
     if (!token) {
       throw new ErodeError(
         'A Bitbucket token is needed to create pull requests',
@@ -40,7 +42,7 @@ export class BitbucketWriter implements SourcePlatformWriter {
         `Provide ${ENV_VAR_NAMES.bitbucketToken} in your environment or ${RC_FILENAME} to create pull requests.`
       );
     }
-    this.api = new BitbucketApiClient(token);
+    this.api = new BitbucketApiClient(token, baseUrl);
     this.workspace = targetOwner;
     this.repoSlug = targetRepo;
   }

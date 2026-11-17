@@ -14,16 +14,15 @@ import {
 } from '../../schemas/source-platform.schema.js';
 import { applyDiffTruncation, wrapPlatformError } from '../platform-utils.js';
 import { parseChangeRequestRef } from '../change-request-url.js';
+import { resolvePlatformEndpoint } from '../api-endpoint.js';
 
 export class GitHubReader implements SourcePlatformReader {
-  private octokit: Octokit;
+  constructor(private readonly token?: string) {}
 
-  constructor(token?: string) {
-    const authToken = token ?? CONFIG.github.token;
-    this.octokit = new Octokit({
-      ...(authToken ? { auth: authToken } : {}),
-      baseUrl: CONFIG.github.baseUrl,
-    });
+  private clientFor(ref: ChangeRequestRef): Octokit {
+    const { baseUrl, tokenApplies } = resolvePlatformEndpoint(ref.repositoryUrl, 'github');
+    const authToken = this.token ?? (tokenApplies ? CONFIG.github.token : undefined);
+    return new Octokit({ ...(authToken ? { auth: authToken } : {}), baseUrl });
   }
 
   parseChangeRequestUrl(url: string): ChangeRequestRef {
@@ -39,14 +38,15 @@ export class GitHubReader implements SourcePlatformReader {
     const repo = ref.platformId.repo;
     const pull_number = ref.number;
 
+    const octokit = this.clientFor(ref);
     try {
-      const { data: pr } = await this.octokit.rest.pulls.get({
+      const { data: pr } = await octokit.rest.pulls.get({
         owner,
         repo,
         pull_number,
       });
 
-      const { data: files } = await this.octokit.rest.pulls.listFiles({
+      const { data: files } = await octokit.rest.pulls.listFiles({
         owner,
         repo,
         pull_number,
@@ -71,7 +71,7 @@ export class GitHubReader implements SourcePlatformReader {
         totalLines
       );
 
-      const { data: comparison } = await this.octokit.rest.repos.compareCommits({
+      const { data: comparison } = await octokit.rest.repos.compareCommits({
         owner,
         repo,
         base: pr.base.sha,
@@ -127,8 +127,9 @@ export class GitHubReader implements SourcePlatformReader {
     const repo = ref.platformId.repo;
     const pull_number = ref.number;
 
+    const octokit = this.clientFor(ref);
     try {
-      const { data: commits } = await this.octokit.rest.pulls.listCommits({
+      const { data: commits } = await octokit.rest.pulls.listCommits({
         owner,
         repo,
         pull_number,

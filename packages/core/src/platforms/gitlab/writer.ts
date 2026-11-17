@@ -8,6 +8,7 @@ import type {
   CreateOrUpdateChangeRequestOptions,
 } from '../source-platform.js';
 import { wrapPlatformError } from '../platform-utils.js';
+import { resolvePlatformEndpoint } from '../api-endpoint.js';
 
 /** Subset of the GitLab MR response fields we access. */
 interface GitLabMrResponse {
@@ -19,8 +20,9 @@ export class GitLabWriter implements SourcePlatformWriter {
   private readonly api: InstanceType<typeof Gitlab>;
   private readonly projectPath: string;
 
-  constructor(targetOwner: string, targetRepo: string) {
-    const token = CONFIG.gitlab.token;
+  constructor(targetOwner: string, targetRepo: string, repositoryUrl: string) {
+    const { baseUrl, tokenApplies } = resolvePlatformEndpoint(repositoryUrl, 'gitlab');
+    const token = tokenApplies ? CONFIG.gitlab.token : undefined;
     if (!token) {
       throw new ErodeError(
         'A GitLab token is needed to create merge requests',
@@ -28,7 +30,7 @@ export class GitLabWriter implements SourcePlatformWriter {
         `Provide ${ENV_VAR_NAMES.gitlabToken} in your environment or ${RC_FILENAME} to create merge requests.`
       );
     }
-    this.api = new Gitlab({ token, host: CONFIG.gitlab.baseUrl });
+    this.api = new Gitlab({ token, host: baseUrl });
     this.projectPath = `${targetOwner}/${targetRepo}`;
   }
 

@@ -19,16 +19,15 @@ import {
 } from '../../schemas/source-platform.schema.js';
 import { applyDiffTruncation, wrapPlatformError } from '../platform-utils.js';
 import { parseChangeRequestRef } from '../change-request-url.js';
+import { resolvePlatformEndpoint } from '../api-endpoint.js';
 
 export class GitLabReader implements SourcePlatformReader {
-  private api: InstanceType<typeof Gitlab>;
+  constructor(private readonly token?: string) {}
 
-  constructor(token?: string) {
-    const authToken = token ?? CONFIG.gitlab.token;
-    this.api = new Gitlab({
-      ...(authToken ? { token: authToken } : {}),
-      host: CONFIG.gitlab.baseUrl,
-    });
+  private clientFor(ref: ChangeRequestRef): InstanceType<typeof Gitlab> {
+    const { baseUrl, tokenApplies } = resolvePlatformEndpoint(ref.repositoryUrl, 'gitlab');
+    const authToken = this.token ?? (tokenApplies ? CONFIG.gitlab.token : undefined);
+    return new Gitlab({ ...(authToken ? { token: authToken } : {}), host: baseUrl });
   }
 
   parseChangeRequestUrl(url: string): ChangeRequestRef {
@@ -45,15 +44,16 @@ export class GitLabReader implements SourcePlatformReader {
     const projectPath = `${owner}/${repo}`;
     const mrIid = ref.number;
 
+    const api = this.clientFor(ref);
     try {
       const mr = validate(
         GitLabMrResponseSchema,
-        await this.api.MergeRequests.show(projectPath, mrIid),
+        await api.MergeRequests.show(projectPath, mrIid),
         'GitLab MR response'
       );
       const diffs = validate(
         z.array(GitLabDiffEntrySchema),
-        await this.api.MergeRequests.allDiffs(projectPath, mrIid),
+        await api.MergeRequests.allDiffs(projectPath, mrIid),
         'GitLab MR diffs'
       );
 
@@ -143,10 +143,11 @@ export class GitLabReader implements SourcePlatformReader {
     const projectPath = `${owner}/${repo}`;
     const mrIid = ref.number;
 
+    const api = this.clientFor(ref);
     try {
       const commits = validate(
         z.array(GitLabCommitEntrySchema),
-        await this.api.MergeRequests.allCommits(projectPath, mrIid),
+        await api.MergeRequests.allCommits(projectPath, mrIid),
         'GitLab MR commits'
       );
       const result = commits.map((commit) => ({

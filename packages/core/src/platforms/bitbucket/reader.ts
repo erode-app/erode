@@ -18,6 +18,8 @@ import {
 import { BitbucketApiClient } from './api-client.js';
 import { applyDiffTruncation, wrapPlatformError } from '../platform-utils.js';
 import { parseChangeRequestRef } from '../change-request-url.js';
+import { resolvePlatformEndpoint } from '../api-endpoint.js';
+import { CONFIG } from '../../utils/config.js';
 
 /** Parse "Name <email>" format used by Bitbucket commit authors. */
 function parseAuthorRaw(raw: string): { name: string; email: string } {
@@ -29,10 +31,14 @@ function parseAuthorRaw(raw: string): { name: string; email: string } {
 }
 
 export class BitbucketReader implements SourcePlatformReader {
-  private api: BitbucketApiClient;
+  constructor(private readonly token?: string) {}
 
-  constructor(token?: string) {
-    this.api = new BitbucketApiClient(token);
+  private clientFor(ref: ChangeRequestRef): BitbucketApiClient {
+    const { baseUrl, tokenApplies } = resolvePlatformEndpoint(ref.repositoryUrl, 'bitbucket');
+    return new BitbucketApiClient(
+      this.token ?? (tokenApplies ? CONFIG.bitbucket.token : undefined),
+      baseUrl
+    );
   }
 
   parseChangeRequestUrl(url: string): ChangeRequestRef {
@@ -49,20 +55,18 @@ export class BitbucketReader implements SourcePlatformReader {
     const prId = ref.number;
     const basePath = `/repositories/${workspace}/${repoSlug}/pullrequests/${String(prId)}`;
 
+    const api = this.clientFor(ref);
     try {
-      const pr = await this.api.request(basePath, BitbucketPrResponseSchema);
+      const pr = await api.request(basePath, BitbucketPrResponseSchema);
 
-      const diffstatEntries = await this.api.paginate(
+      const diffstatEntries = await api.paginate(
         `${basePath}/diffstat`,
         BitbucketDiffstatEntrySchema
       );
 
-      const commitEntries = await this.api.paginate(
-        `${basePath}/commits`,
-        BitbucketCommitEntrySchema
-      );
+      const commitEntries = await api.paginate(`${basePath}/commits`, BitbucketCommitEntrySchema);
 
-      const rawDiff = await this.api.requestText(`${basePath}/diff`);
+      const rawDiff = await api.requestText(`${basePath}/diff`);
 
       const files = diffstatEntries.map((entry) => ({
         filename: entry.new?.path ?? entry.old?.path ?? 'unknown',
@@ -126,8 +130,9 @@ export class BitbucketReader implements SourcePlatformReader {
     const prId = ref.number;
     const basePath = `/repositories/${workspace}/${repoSlug}/pullrequests/${String(prId)}`;
 
+    const api = this.clientFor(ref);
     try {
-      const commits = await this.api.paginate(`${basePath}/commits`, BitbucketCommitEntrySchema);
+      const commits = await api.paginate(`${basePath}/commits`, BitbucketCommitEntrySchema);
       const result = commits.map((commit) => {
         const { name, email } = parseAuthorRaw(commit.author.raw);
         return {

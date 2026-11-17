@@ -356,6 +356,11 @@ const TOKEN_BASE_PLATFORMS: Record<TokenPlatform, RepoPlatform> = {
   bitbucket: 'bitbucket-server',
 };
 
+/** True when the locator is on the platform's public host (github.com, gitlab.com, bitbucket.org). */
+export function isPublicInstance(locator: RepoLocator, tokenPlatform: TokenPlatform): boolean {
+  return locator.host === TOKEN_DEFAULT_HOSTS[tokenPlatform] && locator.port === undefined;
+}
+
 /**
  * True when the locator is on the instance a platform token is issued for: the
  * self-hosted instance from `ERODE_*_BASE_URL` (host, port and base path) when
@@ -365,9 +370,7 @@ const TOKEN_BASE_PLATFORMS: Record<TokenPlatform, RepoPlatform> = {
 export function isTokenInstance(locator: RepoLocator, tokenPlatform: TokenPlatform): boolean {
   const platform = TOKEN_BASE_PLATFORMS[tokenPlatform];
   const base = repositoryHosts().bases.find((b) => b.platform === platform);
-  if (!base) {
-    return locator.host === TOKEN_DEFAULT_HOSTS[tokenPlatform] && locator.port === undefined;
-  }
+  if (!base) return isPublicInstance(locator, tokenPlatform);
   if (locator.host !== base.host || locator.port !== base.port) return false;
   return startsWithPath(splitPath(new URL(locator.canonicalUrl).pathname), base.basePath);
 }

@@ -41,7 +41,9 @@ vi.mock('@gitbeaker/rest', () => ({
 vi.mock('../../../utils/config.js', async (importOriginal) => ({
   ...(await importOriginal()),
   CONFIG: {
+    github: { token: 'test-token', modelRepoPrToken: null, baseUrl: 'https://api.github.com' },
     gitlab: { token: 'test-token', baseUrl: 'https://gitlab.com' },
+    bitbucket: { token: 'test-token', baseUrl: 'https://api.bitbucket.org/2.0' },
   },
 }));
 
@@ -62,7 +64,7 @@ describe('GitLabWriter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    writer = new GitLabWriter('org', 'repo');
+    writer = new GitLabWriter('org', 'repo', 'https://gitlab.com/org/repo');
   });
 
   describe('constructor', () => {
@@ -72,8 +74,12 @@ describe('GitLabWriter', () => {
       CONFIG.gitlab.token = undefined;
 
       try {
-        expect(() => new GitLabWriter('org', 'repo')).toThrow(ErodeError);
-        expect(() => new GitLabWriter('org', 'repo')).toThrow('A GitLab token is needed');
+        expect(() => new GitLabWriter('org', 'repo', 'https://gitlab.com/org/repo')).toThrow(
+          ErodeError
+        );
+        expect(() => new GitLabWriter('org', 'repo', 'https://gitlab.com/org/repo')).toThrow(
+          'A GitLab token is needed'
+        );
       } finally {
         CONFIG.gitlab.token = originalToken;
       }

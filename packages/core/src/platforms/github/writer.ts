@@ -10,6 +10,7 @@ import type {
 } from '../source-platform.js';
 import { wrapPlatformError, isTransientError } from '../platform-utils.js';
 import { extractStatusCode } from '../../utils/error-utils.js';
+import { resolvePlatformEndpoint } from '../api-endpoint.js';
 
 function throw403AsPermissionError(error: unknown, prNumber: number): void {
   if (error instanceof Error && extractStatusCode(error) === 403) {
@@ -27,8 +28,11 @@ export class GitHubWriter implements SourcePlatformWriter {
   private readonly targetOwner: string;
   private readonly targetRepo: string;
 
-  constructor(targetOwner: string, targetRepo: string) {
-    const token = CONFIG.github.modelRepoPrToken ?? CONFIG.github.token;
+  constructor(targetOwner: string, targetRepo: string, repositoryUrl: string) {
+    const { baseUrl, tokenApplies } = resolvePlatformEndpoint(repositoryUrl, 'github');
+    const token = tokenApplies
+      ? (CONFIG.github.modelRepoPrToken ?? CONFIG.github.token)
+      : undefined;
     if (!token) {
       throw new ErodeError(
         'A GitHub token is needed to create PRs',
@@ -36,7 +40,7 @@ export class GitHubWriter implements SourcePlatformWriter {
         `Provide ${ENV_VAR_NAMES.modelRepoPrToken} or ${ENV_VAR_NAMES.githubToken} in your environment or ${RC_FILENAME} to create PRs.`
       );
     }
-    this.octokit = new Octokit({ auth: token, baseUrl: CONFIG.github.baseUrl });
+    this.octokit = new Octokit({ auth: token, baseUrl });
     this.targetOwner = targetOwner;
     this.targetRepo = targetRepo;
   }

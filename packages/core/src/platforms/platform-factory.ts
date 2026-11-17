@@ -71,11 +71,11 @@ export function createPlatformWriter(
   const platform = detectPlatform(repositoryUrl);
   switch (platform) {
     case 'github':
-      return new GitHubWriter(targetOwner, targetRepo);
+      return new GitHubWriter(targetOwner, targetRepo, repositoryUrl);
     case 'gitlab':
-      return new GitLabWriter(targetOwner, targetRepo);
+      return new GitLabWriter(targetOwner, targetRepo, repositoryUrl);
     case 'bitbucket':
-      return new BitbucketWriter(targetOwner, targetRepo);
+      return new BitbucketWriter(targetOwner, targetRepo, repositoryUrl);
     default: {
       const _exhaustive: never = platform;
       throw new ErodeError(
