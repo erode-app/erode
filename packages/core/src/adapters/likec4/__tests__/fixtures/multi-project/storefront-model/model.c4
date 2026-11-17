@@ -1,0 +1,14 @@
+specification {
+  element service
+}
+
+model {
+  storefront = service 'Storefront' {
+    link https://github.com/example/storefront
+    -> cart 'adds items'
+  }
+
+  cart = service 'Cart' {
+    link https://github.com/example/cart
+  }
+}

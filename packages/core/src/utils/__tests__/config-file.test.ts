@@ -162,6 +162,21 @@ describe('config file support', () => {
         }
       }
     });
+
+    it('should map ERODE_LIKEC4_PROJECT to adapter.likec4.project', () => {
+      const original = process.env['ERODE_LIKEC4_PROJECT'];
+      process.env['ERODE_LIKEC4_PROJECT'] = 'billing';
+      try {
+        const envConfig = loadConfigFromEnv();
+        expect(envConfig).toMatchObject({ adapter: { likec4: { project: 'billing' } } });
+      } finally {
+        if (original === undefined) {
+          delete process.env['ERODE_LIKEC4_PROJECT'];
+        } else {
+          process.env['ERODE_LIKEC4_PROJECT'] = original;
+        }
+      }
+    });
   });
 
   describe('loadConfigFromFile error handling', () => {

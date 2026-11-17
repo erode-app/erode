@@ -30,6 +30,7 @@ const WORKSPACE = '/workspace/model';
 
 function mockInstance(overrides: Record<string, unknown> = {}): LikeC4Instance {
   return {
+    projects: () => ['default'],
     hasErrors: () => false,
     getErrors: () => [],
     computedModel: () => Promise.resolve(createMockModel()),

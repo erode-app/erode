@@ -41,6 +41,7 @@ Environment variable names map to nested JSON keys. For example:
 | `ERODE_MODEL_PATH`         | `adapter.modelPath`           |
 | `ERODE_MODEL_REPO`         | `adapter.modelRepo`           |
 | `ERODE_MODEL_REF`          | `adapter.modelRef`            |
+| `ERODE_LIKEC4_PROJECT`     | `adapter.likec4.project`      |
 
 ## AI provider
 
@@ -64,6 +65,7 @@ Environment variable names map to nested JSON keys. For example:
 | `ERODE_LIKEC4_EXCLUDE_TAGS`       | Comma-separated tags to exclude from model loading      | —        |
 | `ERODE_LIKEC4_FORMAT_AFTER_PATCH` | Format LikeC4 models after applying generated patches   | `true`   |
 | `ERODE_LIKEC4_PATCH_STRATEGY`     | How to patch LikeC4 models (`text` or `model-edits`)    | `text`   |
+| `ERODE_LIKEC4_PROJECT`            | LikeC4 project to load when the workspace has several   | —        |
 
 `model-edits` is experimental. Erode lets LikeC4 decide where suggested elements and relationships go, instead of inserting text into the model block.
 

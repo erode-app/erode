@@ -30,6 +30,7 @@ export const ConfigSchema = z.object({
       excludeTags: z.array(z.string()).default([]),
       formatAfterPatch: z.boolean().default(true),
       patchStrategy: z.enum(['text', 'model-edits']).default('text'),
+      project: z.string().optional(),
     }),
     structurizr: z.object({
       cliPath: z.string().optional(),
@@ -93,6 +94,7 @@ export const ENV_VAR_NAMES = {
   modelRepo: 'ERODE_MODEL_REPO',
   modelRef: 'ERODE_MODEL_REF',
   likec4FormatAfterPatch: 'ERODE_LIKEC4_FORMAT_AFTER_PATCH',
+  likec4Project: 'ERODE_LIKEC4_PROJECT',
 } as const;
 
 const ENV_MAP: Record<string, string> = {
@@ -125,6 +127,7 @@ const ENV_MAP: Record<string, string> = {
   ERODE_LIKEC4_EXCLUDE_TAGS: 'adapter.likec4.excludeTags',
   ERODE_LIKEC4_FORMAT_AFTER_PATCH: 'adapter.likec4.formatAfterPatch',
   ERODE_LIKEC4_PATCH_STRATEGY: 'adapter.likec4.patchStrategy',
+  ERODE_LIKEC4_PROJECT: 'adapter.likec4.project',
   ERODE_STRUCTURIZR_CLI_PATH: 'adapter.structurizr.cliPath',
   ERODE_MAX_FILES_PER_DIFF: 'constraints.maxFilesPerDiff',
   ERODE_MAX_LINES_PER_DIFF: 'constraints.maxLinesPerDiff',
