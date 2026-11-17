@@ -14,6 +14,7 @@ Changes: +{{changeRequest.stats.additions}} -{{changeRequest.stats.deletions}} (
 
 Name: {{component.name}} ({{component.id}})
 Type: {{component.type}}
+Description: {{component.description}}
 Repository: {{component.repository}}
 Tags: {{component.tags}}
 

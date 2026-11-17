@@ -363,6 +363,42 @@ describe('PromptBuilder', () => {
     });
   });
 
+  describe('drift analysis component context', () => {
+    const build = (description?: string) =>
+      PromptBuilder.buildDriftAnalysisPrompt({
+        changeRequest: {
+          number: 1,
+          title: 'Test',
+          description: null,
+          repository: 'org/repo',
+          author: { login: 'dev' },
+          base: { ref: 'main', sha: 'base' },
+          head: { ref: 'feature', sha: 'head' },
+          stats: { commits: 1, additions: 1, deletions: 0, files_changed: 1 },
+          commits: [{ sha: 'head', message: 'Test', author: 'dev' }],
+        },
+        component: { id: 'comp.api', name: 'API', type: 'service', tags: [], description },
+        dependencies: { dependencies: [], summary: 'No changes' },
+        architectural: { dependencies: [], dependents: [], relationships: [] },
+      });
+
+    it('should pass the component description to the template', () => {
+      const vars = JSON.parse(build('Serves the public REST API')) as DriftAnalysisPromptVars;
+      expect(vars.component.description).toBe('Serves the public REST API');
+    });
+
+    it('should fall back to None when the component has no description', () => {
+      const vars = JSON.parse(build()) as DriftAnalysisPromptVars;
+      expect(vars.component.description).toBe('None');
+    });
+
+    it('should render the component description in the template', () => {
+      const templateDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'prompts');
+      const template = readFileSync(join(templateDir, 'drift-analysis.md'), 'utf-8');
+      expect(template).toContain('Description: {{component.description}}');
+    });
+  });
+
   describe('buildModelPatchPrompt', () => {
     it('should include syntax guide for likec4 format', () => {
       // The mock returns JSON.stringify(vars), so we can parse and check
