@@ -40,6 +40,10 @@ The adapter pattern decouples the pipeline from model format details. Adding a n
 - The interface must cover the superset of all format capabilities. Format-specific features that do not fit the interface require workarounds or optional methods.
 - The `checkVersion` method is optional, creating inconsistency in version checking across adapters.
 
+## Amendments
+
+- **2026-11-17:** Added optional `getValidationBaseline?()` to the adapter interface and a matching optional `validationBaseline` field on `ModelPatchOptions`. The LikeC4 adapter captures the model's validation warnings at load time, and patch validation reports only warnings the patch introduces.
+
 ## Related commits
 
 - `8691ba8` - chore(release): release 0.4.0 (#24)
