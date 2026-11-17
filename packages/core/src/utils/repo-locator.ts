@@ -70,6 +70,7 @@ interface HostBase {
   host: string;
   /** Web base path segments, e.g. `['gitlab']` for `https://example.com/gitlab`. */
   basePath: string[];
+  port?: number;
   platform: RepoPlatform;
 }
 
@@ -99,7 +100,12 @@ function configuredBase(
   if (host in BUILT_IN_HOSTS || host === 'api.bitbucket.org') return undefined;
   const path = splitPath(parsed.pathname);
   const api = path.findIndex((s) => s.toLowerCase() === apiSegment);
-  return { host, basePath: api === -1 ? path : path.slice(0, api), platform };
+  return {
+    host,
+    basePath: api === -1 ? path : path.slice(0, api),
+    ...(parsed.port ? { port: Number(parsed.port) } : {}),
+    platform,
+  };
 }
 
 let registryCache: { key: string; registry: HostRegistry } | undefined;
@@ -334,6 +340,36 @@ export function parseRepoLocator(
 /** The platform for a hostname, including configured self-hosted hosts. */
 export function platformForHost(hostname: string): RepoPlatform {
   return resolveHost(hostname, repositoryHosts().hosts, false)[1];
+}
+
+export type TokenPlatform = 'github' | 'gitlab' | 'bitbucket';
+
+const TOKEN_DEFAULT_HOSTS: Record<TokenPlatform, string> = {
+  github: 'github.com',
+  gitlab: 'gitlab.com',
+  bitbucket: 'bitbucket.org',
+};
+
+const TOKEN_BASE_PLATFORMS: Record<TokenPlatform, RepoPlatform> = {
+  github: 'github',
+  gitlab: 'gitlab',
+  bitbucket: 'bitbucket-server',
+};
+
+/**
+ * True when the locator is on the instance a platform token is issued for: the
+ * self-hosted instance from `ERODE_*_BASE_URL` (host, port and base path) when
+ * one is set, otherwise the public host. The platform guessed from a path shape
+ * such as `/scm/KEY/repo` never qualifies on its own.
+ */
+export function isTokenInstance(locator: RepoLocator, tokenPlatform: TokenPlatform): boolean {
+  const platform = TOKEN_BASE_PLATFORMS[tokenPlatform];
+  const base = repositoryHosts().bases.find((b) => b.platform === platform);
+  if (!base) {
+    return locator.host === TOKEN_DEFAULT_HOSTS[tokenPlatform] && locator.port === undefined;
+  }
+  if (locator.host !== base.host || locator.port !== base.port) return false;
+  return startsWithPath(splitPath(new URL(locator.canonicalUrl).pathname), base.basePath);
 }
 
 /** True when the input points at a repository on a known (built-in or configured) host. */

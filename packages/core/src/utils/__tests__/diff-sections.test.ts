@@ -11,6 +11,8 @@ describe('unquoteGitPath', () => {
     ['plain/path.ts', 'plain/path.ts'],
     ['"src/caf\\303\\251.ts"', 'src/café.ts'],
     ['"a\\tb\\"c\\\\d.ts"', 'a\tb"c\\d.ts'],
+    ['"src/😀\\".ts"', 'src/😀".ts'],
+    ['"src/日本/caf\\303\\251\\".ts"', 'src/日本/café".ts'],
   ])('decodes %s', (input, expected) => {
     expect(unquoteGitPath(input)).toBe(expected);
   });
@@ -24,6 +26,9 @@ describe('splitDiffSections', () => {
     ['path containing " b/"', 'diff --git a/docs/a b/c.md b/docs/a b/c.md', 'docs/a b/c.md'],
     ['no prefix with " b/"', 'diff --git docs/a b/c.md docs/a b/c.md', 'docs/a b/c.md'],
     ['quoted paths', 'diff --git "a/caf\\303\\251.ts" "b/caf\\303\\251.ts"', 'café.ts'],
+    ['quoted no prefix', 'diff --git "caf\\303\\251.ts" "caf\\303\\251.ts"', 'café.ts'],
+    ['quoted mnemonic prefixes', 'diff --git "i/caf\\303\\251.ts" "w/caf\\303\\251.ts"', 'café.ts'],
+    ['quoted literal emoji', 'diff --git "a/src/😀\\".ts" "b/src/😀\\".ts"', 'src/😀".ts'],
     ['combined diff', 'diff --cc src/conflict.ts', 'src/conflict.ts'],
     ['unmerged marker', '* Unmerged path src/conflict.ts', 'src/conflict.ts'],
   ])('resolves the path for %s', (_name, header, expected) => {
@@ -68,6 +73,21 @@ describe('parseFilesFromDiff and filterDiffByFiles with git config variants', ()
 
   it('keeps only the requested sections', () => {
     const result = filterDiffByFiles(diff, [{ filename: 'docs/a b/c.md' }]);
+    expect(result).toContain('+keep');
+    expect(result).not.toContain('+drop');
+  });
+
+  it('decodes quoted no-prefix and mnemonic-prefix headers', () => {
+    const quoted = [
+      'diff --git "caf\\303\\251.ts" "caf\\303\\251.ts"',
+      '@@ -1 +1 @@',
+      '+keep',
+      'diff --git "i/na\\303\\257ve.ts" "w/na\\303\\257ve.ts"',
+      '@@ -1 +1 @@',
+      '+drop',
+    ].join('\n');
+    expect(parseFilesFromDiff(quoted).map((f) => f.filename)).toEqual(['café.ts', 'naïve.ts']);
+    const result = filterDiffByFiles(quoted, [{ filename: 'café.ts' }]);
     expect(result).toContain('+keep');
     expect(result).not.toContain('+drop');
   });

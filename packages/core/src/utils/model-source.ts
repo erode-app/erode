@@ -6,7 +6,13 @@ import { promisify } from 'node:util';
 import { ConfigurationError, ErodeError, ErrorCode } from '../errors.js';
 import { CONFIG } from './config.js';
 import { redactUrlCredentials } from './url-credentials.js';
-import { parseRepoLocator, type RepoPlatform } from './repo-locator.js';
+import {
+  isTokenInstance,
+  parseRepoLocator,
+  type RepoLocator,
+  type RepoPlatform,
+  type TokenPlatform,
+} from './repo-locator.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -40,10 +46,10 @@ export async function resolveModelSource(
     };
   }
 
-  const { cloneUrl, slug, platform, asGiven } = locateModelRepo(modelRepo);
+  const { cloneUrl, slug, platform, asGiven, locator } = locateModelRepo(modelRepo);
   const ref = options.ref ?? 'main';
   validateRef(ref);
-  let token = asGiven ? undefined : resolveToken(platform);
+  let token = asGiven ? undefined : resolveToken(locator);
   if (token && !cloneUrl.startsWith('https://')) {
     console.warn(
       `[erode] Cloning ${cloneUrl} without credentials: the access token is never sent over plain http.`
@@ -94,6 +100,7 @@ function locateModelRepo(modelRepo: string): {
   platform: RepoPlatform;
   /** Clone the input unchanged and without a token (SSH and `git://`). */
   asGiven: boolean;
+  locator: RepoLocator;
 } {
   const locator = parseRepoLocator(modelRepo, { allowShorthand: true });
   if (!locator) {
@@ -103,7 +110,7 @@ function locateModelRepo(modelRepo: string): {
   }
   const { slug, platform } = locator;
   if (locator.protocol === 'ssh' || locator.protocol === 'git') {
-    return { cloneUrl: modelRepo.trim(), slug, platform, asGiven: true };
+    return { cloneUrl: modelRepo.trim(), slug, platform, asGiven: true, locator };
   }
   let cloneUrl = `${locator.canonicalUrl}.git`;
   if (platform === 'azure-devops') cloneUrl = locator.canonicalUrl;
@@ -111,20 +118,27 @@ function locateModelRepo(modelRepo: string): {
     cloneUrl = locator.canonicalUrl.replace(/\/projects\/([^/]+)\/repos\//, '/scm/$1/') + '.git';
   }
   if (locator.protocol === 'http') cloneUrl = cloneUrl.replace(/^https:/, 'http:');
-  return { cloneUrl, slug, platform, asGiven: false };
+  return { cloneUrl, slug, platform, asGiven: false, locator };
 }
 
-function resolveToken(platform: RepoPlatform): string | undefined {
-  switch (platform) {
+const TOKEN_PLATFORMS: Partial<Record<RepoPlatform, TokenPlatform>> = {
+  github: 'github',
+  gitlab: 'gitlab',
+  bitbucket: 'bitbucket',
+  'bitbucket-server': 'bitbucket',
+};
+
+/** The platform token, only when the repository is on the instance that token belongs to. */
+function resolveToken(locator: RepoLocator): string | undefined {
+  const tokenPlatform = TOKEN_PLATFORMS[locator.platform];
+  if (!tokenPlatform || !isTokenInstance(locator, tokenPlatform)) return undefined;
+  switch (tokenPlatform) {
     case 'github':
       return CONFIG.github.modelRepoPrToken ?? CONFIG.github.token;
     case 'gitlab':
       return CONFIG.gitlab.token;
     case 'bitbucket':
-    case 'bitbucket-server':
       return CONFIG.bitbucket.token;
-    default:
-      return undefined;
   }
 }
 

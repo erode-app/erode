@@ -41,15 +41,23 @@ const C_ESCAPES: Record<string, number> = {
   '\\': 92,
 };
 
-/** Decode a path that git quoted C-style (`"caf\303\251.ts"`); other input is returned as is. */
+const utf8 = new TextEncoder();
+
+/**
+ * Decode a path that git quoted C-style (`"caf\303\251.ts"`); other input is
+ * returned as is. Octal escapes are raw bytes and literal characters (left
+ * unescaped with `core.quotePath=false`) are UTF-8, so both go into one byte
+ * buffer that is decoded once.
+ */
 export function unquoteGitPath(value: string): string {
   if (value.length < 2 || !value.startsWith('"') || !value.endsWith('"')) return value;
   const body = value.slice(1, -1);
   const bytes: number[] = [];
   for (let i = 0; i < body.length; i++) {
-    const ch = body.charAt(i);
+    const ch = String.fromCodePoint(body.codePointAt(i) ?? 0);
     if (ch !== '\\') {
-      bytes.push(...Buffer.from(ch, 'utf-8'));
+      bytes.push(...utf8.encode(ch));
+      i += ch.length - 1;
       continue;
     }
     const next = body.charAt(i + 1);
@@ -62,7 +70,7 @@ export function unquoteGitPath(value: string): string {
       i += 1;
     }
   }
-  return Buffer.from(bytes).toString('utf-8');
+  return new TextDecoder('utf-8').decode(new Uint8Array(bytes));
 }
 
 function stripPrefix(path: string, prefixes: readonly string[]): string {
@@ -81,13 +89,25 @@ function symmetricHeaderPath(rest: string): string | undefined {
   return undefined;
 }
 
-/** Read the second token of a header whose first token is C-quoted. */
+/**
+ * Resolve a header whose first token is C-quoted, e.g. `"a/caf\303\251.ts" "b/caf\303\251.ts"`
+ * or, without prefixes, `"caf\303\251.ts" "caf\303\251.ts"`. Both tokens are
+ * decoded before the prefixes are matched.
+ */
 function quotedHeaderPath(rest: string): string | undefined {
   if (!rest.startsWith('"')) return undefined;
   let end = 1;
   while (end < rest.length && rest[end] !== '"') end += rest[end] === '\\' ? 2 : 1;
   const second = rest.slice(end + 2);
-  return second ? stripPrefix(unquoteGitPath(second), DST_PREFIXES) : undefined;
+  if (!second) return undefined;
+  const srcPath = unquoteGitPath(rest.slice(0, end + 1));
+  const dstPath = unquoteGitPath(second);
+  for (const [src, dst] of PREFIX_PAIRS) {
+    if (!srcPath.startsWith(src) || !dstPath.startsWith(dst)) continue;
+    const path = dstPath.slice(dst.length);
+    if (path && srcPath.slice(src.length) === path) return path;
+  }
+  return stripPrefix(dstPath, DST_PREFIXES);
 }
 
 function fileLinePath(lines: string[], marker: '+++ ' | '--- '): string | undefined {
@@ -112,9 +132,10 @@ function resolveSectionPath(lines: string[]): string | undefined {
   if (renamed) return unquoteGitPath(renamed.slice(renamed.indexOf(' to ') + 4));
 
   const rest = header.slice('diff --git '.length);
+  // A quoted header must be decoded before its prefixes are matched.
   const path =
-    symmetricHeaderPath(rest) ??
     quotedHeaderPath(rest) ??
+    symmetricHeaderPath(rest) ??
     fileLinePath(meta, '+++ ') ??
     fileLinePath(meta, '--- ');
   if (path) return path;

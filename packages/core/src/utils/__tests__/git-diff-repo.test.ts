@@ -29,6 +29,7 @@ beforeAll(() => {
   mkdirSync(join(dir, 'src'));
   write('docs/a b/c.md', 'one\n');
   write('src/café.ts', 'export const a = 1;\n');
+  write('src/say"hi".ts', 'export const q = 1;\n');
   write('link.txt', 'target\n');
   write('old.ts', 'export const moved = 1;\nexport const kept = 2;\n');
   write('image.bin', Buffer.from([0, 1, 2, 3]));
@@ -38,6 +39,7 @@ beforeAll(() => {
 
   write('docs/a b/c.md', 'one\ntwo\n');
   write('src/café.ts', 'export const a = 2;\n');
+  write('src/say"hi".ts', 'export const q = 2;\n');
   rmSync(join(dir, 'link.txt'));
   symlinkSync('old.ts', join(dir, 'link.txt'));
   git('mv', 'old.ts', 'new.ts');
@@ -62,6 +64,7 @@ const expectedFiles = [
   { filename: 'link.txt', status: 'changed' },
   { filename: 'new.ts', status: 'renamed' },
   { filename: 'src/café.ts', status: 'modified' },
+  { filename: 'src/say"hi".ts', status: 'modified' },
 ];
 
 describe('generateGitDiff against a real repository', () => {
@@ -78,8 +81,8 @@ describe('generateGitDiff against a real repository', () => {
 
   it('computes stats from numstat, counting binary files without lines', () => {
     const result = generateGitDiff({ cwd: dir, staged: true });
-    // c.md +1, café.ts +1 -1, link.txt +1 -1, image.bin binary, rename 0/0.
-    expect(result.stats).toEqual({ additions: 3, deletions: 2, filesChanged: 5 });
+    // c.md +1, café.ts +1 -1, say"hi".ts +1 -1, link.txt +1 -1, image.bin binary, rename 0/0.
+    expect(result.stats).toEqual({ additions: 4, deletions: 3, filesChanged: 6 });
   });
 
   it('emits a parseable diff with a/ and b/ prefixes and no colour', () => {
@@ -87,6 +90,8 @@ describe('generateGitDiff against a real repository', () => {
     expect(diff).not.toContain('\x1b[');
     expect(diff).toContain('diff --git a/docs/a b/c.md b/docs/a b/c.md');
     expect(diff).toContain('diff --git a/src/café.ts b/src/café.ts');
+    // git still C-quotes a name containing `"` with core.quotePath=false.
+    expect(diff).toContain('diff --git "a/src/say\\"hi\\".ts" "b/src/say\\"hi\\".ts"');
     expect(parseFilesFromDiff(diff).map((f) => f.filename)).toEqual(
       expectedFiles.map((f) => f.filename)
     );
@@ -101,6 +106,10 @@ describe('generateGitDiff against a real repository', () => {
     expect(filtered).toContain('+two');
     expect(filtered.match(/^diff --git a\/link\.txt b\/link\.txt$/gm)).toHaveLength(2);
     expect(filtered).not.toContain('café');
+    expect(filtered).not.toContain('say');
+    expect(filterDiffByFiles(diff, [{ filename: 'src/say"hi".ts' }])).toContain(
+      '+export const q = 2;'
+    );
     expect(filtered).not.toContain('image.bin');
     expect(filtered).not.toContain('new.ts');
   });
