@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { join } from 'path';
-import type { ExecFileException } from 'child_process';
+import type { ExecException } from 'child_process';
 import { ErrorCode } from '../../errors.js';
 import { parseModelRepo, resolveModelSource } from '../model-source.js';
 
@@ -31,7 +31,7 @@ vi.mock('../../utils/config.js', () => ({
 }));
 
 type ExecFileCallback = (
-  error: ExecFileException | null,
+  error: ExecException | null,
   stdout: string | Buffer,
   stderr: string | Buffer
 ) => void;
@@ -195,7 +195,7 @@ describe('resolveModelSource', () => {
     vi.mocked(mkdtemp).mockResolvedValue(tmpDir);
     vi.mocked(execFile).mockImplementation((...args: unknown[]) => {
       const cb = args[args.length - 1] as ExecFileCallback | undefined;
-      if (cb) cb(new Error('remote not found'), '', '');
+      if (cb) cb(Object.assign(new Error('remote not found'), { cmd: 'git clone' }), '', '');
       return undefined as never;
     });
 
@@ -311,7 +311,10 @@ describe('resolveModelSource', () => {
       const cb = args[args.length - 1] as ExecFileCallback | undefined;
       if (cb) {
         cb(
-          new Error('fatal: could not read from https://x-access-token@github.com/bad/repo.git'),
+          Object.assign(
+            new Error('fatal: could not read from https://x-access-token@github.com/bad/repo.git'),
+            { cmd: 'git clone' }
+          ),
           '',
           ''
         );

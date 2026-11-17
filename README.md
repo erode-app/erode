@@ -44,7 +44,7 @@ Full documentation at [erode.dev](https://erode.dev).
 
 ## Development
 
-Requires Node.js >= 24.0.0.
+Requires Node.js >= 26.0.0.
 
 ```bash
 npm install
