@@ -56,6 +56,10 @@ describe('LikeC4Patcher escaping against the LikeC4 parser', () => {
 
     expect(result).not.toBeNull();
     if (!result) return;
+    expect(result.content).toContain("obrien_api = service 'O\\'Brien API'");
+    expect(result.content).toContain(
+      "frontend -> obrien_api 'Calls O\\'Brien API at C:\\\\api\\\\'"
+    );
 
     const validation = await validateLikeC4Dsl(
       fixtureWorkspace,
