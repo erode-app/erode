@@ -3,6 +3,7 @@ import { LikeC4Patcher } from '../patcher.js';
 import type { StructuredRelationship } from '../../../analysis/analysis-types.js';
 import type { ComponentIndex, ArchitecturalComponent } from '../../architecture-types.js';
 import type { AIProvider } from '../../../providers/ai-provider.js';
+import { CONFIG } from '../../../utils/config.js';
 
 vi.mock('fs', async (importOriginal) => ({
   ...(await importOriginal()),
@@ -71,6 +72,7 @@ describe('LikeC4Patcher post-format', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    CONFIG.adapter.likec4.patchStrategy = 'text';
     patcher = new LikeC4Patcher();
     mockValidateLikeC4Dsl.mockResolvedValue({ valid: true });
   });

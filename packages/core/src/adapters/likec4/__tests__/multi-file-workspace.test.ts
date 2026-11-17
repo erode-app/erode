@@ -25,6 +25,7 @@ describe('LikeC4 multi-file workspace', () => {
     CONFIG.adapter.likec4.excludePaths = [];
     CONFIG.adapter.likec4.excludeTags = [];
     CONFIG.adapter.likec4.formatAfterPatch = false;
+    CONFIG.adapter.likec4.patchStrategy = 'text';
 
     adapter = new LikeC4Adapter();
     model = await adapter.loadFromPath(workspace);

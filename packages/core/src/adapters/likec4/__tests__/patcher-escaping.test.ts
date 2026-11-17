@@ -27,6 +27,7 @@ describe('LikeC4Patcher escaping against the LikeC4 parser', () => {
   beforeAll(async () => {
     const configModule = await import('../../../utils/config.js');
     configModule.CONFIG.adapter.likec4.formatAfterPatch = false;
+    configModule.CONFIG.adapter.likec4.patchStrategy = 'text';
   });
 
   it('produces DSL that LikeC4 parses when strings contain quotes and backslashes', async () => {

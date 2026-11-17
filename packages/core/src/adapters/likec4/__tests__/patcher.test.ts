@@ -7,6 +7,7 @@ import type {
   ArchitecturalComponent,
 } from '../../architecture-types.js';
 import type { AIProvider } from '../../../providers/ai-provider.js';
+import { CONFIG } from '../../../utils/config.js';
 
 // Mock fs and child_process
 vi.mock('fs', async (importOriginal) => ({
@@ -75,6 +76,7 @@ describe('LikeC4Patcher', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    CONFIG.adapter.likec4.patchStrategy = 'text';
     patcher = new LikeC4Patcher();
     mockValidateLikeC4Dsl.mockResolvedValue({ valid: true });
   });
