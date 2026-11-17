@@ -34,6 +34,18 @@ describe('extractMinVersion', () => {
     expect(extractMinVersion('<1.70.0 >=1.45.0')).toEqual({ major: 1, minor: 45, patch: 0 });
   });
 
+  it('takes the highest lower bound when a range has several', () => {
+    expect(extractMinVersion('>=1.50.0 >=1.30.0')).toEqual({ major: 1, minor: 50, patch: 0 });
+  });
+
+  it('reads a hyphen range from its left side', () => {
+    expect(extractMinVersion('1.45.0 - 1.70.0')).toEqual({ major: 1, minor: 45, patch: 0 });
+  });
+
+  it('falls back to the upper bound when a range has no lower bound', () => {
+    expect(extractMinVersion('<1.40.0')).toEqual({ major: 1, minor: 40, patch: 0 });
+  });
+
   it('takes the lowest alternative in an OR range', () => {
     expect(extractMinVersion('^2.0.0 || ^1.50.0')).toEqual({ major: 1, minor: 50, patch: 0 });
   });

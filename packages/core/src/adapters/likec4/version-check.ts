@@ -51,17 +51,33 @@ function findPackageJson(startPath: string): string | null {
   return null;
 }
 
-/** Lowest version a range allows; upper bounds (`<`, `<=`) are ignored. */
+function parseVersion(match: RegExpMatchArray): SemVer {
+  return {
+    major: parseInt(match[2] ?? '', 10),
+    minor: parseInt(match[3] ?? '', 10),
+    patch: parseInt(match[4] ?? '', 10),
+  };
+}
+
+/** Lower bound of one range without `||`: the highest lower bound, else the upper bound. */
+function alternativeMinVersion(range: string): SemVer | null {
+  let lower: SemVer | null = null;
+  let upper: SemVer | null = null;
+  // `<`/`<=` and the right side of `a - b` are upper bounds
+  for (const match of range.matchAll(/(<=?|\s-\s*)?\s*v?(\d+)\.(\d+)\.(\d+)/g)) {
+    const version = parseVersion(match);
+    if (match[1]) upper ??= version;
+    else if (!lower || isVersionBelow(lower, version)) lower = version;
+  }
+  return lower ?? upper;
+}
+
+/** Lowest version a range allows, across its `||` alternatives. */
 export function extractMinVersion(range: string): SemVer | null {
   let lowest: SemVer | null = null;
-  for (const match of range.matchAll(/(<=?)?\s*v?(\d+)\.(\d+)\.(\d+)/g)) {
-    if (match[1]) continue;
-    const version = {
-      major: parseInt(match[2] ?? '', 10),
-      minor: parseInt(match[3] ?? '', 10),
-      patch: parseInt(match[4] ?? '', 10),
-    };
-    if (!lowest || isVersionBelow(version, lowest)) lowest = version;
+  for (const alternative of range.split('||')) {
+    const min = alternativeMinVersion(alternative);
+    if (min && (!lowest || isVersionBelow(min, lowest))) lowest = min;
   }
   return lowest;
 }
