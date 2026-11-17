@@ -62,7 +62,7 @@ describe('buildDiffBlock', () => {
       []
     );
     expect(block).toContain('    extend shop {');
-    expect(block).toContain("      cache = service 'Bobs Cache' {");
+    expect(block).toContain("      cache = service 'Bob\\'s Cache' {");
     expect(block).toContain("        technology 'Redis'");
   });
 
