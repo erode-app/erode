@@ -61,6 +61,8 @@ export interface ModelPatchOptions {
   validationBaseline?: readonly ValidationDiagnostic[];
   /** Element ID to absolute path of its declaring file, used to pick the file to patch */
   elementSourceFiles?: ReadonlyMap<string, string>;
+  /** Element ID to its DSL reference; when set, relationships to elements without one are skipped */
+  dslReferences?: ReadonlyMap<string, string>;
 }
 
 export interface ModelPatcher {

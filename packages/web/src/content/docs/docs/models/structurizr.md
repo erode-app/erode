@@ -124,13 +124,22 @@ The more accurately the model reflects the dependencies that matter, the better 
 
 ## ID resolution
 
-Erode resolves element IDs using the following priority:
+A workspace JSON gives every element a numeric `id` ("1", "5", ...). Erode uses these only to resolve relationships. It resolves the element IDs it shows and reports in this order:
 
-1. **`erode.id` property**: if an element has a `properties` block with `erode.id`, that value is used directly
-2. **DSL identifier**: the variable name assigned to the element (e.g., `backend` in `backend = container "Backend API"`)
-3. **snake_case name**: the element name converted to snake_case (e.g., `"Backend API"` becomes `backend_api`)
+1. **`erode.id` property**: if an element has a `properties` block with `erode.id`, that value is used as is.
+2. **DSL identifier**: the identifier assigned in the DSL (e.g., `backend` in `backend = container "Backend API"`). The DSL parser stores it in the exported JSON as the `structurizr.dsl.identifier` property. With the default flat identifiers it is the bare name (`backend`); with `!identifiers hierarchical` it is the dotted path (`softwareSystem.backend`).
+3. **Name fallback**: for elements without an identifier, the parent's ID plus the element name converted to snake_case (e.g., a container `"Backend API"` in `softwareSystem` becomes `softwareSystem.backend_api`). The slug is ASCII: accents are stripped (`Betalningstjänst` becomes `betalningstjanst`) and any other character becomes `_`. If nothing remains, loading fails; set `erode.id` or a DSL identifier.
 
-IDs are hierarchical: a container inside a software system gets a dotted path like `my_system.backend`.
+Every resolved ID must be unique. If two elements resolve to the same ID (for example two `erode.id` values, or the names `"Payment Service"` and `"Payment-Service"` under the same parent), loading fails with an error that names both elements. Give one of them an `erode.id` or a DSL identifier.
+
+### Model patches
+
+When Erode adds a relationship to the DSL, it writes the elements' DSL identifiers, not their Erode IDs. A relationship to an element without a DSL identifier is skipped and listed with the reason. To let Erode patch relationships for an element, assign it an identifier in the DSL.
+
+### Upgrading
+
+- Element IDs are now DSL identifiers (or `erode.id`), not the numeric JSON ids. Update any stored references to the old IDs.
+- Two elements that resolve to the same ID now fail the load instead of being suffixed.
 
 ## Version requirements
 

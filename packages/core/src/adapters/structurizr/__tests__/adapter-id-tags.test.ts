@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { StructurizrWorkspace } from '../structurizr-types.js';
 import { TestStructurizrAdapter } from './adapter.test.js';
+import { dslElement } from './fixtures/mock-workspace.js';
 
 describe('StructurizrAdapter - Built-in tag filtering', () => {
   let adapter: TestStructurizrAdapter;
@@ -12,7 +13,7 @@ describe('StructurizrAdapter - Built-in tag filtering', () => {
       model: {
         softwareSystems: [
           {
-            id: 'svc',
+            ...dslElement('svc'),
             name: 'My Service',
             // Built-in Structurizr tags that should be filtered out
             tags: 'Element,Software System,myCustomTag',
@@ -20,7 +21,7 @@ describe('StructurizrAdapter - Built-in tag filtering', () => {
         ],
         people: [
           {
-            id: 'usr',
+            ...dslElement('usr'),
             name: 'User',
             tags: 'Element,Person,externalUser',
           },
@@ -52,17 +53,17 @@ describe('StructurizrAdapter - Built-in tag filtering', () => {
       model: {
         softwareSystems: [
           {
-            id: 'sys',
+            ...dslElement('sys'),
             name: 'System',
             tags: 'Element,Software System',
             containers: [
               {
-                id: 'ctr',
+                ...dslElement('sys.ctr'),
                 name: 'Container',
                 tags: 'Element,Container,myContainerTag',
                 components: [
                   {
-                    id: 'cmp',
+                    ...dslElement('sys.ctr.cmp'),
                     name: 'Component',
                     tags: 'Element,Component,myComponentTag',
                   },
@@ -96,7 +97,7 @@ describe('StructurizrAdapter - ID resolution', () => {
     const workspace: StructurizrWorkspace = {
       name: 'Test',
       model: {
-        softwareSystems: [{ id: 'my_service', name: 'My Service' }],
+        softwareSystems: [{ ...dslElement('my_service', '1'), name: 'My Service' }],
       },
     };
     adapter.setMockWorkspace(workspace);
@@ -124,9 +125,12 @@ describe('StructurizrAdapter - ID resolution', () => {
       model: {
         softwareSystems: [
           {
-            id: 'dsl_identifier',
+            id: '1',
             name: 'Service With Custom ID',
-            properties: { 'erode.id': 'custom_erode_id' },
+            properties: {
+              'erode.id': 'custom_erode_id',
+              'structurizr.dsl.identifier': 'dsl_identifier',
+            },
           },
         ],
       },
@@ -144,9 +148,9 @@ describe('StructurizrAdapter - ID resolution', () => {
       model: {
         softwareSystems: [
           {
-            id: 'parent_sys',
+            ...dslElement('parent_sys'),
             name: 'Parent System',
-            containers: [{ id: 'child_svc', name: 'Child Service' }],
+            containers: [{ ...dslElement('parent_sys.child_svc'), name: 'Child Service' }],
           },
         ],
       },
@@ -164,13 +168,13 @@ describe('StructurizrAdapter - ID resolution', () => {
       model: {
         softwareSystems: [
           {
-            id: 'sys',
+            ...dslElement('sys'),
             name: 'System',
             containers: [
               {
-                id: 'container',
+                ...dslElement('sys.container'),
                 name: 'Container',
-                components: [{ id: 'component', name: 'Component' }],
+                components: [{ ...dslElement('sys.container.component'), name: 'Component' }],
               },
             ],
           },

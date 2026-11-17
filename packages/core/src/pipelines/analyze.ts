@@ -290,6 +290,7 @@ export async function runAnalyze(
         newComponents: ctx.analysisResult.modelUpdates?.newComponents,
         validationBaseline: adapter.getValidationBaseline?.(),
         elementSourceFiles: adapter.getElementSourceFiles?.(),
+        dslReferences: adapter.getDslReferences?.(),
       });
       if (ctx.patchResult) {
         const relCount = ctx.patchResult.insertedLines.length;

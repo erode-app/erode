@@ -6,14 +6,14 @@ export function createMockWorkspace(): StructurizrWorkspace {
     model: {
       softwareSystems: [
         {
-          id: 'frontend',
+          ...dslElement('frontend'),
           name: 'Web Frontend',
           technology: 'React',
           tags: 'ui',
           url: 'https://github.com/example/frontend',
         },
         {
-          id: 'api_gateway',
+          ...dslElement('api_gateway'),
           name: 'API Gateway',
           technology: 'Node.js',
           tags: 'backend',
@@ -34,7 +34,7 @@ export function createMockWorkspace(): StructurizrWorkspace {
           ],
         },
         {
-          id: 'user_service',
+          ...dslElement('user_service'),
           name: 'User Service',
           technology: 'Java',
           tags: 'backend,microservice',
@@ -49,7 +49,7 @@ export function createMockWorkspace(): StructurizrWorkspace {
           ],
         },
         {
-          id: 'product_service',
+          ...dslElement('product_service'),
           name: 'Product Service',
           technology: 'Python',
           tags: 'backend,microservice',
@@ -64,43 +64,43 @@ export function createMockWorkspace(): StructurizrWorkspace {
           ],
         },
         {
-          id: 'database',
+          ...dslElement('database'),
           name: 'PostgreSQL Database',
           technology: 'PostgreSQL',
           tags: 'storage',
         },
         {
-          id: 'azure_infrastructure',
+          ...dslElement('azure_infrastructure'),
           name: 'Azure Infrastructure',
           description: 'Shared Azure infrastructure',
           tags: 'infrastructure',
           containers: [
             {
-              id: 'vnet',
+              ...dslElement('azure_infrastructure.vnet'),
               name: 'Virtual Network',
               tags: 'infrastructure,networking',
             },
           ],
         },
         {
-          id: 'experimental',
+          ...dslElement('experimental'),
           name: 'Experimental',
           tags: 'experimental',
           containers: [
             {
-              id: 'new_feature',
+              ...dslElement('experimental.new_feature'),
               name: 'Experimental Feature',
               tags: 'experimental',
             },
           ],
         },
         {
-          id: 'temp',
+          ...dslElement('temp'),
           name: 'Temporary',
           tags: 'temp',
           containers: [
             {
-              id: 'test_service',
+              ...dslElement('temp.test_service'),
               name: 'Temporary Test Service',
               tags: 'temp',
             },
@@ -129,4 +129,12 @@ export function createMockWorkspace(): StructurizrWorkspace {
       ],
     },
   };
+}
+
+/** JSON id and DSL identifier property, as a Structurizr DSL export carries them. */
+export function dslElement(
+  identifier: string,
+  jsonId = identifier
+): { id: string; properties: Record<string, string> } {
+  return { id: jsonId, properties: { 'structurizr.dsl.identifier': identifier } };
 }
