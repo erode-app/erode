@@ -20,7 +20,8 @@ export function normalizeLikeC4Text(value: LikeC4RichTextInput): string | undefi
       : value.$source && 'txt' in value.$source
         ? value.$source.txt
         : value.$source?.md;
-  return text?.trim() ? text : undefined;
+  const trimmed = text?.trim();
+  return trimmed === '' ? undefined : trimmed;
 }
 
 // computedModel() exposes descriptions as RichText objects, not strings.

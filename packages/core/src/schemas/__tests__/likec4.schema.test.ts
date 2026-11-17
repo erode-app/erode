@@ -22,6 +22,10 @@ describe('normalizeLikeC4Text', () => {
     expect(normalizeLikeC4Text('Legacy')).toBe('Legacy');
   });
 
+  it('should trim surrounding whitespace', () => {
+    expect(normalizeLikeC4Text({ $source: { txt: '\n  Primary store\n' } })).toBe('Primary store');
+  });
+
   it('should return undefined for empty or missing values', () => {
     expect(normalizeLikeC4Text('  ')).toBeUndefined();
     expect(normalizeLikeC4Text({ $source: { txt: '' } })).toBeUndefined();
