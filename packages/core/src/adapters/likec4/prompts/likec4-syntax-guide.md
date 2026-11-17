@@ -11,7 +11,7 @@ IDENTIFIER = KIND 'title' { ... }
 KIND IDENTIFIER 'title' { ... }
 ```
 
-Element body (all optional, in order): `#tag`s first, then properties, then nested elements and relationships. Element kinds, relationship kinds and tags must already be declared in `specification` (`tag critical` there, `#critical` in the model).
+Element body (all optional): `#tag`s first, then properties, then nested elements and relationships. Element kinds, relationship kinds and tags must already be declared in `specification` (`tag critical` there, `#critical` in the model).
 
 **Relationships**:
 
@@ -24,7 +24,7 @@ Element body (all optional, in order): `#tag`s first, then properties, then nest
 
 **Strings**: `'single-quoted'` or `"double-quoted"`; escape quotes with backslash (`\'` or `\"`)
 
-**Extend** (add to existing elements without redefining): `extend FQN { #tags; metadata { ... }; link ...; nested elements/relationships }`. Only `metadata` and `link` properties are allowed in `extend`.
+**Extend** existing elements: `extend FQN { #tags; metadata { ... }; link ...; nested elements/relationships }`. No other properties.
 
 **Anti-patterns to avoid**:
 
@@ -32,5 +32,4 @@ Element body (all optional, in order): `#tag`s first, then properties, then nest
 - Do NOT create relationships from parent to direct child
 - Do NOT add or remove `{` or `}` braces from existing blocks
 - Do NOT redefine existing elements; use `extend` instead
-- Do NOT use kinds or tags that are not declared in `specification`
 - Do NOT use `extend SOURCE -> TARGET`, `<->`, `[[fqn]]` links, `descriptionFile` or `diff` blocks (not supported by older LikeC4 versions)
