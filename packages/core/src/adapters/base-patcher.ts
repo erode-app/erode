@@ -255,7 +255,9 @@ export abstract class BasePatcher implements ModelPatcher {
     return valid.filter((rel) => {
       const isDuplicate = existingRelationships.some(
         (existing) =>
-          (existing.source === rel.source && existing.target === rel.target) ||
+          (existing.source === rel.source &&
+            existing.target === rel.target &&
+            (rel.kind === undefined || existing.kind === rel.kind)) ||
           (existing.bidirectional === true &&
             existing.source === rel.target &&
             existing.target === rel.source)
