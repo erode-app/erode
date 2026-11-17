@@ -124,6 +124,15 @@ describe('LikeC4RelationshipSchema', () => {
     expect(result.kind).toBeUndefined();
   });
 
+  it('should parse isBidirectional', () => {
+    const result = LikeC4RelationshipSchema.parse({
+      source: 'a',
+      target: 'b',
+      isBidirectional: true,
+    });
+    expect(result.isBidirectional).toBe(true);
+  });
+
   it('should reject relationship missing source', () => {
     const relationship = { target: 'b' };
     expect(() => LikeC4RelationshipSchema.parse(relationship)).toThrow();

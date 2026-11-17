@@ -169,12 +169,16 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     );
 
     const result = relationships
-      .map((rel) => ({
-        source: typeof rel.source === 'string' ? rel.source : rel.source.id,
-        target: typeof rel.target === 'string' ? rel.target : rel.target.id,
-        title: rel.title ?? undefined,
-        kind: rel.kind ?? undefined,
-      }))
+      .map((rel) => {
+        const mapped: ModelRelationship = {
+          source: typeof rel.source === 'string' ? rel.source : rel.source.id,
+          target: typeof rel.target === 'string' ? rel.target : rel.target.id,
+          title: rel.title ?? undefined,
+          kind: rel.kind ?? undefined,
+        };
+        if (rel.isBidirectional) mapped.bidirectional = true;
+        return mapped;
+      })
       .filter(
         (rel) =>
           !this.isExcluded({
@@ -190,7 +194,13 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     // Build adjacency maps for O(1) lookups
     this.outgoing.clear();
     this.incoming.clear();
-    for (const rel of result) {
+    // LikeC4 models `a <-> b` as one relationship; index its mirror so b -> a is declared too.
+    const indexed = result.flatMap((rel) =>
+      rel.bidirectional && rel.source !== rel.target
+        ? [rel, { ...rel, source: rel.target, target: rel.source }]
+        : [rel]
+    );
+    for (const rel of indexed) {
       const out = this.outgoing.get(rel.source) ?? [];
       out.push(rel);
       this.outgoing.set(rel.source, out);

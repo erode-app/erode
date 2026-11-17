@@ -143,6 +143,45 @@ describe('LikeC4Patcher', () => {
     expect(result).toBeNull(); // Duplicate, nothing to insert
   });
 
+  it('should skip the reverse of a bidirectional relationship', async () => {
+    const rels: StructuredRelationship[] = [
+      { source: 'backend', target: 'customer', description: 'Pushes updates' },
+    ];
+    const existing: ModelRelationship[] = [
+      { source: 'customer', target: 'backend', bidirectional: true },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: existing,
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('should keep the reverse of a one-way relationship', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+
+    const rels: StructuredRelationship[] = [
+      { source: 'backend', target: 'customer', description: 'Pushes updates' },
+    ];
+    const existing: ModelRelationship[] = [{ source: 'customer', target: 'backend' }];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: existing,
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+    });
+
+    expect(result?.insertedLines).toEqual(["  backend -> customer 'Pushes updates'"]);
+  });
+
   it('should generate correct DSL line without kind', async () => {
     mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
     mockReadFileSync.mockReturnValue(SAMPLE_C4);

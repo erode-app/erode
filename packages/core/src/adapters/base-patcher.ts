@@ -214,7 +214,11 @@ export abstract class BasePatcher implements ModelPatcher {
   ): StructuredRelationship[] {
     return valid.filter((rel) => {
       const isDuplicate = existingRelationships.some(
-        (existing) => existing.source === rel.source && existing.target === rel.target
+        (existing) =>
+          (existing.source === rel.source && existing.target === rel.target) ||
+          (existing.bidirectional === true &&
+            existing.source === rel.target &&
+            existing.target === rel.source)
       );
       if (isDuplicate) {
         skipped.push({

@@ -249,6 +249,13 @@ describe('section-formatters', () => {
       expect(result).toBe('  - api_gateway -> product_service');
     });
 
+    it('should format bidirectional relationships with <->', () => {
+      const result = formatAllRelationships([
+        { source: 'orders', target: 'payments', kind: 'grpc', bidirectional: true },
+      ]);
+      expect(result).toBe('  - orders <-> payments [grpc]');
+    });
+
     it('should return "No relationships defined" for empty array', () => {
       expect(formatAllRelationships([])).toBe('  - No relationships defined');
     });

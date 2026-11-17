@@ -22,6 +22,7 @@ export const LikeC4RelationshipSchema = z
     target: z.union([z.string(), z.object({ id: z.string() })]),
     title: z.string().nullish(),
     kind: z.string().nullish(),
+    isBidirectional: z.boolean().optional(),
   })
   .loose();
 

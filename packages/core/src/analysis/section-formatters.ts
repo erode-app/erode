@@ -109,7 +109,13 @@ ${String(idx + 1)}. **${c.id}**
 }
 
 export function formatAllRelationships(
-  relationships: { source: string; target: string; kind?: string; title?: string }[]
+  relationships: {
+    source: string;
+    target: string;
+    kind?: string;
+    title?: string;
+    bidirectional?: boolean;
+  }[]
 ): string {
   if (relationships.length === 0) {
     return '  - No relationships defined';
@@ -118,7 +124,8 @@ export function formatAllRelationships(
     .map((r) => {
       const kind = r.kind ? ` [${r.kind}]` : '';
       const title = r.title ? ` "${r.title}"` : '';
-      return `  - ${r.source} -> ${r.target}${kind}${title}`;
+      const arrow = r.bidirectional ? '<->' : '->';
+      return `  - ${r.source} ${arrow} ${r.target}${kind}${title}`;
     })
     .join('\n');
 }

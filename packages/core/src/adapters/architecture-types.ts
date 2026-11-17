@@ -18,6 +18,8 @@ export interface ModelRelationship {
   target: string;
   title?: string;
   kind?: string;
+  /** Also permits target -> source (LikeC4 `a <-> b`). */
+  bidirectional?: boolean;
 }
 
 export interface ArchitectureModel {

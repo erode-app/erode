@@ -41,4 +41,22 @@ model {
     description 'Primary data store'
     technology 'PostgreSQL'
   }
+
+  order_service = service 'Order Service' {
+    #backend
+    description 'Handles orders'
+  }
+
+  payment_service = service 'Payment Service' {
+    #backend
+    description 'Settles payments'
+  }
+
+  notification_service = service 'Notification Service' {
+    #backend
+    description 'Sends order notifications'
+  }
+
+  order_service <-> payment_service 'settles payments'
+  notification_service -[grpc]<-> order_service 'streams order events'
 }
