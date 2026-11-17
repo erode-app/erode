@@ -1,5 +1,18 @@
 import { extractStatusCode } from './utils/error-utils.js';
 
+/**
+ * Matches `got status: 429`, `[429 ...]` or the JSON body `"code":429` that the SDK puts in the
+ * message, never a number embedded in a model name or token count.
+ */
+const GEMINI_STATUS_PATTERN = /(?:\bstatus:?\s+|\[|"code"\s*:\s*)([45]\d{2})\b/i;
+
+function extractGeminiStatusCode(err: Error): number | undefined {
+  const structured = extractStatusCode(err);
+  if (structured !== undefined) return structured;
+  const match = GEMINI_STATUS_PATTERN.exec(err.message);
+  return match?.[1] ? parseInt(match[1], 10) : undefined;
+}
+
 export enum ErrorCode {
   CONFIG_MISSING = 'CONFIG_MISSING',
   CONFIG_INVALID = 'CONFIG_INVALID',
@@ -137,10 +150,7 @@ export class ApiError extends ErodeError {
   }
 
   static fromGeminiError(error: unknown): ApiError {
-    return ApiError.fromProviderError(error, 'gemini', (err) => {
-      const statusMatch = /(\d{3})/.exec(err.message);
-      return statusMatch?.[1] ? parseInt(statusMatch[1], 10) : undefined;
-    });
+    return ApiError.fromProviderError(error, 'gemini', extractGeminiStatusCode);
   }
 
   static fromOpenAIError(error: unknown): ApiError {
