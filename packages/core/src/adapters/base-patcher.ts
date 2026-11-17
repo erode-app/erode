@@ -121,9 +121,7 @@ export abstract class BasePatcher implements ModelPatcher {
 
     const originalContent = readFileSync(targetFile, 'utf-8');
 
-    // 5. Try LLM-based patching with DSL validation
-    let validationSkipped = false;
-    let validationWarnings: string[] | undefined;
+    // 5. Try LLM-based patching, 6. else deterministic fallback; both validate the DSL
     const llmResult = await this.tryLlmPatching(
       provider,
       originalContent,
@@ -131,32 +129,14 @@ export abstract class BasePatcher implements ModelPatcher {
       modelPath,
       targetFile
     ).catch(() => null);
+    const accepted = llmResult?.content
+      ? llmResult
+      : await this.tryDeterministicFallback(originalContent, insertedLines, modelPath, targetFile);
 
-    let finalContent: string | null = null;
-    if (llmResult) {
-      finalContent = llmResult.content;
-      validationSkipped = llmResult.validationSkipped;
-      validationWarnings = llmResult.validationWarnings;
-    }
-
-    // 6. Deterministic fallback with DSL validation
-    if (!finalContent) {
-      const fallbackResult = await this.tryDeterministicFallback(
-        originalContent,
-        insertedLines,
-        modelPath,
-        targetFile
-      );
-      if (fallbackResult) {
-        finalContent = fallbackResult.content;
-        validationSkipped = fallbackResult.validationSkipped;
-        validationWarnings = fallbackResult.validationWarnings;
-      }
-    }
-
-    if (!finalContent) {
+    if (!accepted?.content) {
       return null;
     }
+    let finalContent = accepted.content;
 
     // 7. Optional post-processing (e.g., formatting)
     const preFormatContent = finalContent;
@@ -191,9 +171,9 @@ export abstract class BasePatcher implements ModelPatcher {
               insertedLines: componentDslLines[i] ? [componentDslLines[i]] : [],
             }))
           : undefined,
-      validationSkipped: validationSkipped || undefined,
+      validationSkipped: accepted.validationSkipped || undefined,
       formatted: formatted || undefined,
-      validationWarnings,
+      validationWarnings: accepted.validationWarnings,
     };
   }
 
