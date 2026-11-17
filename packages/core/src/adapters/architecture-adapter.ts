@@ -12,6 +12,10 @@ export interface VersionCheckResult {
   version?: string;
   compatible?: boolean;
   minimum: string;
+  /** Version of the model tooling bundled with erode, when known. */
+  bundled?: string;
+  /** Non-fatal compatibility warning, e.g. the model targets a newer version than erode bundles. */
+  warning?: string;
 }
 
 /** A model validation diagnostic, keyed for comparison across workspace copies. */

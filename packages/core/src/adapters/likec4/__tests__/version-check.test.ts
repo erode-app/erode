@@ -4,7 +4,15 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { extractMinVersion, isVersionBelow, checkLikeC4Version } from '../version-check.js';
+import { createRequire } from 'module';
+import {
+  extractMinVersion,
+  isVersionBelow,
+  checkLikeC4Version,
+  getBundledLikeC4Version,
+} from '../version-check.js';
+import { LikeC4Adapter } from '../adapter.js';
+import { AdapterError } from '../../../errors.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -160,5 +168,65 @@ describe('checkLikeC4Version', () => {
     expect(result.found).toBe(true);
     expect(result.version).toBe('1.46.0');
     expect(result.compatible).toBe(true);
+  });
+});
+
+describe('getBundledLikeC4Version', () => {
+  it('reads the installed likec4 package version', () => {
+    const installed = (createRequire(import.meta.url)('likec4/package.json') as { version: string })
+      .version;
+    expect(getBundledLikeC4Version()).toEqual(extractMinVersion(installed));
+  });
+});
+
+describe('checkLikeC4Version bundled version skew', () => {
+  const bundled = { major: 1, minor: 59, patch: 3 };
+
+  function dirWithRange(range: string): string {
+    const dir = mkdtempSync(join(tmpdir(), 'version-skew-'));
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ dependencies: { likec4: range } }));
+    return dir;
+  }
+
+  it('warns but stays compatible when the model targets a newer likec4 than erode bundles', () => {
+    const result = checkLikeC4Version(dirWithRange('^1.60.0'), bundled);
+    expect(result.compatible).toBe(true);
+    expect(result.bundled).toBe('1.59.3');
+    expect(result.warning).toBe(
+      'Your model targets likec4 1.60.0, erode bundles 1.59.3; newer syntax may fail to parse.'
+    );
+  });
+
+  it('does not warn when the model targets the bundled version', () => {
+    const result = checkLikeC4Version(dirWithRange('1.59.3'), bundled);
+    expect(result.warning).toBeUndefined();
+  });
+
+  it('does not warn when the model targets an older version', () => {
+    const result = checkLikeC4Version(dirWithRange('^1.45.0'), bundled);
+    expect(result.warning).toBeUndefined();
+  });
+
+  it('does not warn when the bundled version is unknown', () => {
+    const result = checkLikeC4Version(dirWithRange('^9.0.0'), null);
+    expect(result.bundled).toBeUndefined();
+    expect(result.warning).toBeUndefined();
+  });
+
+  it('adds the skew warning to LikeC4 parse errors', async () => {
+    const dir = dirWithRange('^99.0.0');
+    writeFileSync(join(dir, 'model.c4'), 'model {\n  a = \n}\n');
+    const adapter = new LikeC4Adapter();
+    const error: unknown = await adapter.loadFromPath(dir).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(AdapterError);
+    expect((error as AdapterError).userMessage).toMatch(
+      /Your model targets likec4 99\.0\.0, erode bundles \d+\.\d+\.\d+/
+    );
+  }, 60_000);
+
+  it('errors rather than warns when the model is below the minimum', () => {
+    const result = checkLikeC4Version(dirWithRange('^1.30.0'), bundled);
+    expect(result.compatible).toBe(false);
+    expect(result.warning).toBeUndefined();
   });
 });

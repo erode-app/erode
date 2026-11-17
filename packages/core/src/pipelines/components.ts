@@ -3,6 +3,7 @@ import { SilentProgress } from './progress.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
 import { validatePath } from '../utils/validation.js';
 import type { SimpleComponent } from '../adapters/architecture-types.js';
+import { warnOnModelVersionSkew } from './pipeline-shared.js';
 
 export interface ComponentsOptions {
   modelPath: string;
@@ -18,6 +19,7 @@ export async function runComponents(
 
   p.section(`Loading ${adapter.metadata.displayName} Architecture Model`);
   validatePath(options.modelPath, 'directory');
+  warnOnModelVersionSkew(adapter, options.modelPath, p);
   p.start('Loading architecture model');
 
   const components = await adapter.loadAndListComponents(options.modelPath);

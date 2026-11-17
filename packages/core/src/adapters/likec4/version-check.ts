@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs';
+import { createRequire } from 'module';
 import { dirname, join } from 'path';
 import { z } from 'zod';
 import type { VersionCheckResult } from '../architecture-adapter.js';
@@ -15,6 +16,23 @@ const SourcePackageJsonSchema = z.object({
   dependencies: z.record(z.string(), z.string()).optional(),
   devDependencies: z.record(z.string(), z.string()).optional(),
 });
+
+const InstalledPackageJsonSchema = z.object({ version: z.string() });
+
+let bundledVersionCache: SemVer | null | undefined;
+
+/** Version of the likec4 package installed alongside erode, or null if it cannot be read. */
+export function getBundledLikeC4Version(): SemVer | null {
+  if (bundledVersionCache !== undefined) return bundledVersionCache;
+  try {
+    const require = createRequire(import.meta.url);
+    const pkg = InstalledPackageJsonSchema.parse(require('likec4/package.json'));
+    bundledVersionCache = extractMinVersion(pkg.version);
+  } catch {
+    bundledVersionCache = null;
+  }
+  return bundledVersionCache;
+}
 
 function findPackageJson(startPath: string): string | null {
   let current = startPath;
@@ -53,8 +71,12 @@ function formatVersion(v: SemVer): string {
   return `${String(v.major)}.${String(v.minor)}.${String(v.patch)}`;
 }
 
-export function checkLikeC4Version(likec4Path: string): VersionCheckResult {
+export function checkLikeC4Version(
+  likec4Path: string,
+  bundledVersion: SemVer | null = getBundledLikeC4Version()
+): VersionCheckResult {
   const minimum = formatVersion(MIN_LIKEC4_VERSION);
+  const bundled = bundledVersion ? formatVersion(bundledVersion) : undefined;
 
   const packageJsonPath = findPackageJson(likec4Path);
   if (!packageJsonPath) {
@@ -79,10 +101,16 @@ export function checkLikeC4Version(likec4Path: string): VersionCheckResult {
     return { found: false, minimum };
   }
 
-  return {
+  const formatted = formatVersion(version);
+  const result: VersionCheckResult = {
     found: true,
-    version: formatVersion(version),
+    version: formatted,
     compatible: !isVersionBelow(version, MIN_LIKEC4_VERSION),
     minimum,
+    bundled,
   };
+  if (bundledVersion && bundled && isVersionBelow(bundledVersion, version)) {
+    result.warning = `Your model targets likec4 ${formatted}, erode bundles ${bundled}; newer syntax may fail to parse.`;
+  }
+  return result;
 }

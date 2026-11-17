@@ -66,6 +66,9 @@ export async function runValidate(
         `Could not detect ${adapter.metadata.displayName} version — skipping compatibility check`
       );
     }
+    if (versionResult.warning) {
+      p.warn(versionResult.warning);
+    }
     versionCheck = {
       detected: versionResult.version ?? null,
       minimum: versionResult.minimum,
