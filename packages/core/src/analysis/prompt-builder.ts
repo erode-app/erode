@@ -17,6 +17,11 @@ import {
   formatCommits,
 } from './section-formatters.js';
 
+/** Prevents author-controlled text from closing the untrusted block early. */
+function escapeUntrusted(text: string): string {
+  return text.replace(/<(\/?)untrusted_pr_content>/gi, '<$1untrusted-pr-content>');
+}
+
 export const PromptBuilder = {
   /** Extract the first JSON object from an AI response text, or null if none found. */
   extractJson(responseText: string): string | null {
@@ -80,7 +85,7 @@ export const PromptBuilder = {
 
     return TemplateEngine.loadDependencyExtractionPrompt({
       diff,
-      commit,
+      commit: { ...commit, message: escapeUntrusted(commit.message) },
       repository,
       componentsContext,
     });
@@ -145,13 +150,13 @@ export const PromptBuilder = {
       changeContext,
       changeRequest: {
         number: changeRequest.number,
-        title: changeRequest.title,
+        title: escapeUntrusted(changeRequest.title),
         author: changeRequest.author.name ?? changeRequest.author.login,
         base: { ref: changeRequest.base.ref },
         head: { ref: changeRequest.head.ref },
         stats: changeRequest.stats,
         descriptionSection: changeRequest.description
-          ? `Description:\n${changeRequest.description}\n`
+          ? `Description:\n${escapeUntrusted(changeRequest.description)}\n`
           : '',
       },
       component: {
@@ -162,7 +167,7 @@ export const PromptBuilder = {
         repository: component.repository ?? 'Unknown',
         tags: component.tags.join(', ') || 'None',
       },
-      commitsSection,
+      commitsSection: escapeUntrusted(commitsSection),
       commitsNote,
       allowedDeps,
       dependents,
