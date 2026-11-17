@@ -36,43 +36,6 @@ describe('PromptBuilder', () => {
     vi.clearAllMocks();
   });
 
-  describe('extractJson', () => {
-    it('should extract JSON from markdown code block', () => {
-      const input = '```json\n{"key": "value"}\n```';
-      const result = PromptBuilder.extractJson(input);
-      expect(result).toBe('{"key": "value"}');
-    });
-
-    it('should extract bare JSON object', () => {
-      const input = 'Some text {"key": "value"} more text';
-      const result = PromptBuilder.extractJson(input);
-      expect(result).toBe('{"key": "value"}');
-    });
-
-    it('should extract first JSON when multiple exist', () => {
-      const input = '{"first": 1} and {"second": 2}';
-      const result = PromptBuilder.extractJson(input);
-      // Bracket-counting finds the first complete JSON object
-      expect(result).toBe('{"first": 1}');
-    });
-
-    it('should return null when no JSON found', () => {
-      const result = PromptBuilder.extractJson('no json here');
-      expect(result).toBeNull();
-    });
-
-    it('should return null for empty string', () => {
-      const result = PromptBuilder.extractJson('');
-      expect(result).toBeNull();
-    });
-
-    it('should handle nested JSON objects', () => {
-      const input = '{"outer": {"inner": "value"}}';
-      const result = PromptBuilder.extractJson(input);
-      expect(result).toBe(input);
-    });
-  });
-
   describe('buildDependencyExtractionPrompt', () => {
     const baseData = {
       diff: 'diff --git a/src/index.ts\n+import redis',

@@ -51,7 +51,7 @@ Anthropic support is experimental and may not produce consistent results across 
 
 ## Overriding models
 
-Override the default models per provider with environment variables. See [Configuration: Provider model overrides](/docs/reference/configuration/#provider-model-overrides) for the full list.
+Override the default models per provider with environment variables. See [Configuration: Provider model overrides](/docs/reference/configuration/#provider-model-overrides) for the full list. Overridden models must support native structured output: OpenAI `gpt-4o-2024-08-06` or later, a Gemini model with `responseJsonSchema`, or any current Claude model.
 
 ## Timeouts
 

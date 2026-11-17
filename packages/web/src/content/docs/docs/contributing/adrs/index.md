@@ -22,6 +22,7 @@ This project tracks significant architectural decisions as ADRs. Each record cap
 | [011](/docs/contributing/adrs/011-intent-based-provider-generation-profiles/) | Intent-based provider generation profiles | 2026-05-05 | Accepted |
 | [012](/docs/contributing/adrs/012-likec4-model-edits-via-diff-blocks/)        | LikeC4 model edits via diff blocks        | 2026-11-17 | Proposed |
 | [013](/docs/contributing/adrs/013-single-repository-locator/)                 | Single repository locator                 | 2026-11-17 | Proposed |
+| [014](/docs/contributing/adrs/014-native-structured-ai-output/)               | Native structured AI output               | 2026-11-17 | Proposed |
 
 ## Adding a new ADR
 

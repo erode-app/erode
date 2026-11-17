@@ -9,6 +9,7 @@ import {
   type OutputSize,
   type ReasoningEffort,
 } from '../generation-profile.js';
+import { toStrictJsonSchema, type StructuredOutputSpec } from '../structured-output.js';
 import { OPENAI_MODELS } from './models.js';
 
 type OpenAIReasoningEffort = 'minimal' | 'low' | 'medium' | 'high';
@@ -18,6 +19,17 @@ const MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE = {
   medium: 6000,
   large: 10000,
 } satisfies Record<OutputSize, number>;
+
+const strictSchemaCache = new WeakMap<StructuredOutputSpec, Record<string, unknown>>();
+
+function getStrictSchema(output: StructuredOutputSpec): Record<string, unknown> {
+  let strict = strictSchemaCache.get(output);
+  if (!strict) {
+    strict = toStrictJsonSchema(output.jsonSchema);
+    strictSchemaCache.set(output, strict);
+  }
+  return strict;
+}
 
 export class OpenAIProvider extends BaseProvider {
   private readonly client: OpenAI;
@@ -41,7 +53,8 @@ export class OpenAIProvider extends BaseProvider {
     model: string,
     prompt: string,
     phase: AnalysisPhase,
-    generationProfile: GenerationProfile
+    generationProfile: GenerationProfile,
+    output?: StructuredOutputSpec
   ): Promise<string> {
     const maxOutputTokens = resolveOutputTokenLimit(
       generationProfile,
@@ -54,6 +67,19 @@ export class OpenAIProvider extends BaseProvider {
         model,
         input: prompt,
         max_output_tokens: maxOutputTokens,
+        ...(output
+          ? {
+              text: {
+                format: {
+                  type: 'json_schema' as const,
+                  name: output.name,
+                  description: output.description,
+                  schema: getStrictSchema(output),
+                  strict: true,
+                },
+              },
+            }
+          : {}),
         ...(supportsReasoningEffort(model) ? { reasoning: { effort: reasoningEffort } } : {}),
       });
 
@@ -65,6 +91,15 @@ export class OpenAIProvider extends BaseProvider {
           maxOutputTokens,
           generationProfile,
           reasoningEffort
+        );
+      }
+
+      if (hasRefusal(response)) {
+        throw new ErodeError(
+          'OpenAI declined to answer the request',
+          ErrorCode.PROVIDER_SAFETY_BLOCK,
+          'Content was blocked by the AI provider safety filters. Try simplifying the input.',
+          { model, phase }
         );
       }
 
@@ -145,6 +180,12 @@ export class OpenAIProvider extends BaseProvider {
         .filter((content) => content.type === 'output_text')
         .map((content) => content.text)
         .join('');
+    }
+
+    function hasRefusal(response: OpenAI.Responses.Response): boolean {
+      return response.output
+        .filter((item) => item.type === 'message')
+        .some((item) => item.content.some((content) => content.type === 'refusal'));
     }
 
     function supportsReasoningEffort(reasoningModel: string): boolean {

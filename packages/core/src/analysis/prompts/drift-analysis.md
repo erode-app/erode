@@ -111,50 +111,17 @@ relationships to or from that component.
 - Better alignment with the architecture
 - Adding proper abstraction layers
 
-## OUTPUT FORMAT
+## OUTPUT FIELDS
 
-Respond with ONLY valid JSON:
-
-```json
-{
-  "violations": [
-    {
-      "severity": "high|medium|low",
-      "description": "Clear description of the violation",
-      "file": "filename if applicable",
-      "line": line_number_if_known,
-      "commit": "commit SHA if relevant",
-      "suggestion": "How to fix this or update the model"
-    }
-  ],
-  "improvements": ["List of architectural improvements in this commit"],
-  "warnings": ["Architectural concerns to watch that aren't violations yet (e.g., increased coupling, potential future drift risks)"],
-  "modelUpdates": {
-    "add": ["Dependencies to ADD to model"],
-    "remove": ["Dependencies to REMOVE from model"],
-    "notes": "Additional context about model updates",
-    "relationships": [
-      {
-        "source": "exact.component.id.from.model",
-        "target": "exact.component.id.from.model",
-        "kind": "optional relationship kind",
-        "description": "What this dependency is for"
-      }
-    ],
-    "newComponents": [
-      {
-        "id": "snake_case_component_id",
-        "kind": "service|webapp|database|library|system",
-        "name": "Human-Readable Name",
-        "description": "What this component does",
-        "tags": ["backend", "microservice"],
-        "technology": "TypeScript"
-      }
-    ]
-  },
-  "summary": "2-3 sentence summary of the architectural impact"
-}
-```
+- `violations[]`: each with `severity` (`high`, `medium` or `low`), a clear `description`, the `file` and `line` if known, the `commit` SHA if relevant, and a `suggestion` for how to fix the code or update the model
+- `improvements`: architectural improvements in this change
+- `warnings`: architectural concerns to watch that aren't violations yet (e.g., increased coupling, potential future drift risks)
+- `modelUpdates.add`: dependencies to ADD to the model
+- `modelUpdates.remove`: dependencies to REMOVE from the model
+- `modelUpdates.notes`: additional context about model updates
+- `modelUpdates.relationships[]`: relationships to add, each with `source`, `target`, an optional `kind` and a `description` of what the dependency is for
+- `modelUpdates.newComponents[]`: components to add, each with `id` (snake_case or the model's style), `kind` (e.g., service, webapp, database, library, system), a human-readable `name`, and optional `description`, `tags` and `technology`
+- `summary`: 2-3 sentence summary of the architectural impact
 
 Concentrate on architectural drift — whether the code aligns with the documented architecture.
 

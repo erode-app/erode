@@ -44,36 +44,6 @@ function escapeUntrusted(text: string): string {
 }
 
 export const PromptBuilder = {
-  /** Extract the first JSON object from an AI response text, or null if none found. */
-  extractJson(responseText: string): string | null {
-    const start = responseText.indexOf('{');
-    if (start === -1) return null;
-    let depth = 0;
-    let inString = false;
-    let escape = false;
-    for (let i = start; i < responseText.length; i++) {
-      const ch = responseText[i];
-      if (escape) {
-        escape = false;
-        continue;
-      }
-      if (ch === '\\' && inString) {
-        escape = true;
-        continue;
-      }
-      if (ch === '"') {
-        inString = !inString;
-        continue;
-      }
-      if (inString) continue;
-      if (ch === '{') depth++;
-      else if (ch === '}') {
-        depth--;
-        if (depth === 0) return responseText.slice(start, i + 1);
-      }
-    }
-    return null;
-  },
   /**
    * Stage 2: Build dependency extraction prompt to extract architectural dependencies from git diff
    * @param data - Must contain exactly one component (selected in Stage 1)

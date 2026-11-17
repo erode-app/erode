@@ -91,6 +91,10 @@ function makeAnthropicResponse(
   };
 }
 
+function makeJsonResponse(value: unknown) {
+  return makeAnthropicResponse(JSON.stringify(value));
+}
+
 function createProvider(): AnthropicProvider {
   return new AnthropicProvider({ apiKey: 'test-api-key' });
 }
@@ -108,9 +112,7 @@ describe('AnthropicProvider', () => {
 
   describe('selectComponent', () => {
     it('should return matching component ID from response', async () => {
-      mockCreate.mockResolvedValueOnce(
-        makeAnthropicResponse('Based on the files, the component is comp.backend')
-      );
+      mockCreate.mockResolvedValueOnce(makeJsonResponse({ componentId: 'comp.backend' }));
 
       const provider = createProvider();
       const result = await provider.selectComponent(
@@ -121,18 +123,24 @@ describe('AnthropicProvider', () => {
         expect.objectContaining({
           model: 'claude-haiku-4-5',
           max_tokens: 600,
+          output_config: {
+            format: expect.objectContaining({ type: 'json_schema' }) as unknown,
+          },
         })
       );
     });
 
-    it('should return null when no component matches', async () => {
-      mockCreate.mockResolvedValueOnce(makeAnthropicResponse('I cannot determine the component'));
+    it('should return null when no valid component is returned after one repair', async () => {
+      mockCreate
+        .mockResolvedValueOnce(makeJsonResponse({ componentId: 'nope' }))
+        .mockResolvedValueOnce(makeJsonResponse({ componentId: 'nope' }));
 
       const provider = createProvider();
       const result = await provider.selectComponent(
         makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBeNull();
+      expect(mockCreate).toHaveBeenCalledTimes(2);
     });
 
     it('should throw on empty response', async () => {
@@ -164,9 +172,7 @@ describe('AnthropicProvider', () => {
         summary: 'Added Redis dependency',
       };
 
-      mockCreate.mockResolvedValueOnce(
-        makeAnthropicResponse('```json\n' + JSON.stringify(responseJson) + '\n```')
-      );
+      mockCreate.mockResolvedValueOnce(makeJsonResponse(responseJson));
 
       const provider = createProvider();
       const result = await provider.extractDependencies(makePreprocessingData());
@@ -181,8 +187,10 @@ describe('AnthropicProvider', () => {
       );
     });
 
-    it('should throw on non-JSON response', async () => {
-      mockCreate.mockResolvedValueOnce(makeAnthropicResponse('This is not JSON at all'));
+    it('should throw when both the response and the repair are not JSON', async () => {
+      mockCreate
+        .mockResolvedValueOnce(makeAnthropicResponse('This is not JSON at all'))
+        .mockResolvedValueOnce(makeAnthropicResponse('This is not JSON at all'));
 
       const provider = createProvider();
       await expect(provider.extractDependencies(makePreprocessingData())).rejects.toThrow(
@@ -207,9 +215,7 @@ describe('AnthropicProvider', () => {
         summary: 'Found undeclared Redis dependency',
       };
 
-      mockCreate.mockResolvedValueOnce(
-        makeAnthropicResponse(JSON.stringify(analysisJson), 'end_turn', 1000, 200)
-      );
+      mockCreate.mockResolvedValueOnce(makeJsonResponse(analysisJson));
 
       const provider = createProvider();
       const data = makePrAnalysisData();
@@ -267,10 +273,10 @@ describe('AnthropicProvider', () => {
 
   describe('retry on rate limit', () => {
     it('should retry on 429 and eventually succeed', async () => {
-      const rateLimitError = new ApiError('Rate limited', 429);
+      const rateLimitError = Object.assign(new Error('Rate limited'), { status: 429 });
       mockCreate
         .mockRejectedValueOnce(rateLimitError)
-        .mockResolvedValueOnce(makeAnthropicResponse('comp.api', 'end_turn', 100, 10));
+        .mockResolvedValueOnce(makeJsonResponse({ componentId: 'comp.api' }));
 
       const provider = createProvider();
       const result = await provider.selectComponent(makeStage1Data(['comp.api']));
@@ -279,18 +285,12 @@ describe('AnthropicProvider', () => {
     });
 
     it('should not retry on non-recoverable errors', async () => {
-      const nonRecoverableError = new ErodeError(
-        'Invalid input',
-        ErrorCode.INPUT_INVALID,
-        'Bad input',
-        {},
-        false
-      );
+      const nonRecoverableError = Object.assign(new Error('Unauthorized'), { status: 401 });
       mockCreate.mockRejectedValueOnce(nonRecoverableError);
 
       const provider = createProvider();
       await expect(provider.selectComponent(makeStage1Data(['comp.api']))).rejects.toThrow(
-        ErodeError
+        ApiError
       );
       expect(mockCreate).toHaveBeenCalledTimes(1);
     });
@@ -375,7 +375,7 @@ describe('AnthropicProvider', () => {
 
     it('should retry on rate limit', async () => {
       const patchedContent = 'model {\n  comp.a -> comp.b\n}\n';
-      const rateLimitError = new ApiError('Rate limited', 429);
+      const rateLimitError = Object.assign(new Error('Rate limited'), { status: 429 });
       mockCreate
         .mockRejectedValueOnce(rateLimitError)
         .mockResolvedValueOnce(makeAnthropicResponse(patchedContent));

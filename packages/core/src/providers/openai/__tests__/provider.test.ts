@@ -87,6 +87,10 @@ function makeOpenAIResponse(content: string) {
   };
 }
 
+function selectionResponse(componentId: string) {
+  return makeOpenAIResponse(JSON.stringify({ componentId }));
+}
+
 function makeOpenAIMessageResponse(content: string) {
   return {
     status: 'completed',
@@ -131,9 +135,7 @@ describe('OpenAIProvider', () => {
 
   describe('selectComponent', () => {
     it('should return matching component ID from response', async () => {
-      mockCreate.mockResolvedValueOnce(
-        makeOpenAIResponse('Based on the files, the component is comp.backend')
-      );
+      mockCreate.mockResolvedValueOnce(selectionResponse('comp.backend'));
 
       const provider = createProvider();
       const result = await provider.selectComponent(
@@ -145,12 +147,44 @@ describe('OpenAIProvider', () => {
           model: 'gpt-5.6-luna',
           max_output_tokens: 1500,
           reasoning: { effort: 'low' },
+          text: {
+            format: expect.objectContaining({
+              type: 'json_schema',
+              name: 'component_selection',
+              strict: true,
+            }) as unknown,
+          },
         })
       );
     });
 
+    it('should compute the strict schema once per spec', async () => {
+      mockCreate
+        .mockResolvedValueOnce(
+          makeOpenAIResponse(JSON.stringify({ dependencies: [], summary: 's' }))
+        )
+        .mockResolvedValueOnce(
+          makeOpenAIResponse(JSON.stringify({ dependencies: [], summary: 's' }))
+        );
+
+      const provider = createProvider();
+      const data = {
+        diff: 'd',
+        commit: { sha: 'a', message: 'm', author: 'x' },
+        repository: { owner: 'o', repo: 'r', url: 'https://github.com/o/r' },
+        components: [{ id: 'c', name: 'C', type: 'service' }],
+      };
+      await provider.extractDependencies(data);
+      await provider.extractDependencies(data);
+
+      const schemas = mockCreate.mock.calls.map(
+        (call) => (call[0] as { text: { format: { schema: unknown } } }).text.format.schema
+      );
+      expect(schemas[0]).toBe(schemas[1]);
+    });
+
     it('should omit reasoning for chat-tuned GPT-5 models', async () => {
-      mockCreate.mockResolvedValueOnce(makeOpenAIResponse('comp.backend'));
+      mockCreate.mockResolvedValueOnce(selectionResponse('comp.backend'));
 
       const provider = new OpenAIProvider({
         apiKey: 'test-api-key',
@@ -164,7 +198,7 @@ describe('OpenAIProvider', () => {
     });
 
     it('should send reasoning for GPT-5 family models', async () => {
-      mockCreate.mockResolvedValueOnce(makeOpenAIResponse('comp.backend'));
+      mockCreate.mockResolvedValueOnce(selectionResponse('comp.backend'));
 
       const provider = new OpenAIProvider({
         apiKey: 'test-api-key',
@@ -180,14 +214,17 @@ describe('OpenAIProvider', () => {
       );
     });
 
-    it('should return null when no component matches', async () => {
-      mockCreate.mockResolvedValueOnce(makeOpenAIResponse('I cannot determine the component'));
+    it('should return null when no valid component is returned after one repair', async () => {
+      mockCreate
+        .mockResolvedValueOnce(makeOpenAIResponse('I cannot determine the component'))
+        .mockResolvedValueOnce(makeOpenAIResponse('I cannot determine the component'));
 
       const provider = createProvider();
       const result = await provider.selectComponent(
         makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBeNull();
+      expect(mockCreate).toHaveBeenCalledTimes(2);
     });
 
     it('should throw on empty response', async () => {
@@ -215,9 +252,7 @@ describe('OpenAIProvider', () => {
         summary: 'Added Redis dependency',
       };
 
-      mockCreate.mockResolvedValueOnce(
-        makeOpenAIResponse('```json\n' + JSON.stringify(responseJson) + '\n```')
-      );
+      mockCreate.mockResolvedValueOnce(makeOpenAIResponse(JSON.stringify(responseJson)));
 
       const provider = createProvider();
       const result = await provider.extractDependencies(makePreprocessingData());
@@ -233,8 +268,10 @@ describe('OpenAIProvider', () => {
       );
     });
 
-    it('should throw on non-JSON response', async () => {
-      mockCreate.mockResolvedValueOnce(makeOpenAIResponse('This is not JSON at all'));
+    it('should throw when both the response and the repair are not JSON', async () => {
+      mockCreate
+        .mockResolvedValueOnce(makeOpenAIResponse('This is not JSON at all'))
+        .mockResolvedValueOnce(makeOpenAIResponse('This is not JSON at all'));
 
       const provider = createProvider();
       await expect(provider.extractDependencies(makePreprocessingData())).rejects.toThrow(
@@ -329,7 +366,9 @@ describe('OpenAIProvider', () => {
 
   describe('response text extraction', () => {
     it('should read fallback output text from message items only', async () => {
-      mockCreate.mockResolvedValueOnce(makeOpenAIMessageResponse('comp.api'));
+      mockCreate.mockResolvedValueOnce(
+        makeOpenAIMessageResponse(JSON.stringify({ componentId: 'comp.api' }))
+      );
 
       const provider = createProvider();
       const result = await provider.selectComponent(makeStage1Data(['comp.api']));
@@ -352,7 +391,7 @@ describe('OpenAIProvider', () => {
       const rateLimitError = new ApiError('Rate limited', 429);
       mockCreate
         .mockRejectedValueOnce(rateLimitError)
-        .mockResolvedValueOnce(makeOpenAIResponse('comp.api'));
+        .mockResolvedValueOnce(makeOpenAIResponse(JSON.stringify({ componentId: 'comp.api' })));
 
       const provider = createProvider();
       const result = await provider.selectComponent(makeStage1Data(['comp.api']));

@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import type { AIProvider } from './ai-provider.js';
 import type {
   DependencyExtractionPromptData,
@@ -10,8 +10,13 @@ import type { DependencyExtractionResult } from '../schemas/dependency-extractio
 import { DependencyExtractionResultSchema } from '../schemas/dependency-extraction.schema.js';
 import { DriftAnalysisResponseSchema } from '../schemas/drift-analysis.schema.js';
 import { PromptBuilder } from '../analysis/prompt-builder.js';
-import { validate } from '../utils/validation.js';
-import { ErodeError, ErrorCode, ApiError } from '../errors.js';
+import { formatZodIssues } from '../utils/validation.js';
+import { ApiError, StructuredOutputError } from '../errors.js';
+import {
+  createStructuredOutputSpec,
+  stripNullProperties,
+  type StructuredOutputSpec,
+} from './structured-output.js';
 import { withRetry } from '../utils/retry.js';
 import { AnalysisPhase } from './analysis-phase.js';
 import { CONFIG } from '../utils/config.js';
@@ -27,45 +32,83 @@ function debugLog(msg: string, data?: unknown): void {
   }
 }
 
-function isIdChar(ch: string | undefined): boolean {
-  return ch !== undefined && /[A-Za-z0-9_.-]/.test(ch);
-}
-
-export function matchComponentId(responseText: string, ids: string[]): string | null {
-  const reply = responseText
-    .trim()
-    .replace(/^[`'"]+|[`'"]+$/g, '')
-    .trim();
-  if (ids.includes(reply)) return reply;
-
-  // Earliest whole-token occurrence wins (the reply leads with its answer); the longest id
-  // breaks ties at the same position.
-  let best: { id: string; at: number } | null = null;
-  for (const id of ids) {
-    if (id.length === 0) continue;
-    let from = 0;
-    for (;;) {
-      const at = reply.indexOf(id, from);
-      if (at === -1 || (best !== null && at > best.at)) break;
-      const after = reply[at + id.length];
-      // A trailing "." that ends a sentence is punctuation, not part of the id.
-      const afterOk = !isIdChar(after) || (after === '.' && !isIdChar(reply[at + id.length + 1]));
-      if (!isIdChar(reply[at - 1]) && afterOk) {
-        if (best === null || at < best.at || id.length > best.id.length) best = { id, at };
-        break;
-      }
-      from = at + 1;
-    }
-  }
-  return best?.id ?? null;
-}
-
 function formatDuration(startedAt: bigint): string {
   const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
   if (elapsedMs < 1000) {
     return `${String(Math.round(elapsedMs))}ms`;
   }
   return `${(elapsedMs / 1000).toFixed(2)}s`;
+}
+
+const DEPENDENCY_EXTRACTION_OUTPUT = createStructuredOutputSpec(
+  'dependency_extraction',
+  'External architectural dependencies added, modified or removed by the diff',
+  DependencyExtractionResultSchema
+);
+
+const DRIFT_ANALYSIS_OUTPUT = createStructuredOutputSpec(
+  'drift_analysis',
+  'Architectural drift assessment of the change against the declared model',
+  DriftAnalysisResponseSchema
+);
+
+type ParsedResponse<T> = { success: true; data: T } | { success: false; issues: string };
+
+function parseStructuredResponse<T>(
+  responseText: string,
+  output: StructuredOutputSpec<T>
+): ParsedResponse<T> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(responseText);
+  } catch (error) {
+    debugLog('structured response is not valid JSON (first 500 chars)', responseText.slice(0, 500));
+    const reason = error instanceof Error ? error.message : String(error);
+    return { success: false, issues: `  1. [(root)] Response is not valid JSON: ${reason}` };
+  }
+  const result = output.zodSchema.safeParse(stripNullProperties(parsed));
+  return result.success
+    ? { success: true, data: result.data }
+    : { success: false, issues: formatZodIssues(result.error.issues) };
+}
+
+/** Cap on the echoed invalid response so a huge output cannot blow up the repair prompt. */
+const MAX_REPAIR_RESPONSE_CHARS = 4000;
+
+function buildRepairPrompt(prompt: string, previousResponse: string, issues: string): string {
+  const truncated =
+    previousResponse.length > MAX_REPAIR_RESPONSE_CHARS
+      ? `${previousResponse.slice(0, MAX_REPAIR_RESPONSE_CHARS)}\n... (truncated)`
+      : previousResponse;
+  return `${prompt}
+
+## CORRECTION
+
+Your previous response:
+${truncated}
+
+It failed validation:
+${issues}
+
+Return the complete response again, corrected so it satisfies the schema.`;
+}
+
+/** Above this many components the selection schema uses a plain string and code checks membership. */
+const MAX_COMPONENT_ENUM_SIZE = 100;
+
+/** 4xx other than auth (401, 403), rate limiting (429) and timeouts (408): the request itself was rejected. */
+function isInvalidRequestError(error: unknown): boolean {
+  if (!(error instanceof ApiError) || error.statusCode === undefined) {
+    return false;
+  }
+  const status = error.statusCode;
+  return (
+    status >= 400 &&
+    status < 500 &&
+    ![401, 403, 408, 429].includes(status) &&
+    !error.isRateLimited &&
+    !error.isTimeout
+  );
 }
 
 export interface ProviderConfig {
@@ -77,8 +120,9 @@ export interface ProviderConfig {
 /**
  * Abstract base class for AI providers.
  *
- * Subclasses only need to implement `callModel` with the provider-specific SDK call.
- * All shared pipeline logic (prompt building, retry, JSON extraction, validation) lives here.
+ * Subclasses implement `callModel` (free text, or native structured output when given a spec)
+ * with the provider-specific SDK call. All shared pipeline logic (prompt building,
+ * retry, JSON parsing, validation, repair) lives here.
  */
 export abstract class BaseProvider implements AIProvider {
   protected readonly fastModel: string;
@@ -95,46 +139,54 @@ export abstract class BaseProvider implements AIProvider {
    * @param prompt - The prompt text to send
    * @param phase - The analysis phase (for error context)
    * @param generationProfile - Provider-agnostic output intent
+   * @param output - When set, the provider must return a JSON document matching
+   *   `output.jsonSchema` via its native structured output; `BaseProvider` parses and validates it
    * @returns The text content of the model response
    */
   protected abstract callModel(
     model: string,
     prompt: string,
     phase: AnalysisPhase,
-    generationProfile: GenerationProfile
+    generationProfile: GenerationProfile,
+    output?: StructuredOutputSpec
   ): Promise<string>;
 
   async selectComponent(data: ComponentSelectionPromptData): Promise<string | null> {
-    const prompt = PromptBuilder.buildComponentSelectionPrompt(data);
-
-    debugLog('selectComponent using model', this.fastModel);
-    const startedAt = process.hrtime.bigint();
-    const responseText = await withRetry(
-      () =>
-        this.callModel(
-          this.fastModel,
-          prompt,
-          AnalysisPhase.COMPONENT_RESOLUTION,
-          getGenerationProfileForPhase(AnalysisPhase.COMPONENT_RESOLUTION)
-        ),
-      {
-        retries: 2,
-        shouldRetry: (error) => this.isRetryableError(error),
-      }
-    );
-    debugLog('selectComponent completed in', formatDuration(startedAt));
-
-    if (!responseText) {
+    const ids = data.components.map((c) => c.id);
+    const [firstId, ...otherIds] = ids;
+    if (firstId === undefined) {
       return null;
     }
-
-    debugLog('selectComponent raw response', responseText);
-    const matchedId = matchComponentId(
-      responseText,
-      data.components.map((c) => c.id)
+    // Very large enums can exceed provider schema limits, so fall back to a string checked here.
+    const useEnum = ids.length <= MAX_COMPONENT_ENUM_SIZE;
+    const output = createStructuredOutputSpec(
+      'component_selection',
+      'The component most affected by the changed files',
+      z.object({ componentId: useEnum ? z.enum([firstId, ...otherIds]) : z.string() })
     );
-    debugLog('selectComponent matched', matchedId);
-    return matchedId;
+
+    try {
+      const { componentId } = await this.executeStage({
+        phase: AnalysisPhase.COMPONENT_RESOLUTION,
+        model: this.fastModel,
+        prompt: PromptBuilder.buildComponentSelectionPrompt(data),
+        output,
+      });
+      if (!ids.includes(componentId)) {
+        debugLog('selectComponent returned an unknown component', componentId);
+        return null;
+      }
+      debugLog('selectComponent matched', componentId);
+      return componentId;
+    } catch (error) {
+      // Selection is best-effort: an unusable answer, or a request the provider rejects as
+      // invalid (schema or model unsupported), falls back to the default component.
+      if (error instanceof StructuredOutputError || isInvalidRequestError(error)) {
+        debugLog('selectComponent gave no component', error instanceof Error ? error.message : '');
+        return null;
+      }
+      throw error;
+    }
   }
 
   async extractDependencies(
@@ -144,8 +196,7 @@ export abstract class BaseProvider implements AIProvider {
       phase: AnalysisPhase.DEPENDENCY_SCAN,
       model: this.fastModel,
       prompt: PromptBuilder.buildDependencyExtractionPrompt(data),
-      schema: DependencyExtractionResultSchema,
-      schemaName: 'DependencyExtractionResult',
+      output: DEPENDENCY_EXTRACTION_OUTPUT,
     });
   }
 
@@ -154,8 +205,7 @@ export abstract class BaseProvider implements AIProvider {
       phase: AnalysisPhase.CHANGE_ANALYSIS,
       model: this.advancedModel,
       prompt: PromptBuilder.buildDriftAnalysisPrompt(data),
-      schema: DriftAnalysisResponseSchema,
-      schemaName: 'DriftAnalysisResponse',
+      output: DRIFT_ANALYSIS_OUTPUT,
     });
 
     return {
@@ -201,39 +251,39 @@ export abstract class BaseProvider implements AIProvider {
     phase: AnalysisPhase;
     model: string;
     prompt: string;
-    schema: z.ZodType<T>;
-    schemaName: string;
-    generationProfile?: GenerationProfile;
+    output: StructuredOutputSpec<T>;
   }): Promise<T> {
-    debugLog(`executeStage ${config.phase} using model`, config.model);
-    const generationProfile =
-      config.generationProfile ?? getGenerationProfileForPhase(config.phase);
-    const startedAt = process.hrtime.bigint();
-    const responseText = await withRetry(
-      () => this.callModel(config.model, config.prompt, config.phase, generationProfile),
-      {
+    const { phase, model, prompt, output } = config;
+    debugLog(`executeStage ${phase} using model`, model);
+    const generationProfile = getGenerationProfileForPhase(phase);
+    const request = (requestPrompt: string): Promise<string> =>
+      withRetry(() => this.callModel(model, requestPrompt, phase, generationProfile, output), {
         retries: 2,
         shouldRetry: (error) => this.isRetryableError(error),
-      }
-    );
-    debugLog(`executeStage ${config.phase} completed in`, formatDuration(startedAt));
+      });
 
-    const jsonStr = PromptBuilder.extractJson(responseText);
-    if (!jsonStr) {
-      debugLog(
-        `extractJson returned null for ${config.phase}, raw response (first 500 chars)`,
-        responseText.slice(0, 500)
-      );
-      throw new ErodeError(
-        'Response contained no parseable JSON',
-        ErrorCode.PROVIDER_INVALID_RESPONSE,
-        'AI response failed to produce valid JSON',
-        { phase: config.phase }
-      );
+    const startedAt = process.hrtime.bigint();
+    const firstText = await request(prompt);
+    const first = parseStructuredResponse(firstText, output);
+    if (first.success) {
+      debugLog(`executeStage ${phase} completed in`, formatDuration(startedAt));
+      return first.data;
     }
 
-    const parsed: unknown = JSON.parse(jsonStr);
-    return validate(config.schema, parsed, config.schemaName);
+    debugLog(`executeStage ${phase} invalid response, requesting one repair`, first.issues);
+    const second = parseStructuredResponse(
+      await request(buildRepairPrompt(prompt, firstText, first.issues)),
+      output
+    );
+    debugLog(`executeStage ${phase} completed in`, formatDuration(startedAt));
+    if (second.success) {
+      return second.data;
+    }
+
+    throw new StructuredOutputError(
+      `${output.name} response failed validation after one repair attempt:\n${second.issues}`,
+      { phase, schema: output.name }
+    );
   }
 
   private isRetryableError(error: unknown): boolean {
