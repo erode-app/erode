@@ -99,6 +99,48 @@ describe('validateLikeC4Dsl', () => {
     expect(dispose).toHaveBeenCalledOnce();
   });
 
+  it('should return warnings when the SDK reports them', async () => {
+    mockFromWorkspace.mockResolvedValue(
+      mockInstance({
+        getWarnings: () => [{ message: 'Relationship has no title' }],
+      }).instance
+    );
+
+    const result = await validateLikeC4Dsl('/workspace', '/workspace/model.c4', 'model {}');
+
+    expect(result).toEqual({ valid: true, warnings: ['Relationship has no title'] });
+  });
+
+  it('should omit warnings when getWarnings returns none', async () => {
+    mockFromWorkspace.mockResolvedValue(mockInstance({ getWarnings: () => [] }).instance);
+
+    const result = await validateLikeC4Dsl('/workspace', '/workspace/model.c4', 'model {}');
+
+    expect(result).toEqual({ valid: true });
+  });
+
+  it('should stay valid when getWarnings throws', async () => {
+    mockFromWorkspace.mockResolvedValue(
+      mockInstance({
+        getWarnings: () => {
+          throw new Error('warnings unavailable');
+        },
+      }).instance
+    );
+
+    const result = await validateLikeC4Dsl('/workspace', '/workspace/model.c4', 'model {}');
+
+    expect(result).toEqual({ valid: true });
+  });
+
+  it('should omit warnings when the SDK has no getWarnings method', async () => {
+    mockFromWorkspace.mockResolvedValue(mockInstance().instance);
+
+    const result = await validateLikeC4Dsl('/workspace', '/workspace/model.c4', 'model {}');
+
+    expect(result).not.toHaveProperty('warnings');
+  });
+
   it('should keep a valid verdict when dispose rejects', async () => {
     const { instance, dispose } = mockInstance();
     dispose.mockRejectedValue(new Error('dispose failed'));

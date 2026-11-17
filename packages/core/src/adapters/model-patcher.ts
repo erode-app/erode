@@ -36,6 +36,8 @@ export interface PatchResult {
   validationSkipped?: boolean;
   /** true when post-patch formatting was applied */
   formatted?: boolean;
+  /** Non-blocking warnings reported by DSL validation for the accepted patch */
+  validationWarnings?: string[];
 }
 
 export interface DslValidationResult {
@@ -43,6 +45,8 @@ export interface DslValidationResult {
   errors?: string[];
   /** true if validation tooling was unavailable */
   skipped?: boolean;
+  /** Non-blocking warnings from a successful validation */
+  warnings?: string[];
 }
 
 export interface ModelPatchOptions {

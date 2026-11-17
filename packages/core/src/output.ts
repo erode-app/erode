@@ -258,6 +258,7 @@ export function formatPatchPrBody(options: {
   skipped: SkippedRelationship[];
   removals?: string[];
   newComponents?: PatchNewComponent[];
+  validationWarnings?: string[];
 }): string {
   const lines: string[] = [];
 
@@ -306,6 +307,19 @@ export function formatPatchPrBody(options: {
     lines.push('|---|---|---|');
     for (const s of options.skipped) {
       lines.push(`| \`${s.source}\` | \`${s.target}\` | ${s.reason} |`);
+    }
+    lines.push('');
+  }
+
+  if (options.validationWarnings && options.validationWarnings.length > 0) {
+    lines.push('### Validation Warnings');
+    lines.push('');
+    lines.push(
+      '> The patched model is valid. These warnings are informational and did not block it.'
+    );
+    lines.push('');
+    for (const w of options.validationWarnings) {
+      lines.push(`- ${w}`);
     }
     lines.push('');
   }

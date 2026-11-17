@@ -30,7 +30,8 @@ export async function validateLikeC4Dsl(
               errors: errors.map((e: { message?: string }) => e.message ?? JSON.stringify(e)),
             };
           }
-          return { valid: true };
+          const warnings = collectWarnings(likec4);
+          return warnings.length > 0 ? { valid: true, warnings } : { valid: true };
         } finally {
           // A dispose failure must not change the validation verdict
           await likec4.dispose().catch(() => undefined);
@@ -42,5 +43,23 @@ export async function validateLikeC4Dsl(
       valid: false,
       errors: [error instanceof Error ? error.message : String(error)],
     };
+  }
+}
+
+interface WarningSource {
+  getWarnings?: () => { message?: string }[];
+}
+
+// getWarnings() was added in LikeC4 1.61; older SDKs don't have it.
+function collectWarnings(likec4: object): string[] {
+  const source = likec4 as WarningSource;
+  if (typeof source.getWarnings !== 'function') {
+    return [];
+  }
+  // Warnings are informational; a failure reading them must not reject a valid patch
+  try {
+    return source.getWarnings().map((w) => w.message ?? JSON.stringify(w));
+  } catch {
+    return [];
   }
 }

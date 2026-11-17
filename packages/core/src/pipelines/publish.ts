@@ -77,6 +77,7 @@ export async function publishResults(
         skipped: patchResult.skipped,
         removals: analysisResult.modelUpdates?.remove,
         newComponents: patchResult.newComponents,
+        validationWarnings: patchResult.validationWarnings,
       });
       const result = await createModelPr({
         repositoryUrl: ref.repositoryUrl,

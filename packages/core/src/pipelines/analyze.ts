@@ -282,6 +282,9 @@ export async function runAnalyze(
         if (ctx.patchResult.validationSkipped) {
           p.warn('DSL validation skipped: validation tooling unavailable');
         }
+        for (const warning of ctx.patchResult.validationWarnings ?? []) {
+          p.info(`DSL validation warning (non-blocking): ${warning}`);
+        }
         if (ctx.patchResult.formatted) {
           p.info('Patched model formatted with LikeC4 formatter');
         }

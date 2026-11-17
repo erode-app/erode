@@ -12,6 +12,19 @@ import type { ModelRelationship, ComponentIndex } from './architecture-types.js'
 import type { AIProvider } from '../providers/ai-provider.js';
 import { CONFIG } from '../utils/config.js';
 
+interface AcceptedPatch {
+  content: string;
+  validationSkipped: boolean;
+  validationWarnings?: string[];
+}
+
+function acceptedValidation(dslResult: DslValidationResult): Omit<AcceptedPatch, 'content'> {
+  return {
+    validationSkipped: !!dslResult.skipped,
+    validationWarnings: dslResult.warnings?.length ? dslResult.warnings : undefined,
+  };
+}
+
 export abstract class BasePatcher implements ModelPatcher {
   protected abstract readonly formatName: string;
   protected abstract readonly formatId: string;
@@ -110,6 +123,7 @@ export abstract class BasePatcher implements ModelPatcher {
 
     // 5. Try LLM-based patching with DSL validation
     let validationSkipped = false;
+    let validationWarnings: string[] | undefined;
     const llmResult = await this.tryLlmPatching(
       provider,
       originalContent,
@@ -122,6 +136,7 @@ export abstract class BasePatcher implements ModelPatcher {
     if (llmResult) {
       finalContent = llmResult.content;
       validationSkipped = llmResult.validationSkipped;
+      validationWarnings = llmResult.validationWarnings;
     }
 
     // 6. Deterministic fallback with DSL validation
@@ -135,6 +150,7 @@ export abstract class BasePatcher implements ModelPatcher {
       if (fallbackResult) {
         finalContent = fallbackResult.content;
         validationSkipped = fallbackResult.validationSkipped;
+        validationWarnings = fallbackResult.validationWarnings;
       }
     }
 
@@ -177,6 +193,7 @@ export abstract class BasePatcher implements ModelPatcher {
           : undefined,
       validationSkipped: validationSkipped || undefined,
       formatted: formatted || undefined,
+      validationWarnings,
     };
   }
 
@@ -233,7 +250,7 @@ export abstract class BasePatcher implements ModelPatcher {
     insertedLines: string[],
     modelPath: string,
     targetFile: string
-  ): Promise<{ content: string; validationSkipped: boolean } | null> {
+  ): Promise<AcceptedPatch | null> {
     if (!provider.patchModel) {
       return null;
     }
@@ -247,7 +264,7 @@ export abstract class BasePatcher implements ModelPatcher {
             valid: dslResult.valid,
             skipped: dslResult.skipped,
           });
-          return { content: result, validationSkipped: !!dslResult.skipped };
+          return { content: result, ...acceptedValidation(dslResult) };
         } else {
           this.debugLog('LLM patch failed DSL validation', dslResult.errors);
         }
@@ -265,7 +282,7 @@ export abstract class BasePatcher implements ModelPatcher {
     insertedLines: string[],
     modelPath: string,
     targetFile: string
-  ): Promise<{ content: string; validationSkipped: boolean } | null> {
+  ): Promise<AcceptedPatch | null> {
     this.debugLog('Using deterministic fallback');
     const deterministic = this.deterministicInsert(originalContent, insertedLines);
     const dslResult = await this.validateDsl(modelPath, targetFile, deterministic);
@@ -274,7 +291,7 @@ export abstract class BasePatcher implements ModelPatcher {
         valid: dslResult.valid,
         skipped: dslResult.skipped,
       });
-      return { content: deterministic, validationSkipped: !!dslResult.skipped };
+      return { content: deterministic, ...acceptedValidation(dslResult) };
     } else {
       this.debugLog('Deterministic patch failed DSL validation', dslResult.errors);
       return null;
