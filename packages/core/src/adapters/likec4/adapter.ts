@@ -6,7 +6,11 @@ import { CONFIG } from '../../utils/config.js';
 import { validate } from '../../utils/validation.js';
 import { isRepositoryHostUrl, normalizeRepositoryUrl } from '../url-utils.js';
 import { ErodeError, AdapterError, ErrorCode } from '../../errors.js';
-import type { ArchitectureModelAdapter, VersionCheckResult } from '../architecture-adapter.js';
+import type {
+  ArchitectureModelAdapter,
+  ValidationDiagnostic,
+  VersionCheckResult,
+} from '../architecture-adapter.js';
 import { LIKEC4_METADATA } from './metadata.js';
 import type {
   ArchitecturalComponent,
@@ -19,6 +23,7 @@ import type {
 import { LikeC4ElementSchema, LikeC4RelationshipSchema } from '../../schemas/likec4.schema.js';
 import type { LikeC4Element, LikeC4Model } from './likec4-types.js';
 import { checkLikeC4Version } from './version-check.js';
+import { readLikeC4Warnings } from './validation-warnings.js';
 
 export class LikeC4Adapter implements ArchitectureModelAdapter {
   readonly metadata = LIKEC4_METADATA;
@@ -28,6 +33,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
   private elementTagsMap = new Map<string, string[]>();
   private outgoing = new Map<string, ModelRelationship[]>();
   private incoming = new Map<string, ModelRelationship[]>();
+  private validationBaseline: ValidationDiagnostic[] | undefined;
 
   private isExcluded(options: { componentId: string; componentTags?: readonly string[] }): boolean {
     const { componentId, componentTags } = options;
@@ -99,6 +105,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
       );
     }
     this.guardVersionCompatibility(resolvedPath);
+    this.validationBaseline = undefined;
     const likec4 = await LikeC4.fromWorkspace(resolvedPath, { printErrors: false });
     try {
       if (likec4.hasErrors()) {
@@ -121,6 +128,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
         );
       }
       this.model = computedModel;
+      this.validationBaseline = readLikeC4Warnings(likec4, resolvedPath);
       const components = this.extractComponents();
       this.relationships = this.extractRelationships();
       this.componentIndex = this.buildComponentIndex(components);
@@ -378,6 +386,10 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
       throw AdapterError.notLoaded('likec4');
     }
     return this.relationships;
+  }
+
+  getValidationBaseline(): readonly ValidationDiagnostic[] | undefined {
+    return this.validationBaseline;
   }
 
   checkVersion(path: string): VersionCheckResult {

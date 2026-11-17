@@ -1,11 +1,16 @@
 import type { DslValidationResult } from '../model-patcher.js';
 import { withTempWorkspaceCopy } from '../dsl-validation.js';
 import type { LikeC4 as LikeC4Sdk } from 'likec4';
+import type { ValidationDiagnostic } from '../architecture-adapter.js';
+import { excludeBaseline, formatDiagnostic, readLikeC4Warnings } from './validation-warnings.js';
+
+const UNKNOWN_ERROR = 'LikeC4 reported an error without a message';
 
 export async function validateLikeC4Dsl(
   workspacePath: string,
   targetFile: string,
-  patchedContent: string
+  patchedContent: string,
+  baseline?: readonly ValidationDiagnostic[]
 ): Promise<DslValidationResult> {
   let LikeC4: typeof LikeC4Sdk;
   try {
@@ -27,10 +32,12 @@ export async function validateLikeC4Dsl(
             const errors = likec4.getErrors();
             return {
               valid: false,
-              errors: errors.map((e: { message?: string }) => e.message ?? JSON.stringify(e)),
+              errors: errors.map((e: { message?: string }) => e.message ?? UNKNOWN_ERROR),
             };
           }
-          return { valid: true };
+          const current = readLikeC4Warnings(likec4, tmpDir) ?? [];
+          const warnings = excludeBaseline(current, baseline).map(formatDiagnostic);
+          return warnings.length > 0 ? { valid: true, warnings } : { valid: true };
         } finally {
           // A dispose failure must not change the validation verdict
           await likec4.dispose().catch(() => undefined);

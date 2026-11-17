@@ -14,6 +14,13 @@ export interface VersionCheckResult {
   minimum: string;
 }
 
+/** A model validation diagnostic, keyed for comparison across workspace copies. */
+export interface ValidationDiagnostic {
+  /** Path relative to the model workspace, with `/` separators, when known */
+  file?: string;
+  message: string;
+}
+
 /** Adapter interface for loading and querying an architecture model. */
 export interface ArchitectureModelAdapter {
   /** Format-specific display info */
@@ -54,4 +61,10 @@ export interface ArchitectureModelAdapter {
 
   /** Optional: check version compatibility for the model format. */
   checkVersion?(path: string): VersionCheckResult;
+
+  /**
+   * Optional: validation warnings present in the model as loaded, so patch validation
+   * can report only the warnings a patch introduces. Undefined when not captured.
+   */
+  getValidationBaseline?(): readonly ValidationDiagnostic[] | undefined;
 }

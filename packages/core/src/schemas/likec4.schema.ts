@@ -26,3 +26,11 @@ export const LikeC4RelationshipSchema = z
   .loose();
 
 export type LikeC4Relationship = z.infer<typeof LikeC4RelationshipSchema>;
+
+/** Loose shape of `LikeC4Diagnostic` from `LikeC4.getWarnings()` (SDK 1.61+) */
+export const LikeC4DiagnosticSchema = z
+  .object({
+    message: z.string().optional(),
+    sourceFsPath: z.string().optional(),
+  })
+  .loose();

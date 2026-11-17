@@ -271,6 +271,7 @@ export async function runAnalyze(
         componentIndex: architectureModel.componentIndex,
         provider,
         newComponents: ctx.analysisResult.modelUpdates?.newComponents,
+        validationBaseline: adapter.getValidationBaseline?.(),
       });
       if (ctx.patchResult) {
         const relCount = ctx.patchResult.insertedLines.length;
@@ -281,6 +282,9 @@ export async function runAnalyze(
         p.succeed(`Patch: ${parts.join(', ')}`);
         if (ctx.patchResult.validationSkipped) {
           p.warn('DSL validation skipped: validation tooling unavailable');
+        }
+        for (const warning of ctx.patchResult.validationWarnings ?? []) {
+          p.info(`DSL validation warning (non-blocking): ${warning}`);
         }
         if (ctx.patchResult.formatted) {
           p.info('Patched model formatted with LikeC4 formatter');

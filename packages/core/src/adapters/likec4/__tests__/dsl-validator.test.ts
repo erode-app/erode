@@ -99,6 +99,61 @@ describe('validateLikeC4Dsl', () => {
     expect(dispose).toHaveBeenCalledOnce();
   });
 
+  it('should return warnings when the SDK reports them', async () => {
+    mockFromWorkspace.mockResolvedValue(
+      mockInstance({
+        getWarnings: () => [{ message: 'Relationship has no title' }],
+      }).instance
+    );
+
+    const result = await validateLikeC4Dsl('/workspace', '/workspace/model.c4', 'model {}');
+
+    expect(result).toEqual({ valid: true, warnings: ['Relationship has no title'] });
+  });
+
+  it('should omit warnings when getWarnings returns none', async () => {
+    mockFromWorkspace.mockResolvedValue(mockInstance({ getWarnings: () => [] }).instance);
+
+    const result = await validateLikeC4Dsl('/workspace', '/workspace/model.c4', 'model {}');
+
+    expect(result).toEqual({ valid: true });
+  });
+
+  it('should stay valid when getWarnings throws', async () => {
+    mockFromWorkspace.mockResolvedValue(
+      mockInstance({
+        getWarnings: () => {
+          throw new Error('warnings unavailable');
+        },
+      }).instance
+    );
+
+    const result = await validateLikeC4Dsl('/workspace', '/workspace/model.c4', 'model {}');
+
+    expect(result).toEqual({ valid: true });
+  });
+
+  it('should omit warnings when the SDK has no getWarnings method', async () => {
+    mockFromWorkspace.mockResolvedValue(mockInstance().instance);
+
+    const result = await validateLikeC4Dsl('/workspace', '/workspace/model.c4', 'model {}');
+
+    expect(result).not.toHaveProperty('warnings');
+  });
+
+  it('should render a safe message for errors without one', async () => {
+    mockFromWorkspace.mockResolvedValue(
+      mockInstance({
+        hasErrors: () => true,
+        getErrors: () => [{ sourceFsPath: `${TMP}/model.c4` }],
+      }).instance
+    );
+
+    const result = await validateLikeC4Dsl('/workspace', '/workspace/model.c4', 'model {}');
+
+    expect(result.errors).toEqual(['LikeC4 reported an error without a message']);
+  });
+
   it('should keep a valid verdict when dispose rejects', async () => {
     const { instance, dispose } = mockInstance();
     dispose.mockRejectedValue(new Error('dispose failed'));
@@ -110,6 +165,89 @@ describe('validateLikeC4Dsl', () => {
   });
 });
 
+const TMP = '/tmp/erode-likec4-validate-abc';
+
+function warning(file: string, message: string) {
+  return { message, line: 0, sourceFsPath: `${TMP}/${file}` };
+}
+
+describe('validateLikeC4Dsl with a validation baseline', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  async function validateWith(current: unknown[], baseline?: { file?: string; message: string }[]) {
+    mockFromWorkspace.mockResolvedValue(mockInstance({ getWarnings: () => current }).instance);
+    return validateLikeC4Dsl('/workspace', '/workspace/model.c4', 'model {}', baseline);
+  }
+
+  it('should drop warnings present in the baseline and keep new ones', async () => {
+    const result = await validateWith(
+      [warning('model.c4', 'Old warning'), warning('model.c4', 'New warning')],
+      [{ file: 'model.c4', message: 'Old warning' }]
+    );
+
+    expect(result).toEqual({ valid: true, warnings: ['model.c4: New warning'] });
+  });
+
+  it('should return no warnings when all are pre-existing', async () => {
+    const result = await validateWith(
+      [warning('views/a.c4', 'Old warning')],
+      [{ file: 'views/a.c4', message: 'Old warning' }]
+    );
+
+    expect(result).toEqual({ valid: true });
+  });
+
+  it('should keep a warning whose message matches the baseline in another file', async () => {
+    const result = await validateWith(
+      [warning('other.c4', 'Old warning')],
+      [{ file: 'model.c4', message: 'Old warning' }]
+    );
+
+    expect(result.warnings).toEqual(['other.c4: Old warning']);
+  });
+
+  it('should count duplicates so an extra identical warning is reported', async () => {
+    const result = await validateWith(
+      [warning('model.c4', 'Dup'), warning('model.c4', 'Dup')],
+      [{ file: 'model.c4', message: 'Dup' }]
+    );
+
+    expect(result.warnings).toEqual(['model.c4: Dup']);
+  });
+
+  it('should report all warnings when no baseline is given', async () => {
+    const result = await validateWith([warning('model.c4', 'A'), warning('model.c4', 'B')]);
+
+    expect(result.warnings).toEqual(['model.c4: A', 'model.c4: B']);
+  });
+
+  it('should report all warnings when the baseline is empty', async () => {
+    const result = await validateWith([warning('model.c4', 'A')], []);
+
+    expect(result.warnings).toEqual(['model.c4: A']);
+  });
+
+  it('should not leak the temp dir path into warnings', async () => {
+    const result = await validateWith([
+      warning('nested/model.c4', 'A'),
+      { sourceFsPath: `${TMP}/model.c4` },
+      { message: 'Outside', sourceFsPath: '/elsewhere/x.c4' },
+      'not an object',
+    ]);
+
+    expect(result.warnings).toEqual([
+      'nested/model.c4: A',
+      'model.c4: LikeC4 reported a warning without a message',
+      'Outside',
+      'LikeC4 reported a warning without a message',
+    ]);
+    expect(result.warnings?.join('\n')).not.toContain(TMP);
+  });
+});
+
+// Runs last: it resets the module registry, detaching later tests from the likec4 mock
 describe('validateLikeC4Dsl when the SDK cannot be imported', () => {
   it('should return skipped', async () => {
     vi.resetModules();

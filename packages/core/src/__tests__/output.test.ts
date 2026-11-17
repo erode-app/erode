@@ -391,6 +391,50 @@ describe('formatPatchPrBody', () => {
     if (absent) expect(body).not.toContain(absent);
   });
 
+  it('should render validation warnings as a non-blocking section', () => {
+    const body = formatPatchPrBody({
+      prNumber: 42,
+      prTitle: 'Add dep',
+      prUrl: 'https://github.com/org/repo/pull/42',
+      summary: 'Summary',
+      insertedLines: ['  a -> b'],
+      skipped: [],
+      validationWarnings: ['Relationship has no title'],
+    });
+
+    expect(body).toContain('### Validation Warnings');
+    expect(body).toContain('- Relationship has no title');
+  });
+
+  it('should cap validation warnings and summarise the rest', () => {
+    const body = formatPatchPrBody({
+      prNumber: 42,
+      prTitle: 'Add dep',
+      prUrl: 'https://github.com/org/repo/pull/42',
+      summary: 'Summary',
+      insertedLines: ['  a -> b'],
+      skipped: [],
+      validationWarnings: Array.from({ length: 25 }, (_, i) => `warning ${String(i + 1)}`),
+    });
+
+    expect(body).toContain('- warning 20\n');
+    expect(body).not.toContain('- warning 21');
+    expect(body).toContain('- ...and 5 more');
+  });
+
+  it('should omit the validation warnings section when there are none', () => {
+    const body = formatPatchPrBody({
+      prNumber: 42,
+      prTitle: 'Add dep',
+      prUrl: 'https://github.com/org/repo/pull/42',
+      summary: 'Summary',
+      insertedLines: ['  a -> b'],
+      skipped: [],
+    });
+
+    expect(body).not.toContain('Validation Warnings');
+  });
+
   it('should render new components section in PR body', () => {
     const body = formatPatchPrBody({
       prNumber: 42,

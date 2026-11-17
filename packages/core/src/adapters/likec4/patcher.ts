@@ -6,6 +6,7 @@ import { formatLikeC4Dsl } from './dsl-formatter.js';
 import type { StructuredRelationship, NewComponent } from '../../analysis/analysis-types.js';
 import type { ModelRelationship } from '../architecture-types.js';
 import type { DslValidationResult } from '../model-patcher.js';
+import type { ValidationDiagnostic } from '../architecture-adapter.js';
 import { CONFIG } from '../../utils/config.js';
 
 export class LikeC4Patcher extends BasePatcher {
@@ -82,9 +83,10 @@ export class LikeC4Patcher extends BasePatcher {
   protected async validateDsl(
     workspace: string,
     file: string,
-    content: string
+    content: string,
+    baseline?: readonly ValidationDiagnostic[]
   ): Promise<DslValidationResult> {
-    return validateLikeC4Dsl(workspace, file, content);
+    return validateLikeC4Dsl(workspace, file, content, baseline);
   }
 
   protected override async postFormat(
