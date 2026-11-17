@@ -1,0 +1,8 @@
+model {
+  core = system 'Core' {
+    orders = service 'Orders'
+    billing = service 'Billing'
+
+    orders -> billing 'charges'
+  }
+}

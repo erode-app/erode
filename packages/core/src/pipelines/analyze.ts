@@ -272,6 +272,7 @@ export async function runAnalyze(
         provider,
         newComponents: ctx.analysisResult.modelUpdates?.newComponents,
         validationBaseline: adapter.getValidationBaseline?.(),
+        elementSourceFiles: adapter.getElementSourceFiles?.(),
       });
       if (ctx.patchResult) {
         const relCount = ctx.patchResult.insertedLines.length;

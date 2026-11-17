@@ -29,6 +29,12 @@ import { formatLikeC4Dsl } from '../dsl-formatter.js';
 
 const mockReadFileSync = vi.mocked(readFileSync);
 const mockReaddirSync = vi.mocked(readdirSync);
+
+function dirents(names: string[]): ReturnType<typeof readdirSync> {
+  return names.map((name) => ({ name, isDirectory: () => false })) as unknown as ReturnType<
+    typeof readdirSync
+  >;
+}
 const mockValidateLikeC4Dsl = vi.mocked(validateLikeC4Dsl);
 const mockFormatLikeC4Dsl = vi.mocked(formatLikeC4Dsl);
 
@@ -70,7 +76,7 @@ describe('LikeC4Patcher post-format', () => {
   });
 
   it('should apply post-patch formatting when formatter returns content', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const formattedContent = SAMPLE_C4 + "\n  customer -> backend 'Formatted'\n";
@@ -99,7 +105,7 @@ describe('LikeC4Patcher post-format', () => {
   });
 
   it('should set formatted to undefined when formatting is skipped', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
     mockFormatLikeC4Dsl.mockResolvedValue({ formatted: false, skipped: true });
 

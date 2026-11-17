@@ -33,6 +33,12 @@ import { validateLikeC4Dsl } from '../dsl-validator.js';
 
 const mockReadFileSync = vi.mocked(readFileSync);
 const mockReaddirSync = vi.mocked(readdirSync);
+
+function dirents(names: string[]): ReturnType<typeof readdirSync> {
+  return names.map((name) => ({ name, isDirectory: () => false })) as unknown as ReturnType<
+    typeof readdirSync
+  >;
+}
 const mockValidateLikeC4Dsl = vi.mocked(validateLikeC4Dsl);
 
 function makeComponent(id: string): ArchitecturalComponent {
@@ -93,7 +99,7 @@ describe('LikeC4Patcher bidirectional relationships', () => {
   });
 
   it('should keep the reverse of a one-way relationship', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const rels: StructuredRelationship[] = [

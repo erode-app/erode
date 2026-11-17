@@ -12,6 +12,7 @@ import type { ModelRelationship, ComponentIndex } from './architecture-types.js'
 import type { ValidationDiagnostic } from './architecture-adapter.js';
 import type { AIProvider } from '../providers/ai-provider.js';
 import { CONFIG } from '../utils/config.js';
+import { selectTargetFileByLocation, type TargetFileContext } from './target-file-selection.js';
 
 interface AcceptedPatch {
   content: string;
@@ -144,7 +145,11 @@ export abstract class BasePatcher implements ModelPatcher {
     // 5. Text patching: LLM with DSL validation, then deterministic fallback
     const patched =
       native ??
-      (await this.tryTextPatching(provider, insertedLines, modelPath, options.validationBaseline));
+      (await this.tryTextPatching(provider, insertedLines, modelPath, options.validationBaseline, {
+        relationships: unique,
+        newComponents: genuinelyNew,
+        elementSourceFiles: options.elementSourceFiles,
+      }));
     if (!patched) {
       return null;
     }
@@ -245,9 +250,13 @@ export abstract class BasePatcher implements ModelPatcher {
     provider: AIProvider,
     insertedLines: string[],
     modelPath: string,
-    baseline?: readonly ValidationDiagnostic[]
+    baseline: readonly ValidationDiagnostic[] | undefined,
+    touched: TargetFileContext
   ): Promise<PatchedFile | null> {
-    const targetFile = this.findTargetFile(modelPath);
+    // Where the touched elements are declared, else the format heuristic
+    const located = selectTargetFileByLocation(modelPath, touched);
+    if (located) this.debugLog('Target file located from element declarations', located);
+    const targetFile = located ?? this.findTargetFile(modelPath);
     if (!targetFile) {
       this.debugLog(`No suitable .${this.formatId} target file found in`, modelPath);
       return null;

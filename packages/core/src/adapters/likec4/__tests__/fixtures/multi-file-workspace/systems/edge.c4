@@ -1,0 +1,7 @@
+model {
+  edge = system 'Edge' {
+    gateway = service 'Gateway'
+  }
+
+  edge.gateway -> core.orders 'routes'
+}

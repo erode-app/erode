@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { LikeC4 } from 'likec4';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { CONFIG } from '../../utils/config.js';
 import { validate } from '../../utils/validation.js';
 import { isRepositoryHostUrl, normalizeRepositoryUrl } from '../url-utils.js';
@@ -35,6 +36,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
   private outgoing = new Map<string, ModelRelationship[]>();
   private incoming = new Map<string, ModelRelationship[]>();
   private validationBaseline: ValidationDiagnostic[] | undefined;
+  private elementSourceFiles = new Map<string, string>();
 
   private isExcluded(options: { componentId: string; componentTags?: readonly string[] }): boolean {
     const { componentId, componentTags } = options;
@@ -140,6 +142,8 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
       const components = this.extractComponents();
       this.relationships = this.extractRelationships();
       this.componentIndex = this.buildComponentIndex(components);
+      // Language services are gone after dispose, so resolve declaring files now
+      this.elementSourceFiles = this.locateElements(likec4);
       return {
         components,
         relationships: this.relationships,
@@ -238,6 +242,24 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
       },
       { byRepository: new Map(), byId: new Map() }
     );
+  }
+
+  private locateElements(likec4: LikeC4): Map<string, string> {
+    type LocateParams = Parameters<LikeC4['languageServices']['locate']>[0];
+    const files = new Map<string, string>();
+    for (const id of this.elementTagsMap.keys()) {
+      try {
+        const uri = likec4.languageServices.locate({ element: id } as LocateParams)?.uri;
+        if (uri?.startsWith('file:')) files.set(id, fileURLToPath(uri));
+      } catch {
+        // Unlocatable element (e.g. ambiguous project): the patcher falls back to its heuristic
+      }
+    }
+    return files;
+  }
+
+  getElementSourceFiles(): ReadonlyMap<string, string> {
+    return this.elementSourceFiles;
   }
 
   findComponentByRepository(repoUrl: string): ArchitecturalComponent | undefined {

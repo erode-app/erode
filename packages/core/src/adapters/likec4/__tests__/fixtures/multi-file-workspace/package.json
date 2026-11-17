@@ -1,0 +1,7 @@
+{
+  "name": "multi-file-workspace",
+  "private": true,
+  "dependencies": {
+    "likec4": "^1.45.0"
+  }
+}

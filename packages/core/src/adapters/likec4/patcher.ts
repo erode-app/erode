@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'fs';
+import { readFileSync, readdirSync, type Dirent } from 'fs';
 import { join, resolve } from 'path';
 import { BasePatcher, acceptedValidation, type PatchedFile } from '../base-patcher.js';
 import { validateLikeC4Dsl } from './dsl-validator.js';
@@ -9,6 +9,37 @@ import type { ModelRelationship } from '../architecture-types.js';
 import type { DslValidationResult } from '../model-patcher.js';
 import type { ValidationDiagnostic } from '../architecture-adapter.js';
 import { CONFIG } from '../../utils/config.js';
+
+const SKIPPED_DIRS = new Set(['node_modules', '.git']);
+const LIKEC4_EXTENSIONS = ['.c4', '.likec4', '.like-c4'];
+
+/** Recursively lists LikeC4 files, shallowest first, then by path, so root files keep precedence. */
+function listC4Files(root: string): string[] {
+  const found: string[] = [];
+  let level = [root];
+  while (level.length > 0) {
+    const next: string[] = [];
+    for (const dir of level) {
+      let entries: Dirent[];
+      try {
+        entries = readdirSync(dir, { withFileTypes: true });
+      } catch {
+        continue; // Unreadable or vanished folder: skip it rather than fail the analysis
+      }
+      entries.sort((a, b) => a.name.localeCompare(b.name));
+      for (const entry of entries) {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (!SKIPPED_DIRS.has(entry.name)) next.push(full);
+        } else if (LIKEC4_EXTENSIONS.some((ext) => entry.name.endsWith(ext))) {
+          found.push(full);
+        }
+      }
+    }
+    level = next;
+  }
+  return found;
+}
 
 export class LikeC4Patcher extends BasePatcher {
   protected readonly formatName = 'LikeC4Patcher';
@@ -39,31 +70,19 @@ export class LikeC4Patcher extends BasePatcher {
   }
 
   protected findTargetFile(modelPath: string): string | null {
-    const resolvedPath = resolve(modelPath);
-    const c4Files = readdirSync(resolvedPath)
-      .filter((f) => f.endsWith('.c4'))
-      .map((f) => join(resolvedPath, f));
+    const c4Files = listC4Files(resolve(modelPath));
 
-    if (c4Files.length === 0) return null;
-
-    // Prefer files with model blocks and existing relationships
+    // Prefer a file with a model block and existing relationships, then any model block
+    let withModel: string | undefined;
     for (const file of c4Files) {
       const content = readFileSync(file, 'utf-8');
-      if (content.includes('model {') && content.includes('->')) {
-        return file;
-      }
+      if (!content.includes('model {')) continue;
+      if (content.includes('->')) return file;
+      withModel ??= file;
     }
 
-    // Fall back to any file with a model block
-    for (const file of c4Files) {
-      const content = readFileSync(file, 'utf-8');
-      if (content.includes('model {')) {
-        return file;
-      }
-    }
-
-    // Last resort: first .c4 file
-    return c4Files[0] ?? null;
+    // Last resort: first LikeC4 file
+    return withModel ?? c4Files[0] ?? null;
   }
 
   protected async validateDsl(

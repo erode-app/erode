@@ -1,0 +1,8 @@
+specification {
+  element system
+  element service
+}
+
+model {
+  shared = system 'Shared Platform'
+}
