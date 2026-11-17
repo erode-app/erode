@@ -52,6 +52,23 @@ const DRIFT_ANALYSIS_OUTPUT = createStructuredOutputSpec(
   DriftAnalysisResponseSchema
 );
 
+/** Caps on the issue list echoed in repair prompts and errors, so a large invalid response stays bounded. */
+const MAX_REPAIR_ISSUES = 20;
+const MAX_REPAIR_ISSUE_CHARS = 200;
+
+function formatCappedIssues(issues: readonly z.core.$ZodIssue[]): string {
+  const shown = formatZodIssues(issues.slice(0, MAX_REPAIR_ISSUES))
+    .split('\n')
+    .map((line) =>
+      line.length > MAX_REPAIR_ISSUE_CHARS ? `${line.slice(0, MAX_REPAIR_ISSUE_CHARS)}...` : line
+    );
+  const omitted = issues.length - MAX_REPAIR_ISSUES;
+  if (omitted > 0) {
+    shown.push(`  ... and ${String(omitted)} more issues`);
+  }
+  return shown.join('\n');
+}
+
 type ParsedResponse<T> = { success: true; data: T } | { success: false; issues: string };
 
 function parseStructuredResponse<T>(
@@ -69,7 +86,7 @@ function parseStructuredResponse<T>(
   const result = output.zodSchema.safeParse(stripNullProperties(parsed));
   return result.success
     ? { success: true, data: result.data }
-    : { success: false, issues: formatZodIssues(result.error.issues) };
+    : { success: false, issues: formatCappedIssues(result.error.issues) };
 }
 
 /** Cap on the echoed invalid response so a huge output cannot blow up the repair prompt. */

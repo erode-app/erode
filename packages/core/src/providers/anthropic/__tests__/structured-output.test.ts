@@ -212,6 +212,26 @@ describe('AnthropicProvider structured output', () => {
     );
   });
 
+  it('caps the issue list in the repair prompt', async () => {
+    const many = {
+      dependencies: Array.from({ length: 60 }, () => ({ type: 'introduced' })),
+      summary: 's',
+    };
+    mockCreate
+      .mockResolvedValueOnce(jsonResponse(many))
+      .mockResolvedValueOnce(jsonResponse(validResult));
+
+    await provider.extractDependencies(dependencyData);
+
+    const repairPrompt = requestAt(1).messages[0]?.content ?? '';
+    expect(repairPrompt).toMatch(/\.\.\. and \d+ more issues/);
+    expect(repairPrompt).toContain('  20. [');
+    expect(repairPrompt).not.toContain('  21. [');
+    expect(repairPrompt.length).toBeLessThan(
+      (requestAt(0).messages[0]?.content.length ?? 0) + 4000 + 20 * 250 + 500
+    );
+  });
+
   const components = (ids: string[]) =>
     ids.map((id) => ({ id, name: id, type: 'service', tags: [] }));
   const selectionData = (ids: string[]) => ({
