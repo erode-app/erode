@@ -14,6 +14,7 @@ import type { AIProvider } from '../providers/ai-provider.js';
 import { CONFIG } from '../utils/config.js';
 import { knownRelationshipKinds, resolveRelationshipKind } from './relationship-kind.js';
 import { selectTargetFileByLocation, type TargetFileContext } from './target-file-selection.js';
+import { countBraces, findModelBlocks, maskStringsAndComments } from './dsl-scanner.js';
 
 interface AcceptedPatch {
   content: string;
@@ -32,39 +33,12 @@ export function acceptedValidation(dslResult: DslValidationResult): Omit<Accepte
   };
 }
 
-/**
- * Index of the `}` closing the first `{` on the line, or -1 if the block continues.
- * Braces inside quoted strings and after `//` do not count.
- */
-function closingBraceOnSameLine(line: string): number {
-  let depth = 0;
-  let quote: string | null = null;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (quote) {
-      if (ch === '\\') i++;
-      else if (ch === quote) quote = null;
-    } else if (ch === "'" || ch === '"') {
-      quote = ch;
-    } else if (ch === '/' && line[i + 1] === '/') {
-      return -1;
-    } else if (ch === '{') {
-      depth++;
-    } else if (ch === '}' && depth > 0 && --depth === 0) {
-      return i;
-    }
-  }
-  return -1;
-}
-
 export abstract class BasePatcher implements ModelPatcher {
   protected abstract readonly formatName: string;
   protected abstract readonly formatId: string;
   protected abstract readonly defaultIndent: string;
   /** Whether differing relationship kinds make a same-endpoint proposal distinct. */
   protected abstract readonly kindSensitiveDedup: boolean;
-
-  protected abstract isModelBlockLine(line: string): boolean;
 
   protected abstract generateDslLines(
     unique: StructuredRelationship[],
@@ -381,65 +355,32 @@ export abstract class BasePatcher implements ModelPatcher {
   }
 
   protected deterministicInsert(content: string, lines: string[]): string {
-    const contentLines = content.split('\n');
-    let insertIndex = -1;
-
-    let inModel = false;
-    let braceDepth = 0;
-    for (let i = 0; i < contentLines.length; i++) {
-      const line = contentLines[i] ?? '';
-      if (this.isModelBlockLine(line)) {
-        const closeAt = closingBraceOnSameLine(line);
-        if (closeAt !== -1) {
-          // One-line block such as `model { a = service 'A' }`: split it so lines can go inside
-          contentLines.splice(i, 1, line.slice(0, closeAt).trimEnd(), line.slice(closeAt));
-          insertIndex = i + 1;
-          break;
-        }
-        inModel = true;
-        braceDepth = 1;
-        continue;
-      }
-      if (inModel) {
-        for (const ch of line) {
-          if (ch === '{') braceDepth++;
-          if (ch === '}') {
-            braceDepth--;
-            if (braceDepth === 0) {
-              insertIndex = i;
-              inModel = false;
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    // If no model block found, insert before the last } in the file
-    if (insertIndex === -1) {
-      for (let i = contentLines.length - 1; i >= 0; i--) {
-        if ((contentLines[i] ?? '').includes('}')) {
-          insertIndex = i;
-          break;
-        }
-      }
-    }
-
-    if (insertIndex === -1) {
-      // No closing brace found, just append
+    // Insert before the end of the last model block, else before the last `}` in the file
+    const closeAt =
+      findModelBlocks(content).at(-1)?.close ?? maskStringsAndComments(content).lastIndexOf('}');
+    if (closeAt === -1) {
       return content + '\n' + lines.join('\n') + '\n';
     }
 
+    const contentLines = content.split('\n');
+    const lineStart = content.lastIndexOf('\n', closeAt - 1) + 1;
+    let insertIndex = content.slice(0, lineStart).split('\n').length - 1;
+    const closingLine = contentLines[insertIndex] ?? '';
+    const column = closeAt - lineStart;
+    if (closingLine.slice(0, column).trim() !== '') {
+      // Code before the brace, as in `model { a = service 'A' }`: split so lines can go inside
+      contentLines.splice(
+        insertIndex,
+        1,
+        closingLine.slice(0, column).trimEnd(),
+        closingLine.slice(column)
+      );
+      insertIndex++;
+    }
+
     const lineAbove = contentLines[insertIndex - 1] ?? '';
-    const match = /^(\s*)/.exec(lineAbove);
-    const indent = match?.[1] ?? this.defaultIndent;
-
-    const indentedLines = lines.map((line) => {
-      const trimmed = line.trimStart();
-      return indent + trimmed;
-    });
-
-    contentLines.splice(insertIndex, 0, '', ...indentedLines);
+    const indent = /^(\s*)/.exec(lineAbove)?.[1] ?? this.defaultIndent;
+    contentLines.splice(insertIndex, 0, '', ...lines.flatMap((entry) => reindent(entry, indent)));
 
     return contentLines.join('\n');
   }
@@ -455,6 +396,15 @@ export abstract class BasePatcher implements ModelPatcher {
       return filePath;
     }
   }
+}
+
+/** Re-indents a possibly multi-line entry to `indent`, keeping its inner nesting. */
+function reindent(entry: string, indent: string): string[] {
+  const lines = entry.split('\n');
+  const common = Math.min(
+    ...lines.filter((l) => l.trim().length > 0).map((l) => /^\s*/.exec(l)?.[0].length ?? 0)
+  );
+  return lines.map((l) => (l.trim().length > 0 ? indent + l.slice(common) : ''));
 }
 
 /** Quick structural validation shared by both patchers. */
@@ -473,7 +423,11 @@ export function quickValidatePatch(
     }
   }
 
-  for (const line of insertedLines) {
+  // Multi-line entries are checked per line, since the LLM may re-indent nested blocks
+  const insertedSubLines = insertedLines.flatMap((entry) =>
+    entry.split('\n').filter((l) => l.trim().length > 0)
+  );
+  for (const line of insertedSubLines) {
     if (!patched.includes(line.trim())) {
       if (CONFIG.debug.verbose) {
         console.error('[quickValidatePatch] Failed: inserted line missing', JSON.stringify(line));
@@ -482,8 +436,7 @@ export function quickValidatePatch(
     }
   }
 
-  const openBraces = (patched.match(/\{/g) ?? []).length;
-  const closeBraces = (patched.match(/\}/g) ?? []).length;
+  const { open: openBraces, close: closeBraces } = countBraces(patched);
   if (openBraces !== closeBraces) {
     if (CONFIG.debug.verbose) {
       console.error(

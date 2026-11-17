@@ -31,7 +31,7 @@ export function escapeLikeC4String(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
-export function componentBlock(comp: NewComponent, localId: string, indent: string): string[] {
+function componentBlock(comp: NewComponent, localId: string, indent: string): string[] {
   const name = escapeLikeC4String(comp.name);
   const lines = [`${indent}${localId} = ${comp.kind} '${name}' {`];
   if (comp.tags && comp.tags.length > 0) {
@@ -48,9 +48,20 @@ export function componentBlock(comp: NewComponent, localId: string, indent: stri
 }
 
 /**
- * Builds a LikeC4 `diff` block. Dotted component IDs become `extend <parent> { ... }`,
+ * Element definition for a new component. A dotted ID becomes `extend <parent> { <local> = ... }`,
  * because a dotted name is not a valid element definition.
  */
+export function componentDefinition(comp: NewComponent, indent: string): string[] {
+  const dot = comp.id.lastIndexOf('.');
+  if (dot === -1) return componentBlock(comp, comp.id, indent);
+  return [
+    `${indent}extend ${comp.id.slice(0, dot)} {`,
+    ...componentBlock(comp, comp.id.slice(dot + 1), `${indent}  `),
+    `${indent}}`,
+  ];
+}
+
+/** Builds a LikeC4 `diff` block with the new components and relationship lines. */
 export function buildDiffBlock(
   diffId: string,
   components: NewComponent[],
@@ -58,14 +69,7 @@ export function buildDiffBlock(
 ): string {
   const body: string[] = [];
   for (const comp of components) {
-    const dot = comp.id.lastIndexOf('.');
-    if (dot === -1) {
-      body.push(...componentBlock(comp, comp.id, '    '));
-      continue;
-    }
-    body.push(`    extend ${comp.id.slice(0, dot)} {`);
-    body.push(...componentBlock(comp, comp.id.slice(dot + 1), '      '));
-    body.push('    }');
+    body.push(...componentDefinition(comp, '    '));
   }
   for (const line of relationshipLines) {
     body.push(`    ${line.trim()}`);

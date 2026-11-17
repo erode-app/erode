@@ -24,10 +24,6 @@ export class StructurizrPatcher extends BasePatcher {
   protected readonly defaultIndent = '        ';
   protected readonly kindSensitiveDedup = false;
 
-  protected isModelBlockLine(line: string): boolean {
-    return /\bmodel\s*\{/.test(line);
-  }
-
   protected generateDslLines(
     unique: StructuredRelationship[],
     _existing: ModelRelationship[]
