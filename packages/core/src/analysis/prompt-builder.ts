@@ -31,7 +31,7 @@ function escapeUntrusted(text: string): string {
   let i = text.indexOf('<');
   while (i !== -1) {
     let j = i + 1;
-    while (j < text.length && (text[j] === '/' || /\s/.test(text[j] as string))) j++;
+    while (j < text.length && (text[j] === '/' || /\s/.test(text.charAt(j)))) j++;
     let next = j;
     if (UNTRUSTED_NAME.test(text.slice(j, j + 32))) {
       out += text.slice(last, i) + '&lt;';
