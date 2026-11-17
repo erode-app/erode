@@ -79,6 +79,34 @@ describe('LikeC4Patcher with patchStrategy model-edits', () => {
     expect(result?.content).toContain("frontend -> database 'reads'");
   }, 60_000);
 
+  it('falls back to text patching when the model-edits result fails DSL validation', async () => {
+    vi.spyOn(modelEdits, 'previewModelEdits').mockResolvedValue({
+      ok: true,
+      patch: { targetFile: modelFile, content: 'model { this is not valid' },
+    });
+    const result = await new LikeC4Patcher().patch({
+      modelPath: fixture,
+      relationships: [{ source: 'frontend', target: 'database', description: 'reads' }],
+      existingRelationships: [],
+      componentIndex: index,
+      provider,
+    });
+    expect(result?.content).not.toContain('this is not valid');
+    expect(result?.content).toContain("frontend -> database 'reads'");
+  }, 60_000);
+
+  it('falls back to text patching when model edits throw', async () => {
+    vi.spyOn(modelEdits, 'previewModelEdits').mockRejectedValue(new Error('boom'));
+    const result = await new LikeC4Patcher().patch({
+      modelPath: fixture,
+      relationships: [{ source: 'frontend', target: 'database', description: 'reads' }],
+      existingRelationships: [],
+      componentIndex: index,
+      provider,
+    });
+    expect(result?.content).toContain("frontend -> database 'reads'");
+  }, 60_000);
+
   it('does not call model edits with the default text strategy', async () => {
     CONFIG.adapter.likec4.patchStrategy = 'text';
     const spy = vi.spyOn(modelEdits, 'previewModelEdits');

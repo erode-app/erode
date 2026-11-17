@@ -129,7 +129,13 @@ export abstract class BasePatcher implements ModelPatcher {
       genuinelyNew,
       relationshipDslLines,
       options.validationBaseline
-    ).catch(() => null);
+    ).catch((error: unknown) => {
+      this.debugLog(
+        'Native patching failed; falling back to text patching',
+        error instanceof Error ? error.message : String(error)
+      );
+      return null;
+    });
 
     // 5. Find target file
     const targetFile = native?.targetFile ?? this.findTargetFile(modelPath);

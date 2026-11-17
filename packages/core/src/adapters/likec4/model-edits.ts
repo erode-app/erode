@@ -1,5 +1,5 @@
 import { realpathSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
@@ -98,52 +98,56 @@ export async function previewModelEdits(
       async (tmpProposal, tmpDir): Promise<ModelEditsOutcome> => {
         const { LikeC4 } = await import('likec4');
         const likec4 = await LikeC4.fromWorkspace(tmpDir, { printErrors: false });
-        const edits = (likec4 as { modelEdits?: { preview?: unknown } }).modelEdits;
-        if (!edits || typeof edits.preview !== 'function') {
-          return { ok: false, reason: 'likec4 SDK has no modelEdits API' };
-        }
+        try {
+          const edits = (likec4 as { modelEdits?: { preview?: unknown } }).modelEdits;
+          if (!edits || typeof edits.preview !== 'function') {
+            return { ok: false, reason: 'likec4 SDK has no modelEdits API' };
+          }
 
-        const diffs = DiffListSchema.safeParse(await likec4.modelDiffs.list());
-        if (!diffs.success || !diffs.data.some((d) => d.id === diffId)) {
-          return { ok: false, reason: `diff ${diffId} not found in workspace` };
-        }
+          const diffs = DiffListSchema.safeParse(await likec4.modelDiffs.list());
+          if (!diffs.success || !diffs.data.some((d) => d.id === diffId)) {
+            return { ok: false, reason: `diff ${diffId} not found in workspace` };
+          }
 
-        const raw: unknown = await likec4.modelEdits.preview({
-          type: 'apply-diff',
-          diffId: diffId as never,
-          action: 'apply',
-        });
-        const preview = PreviewSchema.safeParse(raw);
-        if (!preview.success) {
-          return { ok: false, reason: 'unexpected modelEdits.preview result' };
-        }
-        if ('error' in preview.data) {
-          return { ok: false, reason: preview.data.error };
-        }
-        if (preview.data.overlaps.length > 0) {
-          return { ok: false, reason: `overlaps: ${preview.data.overlaps.join('; ')}` };
-        }
+          const raw: unknown = await likec4.modelEdits.preview({
+            type: 'apply-diff',
+            diffId: diffId as never,
+            action: 'apply',
+          });
+          const preview = PreviewSchema.safeParse(raw);
+          if (!preview.success) {
+            return { ok: false, reason: 'unexpected modelEdits.preview result' };
+          }
+          if ('error' in preview.data) {
+            return { ok: false, reason: preview.data.error };
+          }
+          if (preview.data.overlaps.length > 0) {
+            return { ok: false, reason: `overlaps: ${preview.data.overlaps.join('; ')}` };
+          }
 
-        const tmpRoot = canonical(tmpDir);
-        const proposal = canonical(tmpProposal);
-        const changed = preview.data.documents.filter(
-          (d) => canonical(fileURLToPath(d.uri)) !== proposal && d.before !== d.after
-        );
-        if (changed.length !== 1 || !changed[0]) {
-          return {
-            ok: false,
-            reason: `expected one changed model file, got ${String(changed.length)}`,
-          };
+          const tmpRoot = canonical(tmpDir);
+          const proposal = canonical(tmpProposal);
+          const changed = preview.data.documents.filter(
+            (d) => canonical(fileURLToPath(d.uri)) !== proposal && d.before !== d.after
+          );
+          if (changed.length !== 1 || !changed[0]) {
+            return {
+              ok: false,
+              reason: `expected one changed model file, got ${String(changed.length)}`,
+            };
+          }
+          const doc = changed[0];
+          if (doc.after.trim() === '') {
+            return { ok: false, reason: 'preview deletes a model file' };
+          }
+          const rel = relative(tmpRoot, canonical(fileURLToPath(doc.uri)));
+          if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
+            return { ok: false, reason: 'changed file is outside the workspace' };
+          }
+          return { ok: true, patch: { targetFile: join(resolvedModel, rel), content: doc.after } };
+        } finally {
+          await likec4.dispose();
         }
-        const doc = changed[0];
-        if (doc.after.trim() === '') {
-          return { ok: false, reason: 'preview deletes a model file' };
-        }
-        const rel = relative(tmpRoot, canonical(fileURLToPath(doc.uri)));
-        if (rel.startsWith('..')) {
-          return { ok: false, reason: 'changed file is outside the workspace' };
-        }
-        return { ok: true, patch: { targetFile: join(resolvedModel, rel), content: doc.after } };
       }
     );
   } catch (error) {

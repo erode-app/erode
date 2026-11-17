@@ -17,10 +17,13 @@ const state: {
   preview: () => ({ error: 'not set' }),
 };
 
+const dispose = vi.fn(() => Promise.resolve());
+
 vi.mock('likec4', () => ({
   LikeC4: {
     fromWorkspace: vi.fn((dir: string) =>
       Promise.resolve({
+        dispose,
         modelDiffs: { list: () => Promise.resolve([{ id: currentDiffId }]) },
         modelEdits: state.hasModelEdits
           ? {
@@ -78,6 +81,7 @@ describe('previewModelEdits', () => {
   beforeEach(() => {
     currentDiffId = 'erode_abcd1234';
     state.hasModelEdits = true;
+    dispose.mockClear();
   });
 
   it('returns the single changed model file re-rooted on the model path', async () => {
@@ -93,18 +97,40 @@ describe('previewModelEdits', () => {
       ok: true,
       patch: { targetFile: join(fixture, 'model.c4'), content: "model {\n  a -> b 'uses'\n}" },
     });
+    expect(dispose).toHaveBeenCalledOnce();
   });
 
   it('fails when the SDK has no modelEdits API', async () => {
     state.hasModelEdits = false;
     const result = await previewModelEdits(fixture, [], ["a -> b 'uses'"]);
     expect(result).toEqual({ ok: false, reason: 'likec4 SDK has no modelEdits API' });
+    expect(dispose).toHaveBeenCalledOnce();
   });
 
   it('fails when preview reports an error', async () => {
     state.preview = () => ({ error: 'Diff has errors' });
     const result = await previewModelEdits(fixture, [], ["a -> b 'uses'"]);
     expect(result).toEqual({ ok: false, reason: 'Diff has errors' });
+  });
+
+  it('fails when the changed file is outside the workspace', async () => {
+    state.preview = () => ({
+      documents: [
+        { uri: pathToFileURL(join(fixture, '..', 'other.c4')).href, before: 'x', after: 'y' },
+      ],
+      overlaps: [],
+    });
+    const result = await previewModelEdits(fixture, [], ["a -> b 'uses'"]);
+    expect(result).toEqual({ ok: false, reason: 'changed file is outside the workspace' });
+  });
+
+  it('disposes the SDK and fails when preview throws', async () => {
+    state.preview = () => {
+      throw new Error('preview crashed');
+    };
+    const result = await previewModelEdits(fixture, [], ["a -> b 'uses'"]);
+    expect(result).toEqual({ ok: false, reason: 'preview crashed' });
+    expect(dispose).toHaveBeenCalledOnce();
   });
 
   it('fails on overlaps with other diffs', async () => {
