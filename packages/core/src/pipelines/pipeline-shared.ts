@@ -51,6 +51,9 @@ export function buildArchitecturalContext(
       target: { id: r.target.id, name: r.target.name },
       kind: r.kind,
       title: r.title,
+      technology: r.technology,
+      description: r.description,
+      tags: r.tags,
     })),
   };
 }

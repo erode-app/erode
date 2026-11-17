@@ -209,6 +209,42 @@ describe('PromptBuilder', () => {
       expect(result).toContain('No architectural dependency changes');
     });
 
+    it('should render declared relationship technology, tags and description', () => {
+      const result = PromptBuilder.buildDriftAnalysisPrompt({
+        changeRequest: {
+          number: 1,
+          title: 'Test',
+          description: null,
+          repository: 'org/repo',
+          author: { login: 'dev' },
+          base: { ref: 'main', sha: 'base' },
+          head: { ref: 'feature', sha: 'head' },
+          stats: { commits: 1, additions: 1, deletions: 0, files_changed: 1 },
+          commits: [],
+        },
+        component: { id: 'comp.api', name: 'API', type: 'service', tags: [] },
+        dependencies: { dependencies: [], summary: '' },
+        architectural: {
+          dependencies: [],
+          dependents: [],
+          relationships: [
+            {
+              target: { id: 'comp.db', name: 'Database' },
+              kind: 'database',
+              technology: 'JDBC',
+              tags: ['storage'],
+              description: 'Stores orders',
+            },
+          ],
+        },
+      });
+
+      expect(result).toContain('Database (comp.db) [via: database]');
+      expect(result).toContain('technology: JDBC');
+      expect(result).toContain('tags: #storage');
+      expect(result).toContain('description: Stores orders');
+    });
+
     it('should use PR context labels when number > 0', () => {
       const result = PromptBuilder.buildDriftAnalysisPrompt({
         changeRequest: {
@@ -360,6 +396,42 @@ describe('PromptBuilder', () => {
       expect(template).toContain('Classify each dependency');
       expect(template).toContain('New component plus relationship to add');
       expect(template).toContain('Do not let one dependency that created a new component');
+    });
+  });
+
+  describe('drift analysis component context', () => {
+    const build = (description?: string) =>
+      PromptBuilder.buildDriftAnalysisPrompt({
+        changeRequest: {
+          number: 1,
+          title: 'Test',
+          description: null,
+          repository: 'org/repo',
+          author: { login: 'dev' },
+          base: { ref: 'main', sha: 'base' },
+          head: { ref: 'feature', sha: 'head' },
+          stats: { commits: 1, additions: 1, deletions: 0, files_changed: 1 },
+          commits: [{ sha: 'head', message: 'Test', author: 'dev' }],
+        },
+        component: { id: 'comp.api', name: 'API', type: 'service', tags: [], description },
+        dependencies: { dependencies: [], summary: 'No changes' },
+        architectural: { dependencies: [], dependents: [], relationships: [] },
+      });
+
+    it('should pass the component description to the template', () => {
+      const vars = JSON.parse(build('Serves the public REST API')) as DriftAnalysisPromptVars;
+      expect(vars.component.description).toBe('Serves the public REST API');
+    });
+
+    it('should fall back to None when the component has no description', () => {
+      const vars = JSON.parse(build()) as DriftAnalysisPromptVars;
+      expect(vars.component.description).toBe('None');
+    });
+
+    it('should render the component description in the template', () => {
+      const templateDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'prompts');
+      const template = readFileSync(join(templateDir, 'drift-analysis.md'), 'utf-8');
+      expect(template).toContain('Description: {{component.description}}');
     });
   });
 

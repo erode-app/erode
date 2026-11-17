@@ -29,6 +29,9 @@ export interface ComponentRelationshipRef {
   target: { id: string; name: string };
   kind?: string;
   title?: string;
+  technology?: string;
+  description?: string;
+  tags?: string[];
 }
 
 export interface DependencyExtractionPromptData {

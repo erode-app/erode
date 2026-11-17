@@ -1,10 +1,44 @@
 import { z } from 'zod';
 
+// computedModel() exposes descriptions as RichText objects ({ $source: {txt}|{md}|null }).
+const LikeC4RichTextInputSchema = z
+  .union([
+    z.string(),
+    z
+      .object({
+        $source: z.union([z.object({ txt: z.string() }), z.object({ md: z.string() })]).nullish(),
+      })
+      .loose(),
+  ])
+  .nullish();
+
+/**
+ * Returns the trimmed text of a LikeC4 rich text value (`txt`, else `md`), or
+ * undefined when empty. Accepts a plain string for older model shapes.
+ */
+export function normalizeLikeC4Text(
+  value: z.infer<typeof LikeC4RichTextInputSchema>
+): string | undefined {
+  if (value == null) return undefined;
+  const text =
+    typeof value === 'string'
+      ? value
+      : value.$source && 'txt' in value.$source
+        ? value.$source.txt
+        : value.$source?.md;
+  const trimmed = text?.trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
+// Unknown shapes fall back to undefined so a LikeC4 change cannot block model loading.
+export const LikeC4RichTextSchema =
+  LikeC4RichTextInputSchema.transform(normalizeLikeC4Text).catch(undefined);
+
 export const LikeC4ElementSchema = z
   .object({
     id: z.string(),
     title: z.string().nullish(),
-    description: z.unknown().optional(),
+    description: LikeC4RichTextSchema,
     kind: z.string(),
     tags: z.array(z.string()).nullish(),
     links: z
@@ -22,8 +56,19 @@ export const LikeC4RelationshipSchema = z
     target: z.union([z.string(), z.object({ id: z.string() })]),
     title: z.string().nullish(),
     kind: z.string().nullish(),
+    technology: z.string().nullish(),
+    description: z.unknown().optional(),
+    tags: z.array(z.string()).nullish(),
     isBidirectional: z.boolean().optional(),
   })
   .loose();
 
 export type LikeC4Relationship = z.infer<typeof LikeC4RelationshipSchema>;
+
+/** Loose shape of `LikeC4Diagnostic` from `LikeC4.getWarnings()` (SDK 1.61+) */
+export const LikeC4DiagnosticSchema = z
+  .object({
+    message: z.string().optional(),
+    sourceFsPath: z.string().optional(),
+  })
+  .loose();

@@ -348,6 +348,28 @@ describe('LikeC4Patcher', () => {
     expect(result).toBeNull();
   });
 
+  it('should pass the validation baseline to DSL validation', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+    const baseline = [{ file: 'model.c4', message: 'Pre-existing warning' }];
+
+    await patcher.patch({
+      modelPath: '/model',
+      relationships: [{ source: 'customer', target: 'backend', description: 'New dep' }],
+      existingRelationships: [],
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+      validationBaseline: baseline,
+    });
+
+    expect(mockValidateLikeC4Dsl).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
+      baseline
+    );
+  });
+
   it('should accept output when DSL validation is skipped (tooling unavailable)', async () => {
     mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
@@ -368,6 +390,43 @@ describe('LikeC4Patcher', () => {
     expect(result).not.toBeNull();
     if (!result) return;
     expect(result.content).toContain("customer -> backend 'New dep'");
+  });
+
+  it('should accept a valid patch and carry its validation warnings', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+    mockValidateLikeC4Dsl.mockResolvedValue({
+      valid: true,
+      warnings: ['Relationship has no title'],
+    });
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: [{ source: 'customer', target: 'backend', description: 'New dep' }],
+      existingRelationships: [],
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+    });
+
+    expect(result).not.toBeNull();
+    expect(result?.validationWarnings).toEqual(['Relationship has no title']);
+    expect(result?.validationSkipped).toBeUndefined();
+  });
+
+  it('should omit validationWarnings when validation reports none', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: [{ source: 'customer', target: 'backend', description: 'New dep' }],
+      existingRelationships: [],
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+    });
+
+    expect(result).not.toBeNull();
+    expect(result?.validationWarnings).toBeUndefined();
   });
 
   it('should strip single quotes from description in DSL output', async () => {

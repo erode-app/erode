@@ -22,6 +22,51 @@ describe('LikeC4Adapter Integration', () => {
 
   runAdapterContractTests(() => adapter);
 
+  it('should read element descriptions from the computed model', () => {
+    expect(adapter.findComponentById('frontend')?.description).toBe(
+      'Customer-facing web application'
+    );
+    expect(adapter.findComponentById('database')?.description).toBe('Primary data store');
+    expect(adapter.getAllComponents().every((c) => typeof c.description === 'string')).toBe(true);
+  });
+
+  it('should read element technology from the computed model', () => {
+    expect(adapter.findComponentById('api_gateway')?.technology).toBe('Node.js');
+  });
+
+  describe('Relationship details', () => {
+    it('should include technology, description and tags on relationships', () => {
+      const rel = adapter
+        .getComponentRelationships('api_gateway')
+        .find((r) => r.target.id === 'product_service');
+      expect(rel).toMatchObject({
+        title: 'fetches catalog',
+        technology: 'REST/JSON',
+        description: 'Reads product listings for the storefront',
+        tags: ['backend'],
+      });
+    });
+
+    it('should expose relationship details in getAllRelationships', () => {
+      const rel = adapter
+        .getAllRelationships()
+        .find((r) => r.source === 'api_gateway' && r.target === 'product_service');
+      expect(rel?.technology).toBe('REST/JSON');
+      expect(rel?.description).toBe('Reads product listings for the storefront');
+      expect(rel?.tags).toEqual(['backend']);
+    });
+
+    it('should omit details on relationships that declare none', () => {
+      const rel = adapter
+        .getComponentRelationships('user_service')
+        .find((r) => r.target.id === 'database');
+      expect(rel).toBeDefined();
+      expect(rel?.technology).toBeUndefined();
+      expect(rel?.description).toBeUndefined();
+      expect(rel?.tags).toBeUndefined();
+    });
+  });
+
   describe('Bidirectional relationships', () => {
     it('should keep a <-> b as one relationship flagged bidirectional', () => {
       const rels = adapter

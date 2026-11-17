@@ -14,6 +14,7 @@ Changes: +{{changeRequest.stats.additions}} -{{changeRequest.stats.deletions}} (
 
 Name: {{component.name}} ({{component.id}})
 Type: {{component.type}}
+Description: {{component.description}}
 Repository: {{component.repository}}
 Tags: {{component.tags}}
 
@@ -23,6 +24,7 @@ Tags: {{component.tags}}
 
 ## MODEL - ALLOWED DEPENDENCIES
 
+Indented lines show each declared relationship's title, technology, tags and description where the model provides them; use them to judge whether a change matches the declared protocol or purpose.
 According to the architecture model, this component is allowed to depend on:
 {{allowedDeps}}
 

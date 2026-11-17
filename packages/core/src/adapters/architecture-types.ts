@@ -18,6 +18,9 @@ export interface ModelRelationship {
   target: string;
   title?: string;
   kind?: string;
+  technology?: string;
+  description?: string;
+  tags?: string[];
   /** Also permits target -> source (LikeC4 `a <-> b`). */
   bidirectional?: boolean;
 }
@@ -33,6 +36,9 @@ export interface ComponentRelationship {
   target: ArchitecturalComponent;
   kind?: string;
   title?: string;
+  technology?: string;
+  description?: string;
+  tags?: string[];
 }
 
 /** Lightweight component reference used in prompt data and pipeline context. */
