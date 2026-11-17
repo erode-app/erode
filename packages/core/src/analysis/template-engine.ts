@@ -62,10 +62,19 @@ function formatValue(value: unknown): string {
   }
 }
 
-function replaceVariables(template: string, variables: object): string {
+function replaceVariables(templateName: string, template: string, variables: object): string {
   return template.replace(/\{\{([^}]+)\}\}/g, (_match: string, path: string) => {
     const value = resolveVariable(variables, path);
-    return value === undefined ? '' : formatValue(value);
+    if (value === undefined) {
+      const key = path.trim();
+      throw new ErodeError(
+        `Template "${templateName}" references missing variable "${key}"`,
+        ErrorCode.INTERNAL_UNKNOWN,
+        `Could not build the "${templateName}" prompt: no value for "${key}". This looks like a programming bug.`,
+        { templateName, key }
+      );
+    }
+    return formatValue(value);
   });
 }
 
@@ -75,19 +84,19 @@ function replaceVariables(template: string, variables: object): string {
 export const TemplateEngine = {
   loadDependencyExtractionPrompt(variables: DependencyExtractionPromptVars): string {
     const template = loadTemplate('dependency-extraction');
-    return replaceVariables(template, variables);
+    return replaceVariables('dependency-extraction', template, variables);
   },
   loadDriftAnalysisPrompt(variables: DriftAnalysisPromptVars): string {
     const template = loadTemplate('drift-analysis');
-    return replaceVariables(template, variables);
+    return replaceVariables('drift-analysis', template, variables);
   },
   loadComponentSelectionPrompt(variables: ComponentSelectionPromptVars): string {
     const template = loadTemplate('component-selection');
-    return replaceVariables(template, variables);
+    return replaceVariables('component-selection', template, variables);
   },
   loadModelPatchPrompt(variables: ModelPatchPromptVars): string {
     const template = loadTemplate('model-patch');
-    return replaceVariables(template, variables);
+    return replaceVariables('model-patch', template, variables);
   },
   loadSyntaxGuide(adapterDir: string, name: string): string {
     const guidePath = join(__dirname, '..', 'adapters', adapterDir, 'prompts', `${name}.md`);
