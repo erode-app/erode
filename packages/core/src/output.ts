@@ -247,6 +247,8 @@ export function analysisHasFindings(result: DriftAnalysisResult): boolean {
   return false;
 }
 
+const MAX_PR_BODY_WARNINGS = 20;
+
 /** Format a PR body for a deterministic model-patch PR. */
 export function formatPatchPrBody(options: {
   prNumber: number;
@@ -318,8 +320,13 @@ export function formatPatchPrBody(options: {
       '> The patched model is valid. These warnings are informational and did not block it.'
     );
     lines.push('');
-    for (const w of options.validationWarnings) {
+    // Warnings cover the whole workspace; cap them so the body stays under platform size limits
+    for (const w of options.validationWarnings.slice(0, MAX_PR_BODY_WARNINGS)) {
       lines.push(`- ${w}`);
+    }
+    const hidden = options.validationWarnings.length - MAX_PR_BODY_WARNINGS;
+    if (hidden > 0) {
+      lines.push(`- ...and ${String(hidden)} more`);
     }
     lines.push('');
   }
