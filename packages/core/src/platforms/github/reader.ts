@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
 import { CONFIG } from '../../utils/config.js';
-import { ErodeError, ErrorCode } from '../../errors.js';
 import type {
   SourcePlatformReader,
   ChangeRequestRef,
@@ -14,6 +13,7 @@ import {
   ChangeRequestCommitSchema,
 } from '../../schemas/source-platform.schema.js';
 import { applyDiffTruncation, wrapPlatformError } from '../platform-utils.js';
+import { parseChangeRequestRef } from '../change-request-url.js';
 
 export class GitHubReader implements SourcePlatformReader {
   private octokit: Octokit;
@@ -22,46 +22,16 @@ export class GitHubReader implements SourcePlatformReader {
     const authToken = token ?? CONFIG.github.token;
     this.octokit = new Octokit({
       ...(authToken ? { auth: authToken } : {}),
+      baseUrl: CONFIG.github.baseUrl,
     });
   }
 
   parseChangeRequestUrl(url: string): ChangeRequestRef {
-    let owner: string;
-    let repo: string;
-    let prNumber: string;
-
-    try {
-      const parsed = new URL(url);
-      if (parsed.hostname !== 'github.com') {
-        throw new Error('Not a GitHub URL');
-      }
-      const segments = parsed.pathname.split('/').filter(Boolean);
-      if (segments.length < 4 || segments[2] !== 'pull' || !segments[3]) {
-        throw new Error('Invalid path structure');
-      }
-      [owner, repo, , prNumber] = segments as [string, string, string, string];
-    } catch {
-      throw new ErodeError(
-        'Cannot parse GitHub pull request URL. Expected format: https://github.com/{owner}/{repo}/pull/{number}',
-        ErrorCode.PLATFORM_INVALID_URL,
-        'Cannot parse GitHub pull request URL. Expected format: https://github.com/{owner}/{repo}/pull/{number}'
-      );
-    }
-
-    if (!owner || !repo || !prNumber || isNaN(Number(prNumber))) {
-      throw new ErodeError(
-        'GitHub PR URL is missing required segments: owner, repo, or PR number',
-        ErrorCode.PLATFORM_INVALID_URL,
-        'GitHub PR URL is missing required segments: owner, repo, or PR number'
-      );
-    }
-
-    return {
-      number: parseInt(prNumber, 10),
+    return parseChangeRequestRef(
       url,
-      repositoryUrl: `https://github.com/${owner}/${repo}`,
-      platformId: { owner, repo },
-    };
+      'github',
+      'Cannot parse GitHub pull request URL. Expected format: https://github.com/{owner}/{repo}/pull/{number}'
+    );
   }
 
   async fetchChangeRequest(ref: ChangeRequestRef): Promise<ChangeRequestData> {

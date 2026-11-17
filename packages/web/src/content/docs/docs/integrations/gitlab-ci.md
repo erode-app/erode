@@ -90,6 +90,6 @@ variables:
   ERODE_GITLAB_BASE_URL: https://gitlab.example.com
 ```
 
-Platform detection identifies `github.com` and `gitlab.com` from PR/MR URLs. Self-hosted GitLab instances require `ERODE_GITLAB_BASE_URL` and the full MR URL passed via `--url`.
+Erode treats the host in `ERODE_GITLAB_BASE_URL` as a GitLab host, alongside `gitlab.com`. MR URLs passed via `--url`, git remotes, and model repository links on that host are recognized.
 
 See [Configuration](/docs/reference/configuration/) for all environment variables and [Self-Hosted](/docs/integrations/self-hosted/) for other deployment options.

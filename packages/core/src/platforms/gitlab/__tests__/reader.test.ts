@@ -22,6 +22,8 @@ vi.mock('@gitbeaker/rest', () => ({
 vi.mock('../../../utils/config.js', () => ({
   CONFIG: {
     gitlab: { token: 'test-token', baseUrl: 'https://gitlab.com' },
+    github: { baseUrl: 'https://api.github.com' },
+    bitbucket: { baseUrl: 'https://api.bitbucket.org/2.0' },
     constraints: { maxFilesPerDiff: 50, maxLinesPerDiff: 5000 },
   },
 }));
@@ -112,6 +114,17 @@ describe('GitLabReader', () => {
       );
       expect(result.platformId).toEqual({ owner: 'a/b/c/d', repo: 'repo' });
       expect(result.repositoryUrl).toBe('https://gitlab.com/a/b/c/d/repo');
+    });
+
+    it.each([
+      'https://www.gitlab.com/org/repo/-/merge_requests/42',
+      'https://gitlab.com/org/repo/-/merge_requests/42/diffs',
+      'https://gitlab.com/org/repo/-/merge_requests/42/',
+      'https://gitlab.com/org/repo/-/merge_requests/42#note_1',
+    ])('should accept %s', (url) => {
+      const result = reader.parseChangeRequestUrl(url);
+      expect(result.number).toBe(42);
+      expect(result.repositoryUrl).toBe('https://gitlab.com/org/repo');
     });
 
     it('should parse URL with http scheme', () => {

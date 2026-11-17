@@ -36,7 +36,7 @@ export class GitHubWriter implements SourcePlatformWriter {
         `Provide ${ENV_VAR_NAMES.modelRepoPrToken} or ${ENV_VAR_NAMES.githubToken} in your environment or ${RC_FILENAME} to create PRs.`
       );
     }
-    this.octokit = new Octokit({ auth: token });
+    this.octokit = new Octokit({ auth: token, baseUrl: CONFIG.github.baseUrl });
     this.targetOwner = targetOwner;
     this.targetRepo = targetRepo;
   }

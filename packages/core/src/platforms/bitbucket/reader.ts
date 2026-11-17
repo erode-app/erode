@@ -5,7 +5,6 @@ import type {
   ChangeRequestData,
   ChangeRequestCommit,
 } from '../source-platform.js';
-import { ErodeError, ErrorCode } from '../../errors.js';
 import { validate } from '../../utils/validation.js';
 import {
   ChangeRequestDataSchema,
@@ -18,9 +17,7 @@ import {
 } from '../../schemas/bitbucket-api.schema.js';
 import { BitbucketApiClient } from './api-client.js';
 import { applyDiffTruncation, wrapPlatformError } from '../platform-utils.js';
-
-const BITBUCKET_PR_URL_PATTERN =
-  /^https?:\/\/bitbucket\.org\/([^/]+)\/([^/]+)\/pull-requests\/(\d+)$/i;
+import { parseChangeRequestRef } from '../change-request-url.js';
 
 /** Parse "Name <email>" format used by Bitbucket commit authors. */
 function parseAuthorRaw(raw: string): { name: string; email: string } {
@@ -39,28 +36,11 @@ export class BitbucketReader implements SourcePlatformReader {
   }
 
   parseChangeRequestUrl(url: string): ChangeRequestRef {
-    const match = BITBUCKET_PR_URL_PATTERN.exec(url);
-    if (!match) {
-      throw new ErodeError(
-        'Unrecognized Bitbucket pull request URL. Expected: https://bitbucket.org/{workspace}/{repo}/pull-requests/{number}',
-        ErrorCode.PLATFORM_INVALID_URL,
-        'Unrecognized Bitbucket pull request URL. Expected: https://bitbucket.org/{workspace}/{repo}/pull-requests/{number}'
-      );
-    }
-    const [, workspace, repoSlug, prNumber] = match;
-    if (!workspace || !repoSlug || !prNumber) {
-      throw new ErodeError(
-        'Incomplete Bitbucket PR URL: workspace, repo, or pull request number is missing',
-        ErrorCode.PLATFORM_INVALID_URL,
-        'Incomplete Bitbucket PR URL: workspace, repo, or pull request number is missing'
-      );
-    }
-    return {
-      number: parseInt(prNumber, 10),
+    return parseChangeRequestRef(
       url,
-      repositoryUrl: `https://bitbucket.org/${workspace}/${repoSlug}`,
-      platformId: { owner: workspace, repo: repoSlug },
-    };
+      'bitbucket',
+      'Unrecognized Bitbucket pull request URL. Expected: https://bitbucket.org/{workspace}/{repo}/pull-requests/{number}'
+    );
   }
 
   async fetchChangeRequest(ref: ChangeRequestRef): Promise<ChangeRequestData> {

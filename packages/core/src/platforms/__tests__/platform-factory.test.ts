@@ -64,6 +64,21 @@ describe('detectPlatform', () => {
   it('should throw for unsupported platforms', () => {
     expect(() => detectPlatform('https://sourcehut.org/org/repo/pull/1')).toThrow(ErodeError);
     expect(() => detectPlatform('https://sourcehut.org/org/repo/pull/1')).toThrow(
+      /Unrecognized repository host.*ERODE_GITLAB_BASE_URL/
+    );
+  });
+
+  it('should detect platforms from SSH remotes', () => {
+    expect(detectPlatform('git@github.com:org/repo.git')).toBe('github');
+    expect(detectPlatform('ssh://git@gitlab.com:2222/group/repo.git')).toBe('gitlab');
+  });
+
+  it('should detect a host without a repository path', () => {
+    expect(detectPlatform('https://bitbucket.org/')).toBe('bitbucket');
+  });
+
+  it('should throw for repository hosts without PR support', () => {
+    expect(() => detectPlatform('https://dev.azure.com/org/project/_git/repo')).toThrow(
       'Unsupported platform'
     );
   });

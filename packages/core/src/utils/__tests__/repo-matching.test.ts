@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isRepositoryHostUrl, normalizeRepositoryUrl } from '../url-utils.js';
+import { isRepositoryHostUrl, normalizeRepositoryUrl } from '../repo-locator.js';
 
 describe('isRepositoryHostUrl', () => {
   it('should accept GitHub URLs', () => {

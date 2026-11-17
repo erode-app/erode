@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { Gitlab } from '@gitbeaker/rest';
 import { CONFIG } from '../../utils/config.js';
-import { ErodeError, ErrorCode } from '../../errors.js';
 import type {
   SourcePlatformReader,
   ChangeRequestRef,
@@ -19,8 +18,7 @@ import {
   ChangeRequestCommitSchema,
 } from '../../schemas/source-platform.schema.js';
 import { applyDiffTruncation, wrapPlatformError } from '../platform-utils.js';
-
-const GITLAB_MR_URL_PATTERN = /^https?:\/\/gitlab\.com\/(.+)\/-\/merge_requests\/(\d+)$/i;
+import { parseChangeRequestRef } from '../change-request-url.js';
 
 export class GitLabReader implements SourcePlatformReader {
   private api: InstanceType<typeof Gitlab>;
@@ -34,33 +32,11 @@ export class GitLabReader implements SourcePlatformReader {
   }
 
   parseChangeRequestUrl(url: string): ChangeRequestRef {
-    const match = GITLAB_MR_URL_PATTERN.exec(url);
-    if (!match) {
-      throw new ErodeError(
-        'Unrecognized GitLab merge request URL. Expected: https://gitlab.com/{namespace}/{project}/-/merge_requests/{number}',
-        ErrorCode.PLATFORM_INVALID_URL,
-        'Unrecognized GitLab merge request URL. Expected: https://gitlab.com/{namespace}/{project}/-/merge_requests/{number}'
-      );
-    }
-    const [, fullProjectPath, mrNumber] = match;
-    if (!fullProjectPath || !mrNumber) {
-      throw new ErodeError(
-        'Incomplete GitLab MR URL: project path or merge request number is missing',
-        ErrorCode.PLATFORM_INVALID_URL,
-        'Incomplete GitLab MR URL: project path or merge request number is missing'
-      );
-    }
-
-    const lastSlashIndex = fullProjectPath.lastIndexOf('/');
-    const owner = fullProjectPath.substring(0, lastSlashIndex);
-    const repo = fullProjectPath.substring(lastSlashIndex + 1);
-
-    return {
-      number: parseInt(mrNumber, 10),
+    return parseChangeRequestRef(
       url,
-      repositoryUrl: `https://gitlab.com/${fullProjectPath}`,
-      platformId: { owner, repo },
-    };
+      'gitlab',
+      'Unrecognized GitLab merge request URL. Expected: https://gitlab.com/{namespace}/{project}/-/merge_requests/{number}'
+    );
   }
 
   async fetchChangeRequest(ref: ChangeRequestRef): Promise<ChangeRequestData> {

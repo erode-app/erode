@@ -112,6 +112,10 @@ export type { ModelPatcher, PatchResult, DslValidationResult } from './adapters/
 export { resolveModelSource } from './utils/model-source.js';
 export type { ResolvedModelSource } from './utils/model-source.js';
 
+// Repository identity
+export { parseRepoLocator, isRepositoryHostUrl } from './utils/repo-locator.js';
+export type { RepoLocator, RepoPlatform } from './utils/repo-locator.js';
+
 // Git diff (local check)
 export {
   generateGitDiff,

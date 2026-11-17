@@ -20,6 +20,8 @@ vi.mock('../api-client.js', () => ({
 vi.mock('../../../utils/config.js', () => ({
   CONFIG: {
     bitbucket: { token: 'test-token', baseUrl: 'https://api.bitbucket.org/2.0' },
+    github: { baseUrl: 'https://api.github.com' },
+    gitlab: { baseUrl: 'https://gitlab.com' },
     constraints: { maxFilesPerDiff: 50, maxLinesPerDiff: 5000 },
   },
 }));
@@ -95,6 +97,17 @@ describe('BitbucketReader', () => {
       );
       expect(result.number).toBe(1);
       expect(result.platformId).toEqual({ owner: 'myteam', repo: 'myrepo' });
+    });
+
+    it.each([
+      'https://www.bitbucket.org/workspace/repo/pull-requests/42',
+      'https://bitbucket.org/workspace/repo/pull-requests/42/overview',
+      'https://bitbucket.org/workspace/repo/pull-requests/42/',
+      'https://bitbucket.org/workspace/repo/pull-requests/42?tab=diff',
+    ])('should accept %s', (url) => {
+      const result = reader.parseChangeRequestUrl(url);
+      expect(result.number).toBe(42);
+      expect(result.repositoryUrl).toBe('https://bitbucket.org/workspace/repo');
     });
 
     it('should be case-insensitive', () => {

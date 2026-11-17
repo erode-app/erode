@@ -10,7 +10,7 @@ export function createConnectionsCommand(): Command {
     .description('Display component relationships from the architecture model')
     .argument('[model-path]', 'Directory containing architecture model files')
     .option('--model-format <format>', 'Format of the architecture model', 'likec4')
-    .requiredOption('--repo <url>', 'GitHub or GitLab repository URL')
+    .requiredOption('--repo <url>', 'Repository URL')
     .option('--output <format>', 'Result format (console, json)', 'console')
     .action(async (modelPath: string | undefined, options: unknown) => {
       try {

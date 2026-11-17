@@ -2,7 +2,7 @@ import type { ProgressReporter } from './progress.js';
 import { SilentProgress } from './progress.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
 import { validatePath } from '../utils/validation.js';
-import { isRepositoryHostUrl } from '../adapters/url-utils.js';
+import { isRepositoryHostUrl } from '../utils/repo-locator.js';
 
 export interface ValidateOptions {
   modelPath: string;

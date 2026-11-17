@@ -27,7 +27,9 @@ vi.mock('@octokit/rest', () => ({
 // Mock config
 vi.mock('../../../utils/config.js', () => ({
   CONFIG: {
-    github: { token: 'test-token' },
+    github: { token: 'test-token', baseUrl: 'https://api.github.com' },
+    gitlab: { baseUrl: 'https://gitlab.com' },
+    bitbucket: { baseUrl: 'https://api.bitbucket.org/2.0' },
     constraints: { maxFilesPerDiff: 50, maxLinesPerDiff: 5000 },
   },
 }));
@@ -126,6 +128,17 @@ describe('GitHubReader', () => {
 
     it('should throw ErodeError for empty string', () => {
       expect(() => reader.parseChangeRequestUrl('')).toThrow(ErodeError);
+    });
+
+    it.each([
+      'https://www.github.com/org/repo/pull/42',
+      'https://github.com/org/repo/pull/42/files',
+      'https://github.com/org/repo/pull/42/',
+      'https://github.com/org/repo/pull/42?diff=split#discussion_r1',
+    ])('should accept %s', (url) => {
+      const result = reader.parseChangeRequestUrl(url);
+      expect(result.number).toBe(42);
+      expect(result.repositoryUrl).toBe('https://github.com/org/repo');
     });
 
     it('should populate repositoryUrl correctly', () => {

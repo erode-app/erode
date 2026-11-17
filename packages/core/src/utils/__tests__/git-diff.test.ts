@@ -109,6 +109,16 @@ describe('normalizeToHttps', () => {
       'https://github.com/owner/repo'
     );
   });
+
+  it.each([
+    ['ssh://git@gitlab.example.com:2222/g/p.git', 'https://gitlab.example.com/g/p'],
+    ['alice@github.com:owner/repo', 'https://github.com/owner/repo'],
+    ['git@github.com-work:owner/repo.git', 'https://github.com/owner/repo'],
+    ['git+ssh://git@github.com/owner/repo.git', 'https://github.com/owner/repo'],
+    ['git@ssh.dev.azure.com:v3/org/proj/repo', 'https://dev.azure.com/org/proj/_git/repo'],
+  ])('normalises %s', (input, expected) => {
+    expect(normalizeToHttps(input)).toBe(expected);
+  });
 });
 
 describe('generateGitDiff', () => {
@@ -126,15 +136,17 @@ describe('generateGitDiff', () => {
     expect(result.stats).toEqual({ additions: 0, deletions: 0, filesChanged: 0 });
   });
 
-  it('parses name-status output for all statuses', () => {
+  it('parses NUL-separated name-status output for all statuses', () => {
     mockExecFileSync.mockImplementation((_bin: string, args: string[]) => {
       if (args.includes('--name-status')) {
-        return 'A\tsrc/new.ts\nM\tsrc/modified.ts\nD\tsrc/deleted.ts\nR100\tsrc/old-name.ts\tsrc/renamed.ts\nC100\tsrc/source.ts\tsrc/copied.ts\n';
+        return [
+          ...['A', 'src/new.ts', 'M', 'src/modified.ts', 'D', 'src/deleted.ts'],
+          ...['R100', 'src/old-name.ts', 'src/renamed.ts'],
+          ...['C100', 'src/source.ts', 'src/copied.ts'],
+          ...['T', 'src/link.ts', 'U', 'src/conflict.ts', ''],
+        ].join('\0');
       }
-      if (args.includes('--shortstat')) {
-        return ' 5 files changed, 20 insertions(+), 3 deletions(-)';
-      }
-      return 'diff content';
+      return '';
     });
 
     const result = generateGitDiff();
@@ -145,13 +157,15 @@ describe('generateGitDiff', () => {
       { filename: 'src/deleted.ts', status: 'removed' },
       { filename: 'src/renamed.ts', status: 'renamed' },
       { filename: 'src/copied.ts', status: 'copied' },
+      { filename: 'src/link.ts', status: 'changed' },
+      { filename: 'src/conflict.ts', status: 'unmerged' },
     ]);
   });
 
-  it('parses shortstat output', () => {
+  it('sums numstat output, counting binary files without lines', () => {
     mockExecFileSync.mockImplementation((_bin: string, args: string[]) => {
-      if (args.includes('--shortstat')) {
-        return ' 3 files changed, 12 insertions(+), 5 deletions(-)';
+      if (args.includes('--numstat')) {
+        return ['10\t5\ta.ts', '-\t-\timage.png', '2\t0\t', 'old.ts', 'new.ts', ''].join('\0');
       }
       return '';
     });
@@ -161,41 +175,48 @@ describe('generateGitDiff', () => {
     expect(result.stats).toEqual({ additions: 12, deletions: 5, filesChanged: 3 });
   });
 
-  it('handles shortstat with only insertions', () => {
-    mockExecFileSync.mockImplementation((_bin: string, args: string[]) => {
-      if (args.includes('--shortstat')) {
-        return ' 1 file changed, 7 insertions(+)';
-      }
-      return '';
-    });
+  it('runs git with stable options and the C locale', () => {
+    mockExecFileSync.mockReturnValue('');
 
-    const result = generateGitDiff();
+    generateGitDiff();
 
-    expect(result.stats).toEqual({ additions: 7, deletions: 0, filesChanged: 1 });
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      [
+        ...['-c', 'core.quotePath=false', '-c', 'diff.relative=false', 'diff'],
+        ...[
+          '--no-color',
+          '--no-ext-diff',
+          '--src-prefix=a/',
+          '--dst-prefix=b/',
+          '--submodule=short',
+        ],
+      ],
+      expect.objectContaining({
+        encoding: 'utf-8',
+        env: expect.objectContaining({ LC_ALL: 'C' }) as unknown,
+      })
+    );
   });
 
-  it('passes --staged flag to git diff', () => {
+  it('passes --staged flag to every git diff call', () => {
     mockExecFileSync.mockReturnValue('');
 
     generateGitDiff({ staged: true });
 
-    expect(mockExecFileSync).toHaveBeenCalledWith(
-      'git',
-      ['diff', '--staged'],
-      expect.objectContaining({ encoding: 'utf-8' })
-    );
+    const calls = mockExecFileSync.mock.calls as [string, string[]][];
+    expect(calls).toHaveLength(3);
+    expect(calls.every(([, args]) => args.includes('--staged'))).toBe(true);
   });
 
-  it('passes branch arg as three-dot diff', () => {
+  it('passes branch arg as three-dot diff to every git diff call', () => {
     mockExecFileSync.mockReturnValue('');
 
     generateGitDiff({ branch: 'main' });
 
-    expect(mockExecFileSync).toHaveBeenCalledWith(
-      'git',
-      ['diff', 'main...HEAD'],
-      expect.objectContaining({ encoding: 'utf-8' })
-    );
+    const calls = mockExecFileSync.mock.calls as [string, string[]][];
+    expect(calls).toHaveLength(3);
+    expect(calls.every(([, args]) => args.includes('main...HEAD'))).toBe(true);
   });
 
   it('throws when both branch and staged are set', () => {
@@ -270,7 +291,7 @@ describe('getRemoteUrl', () => {
     expect(getRemoteUrl()).toBe('https://github.com/org/repo.git');
     expect(mockExecFileSync).toHaveBeenCalledWith(
       'git',
-      ['remote', 'get-url', 'origin'],
+      ['-c', 'core.quotePath=false', 'remote', 'get-url', 'origin'],
       expect.objectContaining({ encoding: 'utf-8' })
     );
   });
@@ -281,7 +302,7 @@ describe('getRemoteUrl', () => {
     expect(getRemoteUrl('upstream')).toBe('https://github.com/org/repo.git');
     expect(mockExecFileSync).toHaveBeenCalledWith(
       'git',
-      ['remote', 'get-url', 'upstream'],
+      ['-c', 'core.quotePath=false', 'remote', 'get-url', 'upstream'],
       expect.objectContaining({ encoding: 'utf-8' })
     );
   });
@@ -293,7 +314,7 @@ describe('getRemoteUrl', () => {
 
     expect(mockExecFileSync).toHaveBeenCalledWith(
       'git',
-      ['remote', 'get-url', 'origin'],
+      ['-c', 'core.quotePath=false', 'remote', 'get-url', 'origin'],
       expect.objectContaining({ cwd: '/custom/path' })
     );
   });
