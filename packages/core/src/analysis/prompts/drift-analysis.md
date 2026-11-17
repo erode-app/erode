@@ -24,8 +24,8 @@ Tags: {{component.tags}}
 
 ## MODEL - ALLOWED DEPENDENCIES
 
-According to the architecture model, this component is allowed to depend on.
-Indented lines show each declared relationship's title, technology, tags and description where the model provides them; use them to judge whether a change matches the declared protocol or purpose:
+Indented lines show each declared relationship's title, technology, tags and description where the model provides them; use them to judge whether a change matches the declared protocol or purpose.
+According to the architecture model, this component is allowed to depend on:
 {{allowedDeps}}
 
 ## MODEL - COMPONENTS DEPENDING ON THIS

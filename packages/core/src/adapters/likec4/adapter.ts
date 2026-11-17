@@ -364,7 +364,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
       if (rel.title) entry.title = rel.title;
       if (rel.technology) entry.technology = rel.technology;
       if (rel.description) entry.description = rel.description;
-      if (rel.tags) entry.tags = rel.tags;
+      if (rel.tags) entry.tags = [...rel.tags];
       return [entry];
     });
   }
