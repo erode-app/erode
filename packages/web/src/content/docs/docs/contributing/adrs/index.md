@@ -20,6 +20,7 @@ This project tracks significant architectural decisions as ADRs. Each record cap
 | [009](/docs/contributing/adrs/009-docker-and-github-action-deployment/)       | Docker and GitHub Action deployment       | 2026-02-24 | Accepted |
 | [010](/docs/contributing/adrs/010-local-diff-check-command/)                  | Local diff check command                  | 2026-03-07 | Accepted |
 | [011](/docs/contributing/adrs/011-intent-based-provider-generation-profiles/) | Intent-based provider generation profiles | 2026-05-05 | Accepted |
+| [012](/docs/contributing/adrs/012-likec4-model-edits-via-diff-blocks/)        | LikeC4 model edits via diff blocks        | 2026-11-17 | Proposed |
 
 ## Adding a new ADR
 

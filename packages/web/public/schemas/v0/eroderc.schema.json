@@ -84,6 +84,14 @@
             "formatAfterPatch": {
               "default": true,
               "type": "boolean"
+            },
+            "patchStrategy": {
+              "default": "text",
+              "type": "string",
+              "enum": [
+                "text",
+                "model-edits"
+              ]
             }
           },
           "additionalProperties": false

@@ -19,7 +19,11 @@ interface AcceptedPatch {
   validationWarnings?: string[];
 }
 
-function acceptedValidation(dslResult: DslValidationResult): Omit<AcceptedPatch, 'content'> {
+export interface PatchedFile extends AcceptedPatch {
+  targetFile: string;
+}
+
+export function acceptedValidation(dslResult: DslValidationResult): Omit<AcceptedPatch, 'content'> {
   return {
     validationSkipped: !!dslResult.skipped,
     validationWarnings: dslResult.warnings?.length ? dslResult.warnings : undefined,
@@ -48,6 +52,16 @@ export abstract class BasePatcher implements ModelPatcher {
     content: string,
     baseline?: readonly ValidationDiagnostic[]
   ): Promise<DslValidationResult>;
+
+  /** Returns null to use LLM/deterministic text patching. */
+  protected tryNativePatching(
+    _modelPath: string,
+    _components: NewComponent[],
+    _relationshipLines: string[],
+    _baseline?: readonly ValidationDiagnostic[]
+  ): Promise<PatchedFile | null> {
+    return Promise.resolve(null);
+  }
 
   protected postFormat(content: string, _modelPath: string, _targetFile: string): Promise<string> {
     return Promise.resolve(content);
@@ -113,41 +127,31 @@ export abstract class BasePatcher implements ModelPatcher {
     const insertedLines = [...componentDslLines, ...relationshipDslLines];
     this.debugLog('Generated DSL lines', insertedLines);
 
-    // 4. Find target file
-    const targetFile = this.findTargetFile(modelPath);
-    if (!targetFile) {
-      this.debugLog(`No suitable .${this.formatId} target file found in`, modelPath);
-      return null;
-    }
-    this.debugLog('Target file', targetFile);
-
-    const originalContent = readFileSync(targetFile, 'utf-8');
-
-    // 5. Try LLM-based patching, 6. else deterministic fallback; both validate the DSL
-    const llmResult = await this.tryLlmPatching(
-      provider,
-      originalContent,
-      insertedLines,
+    // 4. Format-native patching (opt-in); the format picks the target file itself
+    const native = await this.tryNativePatching(
       modelPath,
-      targetFile,
+      genuinelyNew,
+      relationshipDslLines,
       options.validationBaseline
-    ).catch(() => null);
-    const accepted = llmResult?.content
-      ? llmResult
-      : await this.tryDeterministicFallback(
-          originalContent,
-          insertedLines,
-          modelPath,
-          targetFile,
-          options.validationBaseline
-        );
+    ).catch((error: unknown) => {
+      this.debugLog(
+        'Native patching failed; falling back to text patching',
+        error instanceof Error ? error.message : String(error)
+      );
+      return null;
+    });
 
-    if (!accepted?.content) {
+    // 5. Text patching: LLM with DSL validation, then deterministic fallback
+    const patched =
+      native ??
+      (await this.tryTextPatching(provider, insertedLines, modelPath, options.validationBaseline));
+    if (!patched) {
       return null;
     }
-    let finalContent = accepted.content;
+    const { targetFile, validationSkipped, validationWarnings } = patched;
+    let finalContent = patched.content;
 
-    // 7. Optional post-processing (e.g., formatting)
+    // 6. Optional post-processing (e.g., formatting)
     const preFormatContent = finalContent;
     let formatted = false;
     try {
@@ -161,7 +165,7 @@ export abstract class BasePatcher implements ModelPatcher {
       );
     }
 
-    // 8. Compute repo-relative path
+    // 7. Compute repo-relative path
     const repoRelativePath = this.getRepoRelativePath(targetFile);
 
     return {
@@ -180,9 +184,9 @@ export abstract class BasePatcher implements ModelPatcher {
               insertedLines: componentDslLines[i] ? [componentDslLines[i]] : [],
             }))
           : undefined,
-      validationSkipped: accepted.validationSkipped || undefined,
+      validationSkipped: validationSkipped || undefined,
       formatted: formatted || undefined,
-      validationWarnings: accepted.validationWarnings,
+      validationWarnings,
     };
   }
 
@@ -235,6 +239,40 @@ export abstract class BasePatcher implements ModelPatcher {
       }
       return !isDuplicate;
     });
+  }
+
+  private async tryTextPatching(
+    provider: AIProvider,
+    insertedLines: string[],
+    modelPath: string,
+    baseline?: readonly ValidationDiagnostic[]
+  ): Promise<PatchedFile | null> {
+    const targetFile = this.findTargetFile(modelPath);
+    if (!targetFile) {
+      this.debugLog(`No suitable .${this.formatId} target file found in`, modelPath);
+      return null;
+    }
+    this.debugLog('Target file', targetFile);
+
+    const originalContent = readFileSync(targetFile, 'utf-8');
+    const llmResult = await this.tryLlmPatching(
+      provider,
+      originalContent,
+      insertedLines,
+      modelPath,
+      targetFile,
+      baseline
+    ).catch(() => null);
+    const result = llmResult?.content
+      ? llmResult
+      : await this.tryDeterministicFallback(
+          originalContent,
+          insertedLines,
+          modelPath,
+          targetFile,
+          baseline
+        );
+    return result?.content ? { targetFile, ...result } : null;
   }
 
   protected async tryLlmPatching(
