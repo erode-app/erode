@@ -12,6 +12,12 @@ describe('stripUrlUserinfo', () => {
     expect(stripUrlUserinfo('http://ghp_abc@github.com/o/r')).toBe('http://github.com/o/r');
   });
 
+  it('removes passwords that contain @', () => {
+    expect(stripUrlUserinfo('https://u:pa@SECRET@github.com/o/r.git')).toBe(
+      'https://github.com/o/r.git'
+    );
+  });
+
   it.each(['owner/repo', 'git@github.com:o/r.git', 'https://github.com/o/r'])(
     'leaves %s unchanged',
     (input) => {
@@ -36,6 +42,12 @@ describe('redactUrlCredentials', () => {
   it('does not cross an unrelated @ in later text', () => {
     const msg = 'clone https://github.com/o/r failed, contact admin@example.com';
     expect(redactUrlCredentials(msg)).toBe(msg);
+  });
+
+  it('redacts passwords that contain @', () => {
+    expect(redactUrlCredentials('fatal: https://u:pa@SECRET@github.com/o/r.git')).toBe(
+      'fatal: https://github.com/o/r.git'
+    );
   });
 
   it('does not cross whitespace', () => {

@@ -15,7 +15,7 @@ export function stripUrlUserinfo(input: string): string {
   return url.toString();
 }
 
-/** Redact `user:token@` from `scheme://` URLs embedded in free text such as git error output. */
+/** Redact `user:token@` (through the last `@` of the authority, so passwords containing `@` go too) from `scheme://` URLs embedded in free text such as git error output. */
 export function redactUrlCredentials(message: string): string {
-  return message.replace(/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/@]+@/gi, '$1');
+  return message.replace(/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/?#]*@/gi, '$1');
 }

@@ -17,16 +17,30 @@ import {
   formatCommits,
 } from './section-formatters.js';
 
-/**
- * Matches the `<` that opens any tag-like sequence for the untrusted block names, tolerating
- * case, whitespace and `_`/`-` variants. Only the `<` is replaced, so the lookahead stays
- * bounded and runs in linear time on hostile input.
- */
-const UNTRUSTED_TAG_OPEN = /<(?=\/?\s{0,20}untrusted[_-](?:pr[_-]content|diff))/gi;
+const UNTRUSTED_NAME = /^untrusted[_-](?:pr[_-]content|diff)/i;
 
-/** Prevents author-controlled text from closing an untrusted block early. */
+/**
+ * Prevents author-controlled text from closing an untrusted block early. Escapes the `<` of any
+ * tag-like sequence for the untrusted block names, tolerating case, `_`/`-` variants and any
+ * amount of whitespace or `/` before the name. A single forward scan that jumps past each
+ * skipped run keeps it linear, with no regex backtracking.
+ */
 function escapeUntrusted(text: string): string {
-  return text.replace(UNTRUSTED_TAG_OPEN, '&lt;');
+  let out = '';
+  let last = 0;
+  let i = text.indexOf('<');
+  while (i !== -1) {
+    let j = i + 1;
+    while (j < text.length && (text[j] === '/' || /\s/.test(text[j] as string))) j++;
+    let next = j;
+    if (UNTRUSTED_NAME.test(text.slice(j, j + 32))) {
+      out += text.slice(last, i) + '&lt;';
+      last = i + 1;
+      next = i + 1;
+    }
+    i = text.indexOf('<', next);
+  }
+  return last === 0 ? text : out + text.slice(last);
 }
 
 export const PromptBuilder = {
