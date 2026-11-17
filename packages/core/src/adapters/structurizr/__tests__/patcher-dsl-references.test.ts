@@ -87,13 +87,16 @@ describe('StructurizrPatcher - DSL references', () => {
     expect(result?.skipped[0]?.reason).toContain('No DSL identifier for orders.payment_adapter');
   });
 
-  it('returns no patch when every relationship lacks a DSL identifier', async () => {
+  it('returns no patch when every relationship lacks a DSL identifier, keeping the reasons', async () => {
+    const skipped: NonNullable<ModelPatchOptions['skipped']> = [];
     const result = await new StructurizrPatcher().patch({
       ...options,
+      skipped,
       relationships: [{ source: 'orders.payment_adapter', target: 'shop', description: 'x' }],
     });
 
     expect(result).toBeNull();
+    expect(skipped[0]?.reason).toContain('No DSL identifier for orders.payment_adapter');
   });
 
   it('writes the reference, not the erode.id, when they differ', async () => {

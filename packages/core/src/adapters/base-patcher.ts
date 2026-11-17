@@ -97,7 +97,7 @@ export abstract class BasePatcher implements ModelPatcher {
 
   async patch(options: ModelPatchOptions): Promise<PatchResult | null> {
     const { modelPath, relationships, existingRelationships, componentIndex, provider } = options;
-    const skipped: PatchResult['skipped'] = [];
+    const skipped: PatchResult['skipped'] = options.skipped ?? [];
 
     this.debugLog('Input relationships', relationships);
 

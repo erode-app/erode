@@ -63,6 +63,8 @@ export interface ModelPatchOptions {
   elementSourceFiles?: ReadonlyMap<string, string>;
   /** Element ID to its DSL reference; when set, relationships to elements without one are skipped */
   dslReferences?: ReadonlyMap<string, string>;
+  /** When given, skip reasons are also recorded here, so callers see them when no patch remains */
+  skipped?: PatchResult['skipped'];
 }
 
 export interface ModelPatcher {
