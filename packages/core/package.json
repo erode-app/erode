@@ -63,11 +63,13 @@
     "likec4": "^1.61.0",
     "minimatch": "^11.0.6",
     "openai": "^7.38.0",
+    "semver": "^7.8.5",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@erode-app/eslint-config": "*",
     "@types/node": "^26.6.6",
+    "@types/semver": "^7.8.0",
     "@vitest/coverage-v8": "^5.1.0",
     "concurrently": "^10.0.7",
     "eslint": "^10.14.0",
