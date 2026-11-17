@@ -1,18 +1,24 @@
 import { z } from 'zod';
 
-const LikeC4RichTextSourceSchema = z.union([
-  z.object({ txt: z.string() }),
-  z.object({ md: z.string() }),
-]);
-
-type LikeC4RichTextInput =
-  string | { $source?: { txt: string } | { md: string } | null } | null | undefined;
+// computedModel() exposes descriptions as RichText objects ({ $source: {txt}|{md}|null }).
+const LikeC4RichTextInputSchema = z
+  .union([
+    z.string(),
+    z
+      .object({
+        $source: z.union([z.object({ txt: z.string() }), z.object({ md: z.string() })]).nullish(),
+      })
+      .loose(),
+  ])
+  .nullish();
 
 /**
- * Returns the plain text of a LikeC4 rich text value (`txt`, else `md`), or
+ * Returns the trimmed text of a LikeC4 rich text value (`txt`, else `md`), or
  * undefined when empty. Accepts a plain string for older model shapes.
  */
-export function normalizeLikeC4Text(value: LikeC4RichTextInput): string | undefined {
+export function normalizeLikeC4Text(
+  value: z.infer<typeof LikeC4RichTextInputSchema>
+): string | undefined {
   if (value == null) return undefined;
   const text =
     typeof value === 'string'
@@ -24,13 +30,9 @@ export function normalizeLikeC4Text(value: LikeC4RichTextInput): string | undefi
   return trimmed === '' ? undefined : trimmed;
 }
 
-// computedModel() exposes descriptions as RichText objects, not strings.
 // Unknown shapes fall back to undefined so a LikeC4 change cannot block model loading.
-const LikeC4RichTextSchema = z
-  .union([z.string(), z.object({ $source: LikeC4RichTextSourceSchema.nullish() }).loose()])
-  .nullish()
-  .transform(normalizeLikeC4Text)
-  .catch(undefined);
+const LikeC4RichTextSchema =
+  LikeC4RichTextInputSchema.transform(normalizeLikeC4Text).catch(undefined);
 
 export const LikeC4ElementSchema = z
   .object({
