@@ -152,6 +152,27 @@ describe('StructurizrPatcher', () => {
     expect(result.insertedLines[0]).toBe('        user -> system "Accesses"');
   });
 
+  it('should keep quoted text as single quotes and collapse newlines', async () => {
+    mockReaddirSync.mockReturnValue(['workspace.dsl'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_DSL);
+
+    const rels: StructuredRelationship[] = [
+      { source: 'user', target: 'system', kind: 'HT"TPS', description: 'Calls "v2" API\nnow' },
+    ];
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: rels,
+      existingRelationships: [],
+      componentIndex: makeIndex(['user', 'system']),
+      provider: makeProvider(),
+    });
+
+    expect(result?.insertedLines[0]).toBe(
+      '        user -> system "Calls \'v2\' API now" "HT\'TPS"'
+    );
+  });
+
   it('should use deterministic fallback and insert before model closing brace', async () => {
     mockReaddirSync.mockReturnValue(['workspace.dsl'] as unknown as ReturnType<typeof readdirSync>);
     mockReadFileSync.mockReturnValue(SAMPLE_DSL);
