@@ -31,7 +31,7 @@ export function normalizeLikeC4Text(
 }
 
 // Unknown shapes fall back to undefined so a LikeC4 change cannot block model loading.
-const LikeC4RichTextSchema =
+export const LikeC4RichTextSchema =
   LikeC4RichTextInputSchema.transform(normalizeLikeC4Text).catch(undefined);
 
 export const LikeC4ElementSchema = z
@@ -56,6 +56,9 @@ export const LikeC4RelationshipSchema = z
     target: z.union([z.string(), z.object({ id: z.string() })]),
     title: z.string().nullish(),
     kind: z.string().nullish(),
+    technology: z.string().nullish(),
+    description: z.unknown().optional(),
+    tags: z.array(z.string()).nullish(),
   })
   .loose();
 
