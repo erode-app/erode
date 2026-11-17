@@ -45,6 +45,7 @@ The adapter pattern decouples the pipeline from model format details. Adding a n
 - **2026-11-17:** Added optional `getValidationBaseline?()` to the adapter interface and a matching optional `validationBaseline` field on `ModelPatchOptions`. The LikeC4 adapter captures the model's validation warnings at load time, and patch validation reports only warnings the patch introduces.
 - **2026-11-17:** `ModelRelationship` and `ComponentRelationship` gain optional `technology`, `description` and `tags`. The LikeC4 adapter fills them and the drift prompt renders them; the Structurizr adapter leaves them unset because it already maps description to `title` and technology to `kind`.
 - **2026-11-17:** `ModelRelationship` gains an optional `bidirectional` flag. Adapters set it when one declared relationship permits both directions (LikeC4 `a <-> b`). The LikeC4 adapter indexes both directions for dependency checks; formats without the concept leave it unset.
+- **2026-11-17:** `ArchitectureModelAdapter` gains an optional `getElementSourceFiles()` (element ID to declaring file), and `ModelPatchOptions` an optional `elementSourceFiles`. The patcher uses them to pick the file to patch and falls back to its own file scan when they are absent. Only the LikeC4 adapter implements it.
 
 ## Related commits
 

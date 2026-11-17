@@ -33,6 +33,12 @@ import { validateLikeC4Dsl } from '../dsl-validator.js';
 
 const mockReadFileSync = vi.mocked(readFileSync);
 const mockReaddirSync = vi.mocked(readdirSync);
+
+function dirents(names: string[]): ReturnType<typeof readdirSync> {
+  return names.map((name) => ({ name, isDirectory: () => false })) as unknown as ReturnType<
+    typeof readdirSync
+  >;
+}
 const mockValidateLikeC4Dsl = vi.mocked(validateLikeC4Dsl);
 
 function makeComponent(id: string): ArchitecturalComponent {
@@ -85,7 +91,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should skip relationships with unknown source component', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const rels: StructuredRelationship[] = [
@@ -144,7 +150,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should generate correct DSL line without kind', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const rels: StructuredRelationship[] = [
@@ -167,7 +173,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should generate correct DSL line with valid kind', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const rels: StructuredRelationship[] = [
@@ -189,7 +195,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should strip unknown kind and generate line without kind', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const rels: StructuredRelationship[] = [
@@ -211,7 +217,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should use deterministic fallback when provider has no patchModel', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const rels: StructuredRelationship[] = [
@@ -235,7 +241,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should use deterministic fallback when LLM output is invalid', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     // LLM returns invalid output (missing braces)
@@ -261,9 +267,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should prefer .c4 files with model blocks and existing relationships', async () => {
-    mockReaddirSync.mockReturnValue(['views.c4', 'model.c4'] as unknown as ReturnType<
-      typeof readdirSync
-    >);
+    mockReaddirSync.mockReturnValue(dirents(['views.c4', 'model.c4']));
     mockReadFileSync.mockImplementation((path: unknown) => {
       if (String(path).includes('views.c4')) return 'views { }';
       return SAMPLE_C4;
@@ -287,7 +291,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should return null when DSL validation fails for deterministic output', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
     mockValidateLikeC4Dsl.mockResolvedValue({
       valid: false,
@@ -310,7 +314,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should pass the validation baseline to DSL validation', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
     const baseline = [{ file: 'model.c4', message: 'Pre-existing warning' }];
 
@@ -332,7 +336,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should accept output when DSL validation is skipped (tooling unavailable)', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
     mockValidateLikeC4Dsl.mockResolvedValue({ valid: false, skipped: true });
 
@@ -354,7 +358,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should accept a valid patch and carry its validation warnings', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
     mockValidateLikeC4Dsl.mockResolvedValue({
       valid: true,
@@ -375,7 +379,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should omit validationWarnings when validation reports none', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const result = await patcher.patch({
@@ -391,7 +395,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should escape single quotes and backslashes in relationship descriptions', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const rels: StructuredRelationship[] = [
@@ -414,7 +418,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should escape single quotes in new component name, description and technology', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const result = await patcher.patch({
@@ -442,7 +446,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should generate valid LikeC4 DSL block for new component', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const newComps: NewComponent[] = [
@@ -476,7 +480,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should not skip relationship referencing a new component', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const rels: StructuredRelationship[] = [
@@ -503,7 +507,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should filter out component already in componentIndex', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const rels: StructuredRelationship[] = [
@@ -529,7 +533,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should attribute component DSL lines correctly when one ID is a substring of another', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const newComps: NewComponent[] = [
@@ -563,7 +567,7 @@ describe('LikeC4Patcher', () => {
   });
 
   it('should produce correct combined output with new component and relationship', async () => {
-    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReaddirSync.mockReturnValue(dirents(['model.c4']));
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const rels: StructuredRelationship[] = [

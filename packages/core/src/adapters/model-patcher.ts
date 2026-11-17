@@ -59,6 +59,8 @@ export interface ModelPatchOptions {
   newComponents?: NewComponent[];
   /** Warnings in the model before patching; matching validation warnings are not reported */
   validationBaseline?: readonly ValidationDiagnostic[];
+  /** Element ID to absolute path of its declaring file, used to pick the file to patch */
+  elementSourceFiles?: ReadonlyMap<string, string>;
 }
 
 export interface ModelPatcher {

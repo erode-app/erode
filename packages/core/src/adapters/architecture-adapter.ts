@@ -63,6 +63,9 @@ export interface ArchitectureModelAdapter {
   /** Check whether a dependency from one component to another is declared in the model. */
   isAllowedDependency(fromId: string, toId: string): boolean;
 
+  /** Optional: element ID to absolute path of the file declaring it, from the last load. */
+  getElementSourceFiles?(): ReadonlyMap<string, string>;
+
   /** Optional: check version compatibility for the model format. */
   checkVersion?(path: string): VersionCheckResult;
 

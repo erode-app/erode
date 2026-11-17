@@ -12,6 +12,7 @@ import type { ModelRelationship, ComponentIndex } from './architecture-types.js'
 import type { ValidationDiagnostic } from './architecture-adapter.js';
 import type { AIProvider } from '../providers/ai-provider.js';
 import { CONFIG } from '../utils/config.js';
+import { selectTargetFileByLocation, type TargetFileContext } from './target-file-selection.js';
 
 interface AcceptedPatch {
   content: string;
@@ -28,6 +29,31 @@ export function acceptedValidation(dslResult: DslValidationResult): Omit<Accepte
     validationSkipped: !!dslResult.skipped,
     validationWarnings: dslResult.warnings?.length ? dslResult.warnings : undefined,
   };
+}
+
+/**
+ * Index of the `}` closing the first `{` on the line, or -1 if the block continues.
+ * Braces inside quoted strings and after `//` do not count.
+ */
+function closingBraceOnSameLine(line: string): number {
+  let depth = 0;
+  let quote: string | null = null;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (quote) {
+      if (ch === '\\') i++;
+      else if (ch === quote) quote = null;
+    } else if (ch === "'" || ch === '"') {
+      quote = ch;
+    } else if (ch === '/' && line[i + 1] === '/') {
+      return -1;
+    } else if (ch === '{') {
+      depth++;
+    } else if (ch === '}' && depth > 0 && --depth === 0) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 export abstract class BasePatcher implements ModelPatcher {
@@ -144,7 +170,11 @@ export abstract class BasePatcher implements ModelPatcher {
     // 5. Text patching: LLM with DSL validation, then deterministic fallback
     const patched =
       native ??
-      (await this.tryTextPatching(provider, insertedLines, modelPath, options.validationBaseline));
+      (await this.tryTextPatching(provider, insertedLines, modelPath, options.validationBaseline, {
+        relationships: unique,
+        newComponents: genuinelyNew,
+        elementSourceFiles: options.elementSourceFiles,
+      }));
     if (!patched) {
       return null;
     }
@@ -245,9 +275,13 @@ export abstract class BasePatcher implements ModelPatcher {
     provider: AIProvider,
     insertedLines: string[],
     modelPath: string,
-    baseline?: readonly ValidationDiagnostic[]
+    baseline: readonly ValidationDiagnostic[] | undefined,
+    touched: TargetFileContext
   ): Promise<PatchedFile | null> {
-    const targetFile = this.findTargetFile(modelPath);
+    // Where the touched elements are declared, else the format heuristic
+    const located = selectTargetFileByLocation(modelPath, touched);
+    if (located) this.debugLog('Target file located from element declarations', located);
+    const targetFile = located ?? this.findTargetFile(modelPath);
     if (!targetFile) {
       this.debugLog(`No suitable .${this.formatId} target file found in`, modelPath);
       return null;
@@ -340,6 +374,13 @@ export abstract class BasePatcher implements ModelPatcher {
     for (let i = 0; i < contentLines.length; i++) {
       const line = contentLines[i] ?? '';
       if (this.isModelBlockLine(line)) {
+        const closeAt = closingBraceOnSameLine(line);
+        if (closeAt !== -1) {
+          // One-line block such as `model { a = service 'A' }`: split it so lines can go inside
+          contentLines.splice(i, 1, line.slice(0, closeAt).trimEnd(), line.slice(closeAt));
+          insertIndex = i + 1;
+          break;
+        }
         inModel = true;
         braceDepth = 1;
         continue;
