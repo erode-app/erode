@@ -178,19 +178,15 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     );
 
     const result = relationships
-      .map((rel) => {
-        const entry: ModelRelationship = {
-          source: typeof rel.source === 'string' ? rel.source : rel.source.id,
-          target: typeof rel.target === 'string' ? rel.target : rel.target.id,
-          title: rel.title ?? undefined,
-          kind: rel.kind ?? undefined,
-        };
-        if (rel.technology) entry.technology = rel.technology;
-        const description = richTextToString(rel.description);
-        if (description) entry.description = description;
-        if (rel.tags && rel.tags.length > 0) entry.tags = [...rel.tags];
-        return entry;
-      })
+      .map((rel): ModelRelationship => ({
+        source: typeof rel.source === 'string' ? rel.source : rel.source.id,
+        target: typeof rel.target === 'string' ? rel.target : rel.target.id,
+        title: rel.title ?? undefined,
+        kind: rel.kind ?? undefined,
+        technology: rel.technology ?? undefined,
+        description: richTextToString(rel.description),
+        tags: rel.tags?.length ? [...rel.tags] : undefined,
+      }))
       .filter(
         (rel) =>
           !this.isExcluded({
