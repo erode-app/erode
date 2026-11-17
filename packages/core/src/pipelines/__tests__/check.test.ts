@@ -190,6 +190,28 @@ describe('runCheck', () => {
     expect(result.analysisResult.violations).toHaveLength(1);
   });
 
+  it('reports files dropped by the line budget on the result', async () => {
+    const fileDiff = (name: string, adds: number): string =>
+      `diff --git a/${name} b/${name}\n--- a/${name}\n+++ b/${name}\n@@ -0,0 +1 @@\n` +
+      Array.from({ length: adds }, (_, i) => `+x${String(i)}`).join('\n');
+    const result = await runCheck({
+      ...baseOptions(),
+      skipFileFiltering: true,
+      diff: [fileDiff('a.ts', 3), fileDiff('huge.ts', 60000)].join('\n'),
+      files: [
+        { filename: 'a.ts', status: 'modified' },
+        { filename: 'huge.ts', status: 'modified' },
+      ],
+    });
+
+    expect(result.analysisResult.truncation?.reason).toContain('1 file was dropped');
+  });
+
+  it('reports no truncation when under budget', async () => {
+    const result = await runCheck(baseOptions());
+    expect(result.analysisResult.truncation).toBeUndefined();
+  });
+
   it('returns empty result when no components match', async () => {
     mockFindAllComponentsByRepository.mockReturnValue([]);
 

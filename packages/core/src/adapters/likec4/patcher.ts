@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, type Dirent } from 'fs';
 import { join, resolve } from 'path';
 import { BasePatcher, acceptedValidation, type PatchedFile } from '../base-patcher.js';
+import { knownRelationshipKinds, resolveRelationshipKind } from '../relationship-kind.js';
 import { validateLikeC4Dsl } from './dsl-validator.js';
 import { formatLikeC4Dsl } from './dsl-formatter.js';
 import { componentBlock, escapeLikeC4String, previewModelEdits } from './model-edits.js';
@@ -55,12 +56,13 @@ export class LikeC4Patcher extends BasePatcher {
     unique: StructuredRelationship[],
     existing: ModelRelationship[]
   ): string[] {
-    const validKinds = new Set(existing.map((r) => r.kind).filter((k): k is string => Boolean(k)));
+    const validKinds = knownRelationshipKinds(existing);
     this.debugLog('Valid relationship kinds in model', [...validKinds]);
     return unique.map((rel) => {
       const desc = escapeLikeC4String(rel.description);
-      if (rel.kind && validKinds.has(rel.kind)) {
-        return `  ${rel.source} -[${rel.kind}]-> ${rel.target} '${desc}'`;
+      const kind = resolveRelationshipKind(rel.kind, validKinds);
+      if (kind) {
+        return `  ${rel.source} -[${kind}]-> ${rel.target} '${desc}'`;
       }
       return `  ${rel.source} -> ${rel.target} '${desc}'`;
     });

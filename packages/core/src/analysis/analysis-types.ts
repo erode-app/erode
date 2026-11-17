@@ -104,6 +104,8 @@ export interface DriftAnalysisResult {
   component: ArchitecturalComponent;
   /** Aggregated dependency changes across all commits */
   dependencyChanges: DependencyExtractionResult;
+  /** Set when files or lines were dropped before analysis, so the result may be partial */
+  truncation?: { reason: string };
 }
 /**
  * Input data for change request analysis prompt

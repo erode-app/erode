@@ -256,12 +256,18 @@ export function applyLineBudget(
   return { files: kept, truncationReason: `${header} ${detail}` };
 }
 
-/** Count added and removed lines in one per-file diff segment (headers excluded). */
+/**
+ * Count added and removed lines in one per-file diff segment. Only the file header (before the
+ * first hunk) is excluded; inside a hunk every +/- line is content, including `----` (a removed
+ * Markdown rule) and `+++x`.
+ */
 function countChangedLines(segment: string): number {
   let n = 0;
+  let inHunk = false;
   for (const line of segment.split('\n')) {
-    if (line.startsWith('+') && !line.startsWith('+++')) n++;
-    else if (line.startsWith('-') && !line.startsWith('---')) n++;
+    if (line.startsWith('diff --git ')) inHunk = false;
+    else if (line.startsWith('@@')) inHunk = true;
+    else if (inHunk && (line.startsWith('+') || line.startsWith('-'))) n++;
   }
   return n;
 }

@@ -12,6 +12,7 @@ import type { ModelRelationship, ComponentIndex } from './architecture-types.js'
 import type { ValidationDiagnostic } from './architecture-adapter.js';
 import type { AIProvider } from '../providers/ai-provider.js';
 import { CONFIG } from '../utils/config.js';
+import { knownRelationshipKinds, resolveRelationshipKind } from './relationship-kind.js';
 import { selectTargetFileByLocation, type TargetFileContext } from './target-file-selection.js';
 
 interface AcceptedPatch {
@@ -256,9 +257,14 @@ export abstract class BasePatcher implements ModelPatcher {
   ): StructuredRelationship[] {
     // A proposal is a duplicate of a same-endpoint relationship unless both carry a kind and
     // the kinds differ. Structurizr opts out: its `kind` is free-text technology.
+    const knownKinds = knownRelationshipKinds(existingRelationships);
     const kindsDiffer = (a?: string, b?: string): boolean =>
       this.kindSensitiveDedup && a !== undefined && b !== undefined && a !== b;
-    return valid.filter((rel) => {
+    return valid.filter((proposed) => {
+      // A kind the writer would drop counts as no kind
+      const rel = this.kindSensitiveDedup
+        ? { ...proposed, kind: resolveRelationshipKind(proposed.kind, knownKinds) }
+        : proposed;
       const isDuplicate = existingRelationships.some(
         (existing) =>
           (existing.source === rel.source &&

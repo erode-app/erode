@@ -56,4 +56,15 @@ describe('applyLineBudgetToDiff', () => {
     expect(result.diff).not.toContain('big.ts');
     expect(result.truncationReason).toContain('1 file was dropped');
   });
+
+  it('counts removed ---- and added +++x lines as content inside a hunk', () => {
+    const diff =
+      'diff --git a/a.md b/a.md\n--- a/a.md\n+++ b/a.md\n@@ -1,2 +1,2 @@\n-----\n+++x\n context\n' +
+      seg('b.ts', 5);
+    // a.md has 2 changed lines, b.ts 5; a budget of 5 must drop b.ts
+    const result = applyLineBudgetToDiff(diff, 5);
+    expect(result.truncationReason).toContain('7 lines found');
+    expect(result.diff).toContain('a/a.md');
+    expect(result.diff).not.toContain('b.ts');
+  });
 });

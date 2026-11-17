@@ -240,6 +240,9 @@ export async function runAnalyze(
 
     // ── Stage 3: Drift analysis ──────────────────────────────────────────
     ctx.analysisResult = await runDriftStage(provider, promptData, p);
+    if (prData.wasTruncated && prData.truncationReason) {
+      ctx.analysisResult.truncation = { reason: prData.truncationReason };
+    }
 
     // ── Build structured output ──────────────────────────────────────────
     p.section('Output');

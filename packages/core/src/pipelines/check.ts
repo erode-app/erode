@@ -147,6 +147,7 @@ export async function runCheck(
     }
 
     // ── Filter diff to match included files ────────────────────────────
+    let truncationReason: string | undefined;
     let effectiveDiff =
       !options.skipFileFiltering && files.length > 0
         ? filterDiffByFiles(options.diff, files)
@@ -158,6 +159,7 @@ export async function runCheck(
       effectiveDiff = budget.diff;
       const keptNames = new Set(parseFilesFromDiff(effectiveDiff).map((f) => f.filename));
       files = files.filter((f) => keptNames.has(f.filename));
+      truncationReason = budget.truncationReason;
       p.warn(budget.truncationReason);
     }
 
@@ -227,6 +229,7 @@ export async function runCheck(
 
     // ── Stage 3: Drift Analysis ──────────────────────────────────────────
     const analysisResult = await runDriftStage(provider, promptData, p);
+    if (truncationReason) analysisResult.truncation = { reason: truncationReason };
 
     // ── Build structured output ──────────────────────────────────────────
     const structured = buildStructuredOutput(analysisResult, adapter.metadata.displayName, {

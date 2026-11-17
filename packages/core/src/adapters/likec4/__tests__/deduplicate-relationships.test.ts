@@ -20,9 +20,21 @@ describe('deduplicateRelationships', () => {
   it('keeps a relationship when both have a kind and the kinds differ', () => {
     const { kept } = patcher.dedupe(
       [rel('async')],
-      [{ source: 'api', target: 'db', kind: 'sync' }]
+      [
+        { source: 'api', target: 'db', kind: 'sync' },
+        { source: 'web', target: 'api', kind: 'async' },
+      ]
     );
     expect(kept).toHaveLength(1);
+  });
+
+  it('treats a kind the model does not define as no kind, so it is a duplicate', () => {
+    const { kept, skipped } = patcher.dedupe(
+      [rel('grpc')],
+      [{ source: 'api', target: 'db', kind: 'sync' }]
+    );
+    expect(kept).toHaveLength(0);
+    expect(skipped).toHaveLength(1);
   });
 
   it('drops a relationship when the existing one has no kind', () => {
@@ -33,7 +45,10 @@ describe('deduplicateRelationships', () => {
   it('applies the kind rule to bidirectional relationships too', () => {
     const reverse = { source: 'db', target: 'api', kind: 'async', description: 'x' };
     const existing = { source: 'api', target: 'db', bidirectional: true };
-    expect(patcher.dedupe([reverse], [{ ...existing, kind: 'sync' }]).kept).toHaveLength(1);
+    const asyncElsewhere = { source: 'web', target: 'api', kind: 'async' };
+    expect(
+      patcher.dedupe([reverse], [{ ...existing, kind: 'sync' }, asyncElsewhere]).kept
+    ).toHaveLength(1);
     expect(patcher.dedupe([reverse], [existing]).kept).toHaveLength(0);
   });
 
