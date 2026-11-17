@@ -99,6 +99,33 @@ describe('LikeC4Adapter with a multi-project workspace', () => {
     expect(result?.content).toContain("cart -> storefront 'sends updates'");
   });
 
+  it('should validate a patch against errors in its own project only', async () => {
+    const copy = mkdtempSync(path.join(tmpdir(), 'erode-multi-project-'));
+    try {
+      cpSync(workspace, copy, { recursive: true });
+      const billingModel = path.join(copy, 'billing', 'model.c4');
+      writeFileSync(
+        billingModel,
+        readFileSync(billingModel, 'utf-8').replace('-> ledger', '-> missing_service')
+      );
+      const copyShop = path.join(copy, 'storefront-model', 'model.c4');
+      const patched = readFileSync(copyShop, 'utf-8').replace(
+        'link https://github.com/example/cart',
+        "link https://github.com/example/cart\n    -> storefront 'sends updates'"
+      );
+
+      expect(await validateLikeC4Dsl(copy, copyShop, patched)).toEqual({ valid: true });
+      const brokenBilling = await validateLikeC4Dsl(
+        copy,
+        billingModel,
+        readFileSync(billingModel, 'utf-8')
+      );
+      expect(brokenBilling.valid).toBe(false);
+    } finally {
+      rmSync(copy, { recursive: true, force: true });
+    }
+  });
+
   it('should load only the configured project in loadAndListComponents', async () => {
     CONFIG.adapter.likec4.project = 'billing';
     const components = await new LikeC4Adapter().loadAndListComponents(workspace);
