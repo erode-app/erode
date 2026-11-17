@@ -29,6 +29,7 @@ export const ConfigSchema = z.object({
       excludePaths: z.array(z.string()).default([]),
       excludeTags: z.array(z.string()).default([]),
       formatAfterPatch: z.boolean().default(true),
+      patchStrategy: z.enum(['text', 'model-edits']).default('text'),
     }),
     structurizr: z.object({
       cliPath: z.string().optional(),
@@ -123,6 +124,7 @@ const ENV_MAP: Record<string, string> = {
   ERODE_LIKEC4_EXCLUDE_PATHS: 'adapter.likec4.excludePaths',
   ERODE_LIKEC4_EXCLUDE_TAGS: 'adapter.likec4.excludeTags',
   ERODE_LIKEC4_FORMAT_AFTER_PATCH: 'adapter.likec4.formatAfterPatch',
+  ERODE_LIKEC4_PATCH_STRATEGY: 'adapter.likec4.patchStrategy',
   ERODE_STRUCTURIZR_CLI_PATH: 'adapter.structurizr.cliPath',
   ERODE_MAX_FILES_PER_DIFF: 'constraints.maxFilesPerDiff',
   ERODE_MAX_LINES_PER_DIFF: 'constraints.maxLinesPerDiff',

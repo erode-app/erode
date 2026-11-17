@@ -13,13 +13,13 @@ import type { ValidationDiagnostic } from './architecture-adapter.js';
 import type { AIProvider } from '../providers/ai-provider.js';
 import { CONFIG } from '../utils/config.js';
 
-interface AcceptedPatch {
+export interface AcceptedPatch {
   content: string;
   validationSkipped: boolean;
   validationWarnings?: string[];
 }
 
-function acceptedValidation(dslResult: DslValidationResult): Omit<AcceptedPatch, 'content'> {
+export function acceptedValidation(dslResult: DslValidationResult): Omit<AcceptedPatch, 'content'> {
   return {
     validationSkipped: !!dslResult.skipped,
     validationWarnings: dslResult.warnings?.length ? dslResult.warnings : undefined,
@@ -48,6 +48,16 @@ export abstract class BasePatcher implements ModelPatcher {
     content: string,
     baseline?: readonly ValidationDiagnostic[]
   ): Promise<DslValidationResult>;
+
+  /** Returns null to use LLM/deterministic text patching. */
+  protected tryNativePatching(
+    _modelPath: string,
+    _components: NewComponent[],
+    _relationshipLines: string[],
+    _baseline?: readonly ValidationDiagnostic[]
+  ): Promise<(AcceptedPatch & { targetFile: string }) | null> {
+    return Promise.resolve(null);
+  }
 
   protected postFormat(content: string, _modelPath: string, _targetFile: string): Promise<string> {
     return Promise.resolve(content);
@@ -113,41 +123,53 @@ export abstract class BasePatcher implements ModelPatcher {
     const insertedLines = [...componentDslLines, ...relationshipDslLines];
     this.debugLog('Generated DSL lines', insertedLines);
 
-    // 4. Find target file
-    const targetFile = this.findTargetFile(modelPath);
+    // 4. Format-native patching (opt-in); the format picks the target file itself
+    const native = await this.tryNativePatching(
+      modelPath,
+      genuinelyNew,
+      relationshipDslLines,
+      options.validationBaseline
+    ).catch(() => null);
+
+    // 5. Find target file
+    const targetFile = native?.targetFile ?? this.findTargetFile(modelPath);
     if (!targetFile) {
       this.debugLog(`No suitable .${this.formatId} target file found in`, modelPath);
       return null;
     }
     this.debugLog('Target file', targetFile);
 
-    const originalContent = readFileSync(targetFile, 'utf-8');
+    const originalContent = native ? '' : readFileSync(targetFile, 'utf-8');
 
-    // 5. Try LLM-based patching, 6. else deterministic fallback; both validate the DSL
-    const llmResult = await this.tryLlmPatching(
-      provider,
-      originalContent,
-      insertedLines,
-      modelPath,
-      targetFile,
-      options.validationBaseline
-    ).catch(() => null);
-    const accepted = llmResult?.content
-      ? llmResult
-      : await this.tryDeterministicFallback(
+    // 6. Try LLM-based patching, 7. else deterministic fallback; both validate the DSL
+    const llmResult = native
+      ? null
+      : await this.tryLlmPatching(
+          provider,
           originalContent,
           insertedLines,
           modelPath,
           targetFile,
           options.validationBaseline
-        );
+        ).catch(() => null);
+    const accepted =
+      native ??
+      (llmResult?.content
+        ? llmResult
+        : await this.tryDeterministicFallback(
+            originalContent,
+            insertedLines,
+            modelPath,
+            targetFile,
+            options.validationBaseline
+          ));
 
     if (!accepted?.content) {
       return null;
     }
     let finalContent = accepted.content;
 
-    // 7. Optional post-processing (e.g., formatting)
+    // 8. Optional post-processing (e.g., formatting)
     const preFormatContent = finalContent;
     let formatted = false;
     try {
@@ -161,7 +183,7 @@ export abstract class BasePatcher implements ModelPatcher {
       );
     }
 
-    // 8. Compute repo-relative path
+    // 9. Compute repo-relative path
     const repoRelativePath = this.getRepoRelativePath(targetFile);
 
     return {

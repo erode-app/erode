@@ -63,6 +63,13 @@ Environment variable names map to nested JSON keys. For example:
 | `ERODE_LIKEC4_EXCLUDE_PATHS`      | Comma-separated paths to exclude from model loading     | —        |
 | `ERODE_LIKEC4_EXCLUDE_TAGS`       | Comma-separated tags to exclude from model loading      | —        |
 | `ERODE_LIKEC4_FORMAT_AFTER_PATCH` | Format LikeC4 models after applying generated patches   | `true`   |
+| `ERODE_LIKEC4_PATCH_STRATEGY`     | How to patch LikeC4 models (`text` or `model-edits`)    | `text`   |
+
+`model-edits` is experimental. Erode lets LikeC4 decide where suggested elements and relationships go, instead of inserting text into the model block.
+
+The patched file contains plain DSL, so your project does not need a newer LikeC4 version. If LikeC4 cannot place the change in a single file, Erode falls back to `text`.
+
+See [ADR-012](/docs/contributing/adrs/012-likec4-model-edits-via-diff-blocks/).
 
 ## Diff limits
 

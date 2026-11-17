@@ -1,8 +1,9 @@
 import { readFileSync, readdirSync } from 'fs';
 import { join, resolve } from 'path';
-import { BasePatcher } from '../base-patcher.js';
+import { BasePatcher, acceptedValidation, type AcceptedPatch } from '../base-patcher.js';
 import { validateLikeC4Dsl } from './dsl-validator.js';
 import { formatLikeC4Dsl } from './dsl-formatter.js';
+import { previewModelEdits } from './model-edits.js';
 import type { StructuredRelationship, NewComponent } from '../../analysis/analysis-types.js';
 import type { ModelRelationship } from '../architecture-types.js';
 import type { DslValidationResult } from '../model-patcher.js';
@@ -92,6 +93,31 @@ export class LikeC4Patcher extends BasePatcher {
     baseline?: readonly ValidationDiagnostic[]
   ): Promise<DslValidationResult> {
     return validateLikeC4Dsl(workspace, file, content, baseline);
+  }
+
+  protected override async tryNativePatching(
+    modelPath: string,
+    components: NewComponent[],
+    relationshipLines: string[],
+    baseline?: readonly ValidationDiagnostic[]
+  ): Promise<(AcceptedPatch & { targetFile: string }) | null> {
+    if (CONFIG.adapter.likec4.patchStrategy !== 'model-edits') {
+      return null;
+    }
+    const outcome = await previewModelEdits(modelPath, components, relationshipLines);
+    if (!outcome.ok) {
+      this.debugLog('Model edits unavailable; falling back to text patching', outcome.reason);
+      return null;
+    }
+    const { targetFile, content } = outcome.patch;
+    // Preview checks the diff, not the merged file, so validate the result like text patches
+    const dsl = await this.validateDsl(modelPath, targetFile, content, baseline);
+    if (!dsl.valid && !dsl.skipped) {
+      this.debugLog('Model edits result failed DSL validation', dsl.errors);
+      return null;
+    }
+    this.debugLog('Model edits patch accepted', { targetFile });
+    return { targetFile, content, ...acceptedValidation(dsl) };
   }
 
   protected override async postFormat(
