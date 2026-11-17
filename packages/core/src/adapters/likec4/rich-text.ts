@@ -5,14 +5,7 @@ import { LikeC4RichTextSchema } from '../../schemas/likec4.schema.js';
  * Whitespace is collapsed so multi-line descriptions do not break list formatting in prompts.
  */
 export function richTextToString(value: unknown): string | undefined {
-  let text: string | undefined;
-  if (typeof value === 'string') {
-    text = value;
-  } else {
-    const parsed = LikeC4RichTextSchema.safeParse(value);
-    const source = parsed.success ? parsed.data.$source : undefined;
-    text = source?.txt ?? source?.md;
-  }
-  const normalised = text?.replace(/\s+/g, ' ').trim();
-  return normalised === '' ? undefined : normalised;
+  const parsed = LikeC4RichTextSchema.safeParse(value);
+  const text = parsed.success ? parsed.data?.replace(/\s+/g, ' ').trim() : undefined;
+  return text === '' ? undefined : text;
 }
