@@ -31,14 +31,27 @@ export function acceptedValidation(dslResult: DslValidationResult): Omit<Accepte
   };
 }
 
-/** Index of the `}` closing the first `{` on the line, or -1 if the block continues. */
+/**
+ * Index of the `}` closing the first `{` on the line, or -1 if the block continues.
+ * Braces inside quoted strings and after `//` do not count.
+ */
 function closingBraceOnSameLine(line: string): number {
-  const open = line.indexOf('{');
-  if (open === -1) return -1;
   let depth = 0;
-  for (let i = open; i < line.length; i++) {
-    if (line[i] === '{') depth++;
-    if (line[i] === '}' && --depth === 0) return i;
+  let quote: string | null = null;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (quote) {
+      if (ch === '\\') i++;
+      else if (ch === quote) quote = null;
+    } else if (ch === "'" || ch === '"') {
+      quote = ch;
+    } else if (ch === '/' && line[i + 1] === '/') {
+      return -1;
+    } else if (ch === '{') {
+      depth++;
+    } else if (ch === '}' && depth > 0 && --depth === 0) {
+      return i;
+    }
   }
   return -1;
 }
