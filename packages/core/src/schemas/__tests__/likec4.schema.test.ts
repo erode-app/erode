@@ -1,5 +1,34 @@
 import { describe, it, expect } from 'vitest';
-import { LikeC4ElementSchema, LikeC4RelationshipSchema } from '../likec4.schema.js';
+import {
+  LikeC4ElementSchema,
+  LikeC4RelationshipSchema,
+  normalizeLikeC4Text,
+} from '../likec4.schema.js';
+
+describe('normalizeLikeC4Text', () => {
+  it('should return txt source', () => {
+    expect(normalizeLikeC4Text({ $source: { txt: 'Plain' } })).toBe('Plain');
+  });
+
+  it('should return md source', () => {
+    expect(normalizeLikeC4Text({ $source: { md: '**md**' } })).toBe('**md**');
+  });
+
+  it('should return undefined for a null source', () => {
+    expect(normalizeLikeC4Text({ $source: null })).toBeUndefined();
+  });
+
+  it('should return a legacy string as-is', () => {
+    expect(normalizeLikeC4Text('Legacy')).toBe('Legacy');
+  });
+
+  it('should return undefined for empty or missing values', () => {
+    expect(normalizeLikeC4Text('  ')).toBeUndefined();
+    expect(normalizeLikeC4Text({ $source: { txt: '' } })).toBeUndefined();
+    expect(normalizeLikeC4Text(null)).toBeUndefined();
+    expect(normalizeLikeC4Text(undefined)).toBeUndefined();
+  });
+});
 
 describe('LikeC4ElementSchema', () => {
   it('should parse element with all fields', () => {
@@ -65,6 +94,25 @@ describe('LikeC4ElementSchema', () => {
   it('should reject element missing kind', () => {
     const element = { id: 'api' };
     expect(() => LikeC4ElementSchema.parse(element)).toThrow();
+  });
+
+  it('should normalise a RichText description object to plain text', () => {
+    const element = {
+      id: 'api',
+      kind: 'service',
+      description: { $source: { txt: 'Plain' }, isEmpty: false, nonEmpty: true, isMarkdown: false },
+    };
+    expect(LikeC4ElementSchema.parse(element).description).toBe('Plain');
+  });
+
+  it('should normalise an empty RichText description to undefined', () => {
+    const element = { id: 'api', kind: 'service', description: { $source: null, isEmpty: true } };
+    expect(LikeC4ElementSchema.parse(element).description).toBeUndefined();
+  });
+
+  it('should not fail on an unrecognised description shape', () => {
+    const element = { id: 'api', kind: 'service', description: { $source: { html: '<p>' } } };
+    expect(LikeC4ElementSchema.parse(element).description).toBeUndefined();
   });
 
   it('should pass through extra fields', () => {
