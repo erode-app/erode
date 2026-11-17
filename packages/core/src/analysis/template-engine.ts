@@ -62,8 +62,8 @@ function formatValue(value: unknown): string {
   }
 }
 
-function replaceVariables(templateName: string, template: string, variables: object): string {
-  return template.replace(/\{\{([^}]+)\}\}/g, (_match: string, path: string) => {
+function renderTemplate(templateName: string, variables: object): string {
+  return loadTemplate(templateName).replace(/\{\{([^}]+)\}\}/g, (_match: string, path: string) => {
     const value = resolveVariable(variables, path);
     if (value === undefined) {
       const key = path.trim();
@@ -83,20 +83,16 @@ function replaceVariables(templateName: string, template: string, variables: obj
  */
 export const TemplateEngine = {
   loadDependencyExtractionPrompt(variables: DependencyExtractionPromptVars): string {
-    const template = loadTemplate('dependency-extraction');
-    return replaceVariables('dependency-extraction', template, variables);
+    return renderTemplate('dependency-extraction', variables);
   },
   loadDriftAnalysisPrompt(variables: DriftAnalysisPromptVars): string {
-    const template = loadTemplate('drift-analysis');
-    return replaceVariables('drift-analysis', template, variables);
+    return renderTemplate('drift-analysis', variables);
   },
   loadComponentSelectionPrompt(variables: ComponentSelectionPromptVars): string {
-    const template = loadTemplate('component-selection');
-    return replaceVariables('component-selection', template, variables);
+    return renderTemplate('component-selection', variables);
   },
   loadModelPatchPrompt(variables: ModelPatchPromptVars): string {
-    const template = loadTemplate('model-patch');
-    return replaceVariables('model-patch', template, variables);
+    return renderTemplate('model-patch', variables);
   },
   loadSyntaxGuide(adapterDir: string, name: string): string {
     const guidePath = join(__dirname, '..', 'adapters', adapterDir, 'prompts', `${name}.md`);
