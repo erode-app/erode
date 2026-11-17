@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { promisify } from 'node:util';
 import { ConfigurationError, ErodeError, ErrorCode } from '../errors.js';
 import { CONFIG } from './config.js';
+import { redactUrlCredentials } from './url-credentials.js';
 import { detectPlatform } from '../platforms/platform-factory.js';
 
 const execFileAsync = promisify(execFile);
@@ -179,7 +180,7 @@ async function cloneRepo(
     await execFileAsync('git', args, { env });
   } catch (error) {
     const rawMessage = error instanceof Error ? error.message : String(error);
-    const message = stripUrlCredentials(rawMessage);
+    const message = redactUrlCredentials(rawMessage);
     throw new ErodeError(
       `Failed to clone model repository: ${message}`,
       ErrorCode.IO_CLONE_FAILED,
@@ -209,8 +210,4 @@ function assertPathContainment(localPath: string, baseDir: string): void {
   if (resolved !== resolvedBase && !resolved.startsWith(resolvedBase + sep)) {
     throw new ConfigurationError('Model path must be within the cloned repository');
   }
-}
-
-function stripUrlCredentials(message: string): string {
-  return message.replace(/https:\/\/[^@]+@/g, 'https://');
 }

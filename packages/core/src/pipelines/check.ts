@@ -18,6 +18,7 @@ import type { DependencyExtractionResult } from '../schemas/dependency-extractio
 import type { ChangeRequestFile } from '../platforms/source-platform.js';
 import type { DiffStats, GitDiffFile } from '../utils/git-diff.js';
 import { parseFilesFromDiff, filterDiffByFiles } from '../utils/git-diff.js';
+import { stripUrlUserinfo } from '../utils/url-credentials.js';
 import {
   loadArchitectureModel,
   buildArchitecturalContext,
@@ -96,6 +97,8 @@ export async function runCheck(
   progress?: ProgressReporter
 ): Promise<CheckResult> {
   CheckOptionsInputSchema.parse(options);
+  // Library callers may pass a token-bearing URL; it must not reach the AI provider.
+  const repoUrl = stripUrlUserinfo(options.repo);
 
   const p = progress ?? new SilentProgress();
   const adapter = createAdapter(options.modelFormat);
@@ -114,7 +117,7 @@ export async function runCheck(
     const architectureModel = await loadArchitectureModel(adapter, effectiveModelPath, p);
 
     // ── Find components for this repository ──────────────────────────────
-    const lookup = findComponentsForRepo(adapter, options.repo, buildLocalMetadata(options), p);
+    const lookup = findComponentsForRepo(adapter, repoUrl, buildLocalMetadata(options), p);
     if (!('found' in lookup)) return lookup;
     const { components, defaultComponent } = lookup;
 
@@ -190,7 +193,7 @@ export async function runCheck(
       repository: {
         owner: options.repoOwner,
         repo: options.repoName,
-        url: options.repo,
+        url: repoUrl,
       },
       components: [selectedComponent],
     });
