@@ -24,6 +24,7 @@ const mockFromWorkspace = vi.mocked(LikeC4.fromWorkspace);
 function mockInstance(overrides: Record<string, unknown> = {}) {
   const dispose = vi.fn().mockResolvedValue(undefined);
   const instance = {
+    projects: () => ['default'],
     hasErrors: () => false,
     getErrors: () => [],
     dispose,

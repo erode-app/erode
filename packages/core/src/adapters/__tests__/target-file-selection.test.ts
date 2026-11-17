@@ -59,8 +59,9 @@ describe('selectTargetFileByLocation', () => {
     expect(select([rel('edge.gateway', 'core.orders')], [], new Map())).toBeNull();
   });
 
-  it('returns null when no touched element is located', () => {
-    expect(select([rel('unknown.a', 'unknown.b')])).toBeNull();
+  it('falls back to the file declaring the most elements when nothing touched is located', () => {
+    expect(select([rel('unknown.a', 'unknown.b')])).toBe(core);
+    expect(select([], [comp('brand_new')])).toBe(core);
   });
 
   it('picks the file declaring the relationship source', () => {
@@ -92,7 +93,7 @@ describe('selectTargetFileByLocation', () => {
   });
 
   it('places a top-level new component next to a related existing element', () => {
-    expect(select([], [comp('newsvc')])).toBeNull();
+    expect(select([rel('edge.gateway', 'newsvc')], [comp('newsvc')])).toBe(edge);
     const rels = [rel('core.orders', 'newsvc')];
     expect(select(rels, [comp('newsvc')])).toBe(core);
   });

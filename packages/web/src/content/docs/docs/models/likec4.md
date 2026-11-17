@@ -84,6 +84,22 @@ Point the GitHub Action at this repository using `model-repo`:
 
 See [GitHub Actions](/docs/integrations/github-actions/) for all model repository options including `model-path`, `model-ref`, and `model-repo-token`.
 
+### Multiple LikeC4 projects
+
+A workspace can hold several LikeC4 projects, each in a folder with its own `likec4.config.json`. Erode loads one project per run. If the workspace has more than one and you have not picked one, Erode stops and lists the project names it found.
+
+Set the project in `.eroderc.json`:
+
+```json
+{
+  "adapter": {
+    "likec4": { "project": "shop" }
+  }
+}
+```
+
+Or set `ERODE_LIKEC4_PROJECT=shop`. The value is the `name` from that project's `likec4.config.json`. A workspace with a single project needs no setting.
+
 ## How Erode uses the model
 
 During analysis, Erode:

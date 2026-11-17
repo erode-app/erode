@@ -92,6 +92,9 @@
                 "text",
                 "model-edits"
               ]
+            },
+            "project": {
+              "type": "string"
             }
           },
           "additionalProperties": false

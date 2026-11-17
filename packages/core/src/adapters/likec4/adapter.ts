@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { CONFIG } from '../../utils/config.js';
 import { validate } from '../../utils/validation.js';
 import { isRepositoryHostUrl, normalizeRepositoryUrl } from '../url-utils.js';
-import { ErodeError, AdapterError, ErrorCode } from '../../errors.js';
+import { ErodeError, AdapterError, ConfigurationError, ErrorCode } from '../../errors.js';
 import type {
   ArchitectureModelAdapter,
   ValidationDiagnostic,
@@ -100,6 +100,48 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     return result.warning;
   }
 
+  /**
+   * Pick the LikeC4 project to load. A workspace with several projects (folders with their own
+   * likec4.config.json) needs an explicit choice; LikeC4 otherwise fails with a terse error.
+   */
+  private resolveProjectId<T extends string>(available: readonly T[]): T | undefined {
+    const configured = CONFIG.adapter.likec4.project;
+    const known = [...available].sort().join(', ');
+    if (configured) {
+      const match = available.find((id) => id === configured);
+      if (!match) {
+        throw new ConfigurationError(
+          `LikeC4 project "${configured}" not found in the workspace. Known projects: ${known}. Set adapter.likec4.project (or ERODE_LIKEC4_PROJECT) to one of them.`,
+          'adapter.likec4.project'
+        );
+      }
+      return match;
+    }
+    if (available.length > 1) {
+      throw new ConfigurationError(
+        `The LikeC4 workspace contains several projects: ${known}. Set adapter.likec4.project (or ERODE_LIKEC4_PROJECT) to the one erode should load.`,
+        'adapter.likec4.project'
+      );
+    }
+    return undefined;
+  }
+
+  /** Only errors in the selected project's documents count; other projects may be broken. */
+  private assertNoModelErrors(
+    likec4: LikeC4,
+    projectId: ReturnType<LikeC4['projects']>[number] | undefined,
+    skewWarning: string | undefined
+  ): void {
+    let errors = likec4.getErrors();
+    if (projectId) {
+      const documents = new Set(
+        likec4.languageServices.project(projectId).documents.map((uri) => uri.fsPath)
+      );
+      errors = errors.filter((e) => documents.has(e.sourceFsPath));
+    }
+    if (errors.length > 0) this.throwModelErrors(errors, skewWarning);
+  }
+
   private isValidLikeC4Model(model: unknown): model is LikeC4Model {
     return (
       typeof model === 'object' &&
@@ -111,7 +153,11 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     );
   }
 
-  async loadFromPath(likec4Path: string): Promise<ArchitectureModel> {
+  /** Load the workspace, compute the selected project's model and dispose the workspace after `use`. */
+  private async withComputedModel<T>(
+    likec4Path: string,
+    use: (model: LikeC4Model, likec4: LikeC4, workspace: string, projectId: string | undefined) => T
+  ): Promise<T> {
     const resolvedPath = resolve(likec4Path);
     if (!existsSync(resolvedPath)) {
       throw new ErodeError(
@@ -125,10 +171,9 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     this.validationBaseline = undefined;
     const likec4 = await LikeC4.fromWorkspace(resolvedPath, { printErrors: false });
     try {
-      if (likec4.hasErrors()) {
-        this.throwModelErrors(likec4.getErrors(), skewWarning);
-      }
-      const computedModel = await likec4.computedModel();
+      const projectId = this.resolveProjectId(likec4.projects());
+      this.assertNoModelErrors(likec4, projectId, skewWarning);
+      const computedModel = await likec4.computedModel(projectId);
       if (!this.isValidLikeC4Model(computedModel)) {
         throw new AdapterError(
           'Malformed LikeC4 model structure: required methods are absent',
@@ -137,21 +182,27 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
           'Could not load LikeC4 model: the model structure is invalid. It may be corrupted or incompatible.'
         );
       }
+      return use(computedModel, likec4, resolvedPath, projectId);
+    } finally {
+      await likec4.dispose();
+    }
+  }
+
+  async loadFromPath(likec4Path: string): Promise<ArchitectureModel> {
+    return this.withComputedModel(likec4Path, (computedModel, likec4, workspace, projectId) => {
       this.model = computedModel;
-      this.validationBaseline = readLikeC4Warnings(likec4, resolvedPath);
+      this.validationBaseline = readLikeC4Warnings(likec4, workspace);
       const components = this.extractComponents();
       this.relationships = this.extractRelationships();
       this.componentIndex = this.buildComponentIndex(components);
       // Language services are gone after dispose, so resolve declaring files now
-      this.elementSourceFiles = this.locateElements(likec4);
+      this.elementSourceFiles = this.locateElements(likec4, projectId);
       return {
         components,
         relationships: this.relationships,
         componentIndex: this.componentIndex,
       };
-    } finally {
-      await likec4.dispose();
-    }
+    });
   }
 
   protected extractComponents(): ArchitecturalComponent[] {
@@ -244,12 +295,13 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     );
   }
 
-  private locateElements(likec4: LikeC4): Map<string, string> {
+  /** `projectId` is required by LikeC4 when the workspace has several projects. */
+  private locateElements(likec4: LikeC4, projectId: string | undefined): Map<string, string> {
     type LocateParams = Parameters<LikeC4['languageServices']['locate']>[0];
     const files = new Map<string, string>();
     for (const id of this.elementTagsMap.keys()) {
       try {
-        const uri = likec4.languageServices.locate({ element: id } as LocateParams)?.uri;
+        const uri = likec4.languageServices.locate({ element: id, projectId } as LocateParams)?.uri;
         if (uri?.startsWith('file:')) files.set(id, fileURLToPath(uri));
       } catch {
         // Unlocatable element (e.g. ambiguous project): the patcher falls back to its heuristic
@@ -287,32 +339,8 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
   }
 
   async loadAndListComponents(likec4Path: string): Promise<SimpleComponent[]> {
-    const resolvedPath = resolve(likec4Path);
-    if (!existsSync(resolvedPath)) {
-      throw new ErodeError(
-        `LikeC4 model path not found: ${resolvedPath}`,
-        ErrorCode.IO_DIR_NOT_FOUND,
-        `LikeC4 model directory could not be located: ${resolvedPath}`,
-        { path: resolvedPath }
-      );
-    }
-    const skewWarning = this.guardVersionCompatibility(resolvedPath);
-    const likec4 = await LikeC4.fromWorkspace(resolvedPath, { printErrors: false });
-    try {
-      if (likec4.hasErrors()) {
-        this.throwModelErrors(likec4.getErrors(), skewWarning);
-      }
-      const computedModel = await likec4.computedModel();
-      if (!this.isValidLikeC4Model(computedModel)) {
-        throw new AdapterError(
-          'Malformed LikeC4 model structure: required methods are absent',
-          ErrorCode.MODEL_LOAD_FAILED,
-          'likec4',
-          'Could not load LikeC4 model: the model structure is invalid. It may be corrupted or incompatible.'
-        );
-      }
+    return this.withComputedModel(likec4Path, (model) => {
       const components: SimpleComponent[] = [];
-      const model = computedModel as LikeC4Model;
       const rawElements = [...model.elements()];
       const validatedElements = validate(
         z.array(LikeC4ElementSchema),
@@ -335,9 +363,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
         components.push(component);
       }
       return components;
-    } finally {
-      await likec4.dispose();
-    }
+    });
   }
 
   private extractLinks(links: (string | { url?: string; toString(): string })[]): string[] {

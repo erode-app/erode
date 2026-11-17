@@ -1,0 +1,12 @@
+specification {
+  element service
+}
+
+model {
+  invoicing = service 'Invoicing' {
+    link https://github.com/example/invoicing
+    -> ledger 'records entries'
+  }
+
+  ledger = service 'Ledger'
+}
