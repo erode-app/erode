@@ -42,8 +42,8 @@ describe('extractMinVersion', () => {
     expect(extractMinVersion('1.45.0 - 1.70.0')).toEqual({ major: 1, minor: 45, patch: 0 });
   });
 
-  it('falls back to the upper bound when a range has no lower bound', () => {
-    expect(extractMinVersion('<1.40.0')).toEqual({ major: 1, minor: 40, patch: 0 });
+  it('returns null when a range has only an upper bound', () => {
+    expect(extractMinVersion('<1.40.0')).toBeNull();
   });
 
   it('takes the lowest alternative in an OR range', () => {
@@ -230,6 +230,19 @@ describe('checkLikeC4Version bundled version skew', () => {
   it('does not warn when the range lists an upper bound first', () => {
     const result = checkLikeC4Version(dirWithRange('<1.70.0 >=1.45.0'), bundled);
     expect(result.warning).toBeUndefined();
+  });
+
+  it('does not warn for an upper-bound-only range that allows the bundled version', () => {
+    const result = checkLikeC4Version(dirWithRange('<1.70.0'), bundled);
+    expect(result.compatible).toBe(true);
+    expect(result.warning).toBeUndefined();
+  });
+
+  it('rejects an upper-bound-only range below the minimum', () => {
+    const result = checkLikeC4Version(dirWithRange('<1.40.0'), bundled);
+    expect(result.found).toBe(true);
+    expect(result.compatible).toBe(false);
+    expect(result.version).toBe('<1.40.0');
   });
 
   it('does not warn when the bundled version is unknown', () => {

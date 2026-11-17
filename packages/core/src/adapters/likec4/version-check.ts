@@ -59,8 +59,13 @@ function parseVersion(match: RegExpMatchArray): SemVer {
   };
 }
 
-/** Lower bound of one range without `||`: the highest lower bound, else the upper bound. */
-function alternativeMinVersion(range: string): SemVer | null {
+interface RangeBounds {
+  lower: SemVer | null;
+  upper: SemVer | null;
+}
+
+/** Bounds of one range without `||`: the highest lower bound and the first upper bound. */
+function alternativeBounds(range: string): RangeBounds {
   let lower: SemVer | null = null;
   let upper: SemVer | null = null;
   // `<`/`<=` and the right side of `a - b` are upper bounds
@@ -69,17 +74,22 @@ function alternativeMinVersion(range: string): SemVer | null {
     if (match[1]) upper ??= version;
     else if (!lower || isVersionBelow(lower, version)) lower = version;
   }
-  return lower ?? upper;
+  return { lower, upper };
 }
 
-/** Lowest version a range allows, across its `||` alternatives. */
+/** Lowest lower bound across `||` alternatives, or null when no alternative has one. */
 export function extractMinVersion(range: string): SemVer | null {
   let lowest: SemVer | null = null;
   for (const alternative of range.split('||')) {
-    const min = alternativeMinVersion(alternative);
-    if (min && (!lowest || isVersionBelow(min, lowest))) lowest = min;
+    const { lower } = alternativeBounds(alternative);
+    if (lower && (!lowest || isVersionBelow(lower, lowest))) lowest = lower;
   }
   return lowest;
+}
+
+/** Upper bound of a range that has no lower bound at all, such as `<1.40.0`. */
+function extractUpperOnlyBound(range: string): SemVer | null {
+  return extractMinVersion(range) ? null : alternativeBounds(range).upper;
 }
 
 export function isVersionBelow(version: SemVer, minimum: SemVer): boolean {
@@ -119,7 +129,16 @@ export function checkLikeC4Version(
 
   const version = extractMinVersion(versionRange);
   if (!version) {
-    return { found: false, minimum };
+    // Only an upper bound: compatible if it allows the minimum; no skew warning, any version may fit
+    const upper = extractUpperOnlyBound(versionRange);
+    if (!upper) return { found: false, minimum };
+    return {
+      found: true,
+      version: versionRange.trim(),
+      compatible: isVersionBelow(MIN_LIKEC4_VERSION, upper),
+      minimum,
+      bundled,
+    };
   }
 
   const formatted = formatVersion(version);
