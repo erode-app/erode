@@ -40,7 +40,8 @@ These are ALL component IDs currently in the architecture model:
 
 ## ALL MODEL RELATIONSHIPS
 
-These are ALL relationships currently declared in the architecture model:
+These are ALL relationships currently declared in the architecture model
+(`a <-> b` declares both `a -> b` and `b -> a`):
 {{allRelationships}}
 
 ## CHANGED FILES{{changeContext.inSuffix}}

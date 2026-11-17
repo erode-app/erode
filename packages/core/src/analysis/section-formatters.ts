@@ -132,7 +132,10 @@ ${String(idx + 1)}. **${c.id}**
 }
 
 export function formatAllRelationships(
-  relationships: Pick<ModelRelationship, 'source' | 'target' | 'kind' | 'title' | 'technology'>[]
+  relationships: Pick<
+    ModelRelationship,
+    'source' | 'target' | 'kind' | 'title' | 'technology' | 'bidirectional'
+  >[]
 ): string {
   if (relationships.length === 0) {
     return '  - No relationships defined';
@@ -141,8 +144,9 @@ export function formatAllRelationships(
     .map((r) => {
       const kind = r.kind ? ` [${r.kind}]` : '';
       const title = r.title ? ` "${r.title}"` : '';
+      const arrow = r.bidirectional ? '<->' : '->';
       const technology = r.technology ? ` (${r.technology})` : '';
-      return `  - ${r.source} -> ${r.target}${kind}${title}${technology}`;
+      return `  - ${r.source} ${arrow} ${r.target}${kind}${title}${technology}`;
     })
     .join('\n');
 }

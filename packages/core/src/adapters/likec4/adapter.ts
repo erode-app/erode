@@ -186,6 +186,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
         technology: rel.technology ?? undefined,
         description: richTextToString(rel.description),
         tags: rel.tags?.length ? [...rel.tags] : undefined,
+        ...(rel.isBidirectional && { bidirectional: true }),
       }))
       .filter(
         (rel) =>
@@ -202,7 +203,13 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     // Build adjacency maps for O(1) lookups
     this.outgoing.clear();
     this.incoming.clear();
-    for (const rel of result) {
+    // LikeC4 models `a <-> b` as one relationship; index its mirror so b -> a is declared too.
+    const indexed = result.flatMap((rel) =>
+      rel.bidirectional && rel.source !== rel.target
+        ? [rel, { ...rel, source: rel.target, target: rel.source }]
+        : [rel]
+    );
+    for (const rel of indexed) {
       const out = this.outgoing.get(rel.source) ?? [];
       out.push(rel);
       this.outgoing.set(rel.source, out);

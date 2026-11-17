@@ -59,6 +59,7 @@ export const LikeC4RelationshipSchema = z
     technology: z.string().nullish(),
     description: z.unknown().optional(),
     tags: z.array(z.string()).nullish(),
+    isBidirectional: z.boolean().optional(),
   })
   .loose();
 

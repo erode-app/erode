@@ -21,6 +21,8 @@ export interface ModelRelationship {
   technology?: string;
   description?: string;
   tags?: string[];
+  /** Also permits target -> source (LikeC4 `a <-> b`). */
+  bidirectional?: boolean;
 }
 
 export interface ArchitectureModel {
