@@ -390,12 +390,12 @@ describe('LikeC4Patcher', () => {
     expect(result?.validationWarnings).toBeUndefined();
   });
 
-  it('should strip single quotes from description in DSL output', async () => {
+  it('should escape single quotes and backslashes in relationship descriptions', async () => {
     mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
     mockReadFileSync.mockReturnValue(SAMPLE_C4);
 
     const rels: StructuredRelationship[] = [
-      { source: 'customer', target: 'backend', description: 'Calls API via users endpoint' },
+      { source: 'customer', target: 'backend', description: "Calls O'Brien API at C:\\api\\" },
     ];
 
     const result = await patcher.patch({
@@ -408,9 +408,37 @@ describe('LikeC4Patcher', () => {
 
     expect(result).not.toBeNull();
     if (!result) return;
-    // Verify the line does not contain unescaped quotes that could break DSL
-    expect(result.insertedLines[0]).not.toContain("''");
-    expect(result.insertedLines[0]).toContain("'Calls API via users endpoint'");
+    expect(result.insertedLines[0]).toBe(
+      "  customer -> backend 'Calls O\\'Brien API at C:\\\\api\\\\'"
+    );
+  });
+
+  it('should escape single quotes in new component name, description and technology', async () => {
+    mockReaddirSync.mockReturnValue(['model.c4'] as unknown as ReturnType<typeof readdirSync>);
+    mockReadFileSync.mockReturnValue(SAMPLE_C4);
+
+    const result = await patcher.patch({
+      modelPath: '/model',
+      relationships: [],
+      existingRelationships: [],
+      componentIndex: makeIndex(['customer', 'backend']),
+      provider: makeProvider(),
+      newComponents: [
+        {
+          id: 'obrien_api',
+          kind: 'service',
+          name: "O'Brien API",
+          description: "Wraps O'Brien's billing",
+          technology: "Node's runtime",
+        },
+      ],
+    });
+
+    expect(result).not.toBeNull();
+    if (!result) return;
+    expect(result.content).toContain("obrien_api = service 'O\\'Brien API'");
+    expect(result.content).toContain("description 'Wraps O\\'Brien\\'s billing'");
+    expect(result.content).toContain("technology 'Node\\'s runtime'");
   });
 
   it('should generate valid LikeC4 DSL block for new component', async () => {
