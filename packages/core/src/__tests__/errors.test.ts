@@ -31,6 +31,25 @@ describe('ApiError.fromGeminiError', () => {
     expect(ApiError.fromGeminiError(geminiError(message)).statusCode).toBe(expected);
   });
 
+  it.each([
+    ['429 Too Many Requests', 429],
+    ['Request failed: 503 Service Unavailable', 503],
+    ['  500 Internal Server Error', 500],
+    ['RESOURCE_EXHAUSTED (429) quota', 429],
+    ['The model is UNAVAILABLE right now', 503],
+    ['DEADLINE_EXCEEDED while waiting', 504],
+    ['[429 Too Many Requests] slow down', 429],
+  ])('maps the explicit form "%s" to %i', (message, expected) => {
+    expect(ApiError.fromGeminiError(geminiError(message)).statusCode).toBe(expected);
+  });
+
+  it.each(['[429, 500] values', '[500 tokens truncated]', 'sent 500 tokens in total'])(
+    'does not read a status from "%s"',
+    (message) => {
+      expect(ApiError.fromGeminiError(geminiError(message)).statusCode).toBeUndefined();
+    }
+  );
+
   it('classifies a 429 with a misleading model name as rate limited', () => {
     const err = ApiError.fromGeminiError(
       geminiError('gemini-2.0-flash-001 quota hit, got status: 429.')

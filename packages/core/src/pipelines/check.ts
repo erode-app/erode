@@ -66,7 +66,7 @@ export interface CheckResult {
 const CheckOptionsInputSchema = z.object({
   modelPath: z.string().min(1),
   diff: z.string(),
-  repo: z.string().min(1),
+  repo: z.string().min(1).transform(stripUrlUserinfo),
   repoOwner: z.string().min(1),
   repoName: z.string().min(1),
   modelFormat: z.string().optional(),
@@ -96,9 +96,8 @@ export async function runCheck(
   options: CheckOptions,
   progress?: ProgressReporter
 ): Promise<CheckResult> {
-  CheckOptionsInputSchema.parse(options);
-  // Library callers may pass a token-bearing URL; it must not reach the AI provider.
-  const repoUrl = stripUrlUserinfo(options.repo);
+  // The schema strips credentials from `repo`, so a token-bearing URL never reaches the AI provider.
+  const { repo: repoUrl } = CheckOptionsInputSchema.parse(options);
 
   const p = progress ?? new SilentProgress();
   const adapter = createAdapter(options.modelFormat);

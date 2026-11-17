@@ -9,8 +9,6 @@ const DriftViolationSchema = z.intersection(ViolationSchema, CommitTrackingSchem
 
 export const DriftAnalysisResponseSchema = z
   .object({
-    // Accepted for prompt compatibility but never trusted: the exit code must not depend on it.
-    hasViolations: z.boolean().optional(),
     violations: z.array(DriftViolationSchema),
     improvements: z.array(z.string()).optional(),
     warnings: z.array(z.string()).optional(),

@@ -181,11 +181,12 @@ async function cloneRepo(
   } catch (error) {
     const rawMessage = error instanceof Error ? error.message : String(error);
     const message = redactUrlCredentials(rawMessage);
+    const safeUrl = redactUrlCredentials(cloneUrl);
     throw new ErodeError(
       `Failed to clone model repository: ${message}`,
       ErrorCode.IO_CLONE_FAILED,
-      `Could not clone ${cloneUrl}. Check the URL, branch "${ref}", and your access token.`,
-      { cloneUrl, ref }
+      `Could not clone ${safeUrl}. Check the URL, branch "${ref}", and your access token.`,
+      { cloneUrl: safeUrl, ref }
     );
   } finally {
     if (askpassDir) {

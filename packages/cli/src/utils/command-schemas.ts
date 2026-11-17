@@ -1,10 +1,16 @@
 import { z } from 'zod';
+import { stripUrlUserinfo } from '@erode-app/core';
 
 const RepositoryUrlSchema = z
   .string()
-  .regex(
-    /^https?:\/\/(github\.com\/[^/]+\/[^/]+|gitlab\.com\/.+\/[^/]+)\/?$/,
-    'Provide a valid GitHub or GitLab repository URL'
+  .transform(stripUrlUserinfo)
+  .pipe(
+    z
+      .string()
+      .regex(
+        /^https?:\/\/(github\.com\/[^/]+\/[^/]+|gitlab\.com\/.+\/[^/]+)\/?$/,
+        'Provide a valid GitHub or GitLab repository URL'
+      )
   );
 
 const OutputFormatSchema = z.enum(['table', 'json', 'yaml', 'console']);
@@ -54,7 +60,7 @@ export const ConnectionsOptionsSchema = z.object({
 });
 
 export const CheckOptionsSchema = z.object({
-  repo: z.url().optional(),
+  repo: z.url().transform(stripUrlUserinfo).optional(),
   modelFormat: z.string().default('likec4'),
   staged: z.boolean().optional().default(false),
   branch: z

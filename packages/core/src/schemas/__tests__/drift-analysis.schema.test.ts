@@ -22,6 +22,15 @@ describe('DriftAnalysisResponseSchema', () => {
     expect(parsed.hasViolations).toBe(false);
   });
 
+  it('strips a model-supplied hasViolations key and still exposes a boolean', () => {
+    const parsed = DriftAnalysisResponseSchema.parse({
+      hasViolations: true,
+      violations: [],
+      summary: 'ok',
+    });
+    expect(typeof parsed.hasViolations).toBe('boolean');
+  });
+
   it('accepts a response without hasViolations', () => {
     const parsed = DriftAnalysisResponseSchema.parse({ violations: [violation], summary: 'ok' });
     expect(parsed.hasViolations).toBe(true);

@@ -27,6 +27,12 @@ describe('redactUrlCredentials', () => {
     );
   });
 
+  it('redacts credentials on any scheme', () => {
+    expect(
+      redactUrlCredentials('ssh://git:pw@host/r.git and git+https://u:t@host/r and ftp://t@h/x')
+    ).toBe('ssh://host/r.git and git+https://host/r and ftp://h/x');
+  });
+
   it('does not cross an unrelated @ in later text', () => {
     const msg = 'clone https://github.com/o/r failed, contact admin@example.com';
     expect(redactUrlCredentials(msg)).toBe(msg);

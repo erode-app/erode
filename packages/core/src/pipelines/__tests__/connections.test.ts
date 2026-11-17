@@ -167,4 +167,26 @@ describe('runConnections', () => {
     expect(results).toEqual([]);
     expect(mockProgress.warn).toHaveBeenCalledWith('No components found for repository: org/repo');
   });
+
+  it('strips credentials from the repo URL before logging and matching', async () => {
+    mockFindAllComponentsByRepository.mockReturnValue([]);
+    const info = vi.fn();
+    const progress = {
+      section: vi.fn(),
+      start: vi.fn(),
+      succeed: vi.fn(),
+      fail: vi.fn(),
+      warn: vi.fn(),
+      info,
+    };
+
+    await runConnections(
+      { ...makeOptions(), repo: 'https://oauth2:SECRET@github.com/org/repo' },
+      progress
+    );
+
+    expect(mockFindAllComponentsByRepository).toHaveBeenCalledWith('https://github.com/org/repo');
+    expect(JSON.stringify(progress.start.mock.calls)).not.toContain('SECRET');
+    expect(JSON.stringify(progress.warn.mock.calls)).not.toContain('SECRET');
+  });
 });

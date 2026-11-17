@@ -74,6 +74,7 @@ export { ErodeError, ConfigurationError, ApiError, AdapterError, ErrorCode } fro
 
 // Validation (core utilities only)
 export { validate, validatePath } from './utils/validation.js';
+export { stripUrlUserinfo } from './utils/url-credentials.js';
 
 // Retry utility
 export { withRetry } from './utils/retry.js';

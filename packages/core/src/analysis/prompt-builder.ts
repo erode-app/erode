@@ -17,9 +17,15 @@ import {
   formatCommits,
 } from './section-formatters.js';
 
-/** Prevents author-controlled text from closing the untrusted block early. */
+/**
+ * Matches any tag-like sequence for the untrusted block names, tolerating case, whitespace,
+ * attributes and `_`/`-` variants that a lenient reader could still treat as a delimiter.
+ */
+const UNTRUSTED_TAG_PATTERN = /<\s*\/?\s*untrusted[_-](?:pr[_-]content|diff)[^>]*>/gi;
+
+/** Prevents author-controlled text from closing an untrusted block early. */
 function escapeUntrusted(text: string): string {
-  return text.replace(/<(\/?)untrusted_pr_content>/gi, '<$1untrusted-pr-content>');
+  return text.replace(UNTRUSTED_TAG_PATTERN, (tag) => `&lt;${tag.slice(1)}`);
 }
 
 export const PromptBuilder = {
@@ -84,8 +90,12 @@ export const PromptBuilder = {
     }
 
     return TemplateEngine.loadDependencyExtractionPrompt({
-      diff,
-      commit: { ...commit, message: escapeUntrusted(commit.message) },
+      diff: escapeUntrusted(diff),
+      commit: {
+        ...commit,
+        message: escapeUntrusted(commit.message),
+        author: escapeUntrusted(commit.author),
+      },
       repository,
       componentsContext,
     });
@@ -151,9 +161,9 @@ export const PromptBuilder = {
       changeRequest: {
         number: changeRequest.number,
         title: escapeUntrusted(changeRequest.title),
-        author: changeRequest.author.name ?? changeRequest.author.login,
-        base: { ref: changeRequest.base.ref },
-        head: { ref: changeRequest.head.ref },
+        author: escapeUntrusted(changeRequest.author.name ?? changeRequest.author.login),
+        base: { ref: escapeUntrusted(changeRequest.base.ref) },
+        head: { ref: escapeUntrusted(changeRequest.head.ref) },
         stats: changeRequest.stats,
         descriptionSection: changeRequest.description
           ? `Description:\n${escapeUntrusted(changeRequest.description)}\n`
