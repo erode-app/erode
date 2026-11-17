@@ -40,6 +40,10 @@ The adapter pattern decouples the pipeline from model format details. Adding a n
 - The interface must cover the superset of all format capabilities. Format-specific features that do not fit the interface require workarounds or optional methods.
 - The `checkVersion` method is optional, creating inconsistency in version checking across adapters.
 
+## Amendments
+
+- **2026-11-17:** `ModelRelationship` gains an optional `bidirectional` flag. Adapters set it when one declared relationship permits both directions (LikeC4 `a <-> b`). The LikeC4 adapter indexes both directions for dependency checks; formats without the concept leave it unset.
+
 ## Related commits
 
 - `8691ba8` - chore(release): release 0.4.0 (#24)
