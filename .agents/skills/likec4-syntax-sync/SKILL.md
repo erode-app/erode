@@ -39,7 +39,7 @@ and compare against upstream for changes in these areas:
 - **Identifiers**: validity rules, allowed characters, start-with constraints
 - **Elements**: syntax forms (`ID = KIND` and `KIND ID`), nesting, property order
 - **Relationships**: implicit/explicit source, typed (`-[KIND]->`, `.REL_KIND`), `this`/`it`
-- **Properties**: `title`, `summary`, `description`, `notes`, `technology`, `#tag`, `link`, `metadata`
+- **Properties**: `title`, `summary`, `description`, `technology`, `#tag`, `link`, `metadata` (`notes` is not valid in `model` on 1.45.0 or 1.59.3)
 - **Strings**: quoting styles, escaping, triple-quote multi-line markdown
 - **Extend patterns**: `extend FQN { }` for elements and which properties it allows
 - **Anti-patterns**: dots in identifiers, parent-child relationships, redefinition vs extend

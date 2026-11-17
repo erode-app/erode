@@ -18,9 +18,9 @@ Element body (all optional, in order): `#tag`s first, then properties, then nest
 - Inside element body: `-> TARGET 'title'` (implicit source), `-[REL_KIND]-> TARGET` or `.REL_KIND TARGET` (typed, no arrow after `.REL_KIND`)
 - Top-level in model: `SOURCE -> TARGET 'title'`, `SOURCE -[REL_KIND]-> TARGET`, `SOURCE .REL_KIND TARGET` (source required)
 - `this`/`it` alias the current element; `SOURCE -> it` targets current element
-- Relationship body: `{ #tag; title; description; technology; metadata { ... }; link URL }`
+- Relationship body: `#tag`s first, then `title`, `description`, `technology`, `metadata { ... }`, `link URL`
 
-**Properties**: `title` (single line), `summary` (max 150 chars), `description` (add `summary` if over 150 chars), `notes`, `technology` (single line), `#tag`, `link URL 'optional title'`, `metadata { key 'value' }`. Use triple quotes (`'''`/`"""`) for multi-line markdown in `summary`/`description`/`notes`.
+**Properties**: `title` (single line), `summary` (max 150 chars), `description` (add `summary` if over 150 chars), `technology` (single line), `#tag`, `link URL 'optional title'`, `metadata { key 'value' }`. Use triple quotes (`'''`/`"""`) for multi-line markdown in `summary`/`description`. No `notes` in `model`.
 
 **Strings**: `'single-quoted'` or `"double-quoted"`; escape quotes with backslash (`\'` or `\"`)
 
