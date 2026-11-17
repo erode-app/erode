@@ -27,7 +27,8 @@ function locateParent(id: string, files: ReadonlyMap<string, string>): string | 
 /**
  * Picks the file declaring the elements the patch touches. The patch flow writes
  * a single file, so when votes span several files the majority wins, with ties
- * going to the file that received its first vote earliest.
+ * going to the file that received its first vote earliest. When nothing touched is
+ * located, the file declaring the most known elements wins.
  */
 export function selectTargetFileByLocation(
   modelPath: string,
@@ -45,6 +46,14 @@ export function selectTargetFileByLocation(
   for (const file of candidates) {
     if (file && isInside(root, file) && existsSync(file)) {
       votes.set(file, (votes.get(file) ?? 0) + 1);
+    }
+  }
+
+  // Nothing touched is located (e.g. only new top-level components): use the file declaring
+  // the most loaded elements, which keeps the patch inside the loaded project
+  if (votes.size === 0) {
+    for (const file of files.values()) {
+      if (isInside(root, file) && existsSync(file)) votes.set(file, (votes.get(file) ?? 0) + 1);
     }
   }
 

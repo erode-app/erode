@@ -99,6 +99,27 @@ describe('LikeC4Adapter with a multi-project workspace', () => {
     expect(result?.content).toContain("cart -> storefront 'sends updates'");
   });
 
+  it('should add a new top-level component to the selected project', async () => {
+    CONFIG.adapter.likec4.project = 'shop';
+    CONFIG.adapter.likec4.formatAfterPatch = false;
+    const adapter = new LikeC4Adapter();
+    const model = await adapter.loadFromPath(workspace);
+    const provider: AIProvider = { extractDependencies: vi.fn(), analyzeDrift: vi.fn() };
+
+    const result = await new LikeC4Patcher().patch({
+      modelPath: workspace,
+      relationships: [],
+      existingRelationships: adapter.getAllRelationships(),
+      componentIndex: model.componentIndex,
+      provider,
+      newComponents: [{ id: 'payments', kind: 'service', name: 'Payments' }],
+      elementSourceFiles: adapter.getElementSourceFiles(),
+    });
+
+    expect(result?.absolutePath).toBe(shopModel);
+    expect(result?.validationSkipped).toBeUndefined();
+  });
+
   it('should validate a patch against errors in its own project only', async () => {
     const copy = mkdtempSync(path.join(tmpdir(), 'erode-multi-project-'));
     try {
