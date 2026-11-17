@@ -11,7 +11,7 @@ import {
 import { ANTHROPIC_MODELS } from './models.js';
 
 const MAX_TOKENS_BY_OUTPUT_SIZE = {
-  small: 600,
+  small: 1500,
   medium: 1500,
   large: 8192,
 } satisfies Record<OutputSize, number>;
