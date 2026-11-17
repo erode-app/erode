@@ -22,6 +22,11 @@ export function maskStringsAndComments(text: string, options: ScanOptions = {}):
   };
   const atHashComment = (at: number): boolean =>
     !!options.hashComments && text.slice(text.lastIndexOf('\n', at - 1) + 1, at).trim() === '';
+  // A comment opens only at a token boundary (line start, whitespace, `{`, `}` or `;`), never
+  // inside an unquoted token. Unquoted URIs such as `link https://x.io/api/*` contain `//` and
+  // `/*`, and mistaking them for comments would hide every later closing brace. Real comments in
+  // models are always written after whitespace or a brace, so this is the safest boundary.
+  const commentMayStart = (at: number): boolean => at === 0 || /[\s{};]/.test(text.charAt(at - 1));
   const lineEnd = (from: number): number => {
     const newline = text.indexOf('\n', from);
     return newline === -1 ? text.length : newline;
@@ -44,12 +49,11 @@ export function maskStringsAndComments(text: string, options: ScanOptions = {}):
         end = Math.min(end + 1, text.length);
       }
     } else if (
-      // `//` right after `:` belongs to an unquoted URI such as `link https://x.io`
-      (ch === '/' && text[i + 1] === '/' && text[i - 1] !== ':') ||
+      (ch === '/' && text[i + 1] === '/' && commentMayStart(i)) ||
       (ch === '#' && atHashComment(i))
     ) {
       end = lineEnd(i);
-    } else if (ch === '/' && text[i + 1] === '*') {
+    } else if (ch === '/' && text[i + 1] === '*' && commentMayStart(i)) {
       const close = text.indexOf('*/', i + 2);
       end = close === -1 ? text.length : close + 2;
     } else {
