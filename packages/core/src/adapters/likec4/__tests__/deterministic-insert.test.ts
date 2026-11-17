@@ -12,8 +12,12 @@ describe('LikeC4Patcher deterministic insert', () => {
 
   it('splits a one-line model block', () => {
     expect(patcher.insert("model { a = service 'A' }", ['  a -> b'])).toBe(
-      "model { a = service 'A'\n\na -> b\n}"
+      "model { a = service 'A'\n\n  a -> b\n}"
     );
+  });
+
+  it('indents entries one level inside an empty model block', () => {
+    expect(patcher.insert('  model {\n  }', ['a -> b'])).toBe('  model {\n\n    a -> b\n  }');
   });
 
   it('ignores braces inside quoted titles', () => {

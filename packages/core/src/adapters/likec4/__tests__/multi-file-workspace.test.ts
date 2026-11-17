@@ -67,7 +67,7 @@ describe('LikeC4 multi-file workspace', () => {
     expect(result?.absolutePath).toBe(path.join(workspace, 'spec.c4'));
     expect(result?.validationSkipped).toBeUndefined();
     expect(result?.content).toMatch(
-      /model \{ shared = system 'Shared Platform'\n\nshared -> core\.billing 'hosts'\n\}/
+      /model \{ shared = system 'Shared Platform'\n\n {2}shared -> core\.billing 'hosts'\n\}/
     );
   });
 

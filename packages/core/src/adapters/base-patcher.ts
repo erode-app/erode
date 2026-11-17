@@ -362,9 +362,9 @@ export abstract class BasePatcher implements ModelPatcher {
 
   protected deterministicInsert(content: string, lines: string[]): string {
     // Insert before the end of the last model block, else before the last `}` in the file
+    const block = findModelBlocks(content, this.scanOptions).at(-1);
     const closeAt =
-      findModelBlocks(content, this.scanOptions).at(-1)?.close ??
-      maskStringsAndComments(content, this.scanOptions).lastIndexOf('}');
+      block?.close ?? maskStringsAndComments(content, this.scanOptions).lastIndexOf('}');
     if (closeAt === -1) {
       return content + '\n' + lines.join('\n') + '\n';
     }
@@ -386,7 +386,11 @@ export abstract class BasePatcher implements ModelPatcher {
     }
 
     const lineAbove = contentLines[insertIndex - 1] ?? '';
-    const indent = /^(\s*)/.exec(lineAbove)?.[1] ?? this.defaultIndent;
+    const aboveIsOpener = block
+      ? content.slice(0, block.open).split('\n').length === insertIndex
+      : lineAbove.trimEnd().endsWith('{');
+    const aboveIndent = /^[ \t]*/.exec(lineAbove)?.[0] ?? '';
+    const indent = aboveIsOpener ? aboveIndent + this.defaultIndent : aboveIndent;
     contentLines.splice(insertIndex, 0, '', ...lines.flatMap((entry) => reindent(entry, indent)));
 
     return contentLines.join('\n');
@@ -414,6 +418,31 @@ function reindent(entry: string, indent: string): string[] {
   return lines.map((l) => (l.trim().length > 0 ? indent + l.slice(common) : ''));
 }
 
+/** Whether `entry`'s non-blank lines appear, trimmed and in order, as a contiguous run in `lines`. */
+function containsRun(lines: readonly string[], entry: string): boolean {
+  const run = entry
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+  if (run.length === 0) return true;
+  for (let i = 0; i + run.length <= lines.length; i++) {
+    if (run.every((l, k) => lines[i + k] === l)) return true;
+  }
+  return false;
+}
+
+function braceDelta(text: string, scanOptions?: ScanOptions): number {
+  const { open, close } = countBraces(text, scanOptions);
+  return open - close;
+}
+
+function rejectPatch(reason: string, data: unknown): false {
+  if (CONFIG.debug.verbose) {
+    console.error(`[quickValidatePatch] Failed: ${reason}`, JSON.stringify(data));
+  }
+  return false;
+}
+
 /** Quick structural validation shared by both patchers. */
 export function quickValidatePatch(
   original: string,
@@ -423,37 +452,23 @@ export function quickValidatePatch(
 ): boolean {
   const originalLines = original.split('\n').filter((l) => l.trim().length > 0);
   for (const line of originalLines) {
-    if (!patched.includes(line)) {
-      if (CONFIG.debug.verbose) {
-        console.error('[quickValidatePatch] Failed: original line missing', JSON.stringify(line));
-      }
-      return false;
-    }
+    if (!patched.includes(line)) return rejectPatch('original line missing', line);
   }
 
-  // Multi-line entries are checked per line, since the LLM may re-indent nested blocks
-  const insertedSubLines = insertedLines.flatMap((entry) =>
-    entry.split('\n').filter((l) => l.trim().length > 0)
-  );
-  for (const line of insertedSubLines) {
-    if (!patched.includes(line.trim())) {
-      if (CONFIG.debug.verbose) {
-        console.error('[quickValidatePatch] Failed: inserted line missing', JSON.stringify(line));
-      }
-      return false;
-    }
+  // Each entry must appear as a block; the LLM may re-indent it, so lines are compared trimmed
+  const patchedLines = patched
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+  for (const entry of insertedLines) {
+    if (!containsRun(patchedLines, entry)) return rejectPatch('inserted entry missing', entry);
   }
 
-  const { open: openBraces, close: closeBraces } = countBraces(patched, scanOptions);
-  if (openBraces !== closeBraces) {
-    if (CONFIG.debug.verbose) {
-      console.error(
-        '[quickValidatePatch] Failed: brace imbalance',
-        JSON.stringify({ open: openBraces, close: closeBraces })
-      );
-    }
-    return false;
-  }
+  // Compare deltas, not balance, so a file the scanner misreads does not reject every patch
+  const expected =
+    braceDelta(original, scanOptions) + braceDelta(insertedLines.join('\n'), scanOptions);
+  const actual = braceDelta(patched, scanOptions);
+  if (actual !== expected) return rejectPatch('brace delta mismatch', { expected, actual });
 
   return true;
 }

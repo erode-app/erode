@@ -5,7 +5,7 @@ import { knownRelationshipKinds, resolveRelationshipKind } from '../relationship
 import { validateLikeC4Dsl } from './dsl-validator.js';
 import { formatLikeC4Dsl } from './dsl-formatter.js';
 import { componentDefinition, escapeLikeC4String, previewModelEdits } from './model-edits.js';
-import { findModelBlocks } from '../dsl-scanner.js';
+import { findModelBlocks, maskStringsAndComments } from '../dsl-scanner.js';
 import type { StructuredRelationship, NewComponent } from '../../analysis/analysis-types.js';
 import type { ModelRelationship } from '../architecture-types.js';
 import type { DslValidationResult } from '../model-patcher.js';
@@ -82,7 +82,7 @@ export class LikeC4Patcher extends BasePatcher {
         continue; // dangling symlink or unreadable file
       }
       if (findModelBlocks(content).length === 0) continue;
-      if (content.includes('->')) return file;
+      if (maskStringsAndComments(content).includes('->')) return file;
       withModel ??= file;
     }
 
@@ -108,7 +108,12 @@ export class LikeC4Patcher extends BasePatcher {
     if (CONFIG.adapter.likec4.patchStrategy !== 'model-edits') {
       return null;
     }
-    const outcome = await previewModelEdits(modelPath, components, relationshipLines);
+    const outcome = await previewModelEdits(
+      modelPath,
+      components,
+      relationshipLines,
+      CONFIG.adapter.likec4.project
+    );
     if (!outcome.ok) {
       this.debugLog('Model edits unavailable; falling back to text patching', outcome.reason);
       return null;

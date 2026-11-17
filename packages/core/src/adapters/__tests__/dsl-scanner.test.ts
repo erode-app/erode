@@ -51,6 +51,43 @@ describe('findModelBlocks', () => {
   });
 });
 
+describe('unquoted URIs', () => {
+  it('keeps the brace after a LikeC4 link URI', () => {
+    const text = "model {\n  api = service 'API' { link https://x.io }\n}";
+    expect(countBraces(text)).toEqual({ open: 2, close: 2 });
+    expect(findModelBlocks(text)).toEqual([{ open: 6, close: text.length - 1 }]);
+  });
+
+  it('keeps the brace after a Structurizr url', () => {
+    const options = { quotes: ['"'], hashComments: true };
+    const text = 'model {\n  a = softwareSystem "A" { url https://x.io }\n}';
+    expect(countBraces(text, options)).toEqual({ open: 2, close: 2 });
+    expect(findModelBlocks(text, options)).toEqual([{ open: 6, close: text.length - 1 }]);
+  });
+
+  it('still treats // after a space as a comment', () => {
+    expect(countBraces('a { // }\n}')).toEqual({ open: 1, close: 1 });
+  });
+});
+
+describe('findModelBlocks statement starts', () => {
+  it('ignores a byte order mark on the first line', () => {
+    expect(findModelBlocks('\uFEFFmodel {\n}')).toEqual([{ open: 7, close: 9 }]);
+  });
+
+  it('finds model after { or ; on the same line', () => {
+    const options = { quotes: ['"'], hashComments: true };
+    const text = 'workspace "x" { model {\n  a = person "A"\n} }';
+    expect(findModelBlocks(text, options)).toEqual([{ open: 22, close: text.length - 3 }]);
+    expect(findModelBlocks('views { }; model { }')).toEqual([{ open: 17, close: 19 }]);
+  });
+
+  it('still rejects extend blocks and elements named model on the same line', () => {
+    expect(findModelBlocks('model { extend x.datamodel { } }')).toEqual([{ open: 6, close: 31 }]);
+    expect(findModelBlocks("x { model = service 'X' { } }")).toEqual([]);
+  });
+});
+
 describe('countBraces', () => {
   it('counts only structural braces', () => {
     expect(countBraces("a { description '}' /* } */ // {\n}")).toEqual({ open: 1, close: 1 });

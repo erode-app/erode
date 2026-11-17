@@ -9,11 +9,12 @@ export interface ScanOptions {
  * Copy of `text` with the contents of strings and comments replaced by spaces.
  * Newlines and offsets are kept, so positions found in the result apply to `text`.
  * Handles quoted strings (backslash escapes, may span lines), triple-quoted strings,
- * `//` line comments and `/* *\/` block comments.
+ * `//` line comments and `/* *\/` block comments. A byte order mark is blanked too.
  */
 export function maskStringsAndComments(text: string, options: ScanOptions = {}): string {
   const quotes = options.quotes ?? ["'", '"'];
   const out = text.split('');
+  if (out[0] === '\uFEFF') out[0] = ' ';
   const blank = (from: number, to: number): void => {
     for (let k = from; k < to && k < out.length; k++) {
       if (out[k] !== '\n') out[k] = ' ';
@@ -42,7 +43,11 @@ export function maskStringsAndComments(text: string, options: ScanOptions = {}):
         }
         end = Math.min(end + 1, text.length);
       }
-    } else if ((ch === '/' && text[i + 1] === '/') || (ch === '#' && atHashComment(i))) {
+    } else if (
+      // `//` right after `:` belongs to an unquoted URI such as `link https://x.io`
+      (ch === '/' && text[i + 1] === '/' && text[i - 1] !== ':') ||
+      (ch === '#' && atHashComment(i))
+    ) {
       end = lineEnd(i);
     } else if (ch === '/' && text[i + 1] === '*') {
       const close = text.indexOf('*/', i + 2);
@@ -75,13 +80,14 @@ export interface BlockSpan {
 }
 
 /**
- * Balanced `model { ... }` blocks, in file order. The keyword must start a line and the
- * `{` may follow on a later line, so `extend shop.datamodel {` is not a model block.
+ * Balanced `model { ... }` blocks, in file order. The keyword must start a statement (a line,
+ * or follow `{` or `;`) and the `{` may follow on a later line, so `extend shop.datamodel {`
+ * is not a model block but `workspace "x" { model {` is.
  */
 export function findModelBlocks(text: string, options?: ScanOptions): BlockSpan[] {
   const masked = maskStringsAndComments(text, options);
   const blocks: BlockSpan[] = [];
-  for (const match of masked.matchAll(/^[ \t]*model\s*\{/gm)) {
+  for (const match of masked.matchAll(/(?<=^|[{;])[ \t]*model\s*\{/gm)) {
     const open = match.index + match[0].length - 1;
     const close = matchingBrace(masked, open);
     if (close !== -1) blocks.push({ open, close });
