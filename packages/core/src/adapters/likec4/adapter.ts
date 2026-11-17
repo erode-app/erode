@@ -169,16 +169,13 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
     );
 
     const result = relationships
-      .map((rel) => {
-        const mapped: ModelRelationship = {
-          source: typeof rel.source === 'string' ? rel.source : rel.source.id,
-          target: typeof rel.target === 'string' ? rel.target : rel.target.id,
-          title: rel.title ?? undefined,
-          kind: rel.kind ?? undefined,
-        };
-        if (rel.isBidirectional) mapped.bidirectional = true;
-        return mapped;
-      })
+      .map((rel): ModelRelationship => ({
+        source: typeof rel.source === 'string' ? rel.source : rel.source.id,
+        target: typeof rel.target === 'string' ? rel.target : rel.target.id,
+        title: rel.title ?? undefined,
+        kind: rel.kind ?? undefined,
+        ...(rel.isBidirectional && { bidirectional: true }),
+      }))
       .filter(
         (rel) =>
           !this.isExcluded({

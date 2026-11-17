@@ -1,6 +1,7 @@
 import type { DependencyExtractionResult } from '../schemas/dependency-extraction.schema.js';
 import type { CommitInfo, ComponentRelationshipRef } from './analysis-types.js';
 import type { GitDiffFile } from '../utils/git-diff.js';
+import type { ModelRelationship } from '../adapters/architecture-types.js';
 
 export function formatAllowedDependencies(architectural: {
   relationships?: ComponentRelationshipRef[];
@@ -108,15 +109,7 @@ ${String(idx + 1)}. **${c.id}**
     .join('\n');
 }
 
-export function formatAllRelationships(
-  relationships: {
-    source: string;
-    target: string;
-    kind?: string;
-    title?: string;
-    bidirectional?: boolean;
-  }[]
-): string {
+export function formatAllRelationships(relationships: ModelRelationship[]): string {
   if (relationships.length === 0) {
     return '  - No relationships defined';
   }
