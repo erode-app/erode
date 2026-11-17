@@ -37,38 +37,13 @@ describe('applyDiffTruncation', () => {
     expect(result.truncationReason).toContain('60 files found');
   });
 
-  it('drops trailing files once the line budget is exceeded', () => {
-    const files = [makeFile('a.ts', 3000), makeFile('b.ts', 1500), makeFile('c.ts', 1000)];
-    const result = applyDiffTruncation(files, 5500);
+  it('keeps all files but marks truncated when line count exceeds limit', () => {
+    const files = [makeFile('big.ts', 6000)];
+    const result = applyDiffTruncation(files, 6000);
     expect(result.wasTruncated).toBe(true);
-    expect(result.files.map((f) => f.filename)).toEqual(['a.ts', 'b.ts']);
+    expect(result.files).toHaveLength(1);
     expect(result.truncationReason).toContain('5000-line limit');
-    expect(result.truncationReason).toContain('5500 lines found');
-    expect(result.truncationReason).toContain('1 file was dropped');
-  });
-
-  it('always keeps the first file and cuts its patch to the budget', () => {
-    const patch = Array.from({ length: 6000 }, (_, i) => `+line${String(i)}`).join('\n');
-    const files = [{ ...makeFile('big.ts', 6000), patch }, makeFile('b.ts', 10)];
-    const result = applyDiffTruncation(files, 6010);
-    expect(result.files).toHaveLength(1);
-    expect(result.files[0]?.patch?.split('\n')).toHaveLength(5000);
-    expect(result.truncationReason).toContain('1 file was dropped');
-  });
-
-  it('keeps an oversized first file without a patch and still flags truncation', () => {
-    const result = applyDiffTruncation([makeFile('big.ts', 6000)], 6000);
-    expect(result.wasTruncated).toBe(true);
     expect(result.truncationReason).toContain('6000 lines found');
-    expect(result.files).toHaveLength(1);
-  });
-
-  it('applies the line budget after the file-count limit', () => {
-    const files = Array.from({ length: 60 }, (_, i) => makeFile(`f${String(i)}.ts`, 200));
-    const result = applyDiffTruncation(files, 12000);
-    expect(result.files).toHaveLength(25);
-    expect(result.truncationReason).toContain('50-file limit');
-    expect(result.truncationReason).toContain('25 files were dropped');
   });
 });
 

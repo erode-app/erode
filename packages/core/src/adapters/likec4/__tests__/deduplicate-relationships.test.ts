@@ -17,9 +17,24 @@ describe('deduplicateRelationships', () => {
   const patcher = new TestPatcher();
   const rel = (kind?: string) => ({ source: 'api', target: 'db', kind, description: 'x' });
 
-  it('keeps a relationship whose kind differs from the existing one', () => {
-    const { kept } = patcher.dedupe([rel('async')], [{ source: 'api', target: 'db' }]);
+  it('keeps a relationship when both have a kind and the kinds differ', () => {
+    const { kept } = patcher.dedupe(
+      [rel('async')],
+      [{ source: 'api', target: 'db', kind: 'sync' }]
+    );
     expect(kept).toHaveLength(1);
+  });
+
+  it('drops a relationship when the existing one has no kind', () => {
+    const { kept } = patcher.dedupe([rel('async')], [{ source: 'api', target: 'db' }]);
+    expect(kept).toHaveLength(0);
+  });
+
+  it('applies the kind rule to bidirectional relationships too', () => {
+    const reverse = { source: 'db', target: 'api', kind: 'async', description: 'x' };
+    const existing = { source: 'api', target: 'db', bidirectional: true };
+    expect(patcher.dedupe([reverse], [{ ...existing, kind: 'sync' }]).kept).toHaveLength(1);
+    expect(patcher.dedupe([reverse], [existing]).kept).toHaveLength(0);
   });
 
   it('drops a relationship with the same kind', () => {

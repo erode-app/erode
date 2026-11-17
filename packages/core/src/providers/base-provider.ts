@@ -38,24 +38,26 @@ export function matchComponentId(responseText: string, ids: string[]): string | 
     .trim();
   if (ids.includes(reply)) return reply;
 
-  let best: string | null = null;
+  // Earliest whole-token occurrence wins (the reply leads with its answer); the longest id
+  // breaks ties at the same position.
+  let best: { id: string; at: number } | null = null;
   for (const id of ids) {
-    if (id.length === 0 || (best !== null && id.length <= best.length)) continue;
+    if (id.length === 0) continue;
     let from = 0;
     for (;;) {
       const at = reply.indexOf(id, from);
-      if (at === -1) break;
+      if (at === -1 || (best !== null && at > best.at)) break;
       const after = reply[at + id.length];
       // A trailing "." that ends a sentence is punctuation, not part of the id.
       const afterOk = !isIdChar(after) || (after === '.' && !isIdChar(reply[at + id.length + 1]));
       if (!isIdChar(reply[at - 1]) && afterOk) {
-        best = id;
+        if (best === null || at < best.at || id.length > best.id.length) best = { id, at };
         break;
       }
       from = at + 1;
     }
   }
-  return best;
+  return best?.id ?? null;
 }
 
 function formatDuration(startedAt: bigint): string {

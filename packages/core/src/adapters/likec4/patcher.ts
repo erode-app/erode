@@ -45,6 +45,7 @@ export class LikeC4Patcher extends BasePatcher {
   protected readonly formatName = 'LikeC4Patcher';
   protected readonly formatId = 'likec4';
   protected readonly defaultIndent = '  ';
+  protected readonly kindSensitiveDedup = true;
 
   protected isModelBlockLine(line: string): boolean {
     return line.includes('model {') || line.includes('model{');

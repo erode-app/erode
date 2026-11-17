@@ -22,6 +22,7 @@ export class StructurizrPatcher extends BasePatcher {
   protected readonly formatName = 'StructurizrPatcher';
   protected readonly formatId = 'structurizr';
   protected readonly defaultIndent = '        ';
+  protected readonly kindSensitiveDedup = false;
 
   protected isModelBlockLine(line: string): boolean {
     return /\bmodel\s*\{/.test(line);

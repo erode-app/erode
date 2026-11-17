@@ -191,7 +191,7 @@ describe('GeminiProvider', () => {
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gemini-3.5-flash-lite',
-          config: { maxOutputTokens: 1500, thinkingConfig: { thinkingLevel: 'LOW' } },
+          config: { maxOutputTokens: 3000, thinkingConfig: { thinkingLevel: 'LOW' } },
         })
       );
     });

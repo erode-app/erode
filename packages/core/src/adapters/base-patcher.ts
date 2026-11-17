@@ -60,6 +60,8 @@ export abstract class BasePatcher implements ModelPatcher {
   protected abstract readonly formatName: string;
   protected abstract readonly formatId: string;
   protected abstract readonly defaultIndent: string;
+  /** Whether differing relationship kinds make a same-endpoint proposal distinct. */
+  protected abstract readonly kindSensitiveDedup: boolean;
 
   protected abstract isModelBlockLine(line: string): boolean;
 
@@ -252,15 +254,20 @@ export abstract class BasePatcher implements ModelPatcher {
     existingRelationships: ModelRelationship[],
     skipped: PatchResult['skipped']
   ): StructuredRelationship[] {
+    // A proposal is a duplicate of a same-endpoint relationship unless both carry a kind and
+    // the kinds differ. Structurizr opts out: its `kind` is free-text technology.
+    const kindsDiffer = (a?: string, b?: string): boolean =>
+      this.kindSensitiveDedup && a !== undefined && b !== undefined && a !== b;
     return valid.filter((rel) => {
       const isDuplicate = existingRelationships.some(
         (existing) =>
           (existing.source === rel.source &&
             existing.target === rel.target &&
-            (rel.kind === undefined || existing.kind === rel.kind)) ||
+            !kindsDiffer(rel.kind, existing.kind)) ||
           (existing.bidirectional === true &&
             existing.source === rel.target &&
-            existing.target === rel.source)
+            existing.target === rel.source &&
+            !kindsDiffer(rel.kind, existing.kind))
       );
       if (isDuplicate) {
         skipped.push({

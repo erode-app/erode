@@ -15,6 +15,7 @@ import {
   selectComponentWithAI,
   resolveAndCloneModel,
   findComponentsForRepo,
+  applyLineBudget,
 } from './pipeline-shared.js';
 import { CONFIG } from '../utils/config.js';
 import { loadSkipPatterns, applySkipPatterns } from '../utils/skip-patterns.js';
@@ -122,6 +123,19 @@ export async function runAnalyze(
         prData.deletions = included.reduce((sum, f) => sum + f.deletions, 0);
         p.info(`Excluded ${String(excluded)} file(s) matching skip patterns`);
       }
+    }
+
+    // ── Line budget (after skip patterns so excluded files never use it) ──
+    const budget = applyLineBudget(prData.files);
+    if (budget.truncationReason) {
+      prData.files = budget.files;
+      prData.diff = buildDiffFromFiles(budget.files);
+      prData.changed_files = budget.files.length;
+      prData.wasTruncated = true;
+      prData.truncationReason = [prData.truncationReason, budget.truncationReason]
+        .filter(Boolean)
+        .join(' ');
+      p.warn(budget.truncationReason);
     }
 
     // ── Find components for this repository ──────────────────────────────

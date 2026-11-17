@@ -14,8 +14,10 @@ export interface GenerationProfile {
 export function getGenerationProfileForPhase(phase: AnalysisPhase): GenerationProfile {
   switch (phase) {
     case AnalysisPhase.COMPONENT_RESOLUTION:
-    case AnalysisPhase.DEPENDENCY_SCAN:
       return { outputSize: 'small', reasoningEffort: 'low' };
+    case AnalysisPhase.DEPENDENCY_SCAN:
+      // The dependency JSON can be long, so it gets more room than a component pick.
+      return { outputSize: 'medium', reasoningEffort: 'low' };
     case AnalysisPhase.MODEL_UPDATE:
       return { outputSize: 'medium', reasoningEffort: 'medium' };
     case AnalysisPhase.CHANGE_ANALYSIS:

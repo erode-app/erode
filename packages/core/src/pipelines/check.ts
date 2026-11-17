@@ -26,6 +26,7 @@ import {
   selectComponentWithAI,
   resolveAndCloneModel,
   findComponentsForRepo,
+  applyLineBudgetToDiff,
 } from './pipeline-shared.js';
 
 export interface CheckOptions {
@@ -146,10 +147,19 @@ export async function runCheck(
     }
 
     // ── Filter diff to match included files ────────────────────────────
-    const effectiveDiff =
+    let effectiveDiff =
       !options.skipFileFiltering && files.length > 0
         ? filterDiffByFiles(options.diff, files)
         : options.diff;
+
+    // ── Line budget (after skip patterns so excluded files never use it) ──
+    const budget = applyLineBudgetToDiff(effectiveDiff);
+    if (budget.truncationReason) {
+      effectiveDiff = budget.diff;
+      const keptNames = new Set(parseFilesFromDiff(effectiveDiff).map((f) => f.filename));
+      files = files.filter((f) => keptNames.has(f.filename));
+      p.warn(budget.truncationReason);
+    }
 
     // ── Stage 1: Component selection ─────────────────────────────────────
     let selectedComponent: ArchitecturalComponent = defaultComponent;

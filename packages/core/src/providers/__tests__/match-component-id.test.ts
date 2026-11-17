@@ -13,9 +13,14 @@ describe('matchComponentId', () => {
     expect(matchComponentId('"api"', ids)).toBe('api');
   });
 
-  it('finds a whole-token id inside prose and picks the longest', () => {
+  it('finds a whole-token id inside prose', () => {
     expect(matchComponentId('The component is api-gateway.', ids)).toBe('api-gateway');
-    expect(matchComponentId('I think api, not system.web', ids)).toBe('system.web');
+    expect(matchComponentId('I think system.web, not api', ids)).toBe('system.web');
+  });
+
+  it('prefers the earliest match over a longer id mentioned later', () => {
+    expect(matchComponentId('api. api-gateway is not affected', ids)).toBe('api');
+    expect(matchComponentId('api-gateway, not api', ids)).toBe('api-gateway');
   });
 
   it('does not match inside a longer token', () => {

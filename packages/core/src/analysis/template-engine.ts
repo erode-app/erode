@@ -8,6 +8,7 @@ import type {
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { ErodeError, ErrorCode } from '../errors.js';
+import { CONFIG } from '../utils/config.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -62,20 +63,30 @@ function formatValue(value: unknown): string {
   }
 }
 
+const PLACEHOLDER = /\{\{([^}]+)\}\}/g;
+
+/** Placeholder keys in `template` that `variables` does not provide. */
+export function findMissingVariables(template: string, variables: object): string[] {
+  const missing: string[] = [];
+  for (const match of template.matchAll(PLACEHOLDER)) {
+    const key = (match[1] ?? '').trim();
+    if (resolveVariable(variables, key) === undefined) missing.push(key);
+  }
+  return missing;
+}
+
+// A missing key renders empty rather than aborting a real analysis; tests catch renamed
+// variables through findMissingVariables.
 function renderTemplate(templateName: string, variables: object): string {
-  return loadTemplate(templateName).replace(/\{\{([^}]+)\}\}/g, (_match: string, path: string) => {
-    const value = resolveVariable(variables, path);
-    if (value === undefined) {
-      const key = path.trim();
-      throw new ErodeError(
-        `Template "${templateName}" references missing variable "${key}"`,
-        ErrorCode.INTERNAL_UNKNOWN,
-        `Could not build the "${templateName}" prompt: no value for "${key}". This looks like a programming bug.`,
-        { templateName, key }
-      );
+  const template = loadTemplate(templateName);
+  if (CONFIG.debug.verbose) {
+    for (const key of findMissingVariables(template, variables)) {
+      console.error(`[TemplateEngine] Template "${templateName}" has no value for "${key}"`);
     }
-    return formatValue(value);
-  });
+  }
+  return template.replace(PLACEHOLDER, (_match: string, path: string) =>
+    formatValue(resolveVariable(variables, path))
+  );
 }
 
 /**

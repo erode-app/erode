@@ -1,5 +1,11 @@
-import { describe, it, expect } from 'vitest';
-import { TemplateEngine } from '../template-engine.js';
+import { describe, it, expect, vi } from 'vitest';
+import { readFileSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import { TemplateEngine, findMissingVariables } from '../template-engine.js';
+import { CONFIG } from '../../utils/config.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 import type {
   ComponentSelectionPromptVars,
   DependencyExtractionPromptVars,
@@ -87,21 +93,35 @@ describe('TemplateEngine real templates', () => {
     );
   });
 
-  it('throws naming the template and key when a variable is missing', () => {
-    const { files: _files, ...incomplete } = componentVars;
-    expect(() =>
-      TemplateEngine.loadComponentSelectionPrompt(incomplete as ComponentSelectionPromptVars)
-    ).toThrow(/component-selection.*files/);
+  it('leaves no key of any real template without a value', () => {
+    // A missing key renders empty at runtime, so this is what catches a renamed variable.
+    const read = (name: string) =>
+      readFileSync(join(__dirname, '..', 'prompts', `${name}.md`), 'utf-8');
+    expect(findMissingVariables(read('dependency-extraction'), dependencyVars)).toEqual([]);
+    expect(findMissingVariables(read('component-selection'), componentVars)).toEqual([]);
+    expect(findMissingVariables(read('drift-analysis'), driftVars)).toEqual([]);
+    expect(findMissingVariables(read('model-patch'), patchVars)).toEqual([]);
   });
 
-  it('throws for a missing nested key', () => {
-    const vars = {
-      ...driftVars,
-      changeRequest: { ...driftVars.changeRequest, base: {} },
-    } as unknown as DriftAnalysisPromptVars;
-    expect(() => TemplateEngine.loadDriftAnalysisPrompt(vars)).toThrow(
-      /drift-analysis.*changeRequest\.base\.ref/
-    );
+  it('reports missing keys, including nested ones', () => {
+    expect(findMissingVariables('{{a}} {{ b.c }} {{d}}', { a: '', b: {} })).toEqual(['b.c', 'd']);
+  });
+
+  it('renders a missing variable as empty and warns in verbose mode', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const previous = CONFIG.debug.verbose;
+    CONFIG.debug.verbose = true;
+    try {
+      const { files: _files, ...incomplete } = componentVars;
+      const output = TemplateEngine.loadComponentSelectionPrompt(
+        incomplete as ComponentSelectionPromptVars
+      );
+      expect(output).not.toMatch(/\{\{[^}]*\}\}/);
+      expect(spy).toHaveBeenCalledWith(expect.stringMatching(/component-selection.*files/));
+    } finally {
+      CONFIG.debug.verbose = previous;
+      spy.mockRestore();
+    }
   });
 
   it('renders an explicit empty string', () => {
