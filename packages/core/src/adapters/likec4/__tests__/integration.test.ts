@@ -1,4 +1,4 @@
-import { describe, beforeAll } from 'vitest';
+import { describe, beforeAll, it, expect } from 'vitest';
 import { LikeC4Adapter } from '../adapter.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,4 +21,16 @@ describe('LikeC4Adapter Integration', () => {
   });
 
   runAdapterContractTests(() => adapter);
+
+  it('should read element descriptions from the computed model', () => {
+    expect(adapter.findComponentById('frontend')?.description).toBe(
+      'Customer-facing web application'
+    );
+    expect(adapter.findComponentById('database')?.description).toBe('Primary data store');
+    expect(adapter.getAllComponents().every((c) => typeof c.description === 'string')).toBe(true);
+  });
+
+  it('should read element technology from the computed model', () => {
+    expect(adapter.findComponentById('api_gateway')?.technology).toBe('Node.js');
+  });
 });

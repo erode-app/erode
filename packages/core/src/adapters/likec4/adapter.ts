@@ -154,7 +154,7 @@ export class LikeC4Adapter implements ArchitectureModelAdapter {
       .map((el) => ({
         id: el.id,
         name: el.title ?? el.id,
-        description: typeof el.description === 'string' ? el.description : undefined,
+        description: el.description,
         repository: this.extractRepositoryUrl(el),
         tags: el.tags ?? [],
         type: el.kind,

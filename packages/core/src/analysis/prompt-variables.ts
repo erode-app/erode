@@ -46,6 +46,7 @@ export interface DriftAnalysisPromptVars {
     name: string;
     id: string;
     type: string;
+    description: string;
     repository: string;
     tags: string;
   };

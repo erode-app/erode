@@ -158,6 +158,7 @@ export const PromptBuilder = {
         name: component.name,
         id: component.id,
         type: component.type,
+        description: component.description ?? 'None',
         repository: component.repository ?? 'Unknown',
         tags: component.tags.join(', ') || 'None',
       },
