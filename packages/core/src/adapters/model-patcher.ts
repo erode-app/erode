@@ -1,6 +1,7 @@
 import type { StructuredRelationship, NewComponent } from '../analysis/analysis-types.js';
 import type { ModelRelationship, ComponentIndex } from './architecture-types.js';
 import type { AIProvider } from '../providers/ai-provider.js';
+import type { ValidationDiagnostic } from './architecture-adapter.js';
 import { LikeC4Patcher } from './likec4/patcher.js';
 import { StructurizrPatcher } from './structurizr/patcher.js';
 import { ErodeError, ErrorCode } from '../errors.js';
@@ -56,6 +57,8 @@ export interface ModelPatchOptions {
   componentIndex: ComponentIndex;
   provider: AIProvider;
   newComponents?: NewComponent[];
+  /** Warnings in the model before patching; matching validation warnings are not reported */
+  validationBaseline?: readonly ValidationDiagnostic[];
 }
 
 export interface ModelPatcher {

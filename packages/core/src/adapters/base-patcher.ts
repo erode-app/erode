@@ -9,6 +9,7 @@ import type {
 } from './model-patcher.js';
 import type { StructuredRelationship, NewComponent } from '../analysis/analysis-types.js';
 import type { ModelRelationship, ComponentIndex } from './architecture-types.js';
+import type { ValidationDiagnostic } from './architecture-adapter.js';
 import type { AIProvider } from '../providers/ai-provider.js';
 import { CONFIG } from '../utils/config.js';
 
@@ -44,7 +45,8 @@ export abstract class BasePatcher implements ModelPatcher {
   protected abstract validateDsl(
     workspace: string,
     file: string,
-    content: string
+    content: string,
+    baseline?: readonly ValidationDiagnostic[]
   ): Promise<DslValidationResult>;
 
   protected postFormat(content: string, _modelPath: string, _targetFile: string): Promise<string> {
@@ -127,11 +129,18 @@ export abstract class BasePatcher implements ModelPatcher {
       originalContent,
       insertedLines,
       modelPath,
-      targetFile
+      targetFile,
+      options.validationBaseline
     ).catch(() => null);
     const accepted = llmResult?.content
       ? llmResult
-      : await this.tryDeterministicFallback(originalContent, insertedLines, modelPath, targetFile);
+      : await this.tryDeterministicFallback(
+          originalContent,
+          insertedLines,
+          modelPath,
+          targetFile,
+          options.validationBaseline
+        );
 
     if (!accepted?.content) {
       return null;
@@ -229,7 +238,8 @@ export abstract class BasePatcher implements ModelPatcher {
     originalContent: string,
     insertedLines: string[],
     modelPath: string,
-    targetFile: string
+    targetFile: string,
+    baseline?: readonly ValidationDiagnostic[]
   ): Promise<AcceptedPatch | null> {
     if (!provider.patchModel) {
       return null;
@@ -238,7 +248,7 @@ export abstract class BasePatcher implements ModelPatcher {
       this.debugLog('Attempting LLM-based patching');
       const result = await provider.patchModel(originalContent, insertedLines, this.formatId);
       if (quickValidatePatch(originalContent, result, insertedLines)) {
-        const dslResult = await this.validateDsl(modelPath, targetFile, result);
+        const dslResult = await this.validateDsl(modelPath, targetFile, result, baseline);
         if (dslResult.valid || dslResult.skipped) {
           this.debugLog('LLM patch accepted', {
             valid: dslResult.valid,
@@ -261,11 +271,12 @@ export abstract class BasePatcher implements ModelPatcher {
     originalContent: string,
     insertedLines: string[],
     modelPath: string,
-    targetFile: string
+    targetFile: string,
+    baseline?: readonly ValidationDiagnostic[]
   ): Promise<AcceptedPatch | null> {
     this.debugLog('Using deterministic fallback');
     const deterministic = this.deterministicInsert(originalContent, insertedLines);
-    const dslResult = await this.validateDsl(modelPath, targetFile, deterministic);
+    const dslResult = await this.validateDsl(modelPath, targetFile, deterministic, baseline);
     if (dslResult.valid || dslResult.skipped) {
       this.debugLog('Deterministic patch accepted', {
         valid: dslResult.valid,

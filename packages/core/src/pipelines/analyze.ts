@@ -271,6 +271,7 @@ export async function runAnalyze(
         componentIndex: architectureModel.componentIndex,
         provider,
         newComponents: ctx.analysisResult.modelUpdates?.newComponents,
+        validationBaseline: adapter.getValidationBaseline?.(),
       });
       if (ctx.patchResult) {
         const relCount = ctx.patchResult.insertedLines.length;
