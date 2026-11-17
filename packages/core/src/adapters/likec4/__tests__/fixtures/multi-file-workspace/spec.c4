@@ -3,6 +3,4 @@ specification {
   element service
 }
 
-model {
-  shared = system 'Shared Platform'
-}
+model { shared = system 'Shared Platform' }

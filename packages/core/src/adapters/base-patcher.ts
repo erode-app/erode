@@ -31,6 +31,18 @@ export function acceptedValidation(dslResult: DslValidationResult): Omit<Accepte
   };
 }
 
+/** Index of the `}` closing the first `{` on the line, or -1 if the block continues. */
+function closingBraceOnSameLine(line: string): number {
+  const open = line.indexOf('{');
+  if (open === -1) return -1;
+  let depth = 0;
+  for (let i = open; i < line.length; i++) {
+    if (line[i] === '{') depth++;
+    if (line[i] === '}' && --depth === 0) return i;
+  }
+  return -1;
+}
+
 export abstract class BasePatcher implements ModelPatcher {
   protected abstract readonly formatName: string;
   protected abstract readonly formatId: string;
@@ -349,6 +361,13 @@ export abstract class BasePatcher implements ModelPatcher {
     for (let i = 0; i < contentLines.length; i++) {
       const line = contentLines[i] ?? '';
       if (this.isModelBlockLine(line)) {
+        const closeAt = closingBraceOnSameLine(line);
+        if (closeAt !== -1) {
+          // One-line block such as `model { a = service 'A' }`: split it so lines can go inside
+          contentLines.splice(i, 1, line.slice(0, closeAt).trimEnd(), line.slice(closeAt));
+          insertIndex = i + 1;
+          break;
+        }
         inModel = true;
         braceDepth = 1;
         continue;

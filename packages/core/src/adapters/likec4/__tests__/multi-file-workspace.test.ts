@@ -53,6 +53,23 @@ describe('LikeC4 multi-file workspace', () => {
     expect(result?.content).toContain("edge.gateway -> core.billing 'bills'");
   });
 
+  it('inserts into a one-line model block', async () => {
+    const result = await new LikeC4Patcher().patch({
+      modelPath: workspace,
+      relationships: [{ source: 'shared', target: 'core.billing', description: 'hosts' }],
+      existingRelationships: adapter.getAllRelationships(),
+      componentIndex: model.componentIndex,
+      provider,
+      elementSourceFiles: adapter.getElementSourceFiles(),
+    });
+
+    expect(result?.absolutePath).toBe(path.join(workspace, 'spec.c4'));
+    expect(result?.validationSkipped).toBeUndefined();
+    expect(result?.content).toMatch(
+      /model \{ shared = system 'Shared Platform'\n\nshared -> core\.billing 'hosts'\n\}/
+    );
+  });
+
   it('falls back to the recursive heuristic without element locations', async () => {
     const result = await new LikeC4Patcher().patch({
       modelPath: workspace,

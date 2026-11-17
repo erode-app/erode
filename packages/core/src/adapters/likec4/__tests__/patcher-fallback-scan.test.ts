@@ -83,4 +83,15 @@ describe('LikeC4Patcher fallback scan', () => {
 
     expect(new TestPatcher().findTargetFile('/ws')).toBe(join('/ws', 'model.likec4'));
   });
+
+  it('skips files it cannot read', () => {
+    mockTree({ '/ws': { 'broken.c4': false, 'model.c4': false } }, { '/ws/model.c4': QUALIFYING });
+    const read = mockReadFileSync.getMockImplementation();
+    mockReadFileSync.mockImplementation(((file: string, opts: unknown) => {
+      if (file === join('/ws', 'broken.c4')) throw new Error('ENOENT');
+      return (read as (f: string, o: unknown) => unknown)(file, opts);
+    }) as unknown as typeof readFileSync);
+
+    expect(new TestPatcher().findTargetFile('/ws')).toBe(join('/ws', 'model.c4'));
+  });
 });

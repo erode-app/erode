@@ -75,7 +75,12 @@ export class LikeC4Patcher extends BasePatcher {
     // Prefer a file with a model block and existing relationships, then any model block
     let withModel: string | undefined;
     for (const file of c4Files) {
-      const content = readFileSync(file, 'utf-8');
+      let content: string;
+      try {
+        content = readFileSync(file, 'utf-8');
+      } catch {
+        continue; // dangling symlink or unreadable file
+      }
       if (!content.includes('model {')) continue;
       if (content.includes('->')) return file;
       withModel ??= file;
