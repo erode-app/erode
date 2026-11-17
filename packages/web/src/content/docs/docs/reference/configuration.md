@@ -67,7 +67,7 @@ Environment variable names map to nested JSON keys. For example:
 
 `model-edits` is experimental. Erode lets LikeC4 decide where suggested elements and relationships go, instead of inserting text into the model block.
 
-The patched file contains plain DSL, so your project does not need a newer LikeC4 version. If LikeC4 cannot place the change in a single file, Erode falls back to `text`.
+The patched file contains plain DSL, so your project does not need a newer LikeC4 version. If LikeC4 rejects the change, reports overlaps with other diffs, needs to change more than one file, or the result fails validation, Erode falls back to `text`. Set `ERODE_VERBOSE=true` to log the reason.
 
 See [ADR-012](/docs/contributing/adrs/012-likec4-model-edits-via-diff-blocks/).
 

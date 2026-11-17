@@ -13,7 +13,7 @@ When Erode finds undeclared dependencies or new components, it generates DSL for
 
 Text patching does not know the model's structure. It cannot nest a new element under its parent, it can choose the wrong file in multi-file workspaces, and the LLM step can reorder or drop content that validation does not catch.
 
-LikeC4 1.61 adds model diffs: a `diff` block lists planned `add` and `remove` changes, and `LikeC4.modelEdits.preview({ type: 'apply-diff', ... })` returns the text of each changed document after the diff is merged into the model. Preview does not write files. A probe against LikeC4 1.61.0 confirmed that relationships are inserted as plain DSL inside the `model` block, `extend parent { ... }` places a new element inside its parent definition, and the file with the diff comes back with an empty `after` (delete).
+LikeC4 1.61 adds model diffs: a `diff` block lists planned `add` and `remove` changes, and `modelEdits.preview({ type: 'apply-diff', ... })` on a `LikeC4` instance returns the text of each changed document after the diff is merged into the model. Preview does not write files. A probe against LikeC4 1.61.0 confirmed that relationships are inserted as plain DSL inside the `model` block, `extend parent { ... }` places a new element inside its parent definition, and the file with the diff comes back with an empty `after` (delete).
 
 ## Decision
 
@@ -24,7 +24,7 @@ With `model-edits`, the LikeC4 patcher:
 1. Builds a `diff` block with a random id (`erode_<hex>`) from the new components and relationship lines. Dotted component IDs become `extend <parent> { <leaf> = ... }`.
 2. Writes the block as a new file into the temp workspace copy, loads it with the LikeC4 SDK, and checks that `modelEdits.preview` exists.
 3. Calls `preview` with `action: 'apply'`, drops the proposal file from the result, and uses the single remaining document's `after` as the patched content. The file path is mapped back from the temp copy to the original workspace.
-4. Validates the patched content with the existing DSL validator, then runs post-patch formatting as before.
+4. Validates the patched content with the existing DSL validator, then runs post-patch formatting as before. As with text patching, a skipped validation (validator unavailable) is accepted and flagged as `validationSkipped`.
 
 Any failure falls back to text patching: missing API, diff errors, overlaps with other diffs, more than one changed model file, a model file emptied, or failed validation.
 
