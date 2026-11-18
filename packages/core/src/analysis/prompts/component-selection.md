@@ -43,8 +43,6 @@ Identify the component being modified based on the file paths listed above.
 - ❌ Don't select based on what the code functionally does
 - ❌ Don't guess randomly
 
-## Output Format
+## Output
 
-Respond with ONLY the component ID, nothing else.
-
-Example: `system.backend.api_service`
+Set `componentId` to the exact ID of the selected component, for example `system.backend.api_service`.

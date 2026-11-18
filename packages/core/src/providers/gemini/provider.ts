@@ -9,6 +9,7 @@ import {
   type OutputSize,
   type ReasoningEffort,
 } from '../generation-profile.js';
+import type { StructuredOutputSpec } from '../structured-output.js';
 import { GEMINI_MODELS } from './models.js';
 
 const MAX_OUTPUT_TOKENS_BY_OUTPUT_SIZE = {
@@ -39,7 +40,8 @@ export class GeminiProvider extends BaseProvider {
     model: string,
     prompt: string,
     phase: AnalysisPhase,
-    generationProfile: GenerationProfile
+    generationProfile: GenerationProfile,
+    output?: StructuredOutputSpec
   ): Promise<string> {
     const maxOutputTokens = resolveOutputTokenLimit(
       generationProfile,
@@ -51,7 +53,13 @@ export class GeminiProvider extends BaseProvider {
       const response = await this.client.models.generateContent({
         model,
         contents: prompt,
-        config: { maxOutputTokens, thinkingConfig },
+        config: {
+          maxOutputTokens,
+          thinkingConfig,
+          ...(output
+            ? { responseMimeType: 'application/json', responseJsonSchema: output.jsonSchema }
+            : {}),
+        },
       });
 
       const candidate = response.candidates?.[0];

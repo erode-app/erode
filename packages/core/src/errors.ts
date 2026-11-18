@@ -168,6 +168,18 @@ export class ApiError extends ErodeError {
     return ApiError.fromProviderError(error, 'openai', extractStatusCode);
   }
 }
+/** The model returned output that still fails the stage schema after the repair attempt. */
+export class StructuredOutputError extends ErodeError {
+  constructor(message: string, context: { phase: string; schema: string }) {
+    super(
+      message,
+      ErrorCode.PROVIDER_INVALID_RESPONSE,
+      'The AI response did not match the expected structure, even after one repair attempt. Try again or use a different model.',
+      context
+    );
+    this.name = 'StructuredOutputError';
+  }
+}
 type AdapterType = 'likec4' | 'structurizr';
 export class AdapterError extends ErodeError {
   public readonly adapterType: AdapterType;

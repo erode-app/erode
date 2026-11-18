@@ -3,7 +3,7 @@ title: 'ADR-002: Provider-agnostic AI interface'
 description: AIProvider interface with BaseProvider abstract class and factory pattern for multi-provider support.
 ---
 
-**Status:** Accepted\
+**Status:** Accepted, amended by [ADR-014](/docs/contributing/adrs/014-native-structured-ai-output/)\
 **Date:** 2026-02-26\
 **Authors:** Anders Hassis
 
@@ -16,6 +16,8 @@ Coupling the analysis pipeline directly to a single provider's SDK would force a
 ## Decision
 
 Define an `AIProvider` interface with methods matching the pipeline stages: `selectComponent`, `extractDependencies`, `analyzeDrift`, and `patchModel`. Implement a `BaseProvider` abstract class that contains all shared logic (prompt building via `PromptBuilder`, retry with `withRetry`, JSON extraction, Zod validation). Concrete providers (`GeminiProvider`, `AnthropicProvider`, `OpenAIProvider`) only implement `callModel()`, the single method that makes the SDK-specific API call.
+
+Note: JSON extraction was replaced by native structured output; see [ADR-014](/docs/contributing/adrs/014-native-structured-ai-output/).
 
 A `ProviderFactory` creates the correct provider based on the `AI_PROVIDER` configuration value.
 

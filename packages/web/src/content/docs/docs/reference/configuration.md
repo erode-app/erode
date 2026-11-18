@@ -100,6 +100,14 @@ Each AI provider uses two model tiers: a fast model for extraction stages and an
 | `ERODE_ANTHROPIC_FAST_MODEL`     | Anthropic model for Stages 1–2 and model updates |
 | `ERODE_ANTHROPIC_ADVANCED_MODEL` | Anthropic model for Stage 3 (analysis)           |
 
+Erode requests native structured output (a JSON schema) from every model in the analysis stages, so an overridden fast or advanced model must support it:
+
+- OpenAI: `gpt-4o-2024-08-06` or later.
+- Gemini: a model that supports `responseJsonSchema`.
+- Anthropic: any current Claude model.
+
+An unsupported model fails on its first request.
+
 See [AI Providers](/docs/reference/ai-providers/) for default model names and guidance on choosing a provider.
 
 ## Platform tokens

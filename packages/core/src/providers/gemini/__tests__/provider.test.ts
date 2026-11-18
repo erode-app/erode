@@ -116,7 +116,7 @@ describe('GeminiProvider', () => {
   describe('selectComponent', () => {
     it('should return matching component ID from response', async () => {
       mockGenerateContent.mockResolvedValueOnce({
-        text: 'Based on the files, the component is comp.backend',
+        text: JSON.stringify({ componentId: 'comp.backend' }),
         candidates: [{ finishReason: 'STOP' }],
         usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
       });
@@ -129,23 +129,30 @@ describe('GeminiProvider', () => {
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gemini-3.5-flash-lite',
-          config: { maxOutputTokens: 1500, thinkingConfig: { thinkingLevel: 'LOW' } },
+          config: {
+            maxOutputTokens: 1500,
+            thinkingConfig: { thinkingLevel: 'LOW' },
+            responseMimeType: 'application/json',
+            responseJsonSchema: expect.objectContaining({ type: 'object' }) as unknown,
+          },
         })
       );
     });
 
-    it('should return null when no component matches', async () => {
-      mockGenerateContent.mockResolvedValueOnce({
+    it('should return null when no valid component is returned after one repair', async () => {
+      const invalid = {
         text: 'I cannot determine the component',
         candidates: [{ finishReason: 'STOP' }],
         usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
-      });
+      };
+      mockGenerateContent.mockResolvedValueOnce(invalid).mockResolvedValueOnce(invalid);
 
       const provider = createProvider();
       const result = await provider.selectComponent(
         makeStage1Data(['comp.frontend', 'comp.backend'])
       );
       expect(result).toBeNull();
+      expect(mockGenerateContent).toHaveBeenCalledTimes(2);
     });
 
     it('should return null on empty response', async () => {
@@ -178,7 +185,7 @@ describe('GeminiProvider', () => {
       };
 
       mockGenerateContent.mockResolvedValueOnce({
-        text: '```json\n' + JSON.stringify(responseJson) + '\n```',
+        text: JSON.stringify(responseJson),
         candidates: [{ finishReason: 'STOP' }],
         usageMetadata: { promptTokenCount: 500, candidatesTokenCount: 100 },
       });
@@ -191,17 +198,23 @@ describe('GeminiProvider', () => {
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gemini-3.5-flash-lite',
-          config: { maxOutputTokens: 3000, thinkingConfig: { thinkingLevel: 'LOW' } },
+          config: {
+            maxOutputTokens: 3000,
+            thinkingConfig: { thinkingLevel: 'LOW' },
+            responseMimeType: 'application/json',
+            responseJsonSchema: expect.objectContaining({ type: 'object' }) as unknown,
+          },
         })
       );
     });
 
-    it('should throw on non-JSON response', async () => {
-      mockGenerateContent.mockResolvedValueOnce({
+    it('should throw when both the response and the repair are not JSON', async () => {
+      const invalid = {
         text: 'This is not JSON at all',
         candidates: [{ finishReason: 'STOP' }],
         usageMetadata: { promptTokenCount: 500, candidatesTokenCount: 50 },
-      });
+      };
+      mockGenerateContent.mockResolvedValueOnce(invalid).mockResolvedValueOnce(invalid);
 
       const provider = createProvider();
       await expect(provider.extractDependencies(makePreprocessingData())).rejects.toThrow(
@@ -244,7 +257,12 @@ describe('GeminiProvider', () => {
       expect(mockGenerateContent).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gemini-3.6-flash',
-          config: { maxOutputTokens: 6000, thinkingConfig: { thinkingLevel: 'LOW' } },
+          config: {
+            maxOutputTokens: 6000,
+            thinkingConfig: { thinkingLevel: 'LOW' },
+            responseMimeType: 'application/json',
+            responseJsonSchema: expect.objectContaining({ type: 'object' }) as unknown,
+          },
         })
       );
     });
@@ -400,7 +418,7 @@ describe('GeminiProvider', () => {
     it('should retry on 429 and eventually succeed', async () => {
       const rateLimitError = new ApiError('Rate limited', 429);
       mockGenerateContent.mockRejectedValueOnce(rateLimitError).mockResolvedValueOnce({
-        text: 'comp.api',
+        text: JSON.stringify({ componentId: 'comp.api' }),
         candidates: [{ finishReason: 'STOP' }],
         usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 10 },
       });

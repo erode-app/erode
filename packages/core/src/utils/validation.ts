@@ -43,18 +43,22 @@ export function validatePath(path: string, type: 'file' | 'directory' = 'directo
   }
 }
 
+export function formatZodIssues(issues: readonly z.core.$ZodIssue[]): string {
+  return issues
+    .map((issue, idx) => {
+      const path = issue.path.length > 0 ? issue.path.map(String).join('.') : '(root)';
+      return `  ${String(idx + 1)}. [${path}] ${issue.message}`;
+    })
+    .join('\n');
+}
+
 export function validate<T>(schema: z.ZodType<T>, data: unknown, fieldName?: string): T {
   const result = schema.safeParse(data);
   if (result.success) {
     return result.data;
   }
 
-  const issues = result.error.issues
-    .map((issue, idx) => {
-      const path = issue.path.length > 0 ? issue.path.join('.') : '(root)';
-      return `  ${String(idx + 1)}. [${path}] ${issue.message}`;
-    })
-    .join('\n');
+  const issues = formatZodIssues(result.error.issues);
 
   throw new ErodeError(
     `Validation failed${fieldName ? ` for ${fieldName}` : ''}:\n${issues}`,
