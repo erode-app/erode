@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.0.0](https://github.com/erode-app/erode/compare/0.11.2...1.0.0) (2026-11-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* require Node.js 26 and pin npm ([#392](https://github.com/erode-app/erode/issues/392))
+
+### Features
+
+* **core:** add adapter.likec4.project to select a project in multi-project workspaces ([#404](https://github.com/erode-app/erode/issues/404)) ([0a389fe](https://github.com/erode-app/erode/commit/0a389fe9c522e0a4b139b3d77ef96a3307df6d54))
+* **core:** add opt-in LikeC4 model-edits patch strategy (ADR-012) ([#402](https://github.com/erode-app/erode/issues/402)) ([8402154](https://github.com/erode-app/erode/commit/840215480a73625e4f0de44712dd69e0d652ef70))
+* **core:** include LikeC4 relationship technology, description and tags in drift prompt ([#397](https://github.com/erode-app/erode/issues/397)) ([e016952](https://github.com/erode-app/erode/commit/e0169520d07f654a1ced0f5402bd773dbf91fbf5))
+* **core:** patch the LikeC4 file that declares the touched elements ([#403](https://github.com/erode-app/erode/issues/403)) ([672689f](https://github.com/erode-app/erode/commit/672689fa27918a55577d56f8b437ab96e1c7330d))
+* **core:** surface LikeC4 validation warnings on model patches ([#394](https://github.com/erode-app/erode/issues/394)) ([09d3782](https://github.com/erode-app/erode/commit/09d3782d877fc5d9d6d2db40a9967ec6f9e342f4))
+* **core:** use native structured output for JSON stages ([#413](https://github.com/erode-app/erode/issues/413)) ([b3a34dc](https://github.com/erode-app/erode/commit/b3a34dc5253598843865181759b13143ab2a898b))
+* **core:** warn when the model targets a newer likec4 than erode bundles ([#399](https://github.com/erode-app/erode/issues/399)) ([f0a4784](https://github.com/erode-app/erode/commit/f0a47848b8b0524f644faa042b5ede68e6ca2630))
+
+
+### Bug Fixes
+
+* **core:** derive the CI gate from violations and keep PR content and credentials out of prompts ([#408](https://github.com/erode-app/erode/issues/408)) ([f8fc913](https://github.com/erode-app/erode/commit/f8fc91376e9fc203029609464c93ee4bc263e761))
+* **core:** escape quotes and backslashes in LikeC4 patcher strings ([#395](https://github.com/erode-app/erode/issues/395)) ([599d6d8](https://github.com/erode-app/erode/commit/599d6d8a8de74e1be17b889a22bab82b05f28ecb))
+* **core:** fail closed when LikeC4 DSL validation crashes ([#393](https://github.com/erode-app/erode/issues/393)) ([3276d42](https://github.com/erode-app/erode/commit/3276d4247db969c9c3907028dd55d8f3bef0c147))
+* **core:** make LikeC4 patching string- and comment-aware and default to model-edits ([#410](https://github.com/erode-app/erode/issues/410)) ([d9d9097](https://github.com/erode-app/erode/commit/d9d909754b5e41655d3676c5fc981564f3cef48a))
+* **core:** parse local diffs and repository URLs independently of git config and host ([#412](https://github.com/erode-app/erode/issues/412)) ([38d4961](https://github.com/erode-app/erode/commit/38d496106164c5e3c4f2e31a5b1b56735cce533c))
+* **core:** read LikeC4 element descriptions from RichText objects ([#396](https://github.com/erode-app/erode/issues/396)) ([4b92c15](https://github.com/erode-app/erode/commit/4b92c1574bb10e3088b2c5f076d9d3162094b4f5))
+* **core:** tighten component matching, diff line budget and relationship deduplication ([#409](https://github.com/erode-app/erode/issues/409)) ([79e083a](https://github.com/erode-app/erode/commit/79e083ae9d883d35e9fb473983e4ad745dcf874d))
+* **core:** treat LikeC4 bidirectional relationships as declared both ways ([#398](https://github.com/erode-app/erode/issues/398)) ([0736505](https://github.com/erode-app/erode/commit/07365053b613db7ec9ff044c39fe4f75cf8e5d6d))
+* **core:** use Structurizr DSL identifiers for element ids and patches ([#411](https://github.com/erode-app/erode/issues/411)) ([c146db1](https://github.com/erode-app/erode/commit/c146db15c678ab5582e541c706d0b6d8d8437593))
+
+
+### Build System
+
+* **deps-dev:** bump markdownlint-cli2 from 0.24.0 to 0.24.1 ([#415](https://github.com/erode-app/erode/issues/415)) ([7b26604](https://github.com/erode-app/erode/commit/7b266040bf8f9f149b7b85504ad463a72e67735d))
+* **deps:** bump likec4 from 1.59.3 to 1.61.0 ([#401](https://github.com/erode-app/erode/issues/401)) ([bbd84c2](https://github.com/erode-app/erode/commit/bbd84c273d2aa39e4c468568d099a53f9ffd9030))
+* **deps:** bump minimatch from 11.0.5 to 11.0.6 ([#384](https://github.com/erode-app/erode/issues/384)) ([6389549](https://github.com/erode-app/erode/commit/6389549090552deb26628c11fbcc63b26d6056e9))
+* **deps:** bump semver from 7.8.5 to 7.8.6 ([#416](https://github.com/erode-app/erode/issues/416)) ([74c10da](https://github.com/erode-app/erode/commit/74c10dad899d4010697c003aabbfe9c8f12c413b))
+* require Node.js 26 and pin npm ([#392](https://github.com/erode-app/erode/issues/392)) ([d0a70ec](https://github.com/erode-app/erode/commit/d0a70ec9a1a17ef9e6dd800f2ea9b1395494bfbc))
+
 ## [0.11.2](https://github.com/erode-app/erode/compare/0.11.1...0.11.2) (2026-11-11)
 
 
