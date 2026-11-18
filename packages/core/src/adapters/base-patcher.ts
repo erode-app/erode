@@ -48,10 +48,23 @@ export abstract class BasePatcher implements ModelPatcher {
 
   protected abstract generateDslLines(
     unique: StructuredRelationship[],
-    existing: ModelRelationship[]
+    existing: ModelRelationship[],
+    context?: ModelPatchOptions
   ): string[];
 
-  protected abstract generateComponentDslLines(components: NewComponent[]): string[];
+  protected abstract generateComponentDslLines(
+    components: NewComponent[],
+    context?: ModelPatchOptions
+  ): string[];
+
+  /** Formats that cannot write every new component drop it here and record why in `skipped`. */
+  protected filterNewComponents(
+    components: NewComponent[],
+    _skipped: PatchResult['skipped'],
+    _context?: ModelPatchOptions
+  ): NewComponent[] {
+    return components;
+  }
 
   protected abstract findTargetFile(modelPath: string): string | null;
 
@@ -84,13 +97,15 @@ export abstract class BasePatcher implements ModelPatcher {
 
   async patch(options: ModelPatchOptions): Promise<PatchResult | null> {
     const { modelPath, relationships, existingRelationships, componentIndex, provider } = options;
-    const skipped: PatchResult['skipped'] = [];
+    const skipped: PatchResult['skipped'] = options.skipped ?? [];
 
     this.debugLog('Input relationships', relationships);
 
     // 0. Filter new components — skip any that already exist in the model
-    const genuinelyNew = (options.newComponents ?? []).filter(
-      (c) => !componentIndex.byId.has(c.id)
+    const genuinelyNew = this.filterNewComponents(
+      (options.newComponents ?? []).filter((c) => !componentIndex.byId.has(c.id)),
+      skipped,
+      options
     );
     const pendingComponentIds = new Set(genuinelyNew.map((c) => c.id));
 
@@ -106,7 +121,8 @@ export abstract class BasePatcher implements ModelPatcher {
       relationships,
       componentIndex,
       skipped,
-      pendingComponentIds
+      pendingComponentIds,
+      options
     );
 
     if (skipped.length > 0) {
@@ -130,9 +146,9 @@ export abstract class BasePatcher implements ModelPatcher {
 
     // 3. Generate DSL lines — components first, then relationships
     const componentDslLines =
-      genuinelyNew.length > 0 ? this.generateComponentDslLines(genuinelyNew) : [];
+      genuinelyNew.length > 0 ? this.generateComponentDslLines(genuinelyNew, options) : [];
     const relationshipDslLines =
-      unique.length > 0 ? this.generateDslLines(unique, existingRelationships) : [];
+      unique.length > 0 ? this.generateDslLines(unique, existingRelationships, options) : [];
     const insertedLines = [...componentDslLines, ...relationshipDslLines];
     this.debugLog('Generated DSL lines', insertedLines);
 
@@ -207,7 +223,8 @@ export abstract class BasePatcher implements ModelPatcher {
     relationships: StructuredRelationship[],
     componentIndex: ComponentIndex,
     skipped: PatchResult['skipped'],
-    pendingComponentIds?: Set<string>
+    pendingComponentIds?: Set<string>,
+    _context?: ModelPatchOptions
   ): StructuredRelationship[] {
     return relationships.filter((rel) => {
       if (!componentIndex.byId.has(rel.source) && !pendingComponentIds?.has(rel.source)) {

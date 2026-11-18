@@ -281,7 +281,9 @@ export async function runAnalyze(
       }
       p.start('Generating model patch');
       const patcher = createModelPatcher(adapter.metadata.id);
+      const patchSkipped: PatchResult['skipped'] = [];
       ctx.patchResult = await patcher.patch({
+        skipped: patchSkipped,
         modelPath: effectiveModelPath,
         relationships: ctx.analysisResult.modelUpdates?.relationships ?? [],
         existingRelationships: adapter.getAllRelationships(),
@@ -290,6 +292,7 @@ export async function runAnalyze(
         newComponents: ctx.analysisResult.modelUpdates?.newComponents,
         validationBaseline: adapter.getValidationBaseline?.(),
         elementSourceFiles: adapter.getElementSourceFiles?.(),
+        dslReferences: adapter.getDslReferences?.(),
       });
       if (ctx.patchResult) {
         const relCount = ctx.patchResult.insertedLines.length;
@@ -316,6 +319,9 @@ export async function runAnalyze(
         }
       } else {
         p.info('All relationships already exist or were invalid, no new components to add');
+        for (const { source, target, reason } of patchSkipped) {
+          p.info(`  Skipped ${source} -> ${target}: ${reason}`);
+        }
       }
     } else if (shouldPatch) {
       p.info('No model update relationships or new components from analysis');

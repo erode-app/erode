@@ -16,17 +16,8 @@ import type {
   ArchitectureModel,
   SimpleComponent,
 } from '../architecture-types.js';
-import type {
-  StructurizrWorkspace,
-  StructurizrSoftwareSystem,
-  StructurizrContainer,
-  StructurizrComponent,
-  StructurizrPerson,
-  StructurizrRelationship,
-} from './structurizr-types.js';
-
-type StructurizrElement =
-  StructurizrPerson | StructurizrSoftwareSystem | StructurizrContainer | StructurizrComponent;
+import type { StructurizrWorkspace, StructurizrRelationship } from './structurizr-types.js';
+import { resolveElements, type ResolvedElement, type StructurizrElement } from './element-ids.js';
 
 const BUILTIN_TAGS = new Set([
   'Element',
@@ -42,20 +33,57 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
   protected workspace: StructurizrWorkspace | null = null;
   private componentIndex: ComponentIndex | null = null;
   private relationships: ModelRelationship[] | null = null;
-  private identifierMap = new Map<string, string>();
+  private elements: ResolvedElement[] = [];
+  private dslReferences: ReadonlyMap<string, string> = new Map();
 
   async loadFromPath(dslPath: string): Promise<ArchitectureModel> {
-    const resolvedPath = this.resolveWorkspacePath(resolve(dslPath));
-    validatePath(resolvedPath, 'file');
+    await this.loadWorkspace(dslPath);
+    return this.indexWorkspace();
+  }
 
-    try {
-      const rawWorkspace = await this.parseWorkspace(resolvedPath);
-      this.workspace = validate(StructurizrWorkspaceSchema, rawWorkspace, 'Structurizr workspace');
-    } catch (error) {
-      throw AdapterError.fromStructurizrError(error);
+  async loadAndListComponents(dslPath: string): Promise<SimpleComponent[]> {
+    await this.loadWorkspace(dslPath);
+    this.setElements(resolveElements(this.workspace?.model));
+
+    return this.elements.map(({ element, id, kind }) => ({
+      id,
+      title: element.name,
+      kind,
+      links: element.url ? [element.url] : [],
+      tags: this.parseTags(element.tags),
+    }));
+  }
+
+  /** Element id to the identifier that references it in DSL, for elements that have one. */
+  getDslReferences(): ReadonlyMap<string, string> {
+    return this.dslReferences;
+  }
+
+  /** Replaces the element list and drops everything derived from an earlier load. */
+  private setElements(elements: ResolvedElement[]): void {
+    this.elements = elements;
+    this.componentIndex = null;
+    this.relationships = null;
+    const references = new Map<string, string>();
+    for (const { id, dslReference } of elements) {
+      if (dslReference) references.set(id, dslReference);
     }
+    this.dslReferences = references;
+  }
 
-    this.identifierMap = this.buildIdentifierMap();
+  protected async parseWorkspace(resolvedPath: string): Promise<unknown> {
+    if (resolvedPath.endsWith('.json')) {
+      const content = await readFile(resolvedPath, 'utf-8');
+      return JSON.parse(content) as unknown;
+    }
+    return exportDslToJson(resolvedPath);
+  }
+
+  protected indexWorkspace(): ArchitectureModel {
+    if (!this.workspace) {
+      throw AdapterError.notLoaded('structurizr');
+    }
+    this.setElements(resolveElements(this.workspace.model));
     const components = this.extractComponents();
     this.relationships = this.extractRelationships();
     this.componentIndex = this.buildComponentIndex(components);
@@ -67,72 +95,20 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
     };
   }
 
-  async loadAndListComponents(dslPath: string): Promise<SimpleComponent[]> {
-    const resolvedPath = this.resolveWorkspacePath(resolve(dslPath));
-    validatePath(resolvedPath, 'file');
-
-    try {
-      const rawWorkspace = await this.parseWorkspace(resolvedPath);
-      this.workspace = validate(StructurizrWorkspaceSchema, rawWorkspace, 'Structurizr workspace');
-    } catch (error) {
-      throw AdapterError.fromStructurizrError(error);
-    }
-
-    this.identifierMap = this.buildIdentifierMap();
-    const components: SimpleComponent[] = [];
-
-    this.walkElements((element, parentPath) => {
-      const localId = element.id ?? this.toSnakeCase(element.name ?? '');
-      const resolvedId = this.resolveElementId(element, localId, parentPath);
-      const url = element.url;
-      const links = url ? [url] : [];
-
-      components.push({
-        id: resolvedId,
-        title: element.name,
-        kind: this.getElementType(element, parentPath),
-        links,
-        tags: this.parseTags(element.tags),
-      });
-    });
-
-    return components;
-  }
-
-  protected async parseWorkspace(resolvedPath: string): Promise<unknown> {
-    if (resolvedPath.endsWith('.json')) {
-      const content = await readFile(resolvedPath, 'utf-8');
-      return JSON.parse(content) as unknown;
-    }
-    return exportDslToJson(resolvedPath);
-  }
-
   protected extractComponents(): ArchitecturalComponent[] {
     if (!this.workspace) {
       throw AdapterError.notLoaded('structurizr');
     }
 
-    const components: ArchitecturalComponent[] = [];
-
-    this.walkElements((element, parentPath) => {
-      const localId = element.id ?? this.toSnakeCase(element.name ?? '');
-      const resolvedId = this.resolveElementId(element, localId, parentPath);
-      const tags = this.parseTags(element.tags);
-      const repository = this.extractRepositoryUrl(element);
-      const type = this.getElementType(element, parentPath);
-
-      components.push({
-        id: resolvedId,
-        name: element.name ?? localId,
-        description: element.description,
-        repository,
-        tags,
-        type,
-        technology: typeof element.technology === 'string' ? element.technology : undefined,
-      });
-    });
-
-    return components;
+    return this.elements.map(({ element, id, kind }) => ({
+      id,
+      name: element.name ?? id,
+      description: element.description,
+      repository: this.extractRepositoryUrl(element),
+      tags: this.parseTags(element.tags),
+      type: kind,
+      technology: typeof element.technology === 'string' ? element.technology : undefined,
+    }));
   }
 
   protected extractRelationships(): ModelRelationship[] {
@@ -140,12 +116,13 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
       throw AdapterError.notLoaded('structurizr');
     }
 
+    const idByKey = new Map(this.elements.map((e) => [e.key, e.id]));
     const relationships: ModelRelationship[] = [];
     const seen = new Set<string>();
 
     const addRelationship = (rel: StructurizrRelationship): void => {
-      const source = this.resolveIdentifier(rel.sourceId);
-      const target = this.resolveIdentifier(rel.destinationId);
+      const source = idByKey.get(rel.sourceId);
+      const target = idByKey.get(rel.destinationId);
 
       if (!source || !target) return;
 
@@ -161,19 +138,13 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
       });
     };
 
-    this.walkElements((element) => {
-      if (element.relationships) {
-        for (const rel of element.relationships) {
-          addRelationship(rel);
-        }
-      }
-    });
-
-    const modelRels = this.workspace.model?.relationships;
-    if (modelRels) {
-      for (const rel of modelRels) {
+    for (const { element } of this.elements) {
+      for (const rel of element.relationships ?? []) {
         addRelationship(rel);
       }
+    }
+    for (const rel of this.workspace.model?.relationships ?? []) {
+      addRelationship(rel);
     }
 
     return relationships;
@@ -302,6 +273,18 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
     return false;
   }
 
+  private async loadWorkspace(dslPath: string): Promise<void> {
+    const resolvedPath = this.resolveWorkspacePath(resolve(dslPath));
+    validatePath(resolvedPath, 'file');
+
+    try {
+      const rawWorkspace = await this.parseWorkspace(resolvedPath);
+      this.workspace = validate(StructurizrWorkspaceSchema, rawWorkspace, 'Structurizr workspace');
+    } catch (error) {
+      throw AdapterError.fromStructurizrError(error);
+    }
+  }
+
   private resolveWorkspacePath(inputPath: string): string {
     try {
       if (!statSync(inputPath).isDirectory()) {
@@ -327,72 +310,6 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
     );
   }
 
-  private buildIdentifierMap(): Map<string, string> {
-    const map = new Map<string, string>();
-
-    this.walkElements((element, parentPath) => {
-      const localId = element.id ?? this.toSnakeCase(element.name ?? '');
-      const resolvedId = this.resolveElementId(element, localId, parentPath);
-
-      map.set(localId, resolvedId);
-
-      const dottedPath = parentPath ? `${parentPath}.${localId}` : localId;
-      if (dottedPath !== localId) {
-        map.set(dottedPath, resolvedId);
-      }
-    });
-
-    return map;
-  }
-
-  private walkElements(callback: (element: StructurizrElement, parentPath: string) => void): void {
-    if (!this.workspace?.model) return;
-
-    const walk = (elements: StructurizrElement[] | undefined, parentPath: string): void => {
-      if (!elements) return;
-      for (const element of elements) {
-        const localId = element.id ?? this.toSnakeCase(element.name ?? '');
-        const resolvedId = this.resolveElementId(element, localId, parentPath);
-        callback(element, parentPath);
-
-        if ('containers' in element && Array.isArray(element.containers)) {
-          walk(element.containers as StructurizrElement[], resolvedId);
-        }
-        if ('components' in element && Array.isArray(element.components)) {
-          walk(element.components as StructurizrElement[], resolvedId);
-        }
-      }
-    };
-
-    walk(this.workspace.model.people, '');
-    walk(this.workspace.model.softwareSystems, '');
-  }
-
-  private resolveElementId(
-    element: StructurizrElement,
-    localId: string,
-    parentPath: string
-  ): string {
-    // Priority 1: erode.id property
-    if (element.properties?.['erode.id']) {
-      return element.properties['erode.id'];
-    }
-
-    return parentPath ? `${parentPath}.${localId}` : localId;
-  }
-
-  private resolveIdentifier(ref: string): string | undefined {
-    const resolved = this.identifierMap.get(ref);
-    if (resolved) return resolved;
-
-    // Try as-is (might already be a resolved ID)
-    for (const value of this.identifierMap.values()) {
-      if (value === ref) return ref;
-    }
-
-    return undefined;
-  }
-
   private extractRepositoryUrl(element: StructurizrElement): string | undefined {
     const url = element.url;
     if (!url) return undefined;
@@ -406,30 +323,5 @@ export class StructurizrAdapter implements ArchitectureModelAdapter {
       .split(',')
       .map((t) => t.trim())
       .filter((t) => t.length > 0 && !BUILTIN_TAGS.has(t));
-  }
-
-  private getElementType(element: StructurizrElement, parentPath: string): string {
-    // Infer from position in hierarchy or explicit type from parser
-    if ('containers' in element && element.containers) return 'softwareSystem';
-    if ('components' in element && element.components) return 'container';
-
-    if (
-      this.workspace?.model?.people?.some((p) => p.id === element.id && p.name === element.name)
-    ) {
-      return 'person';
-    }
-
-    // Infer from nesting depth
-    if (!parentPath) return 'softwareSystem';
-    if (parentPath.split('.').length === 1) return 'container';
-    return 'component';
-  }
-
-  private toSnakeCase(name: string): string {
-    return name
-      .replace(/([a-z])([A-Z])/g, '$1_$2')
-      .replace(/[^a-zA-Z0-9]+/g, '_')
-      .replace(/^_|_$/g, '')
-      .toLowerCase();
   }
 }

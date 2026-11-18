@@ -3,24 +3,12 @@ import { StructurizrAdapter } from '../adapter.js';
 import { AdapterError, ErrorCode } from '../../../errors.js';
 import type { ArchitecturalComponent } from '../../architecture-types.js';
 import type { StructurizrWorkspace } from '../structurizr-types.js';
-import { createMockWorkspace } from './fixtures/mock-workspace.js';
+import { createMockWorkspace, dslElement } from './fixtures/mock-workspace.js';
 
 export class TestStructurizrAdapter extends StructurizrAdapter {
   public setMockWorkspace(workspace: StructurizrWorkspace): void {
     this.workspace = workspace;
-
-    const adapter = this as unknown as {
-      identifierMap: Map<string, string>;
-      buildIdentifierMap(): Map<string, string>;
-      componentIndex: unknown;
-      relationships: unknown;
-    };
-    adapter.identifierMap = adapter.buildIdentifierMap();
-
-    const components = this.extractComponents();
-    const relationships = this.extractRelationships();
-    adapter.relationships = relationships;
-    adapter.componentIndex = this.buildComponentIndex(components);
+    this.indexWorkspace();
   }
 
   public override extractComponents(): ArchitecturalComponent[] {
@@ -141,7 +129,9 @@ describe('StructurizrAdapter', () => {
       const workspace: StructurizrWorkspace = {
         name: 'Test',
         model: {
-          softwareSystems: [{ id: 'svc', name: 'Service', url: 'https://github.com/org/repo.git' }],
+          softwareSystems: [
+            { ...dslElement('svc'), name: 'Service', url: 'https://github.com/org/repo.git' },
+          ],
         },
       };
       adapter.setMockWorkspace(workspace);
@@ -152,7 +142,9 @@ describe('StructurizrAdapter', () => {
       const workspace: StructurizrWorkspace = {
         name: 'Test',
         model: {
-          softwareSystems: [{ id: 'svc', name: 'Service', url: 'https://example.com/not-github' }],
+          softwareSystems: [
+            { ...dslElement('svc'), name: 'Service', url: 'https://example.com/not-github' },
+          ],
         },
       };
       adapter.setMockWorkspace(workspace);
@@ -164,7 +156,11 @@ describe('StructurizrAdapter', () => {
         name: 'Test',
         model: {
           softwareSystems: [
-            { id: 'gl_svc', name: 'GL Service', url: 'https://gitlab.com/org/my-service' },
+            {
+              ...dslElement('gl_svc'),
+              name: 'GL Service',
+              url: 'https://gitlab.com/org/my-service',
+            },
           ],
         },
       };
@@ -179,7 +175,11 @@ describe('StructurizrAdapter', () => {
         name: 'Test',
         model: {
           softwareSystems: [
-            { id: 'bb_svc', name: 'BB Service', url: 'https://bitbucket.org/org/my-service' },
+            {
+              ...dslElement('bb_svc'),
+              name: 'BB Service',
+              url: 'https://bitbucket.org/org/my-service',
+            },
           ],
         },
       };
@@ -194,7 +194,11 @@ describe('StructurizrAdapter', () => {
         name: 'Test',
         model: {
           softwareSystems: [
-            { id: 'gl_svc', name: 'GL Service', url: 'https://gitlab.com/org/my-service' },
+            {
+              ...dslElement('gl_svc'),
+              name: 'GL Service',
+              url: 'https://gitlab.com/org/my-service',
+            },
           ],
         },
       };
@@ -209,7 +213,11 @@ describe('StructurizrAdapter', () => {
         name: 'Test',
         model: {
           softwareSystems: [
-            { id: 'bb_svc', name: 'BB Service', url: 'https://bitbucket.org/org/my-service' },
+            {
+              ...dslElement('bb_svc'),
+              name: 'BB Service',
+              url: 'https://bitbucket.org/org/my-service',
+            },
           ],
         },
       };
@@ -285,13 +293,13 @@ describe('StructurizrAdapter', () => {
         model: {
           softwareSystems: [
             {
-              id: 'a',
+              ...dslElement('a'),
               name: 'Service A',
               relationships: [
                 { sourceId: 'a', destinationId: 'b', description: 'calls', technology: 'https' },
               ],
             },
-            { id: 'b', name: 'Service B' },
+            { ...dslElement('b'), name: 'Service B' },
           ],
           relationships: [
             { sourceId: 'a', destinationId: 'b', description: 'calls', technology: 'https' },
@@ -312,14 +320,14 @@ describe('StructurizrAdapter', () => {
         model: {
           softwareSystems: [
             {
-              id: 'a',
+              ...dslElement('a'),
               name: 'Service A',
               relationships: [
                 { sourceId: 'a', destinationId: 'b', description: 'calls', technology: 'https' },
                 { sourceId: 'a', destinationId: 'b', description: 'calls', technology: 'grpc' },
               ],
             },
-            { id: 'b', name: 'Service B' },
+            { ...dslElement('b'), name: 'Service B' },
           ],
         },
       };
@@ -397,9 +405,17 @@ describe('StructurizrAdapter', () => {
         name: 'Test',
         model: {
           softwareSystems: [
-            { id: 'svc_a', name: 'Service A', url: 'https://github.com/example/monorepo' },
-            { id: 'svc_b', name: 'Service B', url: 'https://github.com/example/monorepo' },
-            { id: 'svc_c', name: 'Service C', url: 'https://github.com/example/other' },
+            {
+              ...dslElement('svc_a'),
+              name: 'Service A',
+              url: 'https://github.com/example/monorepo',
+            },
+            {
+              ...dslElement('svc_b'),
+              name: 'Service B',
+              url: 'https://github.com/example/monorepo',
+            },
+            { ...dslElement('svc_c'), name: 'Service C', url: 'https://github.com/example/other' },
           ],
         },
       };

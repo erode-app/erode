@@ -20,8 +20,17 @@ export const ViolationSchema = z
 
 /** Only alphanumeric, dots, underscores, and hyphens (valid component IDs). */
 const componentIdPattern = /^[a-zA-Z0-9._-]+$/;
-/** Valid DSL identifier: starts with a letter, then alphanumeric, underscores, or hyphens. */
-const dslIdentifierPattern = /^[a-zA-Z][a-zA-Z0-9_-]*$/;
+/**
+ * DSL identifier erode will write: starts with a letter, then alphanumeric, underscores, or hyphens.
+ * Use this for anything the patcher emits.
+ */
+export const dslIdentifierPattern = /^[a-zA-Z][a-zA-Z0-9_-]*$/;
+/**
+ * Identifier segment accepted when reading a Structurizr export. Wider than
+ * `dslIdentifierPattern` because the DSL parser also allows a leading digit or underscore
+ * in identifiers that already exist in a model.
+ */
+export const exportedDslIdentifierPattern = /^\w[\w-]*$/;
 /** Single-line printable characters, no DSL delimiters (quotes, braces, brackets, angle brackets, pipes). */
 const safeDslTextPattern = /^[^\n\r'"{}[\]`\\<>|]+$/;
 

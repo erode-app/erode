@@ -1,0 +1,122 @@
+{
+  "id": 0,
+  "name": "Shop",
+  "description": "DSL export fixture: flat identifiers, no erode.id",
+  "model": {
+    "people": [
+      {
+        "id": "1",
+        "name": "Customer",
+        "tags": "Element,Person",
+        "location": "Unspecified",
+        "properties": {
+          "structurizr.dsl.identifier": "customer"
+        },
+        "relationships": [
+          {
+            "id": "8",
+            "sourceId": "1",
+            "destinationId": "3",
+            "description": "Browses",
+            "tags": "Relationship"
+          },
+          {
+            "id": "9",
+            "sourceId": "1",
+            "destinationId": "2",
+            "description": "Browses",
+            "linkedRelationshipId": "8"
+          }
+        ]
+      }
+    ],
+    "softwareSystems": [
+      {
+        "id": "2",
+        "name": "Shop",
+        "tags": "Element,Software System",
+        "location": "Unspecified",
+        "properties": {
+          "structurizr.dsl.identifier": "shop"
+        },
+        "containers": [
+          {
+            "id": "3",
+            "name": "Storefront",
+            "technology": "TypeScript",
+            "url": "https://github.com/example/storefront",
+            "tags": "Element,Container",
+            "properties": {
+              "structurizr.dsl.identifier": "storefront"
+            },
+            "relationships": [
+              {
+                "id": "10",
+                "sourceId": "3",
+                "destinationId": "4",
+                "description": "Places orders",
+                "technology": "HTTPS",
+                "tags": "Relationship"
+              }
+            ]
+          },
+          {
+            "id": "4",
+            "name": "Order Service",
+            "technology": "Java",
+            "url": "https://github.com/example/orders",
+            "tags": "Element,Container",
+            "properties": {
+              "structurizr.dsl.identifier": "orders"
+            },
+            "relationships": [
+              {
+                "id": "12",
+                "sourceId": "4",
+                "destinationId": "7",
+                "description": "Charges cards",
+                "linkedRelationshipId": "11"
+              }
+            ],
+            "components": [
+              {
+                "id": "5",
+                "name": "Order API",
+                "tags": "Element,Component",
+                "properties": {
+                  "structurizr.dsl.identifier": "orderApi"
+                },
+                "relationships": [
+                  {
+                    "id": "11",
+                    "sourceId": "5",
+                    "destinationId": "7",
+                    "description": "Charges cards",
+                    "tags": "Relationship"
+                  }
+                ]
+              },
+              {
+                "id": "6",
+                "name": "Payment Adapter",
+                "tags": "Element,Component",
+                "properties": {
+                  "structurizr.dsl.identifier": "3f2b8c1e-5d4a-4e7b-9c6d-1a2b3c4d5e6f"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "7",
+        "name": "Payment Provider",
+        "tags": "Element,Software System",
+        "location": "Unspecified",
+        "properties": {
+          "structurizr.dsl.identifier": "payments"
+        }
+      }
+    ]
+  }
+}

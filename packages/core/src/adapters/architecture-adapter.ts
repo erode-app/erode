@@ -66,6 +66,12 @@ export interface ArchitectureModelAdapter {
   /** Optional: element ID to absolute path of the file declaring it, from the last load. */
   getElementSourceFiles?(): ReadonlyMap<string, string>;
 
+  /**
+   * Optional: element ID to the identifier that references it in the model source, for
+   * formats whose element IDs are not valid source references (Structurizr).
+   */
+  getDslReferences?(): ReadonlyMap<string, string>;
+
   /** Optional: check version compatibility for the model format. */
   checkVersion?(path: string): VersionCheckResult;
 
