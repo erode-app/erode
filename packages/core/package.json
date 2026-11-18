@@ -63,7 +63,7 @@
     "likec4": "^1.61.0",
     "minimatch": "^11.0.6",
     "openai": "^7.38.0",
-    "semver": "^7.8.5",
+    "semver": "^7.8.6",
     "zod": "^4.6.7"
   },
   "devDependencies": {
