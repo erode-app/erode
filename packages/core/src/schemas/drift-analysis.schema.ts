@@ -7,11 +7,12 @@ const CommitTrackingSchema = z.object({
 
 const DriftViolationSchema = z.intersection(ViolationSchema, CommitTrackingSchema);
 
-export const DriftAnalysisResponseSchema = z.object({
-  hasViolations: z.boolean(),
-  violations: z.array(DriftViolationSchema),
-  improvements: z.array(z.string()).optional(),
-  warnings: z.array(z.string()).optional(),
-  summary: z.string(),
-  modelUpdates: ModelChangeSchema.optional(),
-});
+export const DriftAnalysisResponseSchema = z
+  .object({
+    violations: z.array(DriftViolationSchema),
+    improvements: z.array(z.string()).optional(),
+    warnings: z.array(z.string()).optional(),
+    summary: z.string(),
+    modelUpdates: ModelChangeSchema.optional(),
+  })
+  .transform((response) => ({ ...response, hasViolations: response.violations.length > 0 }));

@@ -207,6 +207,30 @@ describe('resolveModelSource', () => {
     expect(rm).toHaveBeenCalledWith(tmpDir, { recursive: true, force: true });
   });
 
+  it('keeps credentials out of the clone failure message and context', async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const { execFile } = await import('child_process');
+    vi.mocked(mkdtemp).mockResolvedValue('/tmp/erode-model-cred');
+    vi.mocked(execFile).mockImplementation((...args: unknown[]) => {
+      const cb = args[args.length - 1] as ExecFileCallback | undefined;
+      if (cb)
+        cb(
+          Object.assign(new Error('fatal: https://u:secret@github.com/o/r.git not found'), {
+            cmd: 'git clone',
+          }),
+          '',
+          ''
+        );
+      return undefined as never;
+    });
+
+    const error = await resolveModelSource('.', 'https://u:secret@github.com/o/r').catch(
+      (e: unknown) => e
+    );
+    expect(JSON.stringify([(error as Error).message, error])).not.toContain('secret');
+    expect((error as { userMessage: string }).userMessage).not.toContain('secret');
+  });
+
   it('rejects path traversal in modelPath', async () => {
     const { mkdtemp } = await import('node:fs/promises');
     const { execFile } = await import('child_process');

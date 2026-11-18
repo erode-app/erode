@@ -6,6 +6,7 @@ import {
   normalizeToHttps,
   getRemoteUrl,
   validate,
+  stripUrlUserinfo,
   ErodeError,
   ErrorCode,
   CONFIG,
@@ -47,7 +48,7 @@ export function createCheckCommand(): Command {
               'Could not detect the repository URL. Make sure you are inside a git repository with an "origin" remote, or use --repo to specify the URL explicitly.'
             );
           }
-          repoUrl = normalizeToHttps(remote);
+          repoUrl = stripUrlUserinfo(normalizeToHttps(remote));
           progress?.info(`Detected repository: ${repoUrl}`);
         }
 

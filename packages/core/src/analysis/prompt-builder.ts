@@ -17,6 +17,32 @@ import {
   formatCommits,
 } from './section-formatters.js';
 
+const UNTRUSTED_NAME = /^untrusted[_-](?:pr[_-]content|diff)/i;
+
+/**
+ * Prevents author-controlled text from closing an untrusted block early. Escapes the `<` of any
+ * tag-like sequence for the untrusted block names, tolerating case, `_`/`-` variants and any
+ * amount of whitespace or `/` before the name. A single forward scan that jumps past each
+ * skipped run keeps it linear, with no regex backtracking.
+ */
+function escapeUntrusted(text: string): string {
+  let out = '';
+  let last = 0;
+  let i = text.indexOf('<');
+  while (i !== -1) {
+    let j = i + 1;
+    while (j < text.length && (text[j] === '/' || /\s/.test(text.charAt(j)))) j++;
+    let next = j;
+    if (UNTRUSTED_NAME.test(text.slice(j, j + 32))) {
+      out += text.slice(last, i) + '&lt;';
+      last = i + 1;
+      next = i + 1;
+    }
+    i = text.indexOf('<', next);
+  }
+  return last === 0 ? text : out + text.slice(last);
+}
+
 export const PromptBuilder = {
   /** Extract the first JSON object from an AI response text, or null if none found. */
   extractJson(responseText: string): string | null {
@@ -79,8 +105,12 @@ export const PromptBuilder = {
     }
 
     return TemplateEngine.loadDependencyExtractionPrompt({
-      diff,
-      commit,
+      diff: escapeUntrusted(diff),
+      commit: {
+        ...commit,
+        message: escapeUntrusted(commit.message),
+        author: escapeUntrusted(commit.author),
+      },
       repository,
       componentsContext,
     });
@@ -145,13 +175,13 @@ export const PromptBuilder = {
       changeContext,
       changeRequest: {
         number: changeRequest.number,
-        title: changeRequest.title,
-        author: changeRequest.author.name ?? changeRequest.author.login,
-        base: { ref: changeRequest.base.ref },
-        head: { ref: changeRequest.head.ref },
+        title: escapeUntrusted(changeRequest.title),
+        author: escapeUntrusted(changeRequest.author.name ?? changeRequest.author.login),
+        base: { ref: escapeUntrusted(changeRequest.base.ref) },
+        head: { ref: escapeUntrusted(changeRequest.head.ref) },
         stats: changeRequest.stats,
         descriptionSection: changeRequest.description
-          ? `Description:\n${changeRequest.description}\n`
+          ? `Description:\n${escapeUntrusted(changeRequest.description)}\n`
           : '',
       },
       component: {
@@ -162,7 +192,7 @@ export const PromptBuilder = {
         repository: component.repository ?? 'Unknown',
         tags: component.tags.join(', ') || 'None',
       },
-      commitsSection,
+      commitsSection: escapeUntrusted(commitsSection),
       commitsNote,
       allowedDeps,
       dependents,

@@ -254,6 +254,20 @@ describe('runCheck', () => {
     expect(extractData.repository.repo).toBe('api');
   });
 
+  it('strips credentials from the repo URL before it reaches the AI provider', async () => {
+    await runCheck({
+      ...baseOptions(),
+      repo: 'https://oauth2:glpat-SECRET@gitlab.com/g/p',
+    });
+
+    const [extractData] = mockExtractDependencies.mock.calls[0] as [
+      { repository: { url: string } },
+    ];
+    expect(extractData.repository.url).toBe('https://gitlab.com/g/p');
+    expect(JSON.stringify(mockFindAllComponentsByRepository.mock.calls)).not.toContain('SECRET');
+    expect(JSON.stringify(mockAnalyzeDrift.mock.calls)).not.toContain('SECRET');
+  });
+
   it('parses files from diff when files not provided', async () => {
     const { files: _files, ...opts } = baseOptions();
 

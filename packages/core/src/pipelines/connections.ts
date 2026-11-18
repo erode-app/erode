@@ -3,6 +3,8 @@ import { SilentProgress } from './progress.js';
 import { createAdapter } from '../adapters/adapter-factory.js';
 import type { ComponentSummary } from '../adapters/architecture-types.js';
 import { validatePath } from '../utils/validation.js';
+import { z } from 'zod';
+import { stripUrlUserinfo } from '../utils/url-credentials.js';
 import { warnOnModelVersionSkew } from './pipeline-shared.js';
 
 export interface ConnectionsOptions {
@@ -10,6 +12,8 @@ export interface ConnectionsOptions {
   modelFormat?: string;
   repo: string;
 }
+
+const ConnectionsRepoSchema = z.string().min(1).transform(stripUrlUserinfo);
 
 export interface ComponentConnections {
   component: ComponentSummary & { repository?: string };
@@ -28,6 +32,7 @@ export async function runConnections(
   progress?: ProgressReporter
 ): Promise<ComponentConnections[]> {
   const p = progress ?? new SilentProgress();
+  const repo = ConnectionsRepoSchema.parse(options.repo);
   const adapter = createAdapter(options.modelFormat);
 
   p.section(`Loading ${adapter.metadata.displayName} Architecture Model`);
@@ -37,11 +42,11 @@ export async function runConnections(
   await adapter.loadFromPath(options.modelPath);
   p.succeed('Architecture model loaded');
 
-  p.start(`Finding components for ${options.repo}`);
-  const components = adapter.findAllComponentsByRepository(options.repo);
+  p.start(`Finding components for ${repo}`);
+  const components = adapter.findAllComponentsByRepository(repo);
 
   if (components.length === 0) {
-    p.warn(`No components found for repository: ${options.repo}`);
+    p.warn(`No components found for repository: ${repo}`);
     p.info('Run "erode validate [model-path]" to check which components have repository links.');
     return [];
   }

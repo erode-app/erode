@@ -18,6 +18,7 @@ import type { DependencyExtractionResult } from '../schemas/dependency-extractio
 import type { ChangeRequestFile } from '../platforms/source-platform.js';
 import type { DiffStats, GitDiffFile } from '../utils/git-diff.js';
 import { parseFilesFromDiff, filterDiffByFiles } from '../utils/git-diff.js';
+import { stripUrlUserinfo } from '../utils/url-credentials.js';
 import {
   loadArchitectureModel,
   buildArchitecturalContext,
@@ -65,7 +66,7 @@ export interface CheckResult {
 const CheckOptionsInputSchema = z.object({
   modelPath: z.string().min(1),
   diff: z.string(),
-  repo: z.string().min(1),
+  repo: z.string().min(1).transform(stripUrlUserinfo),
   repoOwner: z.string().min(1),
   repoName: z.string().min(1),
   modelFormat: z.string().optional(),
@@ -95,7 +96,8 @@ export async function runCheck(
   options: CheckOptions,
   progress?: ProgressReporter
 ): Promise<CheckResult> {
-  CheckOptionsInputSchema.parse(options);
+  // The schema strips credentials from `repo`, so a token-bearing URL never reaches the AI provider.
+  const { repo: repoUrl } = CheckOptionsInputSchema.parse(options);
 
   const p = progress ?? new SilentProgress();
   const adapter = createAdapter(options.modelFormat);
@@ -114,7 +116,7 @@ export async function runCheck(
     const architectureModel = await loadArchitectureModel(adapter, effectiveModelPath, p);
 
     // ── Find components for this repository ──────────────────────────────
-    const lookup = findComponentsForRepo(adapter, options.repo, buildLocalMetadata(options), p);
+    const lookup = findComponentsForRepo(adapter, repoUrl, buildLocalMetadata(options), p);
     if (!('found' in lookup)) return lookup;
     const { components, defaultComponent } = lookup;
 
@@ -190,7 +192,7 @@ export async function runCheck(
       repository: {
         owner: options.repoOwner,
         repo: options.repoName,
-        url: options.repo,
+        url: repoUrl,
       },
       components: [selectedComponent],
     });

@@ -1,5 +1,29 @@
 import { extractStatusCode } from './utils/error-utils.js';
 
+/**
+ * Status forms the Gemini SDK puts in the message: `got status: 429`, `[429 Too Many Requests]`,
+ * a leading `429 Too Many Requests`, or the JSON body `"code":429`. Each needs a reason phrase or
+ * label so a number inside a model name, token count or list never matches.
+ */
+const GEMINI_STATUS_PATTERN =
+  /(?:\b[Ss]tatus:?\s+|"code"\s*:\s*)([45]\d{2})\b|\[([45]\d{2})\s+[A-Z][a-z]|^\s*(?:Request failed:\s*)?([45]\d{2})\s+[A-Z][a-z]/;
+
+/** gRPC-style status names Gemini returns instead of a number. */
+const GEMINI_STATUS_NAMES: readonly (readonly [RegExp, number])[] = [
+  [/\bRESOURCE_EXHAUSTED\b/, 429],
+  [/\bUNAVAILABLE\b/, 503],
+  [/\bDEADLINE_EXCEEDED\b/, 504],
+];
+
+function extractGeminiStatusCode(err: Error): number | undefined {
+  const structured = extractStatusCode(err);
+  if (structured !== undefined) return structured;
+  const match = GEMINI_STATUS_PATTERN.exec(err.message);
+  const code = match?.[1] ?? match?.[2] ?? match?.[3];
+  if (code) return parseInt(code, 10);
+  return GEMINI_STATUS_NAMES.find(([name]) => name.test(err.message))?.[1];
+}
+
 export enum ErrorCode {
   CONFIG_MISSING = 'CONFIG_MISSING',
   CONFIG_INVALID = 'CONFIG_INVALID',
@@ -137,10 +161,7 @@ export class ApiError extends ErodeError {
   }
 
   static fromGeminiError(error: unknown): ApiError {
-    return ApiError.fromProviderError(error, 'gemini', (err) => {
-      const statusMatch = /(\d{3})/.exec(err.message);
-      return statusMatch?.[1] ? parseInt(statusMatch[1], 10) : undefined;
-    });
+    return ApiError.fromProviderError(error, 'gemini', extractGeminiStatusCode);
   }
 
   static fromOpenAIError(error: unknown): ApiError {
