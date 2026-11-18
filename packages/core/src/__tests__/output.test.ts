@@ -96,6 +96,18 @@ describe('buildStructuredOutput', () => {
     expect(result.metadata.component?.id).toBe('comp.api');
   });
 
+  it('should report truncation in change request metadata', () => {
+    const truncated = buildStructuredOutput(
+      makeAnalysisResult({ truncation: { reason: '2 files were dropped.' } }),
+      'LikeC4'
+    );
+    expect(truncated.metadata.changeRequest?.wasTruncated).toBe(true);
+    expect(truncated.metadata.changeRequest?.truncationReason).toBe('2 files were dropped.');
+
+    const clean = buildStructuredOutput(makeAnalysisResult(), 'LikeC4');
+    expect(clean.metadata.changeRequest?.wasTruncated).toBeUndefined();
+  });
+
   it('should include extras when provided', () => {
     const result = buildStructuredOutput(makeAnalysisResult(), 'LikeC4', {
       selectedComponentId: 'comp.api',
@@ -153,6 +165,14 @@ describe('formatAnalysisAsComment', () => {
 
     expect(output).toContain('**Status**: :warning: Issues detected');
     expect(output).not.toContain('**Status**: violations');
+  });
+
+  it('should note partial analysis when files were dropped', () => {
+    const output = formatAnalysisAsComment(
+      makeAnalysisResult({ truncation: { reason: '2 files were dropped.' } })
+    );
+    expect(output).toContain('Partial analysis: 2 files were dropped.');
+    expect(formatAnalysisAsComment(makeAnalysisResult())).not.toContain('Partial analysis');
   });
 
   it('should show checkmark emoji when no violations', () => {

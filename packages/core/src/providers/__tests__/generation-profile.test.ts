@@ -7,13 +7,16 @@ import {
 } from '../generation-profile.js';
 
 describe('getGenerationProfileForPhase', () => {
-  it('uses small low-effort generation for simple phases', () => {
+  it('uses small low-effort generation for component resolution', () => {
     expect(getGenerationProfileForPhase(AnalysisPhase.COMPONENT_RESOLUTION)).toEqual({
       outputSize: 'small',
       reasoningEffort: 'low',
     });
+  });
+
+  it('gives the dependency scan a medium output budget for its longer JSON', () => {
     expect(getGenerationProfileForPhase(AnalysisPhase.DEPENDENCY_SCAN)).toEqual({
-      outputSize: 'small',
+      outputSize: 'medium',
       reasoningEffort: 'low',
     });
   });

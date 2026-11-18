@@ -176,7 +176,7 @@ describe('AnthropicProvider', () => {
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'claude-haiku-4-5',
-          max_tokens: 600,
+          max_tokens: 1500,
         })
       );
     });

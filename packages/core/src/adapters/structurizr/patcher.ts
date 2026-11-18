@@ -6,10 +6,23 @@ import type { StructuredRelationship, NewComponent } from '../../analysis/analys
 import type { ModelRelationship } from '../architecture-types.js';
 import type { DslValidationResult } from '../model-patcher.js';
 
+/**
+ * Escaping of `"` inside Structurizr strings is not documented, so quotes become `'`
+ * (keeps the text) rather than `\"`. Backslashes are dropped so one cannot escape the closing quote.
+ */
+function dslString(text: string): string {
+  return text
+    .replace(/\\/g, '')
+    .replace(/"/g, "'")
+    .replace(/\s*[\r\n]+\s*/g, ' ')
+    .trim();
+}
+
 export class StructurizrPatcher extends BasePatcher {
   protected readonly formatName = 'StructurizrPatcher';
   protected readonly formatId = 'structurizr';
   protected readonly defaultIndent = '        ';
+  protected readonly kindSensitiveDedup = false;
 
   protected isModelBlockLine(line: string): boolean {
     return /\bmodel\s*\{/.test(line);
@@ -20,17 +33,17 @@ export class StructurizrPatcher extends BasePatcher {
     _existing: ModelRelationship[]
   ): string[] {
     return unique.map((rel) => {
-      const desc = rel.description.replace(/"/g, '');
-      const technology = rel.kind ? ` "${rel.kind.replace(/"/g, '')}"` : '';
+      const desc = dslString(rel.description);
+      const technology = rel.kind ? ` "${dslString(rel.kind)}"` : '';
       return `        ${rel.source} -> ${rel.target} "${desc}"${technology}`;
     });
   }
 
   protected generateComponentDslLines(components: NewComponent[]): string[] {
     return components.map((comp) => {
-      const name = comp.name.replace(/"/g, '');
-      const desc = (comp.description ?? '').replace(/"/g, '');
-      const tech = comp.technology ? ` "${comp.technology.replace(/"/g, '')}"` : '';
+      const name = dslString(comp.name);
+      const desc = dslString(comp.description ?? '');
+      const tech = comp.technology ? ` "${dslString(comp.technology)}"` : '';
       return `        ${comp.id} = ${comp.kind} "${name}" "${desc}"${tech}`;
     });
   }

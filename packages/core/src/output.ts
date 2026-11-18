@@ -55,6 +55,10 @@ export function buildStructuredOutput(
         head: result.metadata.head.ref,
         commits: result.metadata.stats.commits,
         filesChanged: result.metadata.stats.files_changed,
+        ...(result.truncation && {
+          wasTruncated: true,
+          truncationReason: result.truncation.reason,
+        }),
       },
       component: {
         id: result.component.id,
@@ -138,6 +142,11 @@ export function formatAnalysisAsComment(
     ? ':warning: Issues detected'
     : ':white_check_mark: No drift found';
   lines.push(`**Status**: ${status}`);
+
+  if (result.truncation) {
+    lines.push('');
+    lines.push(`> :warning: Partial analysis: ${result.truncation.reason}`);
+  }
 
   if (result.modelUpdates?.newComponents && result.modelUpdates.newComponents.length > 0) {
     lines.push('');

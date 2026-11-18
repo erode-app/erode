@@ -8,6 +8,7 @@ import type {
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { ErodeError, ErrorCode } from '../errors.js';
+import { CONFIG } from '../utils/config.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -62,11 +63,30 @@ function formatValue(value: unknown): string {
   }
 }
 
-function replaceVariables(template: string, variables: object): string {
-  return template.replace(/\{\{([^}]+)\}\}/g, (_match: string, path: string) => {
-    const value = resolveVariable(variables, path);
-    return value === undefined ? '' : formatValue(value);
-  });
+const PLACEHOLDER = /\{\{([^}]+)\}\}/g;
+
+/** Placeholder keys in `template` that `variables` does not provide. */
+export function findMissingVariables(template: string, variables: object): string[] {
+  const missing: string[] = [];
+  for (const match of template.matchAll(PLACEHOLDER)) {
+    const key = (match[1] ?? '').trim();
+    if (resolveVariable(variables, key) === undefined) missing.push(key);
+  }
+  return missing;
+}
+
+// A missing key renders empty rather than aborting a real analysis; tests catch renamed
+// variables through findMissingVariables.
+function renderTemplate(templateName: string, variables: object): string {
+  const template = loadTemplate(templateName);
+  if (CONFIG.debug.verbose) {
+    for (const key of findMissingVariables(template, variables)) {
+      console.error(`[TemplateEngine] Template "${templateName}" has no value for "${key}"`);
+    }
+  }
+  return template.replace(PLACEHOLDER, (_match: string, path: string) =>
+    formatValue(resolveVariable(variables, path))
+  );
 }
 
 /**
@@ -74,20 +94,16 @@ function replaceVariables(template: string, variables: object): string {
  */
 export const TemplateEngine = {
   loadDependencyExtractionPrompt(variables: DependencyExtractionPromptVars): string {
-    const template = loadTemplate('dependency-extraction');
-    return replaceVariables(template, variables);
+    return renderTemplate('dependency-extraction', variables);
   },
   loadDriftAnalysisPrompt(variables: DriftAnalysisPromptVars): string {
-    const template = loadTemplate('drift-analysis');
-    return replaceVariables(template, variables);
+    return renderTemplate('drift-analysis', variables);
   },
   loadComponentSelectionPrompt(variables: ComponentSelectionPromptVars): string {
-    const template = loadTemplate('component-selection');
-    return replaceVariables(template, variables);
+    return renderTemplate('component-selection', variables);
   },
   loadModelPatchPrompt(variables: ModelPatchPromptVars): string {
-    const template = loadTemplate('model-patch');
-    return replaceVariables(template, variables);
+    return renderTemplate('model-patch', variables);
   },
   loadSyntaxGuide(adapterDir: string, name: string): string {
     const guidePath = join(__dirname, '..', 'adapters', adapterDir, 'prompts', `${name}.md`);

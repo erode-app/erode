@@ -15,6 +15,7 @@ import {
   selectComponentWithAI,
   resolveAndCloneModel,
   findComponentsForRepo,
+  applyLineBudget,
 } from './pipeline-shared.js';
 import { CONFIG } from '../utils/config.js';
 import { loadSkipPatterns, applySkipPatterns } from '../utils/skip-patterns.js';
@@ -124,6 +125,19 @@ export async function runAnalyze(
       }
     }
 
+    // ── Line budget (after skip patterns so excluded files never use it) ──
+    const budget = applyLineBudget(prData.files);
+    if (budget.truncationReason) {
+      prData.files = budget.files;
+      prData.diff = buildDiffFromFiles(budget.files);
+      prData.changed_files = budget.files.length;
+      prData.wasTruncated = true;
+      prData.truncationReason = [prData.truncationReason, budget.truncationReason]
+        .filter(Boolean)
+        .join(' ');
+      p.warn(budget.truncationReason);
+    }
+
     // ── Find components for this repository ──────────────────────────────
     const repoUrl = ref.repositoryUrl;
     const prMetadata = {
@@ -226,6 +240,9 @@ export async function runAnalyze(
 
     // ── Stage 3: Drift analysis ──────────────────────────────────────────
     ctx.analysisResult = await runDriftStage(provider, promptData, p);
+    if (prData.wasTruncated && prData.truncationReason) {
+      ctx.analysisResult.truncation = { reason: prData.truncationReason };
+    }
 
     // ── Build structured output ──────────────────────────────────────────
     p.section('Output');

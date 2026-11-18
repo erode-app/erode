@@ -12,6 +12,7 @@ import type { ProgressReporter } from './progress.js';
 import { validatePath } from '../utils/validation.js';
 import { buildStructuredOutput } from '../output.js';
 import { CONFIG } from '../utils/config.js';
+import type { ChangeRequestFile } from '../platforms/source-platform.js';
 import { ErodeError, ErrorCode } from '../errors.js';
 import { resolveModelSource, type ResolvedModelSource } from '../utils/model-source.js';
 
@@ -208,3 +209,101 @@ export function findComponentsForRepo(
 type ComponentLookupResult =
   | { found: true; components: ArchitecturalComponent[]; defaultComponent: ArchitecturalComponent }
   | EmptyCheckResult;
+
+export interface LineBudgetResult {
+  files: ChangeRequestFile[];
+  truncationReason?: string;
+}
+
+/**
+ * Keep files in order until the line budget is used up. Runs after skip patterns so excluded
+ * files (lockfiles) never consume budget. A file that does not fit is skipped, not a stop
+ * signal, so smaller later files still fit. The first file is always kept, with its patch
+ * cut to the budget when it alone exceeds it.
+ */
+export function applyLineBudget(
+  files: ChangeRequestFile[],
+  maxLines: number = CONFIG.constraints.maxLinesPerDiff
+): LineBudgetResult {
+  const totalLines = files.reduce((sum, f) => sum + f.changes, 0);
+  if (totalLines <= maxLines) return { files };
+
+  const kept: ChangeRequestFile[] = [];
+  let used = 0;
+  let patchTrimmed = false;
+  for (const file of files) {
+    if (kept.length === 0) {
+      if (file.changes > maxLines && file.patch !== undefined) {
+        kept.push({ ...file, patch: file.patch.split('\n').slice(0, maxLines).join('\n') });
+        patchTrimmed = true;
+      } else {
+        kept.push(file);
+      }
+      used += file.changes;
+      continue;
+    }
+    if (used + file.changes > maxLines) continue;
+    kept.push(file);
+    used += file.changes;
+  }
+
+  const dropped = files.length - kept.length;
+  const header = `Diff surpassed the ${String(maxLines)}-line limit (${String(totalLines)} lines found).`;
+  const detail =
+    dropped > 0 || patchTrimmed
+      ? `${String(dropped)} ${dropped === 1 ? 'file was' : 'files were'} dropped${patchTrimmed ? ' and the first file was cut to fit' : ''}.`
+      : 'Analysis may be partial.';
+  return { files: kept, truncationReason: `${header} ${detail}` };
+}
+
+/**
+ * Count added and removed lines in one per-file diff segment. Only the file header (before the
+ * first hunk) is excluded; inside a hunk every +/- line is content, including `----` (a removed
+ * Markdown rule) and `+++x`.
+ */
+function countChangedLines(segment: string): number {
+  let n = 0;
+  let inHunk = false;
+  for (const line of segment.split('\n')) {
+    if (line.startsWith('diff --git ')) inHunk = false;
+    else if (line.startsWith('@@')) inHunk = true;
+    else if (inHunk && (line.startsWith('+') || line.startsWith('-'))) n++;
+  }
+  return n;
+}
+
+/** Line budget for a local unified diff; same rules as {@link applyLineBudget}. */
+export function applyLineBudgetToDiff(
+  diff: string,
+  maxLines: number = CONFIG.constraints.maxLinesPerDiff
+): { diff: string; truncationReason?: string } {
+  const marker = 'diff --git ';
+  const segments: string[] = [];
+  let current = '';
+  for (const line of diff.split('\n')) {
+    if (line.startsWith(marker) && current) {
+      segments.push(current);
+      current = '';
+    }
+    current += `${line}\n`;
+  }
+  if (current) segments.push(current);
+
+  const asFiles: ChangeRequestFile[] = segments.map((seg, i) => {
+    const changes = countChangedLines(seg);
+    return {
+      filename: String(i),
+      status: 'modified',
+      additions: changes,
+      deletions: 0,
+      changes,
+      patch: seg.replace(/\n$/, ''),
+    };
+  });
+  const result = applyLineBudget(asFiles, maxLines);
+  if (result.truncationReason === undefined) return { diff };
+  return {
+    diff: result.files.map((f) => f.patch ?? '').join('\n'),
+    truncationReason: result.truncationReason,
+  };
+}

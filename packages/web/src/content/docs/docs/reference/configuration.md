@@ -67,6 +67,8 @@ Environment variable names map to nested JSON keys. For example:
 | `ERODE_LIKEC4_PATCH_STRATEGY`     | How to patch LikeC4 models (`text` or `model-edits`)    | `text`   |
 | `ERODE_LIKEC4_PROJECT`            | LikeC4 project to load when the workspace has several   | —        |
 
+A path in `ERODE_LIKEC4_EXCLUDE_PATHS` excludes that element and its descendants by whole segment (`cloud.api` covers `cloud.api` and `cloud.api.*`, not `cloud.apigateway`).
+
 `model-edits` is experimental. Erode lets LikeC4 decide where suggested elements and relationships go, instead of inserting text into the model block.
 
 The patched file contains plain DSL, so your project does not need a newer LikeC4 version. If LikeC4 rejects the change, reports overlaps with other diffs, needs to change more than one file, or the result fails validation, Erode falls back to `text`. Set `ERODE_VERBOSE=true` to log the reason.

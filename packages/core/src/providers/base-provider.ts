@@ -27,6 +27,39 @@ function debugLog(msg: string, data?: unknown): void {
   }
 }
 
+function isIdChar(ch: string | undefined): boolean {
+  return ch !== undefined && /[A-Za-z0-9_.-]/.test(ch);
+}
+
+export function matchComponentId(responseText: string, ids: string[]): string | null {
+  const reply = responseText
+    .trim()
+    .replace(/^[`'"]+|[`'"]+$/g, '')
+    .trim();
+  if (ids.includes(reply)) return reply;
+
+  // Earliest whole-token occurrence wins (the reply leads with its answer); the longest id
+  // breaks ties at the same position.
+  let best: { id: string; at: number } | null = null;
+  for (const id of ids) {
+    if (id.length === 0) continue;
+    let from = 0;
+    for (;;) {
+      const at = reply.indexOf(id, from);
+      if (at === -1 || (best !== null && at > best.at)) break;
+      const after = reply[at + id.length];
+      // A trailing "." that ends a sentence is punctuation, not part of the id.
+      const afterOk = !isIdChar(after) || (after === '.' && !isIdChar(reply[at + id.length + 1]));
+      if (!isIdChar(reply[at - 1]) && afterOk) {
+        if (best === null || at < best.at || id.length > best.id.length) best = { id, at };
+        break;
+      }
+      from = at + 1;
+    }
+  }
+  return best?.id ?? null;
+}
+
 function formatDuration(startedAt: bigint): string {
   const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
   if (elapsedMs < 1000) {
@@ -96,8 +129,10 @@ export abstract class BaseProvider implements AIProvider {
     }
 
     debugLog('selectComponent raw response', responseText);
-    const matchedId =
-      data.components.map((c) => c.id).find((id) => responseText.includes(id)) ?? null;
+    const matchedId = matchComponentId(
+      responseText,
+      data.components.map((c) => c.id)
+    );
     debugLog('selectComponent matched', matchedId);
     return matchedId;
   }

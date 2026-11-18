@@ -227,7 +227,7 @@ describe('OpenAIProvider', () => {
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gpt-5.6-luna',
-          max_output_tokens: 1500,
+          max_output_tokens: 6000,
           reasoning: { effort: 'low' },
         })
       );
