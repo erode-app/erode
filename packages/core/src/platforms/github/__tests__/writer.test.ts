@@ -49,7 +49,9 @@ vi.mock('@octokit/rest', () => ({
 vi.mock('../../../utils/config.js', async (importOriginal) => ({
   ...(await importOriginal()),
   CONFIG: {
-    github: { token: 'test-token', modelRepoPrToken: null },
+    github: { token: 'test-token', modelRepoPrToken: null, baseUrl: 'https://api.github.com' },
+    gitlab: { token: 'test-token', baseUrl: 'https://gitlab.com' },
+    bitbucket: { token: 'test-token', baseUrl: 'https://api.bitbucket.org/2.0' },
   },
 }));
 
@@ -88,7 +90,7 @@ describe('GitHubWriter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    writer = new GitHubWriter('org', 'repo');
+    writer = new GitHubWriter('org', 'repo', 'https://github.com/org/repo');
   });
 
   describe('createOrUpdateChangeRequest', () => {

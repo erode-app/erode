@@ -1,5 +1,7 @@
 import { execFileSync } from 'child_process';
 import { ErodeError, ErrorCode } from '../errors.js';
+import { splitDiffSections } from './diff-sections.js';
+import { parseRepoLocator } from './repo-locator.js';
 
 export interface GitDiffOptions {
   /** Only include staged changes. */
@@ -38,7 +40,22 @@ const STATUS_MAP: Record<string, string> = {
   D: 'removed',
   R: 'renamed',
   C: 'copied',
+  T: 'changed',
+  U: 'unmerged',
 };
+
+/**
+ * Options that make porcelain `git diff` output independent of the user's git
+ * config (`diff.noprefix`, `diff.mnemonicPrefix`, `color.diff`, `diff.external`,
+ * `diff.relative`, `diff.submodule`), so it can be parsed reliably.
+ */
+const STABLE_DIFF_OPTIONS = [
+  '--no-color',
+  '--no-ext-diff',
+  '--src-prefix=a/',
+  '--dst-prefix=b/',
+  '--submodule=short',
+];
 
 function classifyGitError(message: string): ErrorCode {
   if (/not a git repository/i.test(message)) return ErrorCode.IO_DIR_NOT_FOUND;
@@ -48,11 +65,13 @@ function classifyGitError(message: string): ErrorCode {
 
 function run(args: string[], cwd: string): string {
   try {
-    return execFileSync('git', args, {
+    // LC_ALL=C keeps git messages in English; quotePath=false keeps non-ASCII paths unescaped.
+    return execFileSync('git', ['-c', 'core.quotePath=false', ...args], {
       cwd,
       encoding: 'utf-8',
       maxBuffer: 50 * 1024 * 1024,
-    }).trim();
+      env: { ...process.env, LC_ALL: 'C' },
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new ErodeError(
@@ -63,34 +82,45 @@ function run(args: string[], cwd: string): string {
   }
 }
 
-/**
- * Parse file list from `git diff --name-status` output.
- * Each line is `<status>\t<filename>` (e.g. `M\tsrc/index.ts`).
- */
-function parseNameStatus(output: string): GitDiffFile[] {
-  if (!output) return [];
-  return output.split('\n').reduce<GitDiffFile[]>((acc, line) => {
-    const match = /^([AMDRC])\d*\t(?:.+\t)?(.+)$/.exec(line);
-    if (match?.[1] && match[2]) {
-      acc.push({ filename: match[2], status: STATUS_MAP[match[1]] ?? 'modified' });
-    }
-    return acc;
-  }, []);
+function splitNul(output: string): string[] {
+  const fields = output.split('\0');
+  if (fields.at(-1) === '') fields.pop();
+  return fields;
 }
 
 /**
- * Parse `git diff --shortstat` output to extract additions, deletions, and file count.
- * Example: " 3 files changed, 12 insertions(+), 5 deletions(-)"
+ * Parse `git diff --name-status -z` output: `<status>\0<path>\0`, or
+ * `<status>\0<old>\0<new>\0` for renames and copies.
  */
-function parseShortstat(output: string): DiffStats {
-  const filesMatch = /(\d+) files? changed/.exec(output);
-  const addMatch = /(\d+) insertions?/.exec(output);
-  const delMatch = /(\d+) deletions?/.exec(output);
-  return {
-    filesChanged: filesMatch?.[1] ? Number(filesMatch[1]) : 0,
-    additions: addMatch?.[1] ? Number(addMatch[1]) : 0,
-    deletions: delMatch?.[1] ? Number(delMatch[1]) : 0,
-  };
+function parseNameStatus(output: string): GitDiffFile[] {
+  const fields = splitNul(output);
+  const files: GitDiffFile[] = [];
+  for (let i = 0; i < fields.length;) {
+    const code = (fields[i] ?? '').charAt(0);
+    const pathCount = code === 'R' || code === 'C' ? 2 : 1;
+    const filename = fields[i + pathCount];
+    if (filename) files.push({ filename, status: STATUS_MAP[code] ?? 'modified' });
+    i += pathCount + 1;
+  }
+  return files;
+}
+
+/**
+ * Parse `git diff --numstat -z` output: `<add>\t<del>\t<path>\0`, or
+ * `<add>\t<del>\t\0<old>\0<new>\0` for renames and copies. Binary files report `-`.
+ */
+function parseNumstat(output: string): DiffStats {
+  const fields = splitNul(output);
+  const stats: DiffStats = { additions: 0, deletions: 0, filesChanged: 0 };
+  for (let i = 0; i < fields.length; i++) {
+    const match = /^(-|\d+)\t(-|\d+)\t(.*)$/s.exec(fields[i] ?? '');
+    if (!match) continue;
+    stats.filesChanged++;
+    stats.additions += match[1] === '-' ? 0 : Number(match[1]);
+    stats.deletions += match[2] === '-' ? 0 : Number(match[2]);
+    if (match[3] === '') i += 2;
+  }
+  return stats;
 }
 
 function buildDiffArgs(options: GitDiffOptions): string[] {
@@ -116,91 +146,63 @@ function buildDiffArgs(options: GitDiffOptions): string[] {
 /** Generate a git diff from the local working tree. */
 export function generateGitDiff(options: GitDiffOptions = {}): GitDiffResult {
   const cwd = options.cwd ?? process.cwd();
-  const args = buildDiffArgs(options);
+  // -c instead of --no-relative, which needs git 2.28 or later.
+  const args = [
+    '-c',
+    'diff.relative=false',
+    'diff',
+    ...STABLE_DIFF_OPTIONS,
+    ...buildDiffArgs(options),
+  ];
 
-  const diff = run(['diff', ...args], cwd);
-  const nameStatus = run(['diff', ...args, '--name-status'], cwd);
-  const shortstat = run(['diff', ...args, '--shortstat'], cwd);
+  const diff = run(args, cwd).trim();
+  const nameStatus = run([...args, '--name-status', '-z'], cwd);
+  const numstat = run([...args, '--numstat', '-z'], cwd);
 
   return {
     diff,
     files: parseNameStatus(nameStatus),
-    stats: parseShortstat(shortstat),
+    stats: parseNumstat(numstat),
   };
 }
 
 /**
- * Filter a unified diff to include only segments for the given filenames.
- * Splits on `diff --git` headers and reassembles matching segments.
+ * Filter a unified diff to include only sections for the given filenames.
+ * A type change produces two sections for one file; both are kept.
  */
 export function filterDiffByFiles(diff: string, files: { filename: string }[]): string {
   if (!diff || files.length === 0) return '';
   const allowed = new Set(files.map((f) => f.filename));
-  const segments: string[] = [];
-  const marker = 'diff --git ';
-
-  let current = '';
-  for (const line of diff.split('\n')) {
-    if (line.startsWith(marker)) {
-      if (current) segments.push(current);
-      current = line + '\n';
-    } else {
-      current += line + '\n';
-    }
-  }
-  if (current) segments.push(current);
-
-  return segments
-    .filter((seg) => {
-      const header = seg.split('\n')[0] ?? '';
-      const bIdx = header.lastIndexOf(' b/');
-      if (bIdx === -1) return false;
-      const filename = header.slice(bIdx + 3);
-      return allowed.has(filename);
-    })
+  return splitDiffSections(diff)
+    .filter((section) => section.path !== undefined && allowed.has(section.path))
+    .map((section) => section.text)
     .join('')
     .trimEnd();
 }
 
 /**
- * Parse file paths from a unified diff.
- * Looks for `diff --git a/<path> b/<path>` headers.
+ * Parse file paths from a unified diff. Accepts the default `a/` and `b/`
+ * prefixes, mnemonic prefixes, and `--no-prefix` output.
  */
 export function parseFilesFromDiff(diff: string): GitDiffFile[] {
   const files: GitDiffFile[] = [];
   const seen = new Set<string>();
-  const prefix = 'diff --git a/';
-  for (const line of diff.split('\n')) {
-    if (!line.startsWith(prefix)) continue;
-    const rest = line.slice(prefix.length);
-    const bIdx = rest.lastIndexOf(' b/');
-    if (bIdx === -1) continue;
-    const filename = rest.slice(bIdx + 3);
-    if (filename && !seen.has(filename)) {
-      seen.add(filename);
-      files.push({ filename, status: 'modified' });
+  for (const { path } of splitDiffSections(diff)) {
+    if (path && !seen.has(path)) {
+      seen.add(path);
+      files.push({ filename: path, status: 'modified' });
     }
   }
   return files;
 }
 
-/** Convert SSH-style git remote URLs to HTTPS, stripping any embedded credentials. */
+/**
+ * Convert a git remote (HTTPS, `ssh://` or scp-style) to the repository's
+ * canonical HTTPS URL, without credentials. Input that is not a repository
+ * location is returned without a trailing `.git`.
+ */
 export function normalizeToHttps(remote: string): string {
-  // git@github.com:owner/repo.git → https://github.com/owner/repo
-  const sshMatch = /^git@([^:]+):(.+?)(?:\.git)?$/.exec(remote);
-  if (sshMatch?.[1] && sshMatch[2]) {
-    return `https://${sshMatch[1]}/${sshMatch[2]}`;
-  }
-  // HTTPS — strip credentials and trailing .git
-  try {
-    const url = new URL(remote);
-    url.username = '';
-    url.password = '';
-    url.pathname = url.pathname.replace(/\.git$/, '');
-    return url.toString().replace(/\/$/, '');
-  } catch {
-    return remote.replace(/\.git$/, '');
-  }
+  return parseRepoLocator(remote)?.canonicalUrl ?? remote.trim().replace(/\.git$/, '');
 }
 
 /** Read the URL of a named git remote (defaults to `origin`). */
@@ -212,35 +214,16 @@ export function getRemoteUrl(remote = 'origin', cwd?: string): string {
       'Remote names starting with a dash could be interpreted as git flags. Use a valid remote name.'
     );
   }
-  return run(['remote', 'get-url', remote], cwd ?? process.cwd());
+  return run(['remote', 'get-url', remote], cwd ?? process.cwd()).trim();
 }
 
 /**
  * Parse the repository owner and name from a git remote URL.
- * Supports HTTPS and SSH formats.
+ * Supports HTTPS, `ssh://` and scp-style remotes.
  */
 export function parseRepoFromRemote(remoteUrl: string): RepoIdentifier {
-  // HTTPS: https://github.com/owner/repo.git or https://github.com/owner/repo
-  try {
-    const url = new URL(remoteUrl);
-    const path = url.pathname
-      .replace(/^\//, '')
-      .replace(/\.git$/, '')
-      .replace(/\/$/, '');
-    const parts = path.split('/');
-    const repo = parts.at(-1);
-    const owner = parts.slice(0, -1).join('/');
-    if (owner && repo) {
-      return { owner, repo };
-    }
-  } catch {
-    // Not a valid URL, try SSH format below
-  }
-  // SSH: git@github.com:owner/repo.git
-  const sshMatch = /^[^@]+@[^:]+:(.+)\/([^/]+?)(?:\.git)?$/.exec(remoteUrl);
-  if (sshMatch?.[1] && sshMatch[2]) {
-    return { owner: sshMatch[1], repo: sshMatch[2] };
-  }
+  const locator = parseRepoLocator(remoteUrl);
+  if (locator) return { owner: locator.owner, repo: locator.repo };
   throw new ErodeError(
     `Cannot parse repository from remote URL: ${remoteUrl}`,
     ErrorCode.INPUT_INVALID,

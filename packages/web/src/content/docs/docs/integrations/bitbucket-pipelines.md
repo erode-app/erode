@@ -101,6 +101,6 @@ variables:
   ERODE_BITBUCKET_BASE_URL: https://bitbucket.example.com/rest/api/1.0
 ```
 
-Platform detection identifies `bitbucket.org` from PR URLs. Self-hosted Bitbucket instances require `ERODE_BITBUCKET_BASE_URL` and the full PR URL passed via `--url`.
+Erode treats the host in `ERODE_BITBUCKET_BASE_URL` as a Bitbucket Data Center or Server host. Git remotes and model repository links on that host are recognized in the `/projects/KEY/repos/repo` and `/scm/key/repo` forms. PR URL detection covers `bitbucket.org` only.
 
 See [Configuration](/docs/reference/configuration/) for all environment variables and [Self-Hosted](/docs/integrations/self-hosted/) for other deployment options.

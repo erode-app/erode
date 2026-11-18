@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { Gitlab } from '@gitbeaker/rest';
 import { CONFIG } from '../../utils/config.js';
-import { ErodeError, ErrorCode } from '../../errors.js';
 import type {
   SourcePlatformReader,
   ChangeRequestRef,
@@ -19,48 +18,24 @@ import {
   ChangeRequestCommitSchema,
 } from '../../schemas/source-platform.schema.js';
 import { applyDiffTruncation, wrapPlatformError } from '../platform-utils.js';
-
-const GITLAB_MR_URL_PATTERN = /^https?:\/\/gitlab\.com\/(.+)\/-\/merge_requests\/(\d+)$/i;
+import { parseChangeRequestRef } from '../change-request-url.js';
+import { resolvePlatformEndpoint } from '../api-endpoint.js';
 
 export class GitLabReader implements SourcePlatformReader {
-  private api: InstanceType<typeof Gitlab>;
+  constructor(private readonly token?: string) {}
 
-  constructor(token?: string) {
-    const authToken = token ?? CONFIG.gitlab.token;
-    this.api = new Gitlab({
-      ...(authToken ? { token: authToken } : {}),
-      host: CONFIG.gitlab.baseUrl,
-    });
+  private clientFor(ref: ChangeRequestRef): InstanceType<typeof Gitlab> {
+    const { baseUrl, tokenApplies } = resolvePlatformEndpoint(ref.repositoryUrl, 'gitlab');
+    const authToken = this.token ?? (tokenApplies ? CONFIG.gitlab.token : undefined);
+    return new Gitlab({ ...(authToken ? { token: authToken } : {}), host: baseUrl });
   }
 
   parseChangeRequestUrl(url: string): ChangeRequestRef {
-    const match = GITLAB_MR_URL_PATTERN.exec(url);
-    if (!match) {
-      throw new ErodeError(
-        'Unrecognized GitLab merge request URL. Expected: https://gitlab.com/{namespace}/{project}/-/merge_requests/{number}',
-        ErrorCode.PLATFORM_INVALID_URL,
-        'Unrecognized GitLab merge request URL. Expected: https://gitlab.com/{namespace}/{project}/-/merge_requests/{number}'
-      );
-    }
-    const [, fullProjectPath, mrNumber] = match;
-    if (!fullProjectPath || !mrNumber) {
-      throw new ErodeError(
-        'Incomplete GitLab MR URL: project path or merge request number is missing',
-        ErrorCode.PLATFORM_INVALID_URL,
-        'Incomplete GitLab MR URL: project path or merge request number is missing'
-      );
-    }
-
-    const lastSlashIndex = fullProjectPath.lastIndexOf('/');
-    const owner = fullProjectPath.substring(0, lastSlashIndex);
-    const repo = fullProjectPath.substring(lastSlashIndex + 1);
-
-    return {
-      number: parseInt(mrNumber, 10),
+    return parseChangeRequestRef(
       url,
-      repositoryUrl: `https://gitlab.com/${fullProjectPath}`,
-      platformId: { owner, repo },
-    };
+      'gitlab',
+      'Unrecognized GitLab merge request URL. Expected: https://gitlab.com/{namespace}/{project}/-/merge_requests/{number}'
+    );
   }
 
   async fetchChangeRequest(ref: ChangeRequestRef): Promise<ChangeRequestData> {
@@ -69,15 +44,16 @@ export class GitLabReader implements SourcePlatformReader {
     const projectPath = `${owner}/${repo}`;
     const mrIid = ref.number;
 
+    const api = this.clientFor(ref);
     try {
       const mr = validate(
         GitLabMrResponseSchema,
-        await this.api.MergeRequests.show(projectPath, mrIid),
+        await api.MergeRequests.show(projectPath, mrIid),
         'GitLab MR response'
       );
       const diffs = validate(
         z.array(GitLabDiffEntrySchema),
-        await this.api.MergeRequests.allDiffs(projectPath, mrIid),
+        await api.MergeRequests.allDiffs(projectPath, mrIid),
         'GitLab MR diffs'
       );
 
@@ -167,10 +143,11 @@ export class GitLabReader implements SourcePlatformReader {
     const projectPath = `${owner}/${repo}`;
     const mrIid = ref.number;
 
+    const api = this.clientFor(ref);
     try {
       const commits = validate(
         z.array(GitLabCommitEntrySchema),
-        await this.api.MergeRequests.allCommits(projectPath, mrIid),
+        await api.MergeRequests.allCommits(projectPath, mrIid),
         'GitLab MR commits'
       );
       const result = commits.map((commit) => ({

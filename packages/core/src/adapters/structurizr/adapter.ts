@@ -2,7 +2,7 @@ import { readFile } from 'fs/promises';
 import { existsSync, statSync } from 'fs';
 import { join, resolve } from 'path';
 import { validate, validatePath } from '../../utils/validation.js';
-import { isRepositoryHostUrl, normalizeRepositoryUrl } from '../url-utils.js';
+import { isRepositoryHostUrl, normalizeRepositoryUrl } from '../../utils/repo-locator.js';
 import { AdapterError, ErrorCode } from '../../errors.js';
 import { STRUCTURIZR_METADATA } from './metadata.js';
 import { exportDslToJson } from './structurizr-cli.js';

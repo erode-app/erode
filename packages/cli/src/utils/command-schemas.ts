@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { stripUrlUserinfo } from '@erode-app/core';
+import { isRepositoryHostUrl, parseRepoLocator, stripUrlUserinfo } from '@erode-app/core';
 
 const RepositoryUrlSchema = z
   .string()
@@ -7,9 +7,21 @@ const RepositoryUrlSchema = z
   .pipe(
     z
       .string()
-      .regex(
-        /^https?:\/\/(github\.com\/[^/]+\/[^/]+|gitlab\.com\/.+\/[^/]+)\/?$/,
-        'Provide a valid GitHub or GitLab repository URL'
+      .refine(
+        isRepositoryHostUrl,
+        'Provide a repository URL on GitHub, GitLab, Bitbucket, Azure DevOps, or a configured self-hosted host'
+      )
+  );
+
+const RepositoryLocationSchema = z
+  .string()
+  .transform(stripUrlUserinfo)
+  .pipe(
+    z
+      .string()
+      .refine(
+        (value) => parseRepoLocator(value) !== null,
+        'Provide a repository URL or git remote (https://host/owner/repo or git@host:owner/repo.git)'
       )
   );
 
@@ -60,7 +72,7 @@ export const ConnectionsOptionsSchema = z.object({
 });
 
 export const CheckOptionsSchema = z.object({
-  repo: z.url().transform(stripUrlUserinfo).optional(),
+  repo: RepositoryLocationSchema.optional(),
   modelFormat: z.string().default('likec4'),
   staged: z.boolean().optional().default(false),
   branch: z

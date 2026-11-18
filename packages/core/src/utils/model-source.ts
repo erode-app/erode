@@ -6,15 +6,15 @@ import { promisify } from 'node:util';
 import { ConfigurationError, ErodeError, ErrorCode } from '../errors.js';
 import { CONFIG } from './config.js';
 import { redactUrlCredentials } from './url-credentials.js';
-import { detectPlatform } from '../platforms/platform-factory.js';
+import {
+  isTokenInstance,
+  parseRepoLocator,
+  type RepoLocator,
+  type RepoPlatform,
+  type TokenPlatform,
+} from './repo-locator.js';
 
 const execFileAsync = promisify(execFile);
-
-function stripTrailingSlashes(s: string): string {
-  let end = s.length;
-  while (end > 0 && s[end - 1] === '/') end--;
-  return s.slice(0, end);
-}
 
 export interface ResolvedModelSource {
   /** Absolute path to the local directory containing model files. */
@@ -46,15 +46,22 @@ export async function resolveModelSource(
     };
   }
 
-  const { cloneUrl, slug } = parseModelRepo(modelRepo);
+  const { cloneUrl, slug, platform, asGiven, locator } = locateModelRepo(modelRepo);
   const ref = options.ref ?? 'main';
   validateRef(ref);
-  const token = resolveToken(cloneUrl);
+  let token = asGiven ? undefined : resolveToken(locator);
+  if (token && !cloneUrl.startsWith('https://')) {
+    console.warn(
+      `[erode] Cloning ${cloneUrl} without credentials: the access token is never sent over plain http.`
+    );
+    token = undefined;
+  }
+  const effectiveUrl = token ? injectAuthUsername(cloneUrl, platform) : cloneUrl;
 
   const tmpDir = await mkdtemp(join(tmpdir(), 'erode-model-'));
 
   try {
-    await cloneRepo(cloneUrl, tmpDir, ref, token);
+    await cloneRepo(effectiveUrl, cloneUrl, tmpDir, ref, token);
   } catch (error) {
     await rm(tmpDir, { recursive: true, force: true });
     throw error;
@@ -75,94 +82,84 @@ export async function resolveModelSource(
 /**
  * Parse a model repo argument into a clone URL and `owner/repo` slug.
  *
- * Accepts:
- * - Full URLs: `https://github.com/owner/repo`, `https://gitlab.com/group/project`
- * - Slugs: `owner/repo` (infers GitHub)
+ * Accepts anything `parseRepoLocator` does, plus `owner/repo` (GitHub):
+ * - HTTPS URLs, including web links such as `.../-/tree/main` or `.../tree/main`
+ * - SSH remotes (`git@host:owner/repo.git`, `ssh://git@host:2222/owner/repo.git`).
+ *   These are cloned over SSH as given, so the user's keys and host aliases
+ *   apply; no token is used. `git://` URLs are also cloned as given.
+ * - `http://` URLs are cloned without a token.
  */
 export function parseModelRepo(modelRepo: string): { cloneUrl: string; slug: string } {
-  // Full URL
-  if (/^https?:\/\//.test(modelRepo)) {
-    const parsed = new URL(modelRepo);
-    parsed.username = '';
-    parsed.password = '';
-    parsed.search = '';
-    parsed.hash = '';
-    const slug = extractSlugFromUrl(modelRepo);
-    parsed.pathname = `/${slug}.git`;
-    return { cloneUrl: parsed.toString(), slug };
+  const { cloneUrl, slug } = locateModelRepo(modelRepo);
+  return { cloneUrl, slug };
+}
+
+function locateModelRepo(modelRepo: string): {
+  cloneUrl: string;
+  slug: string;
+  platform: RepoPlatform;
+  /** Clone the input unchanged and without a token (SSH and `git://`). */
+  asGiven: boolean;
+  locator: RepoLocator;
+} {
+  const locator = parseRepoLocator(modelRepo, { allowShorthand: true });
+  if (!locator) {
+    throw new ConfigurationError(
+      `Invalid model repository: ${modelRepo}. Use owner/repo, an HTTPS URL, or an SSH remote.`
+    );
   }
-
-  // Bare slug — assume GitHub
-  const slug = stripTrailingSlashes(modelRepo);
-  return { cloneUrl: `https://github.com/${slug}.git`, slug };
-}
-
-function extractSlugFromUrl(url: string): string {
-  const parsed = new URL(url);
-  const path = parsed.pathname.replace(/^\//, '').replace(/\.git\/?$/, '');
-  return stripTrailingSlashes(path);
-}
-
-function resolveToken(cloneUrl: string): string | undefined {
-  try {
-    const platform = detectPlatform(cloneUrl);
-    switch (platform) {
-      case 'github':
-        return CONFIG.github.modelRepoPrToken ?? CONFIG.github.token;
-      case 'gitlab':
-        return CONFIG.gitlab.token;
-      case 'bitbucket':
-        return CONFIG.bitbucket.token;
-      default:
-        return undefined;
-    }
-  } catch (error) {
-    if (CONFIG.debug.verbose) {
-      console.error(
-        '[model-source] Platform detection failed, proceeding without auth:',
-        String(error)
-      );
-    }
-    return undefined;
+  const { slug, platform } = locator;
+  if (locator.protocol === 'ssh' || locator.protocol === 'git') {
+    return { cloneUrl: modelRepo.trim(), slug, platform, asGiven: true, locator };
   }
+  let cloneUrl = `${locator.canonicalUrl}.git`;
+  if (platform === 'azure-devops') cloneUrl = locator.canonicalUrl;
+  if (platform === 'bitbucket-server') {
+    cloneUrl = locator.canonicalUrl.replace(/\/projects\/([^/]+)\/repos\//, '/scm/$1/') + '.git';
+  }
+  if (locator.protocol === 'http') cloneUrl = cloneUrl.replace(/^https:/, 'http:');
+  return { cloneUrl, slug, platform, asGiven: false, locator };
 }
 
-function authUsername(cloneUrl: string): string {
-  try {
-    const platform = detectPlatform(cloneUrl);
-    switch (platform) {
-      case 'github':
-        return 'x-access-token';
-      case 'gitlab':
-        return 'oauth2';
-      case 'bitbucket':
-        return 'x-token-auth';
-      default:
-        return 'token';
-    }
-  } catch (error) {
-    if (CONFIG.debug.verbose) {
-      console.error(
-        '[model-source] Platform detection failed, defaulting to generic auth:',
-        String(error)
-      );
-    }
-    return 'token';
+const TOKEN_PLATFORMS: Partial<Record<RepoPlatform, TokenPlatform>> = {
+  github: 'github',
+  gitlab: 'gitlab',
+  bitbucket: 'bitbucket',
+  'bitbucket-server': 'bitbucket',
+};
+
+/** The platform token, only when the repository is on the instance that token belongs to. */
+function resolveToken(locator: RepoLocator): string | undefined {
+  const tokenPlatform = TOKEN_PLATFORMS[locator.platform];
+  if (!tokenPlatform || !isTokenInstance(locator, tokenPlatform)) return undefined;
+  switch (tokenPlatform) {
+    case 'github':
+      return CONFIG.github.modelRepoPrToken ?? CONFIG.github.token;
+    case 'gitlab':
+      return CONFIG.gitlab.token;
+    case 'bitbucket':
+      return CONFIG.bitbucket.token;
   }
 }
 
-function injectAuthUsername(cloneUrl: string): string {
-  const user = authUsername(cloneUrl);
-  return cloneUrl.replace('https://', `https://${user}@`);
+const AUTH_USERNAMES: Partial<Record<RepoPlatform, string>> = {
+  github: 'x-access-token',
+  gitlab: 'oauth2',
+  bitbucket: 'x-token-auth',
+};
+
+function injectAuthUsername(cloneUrl: string, platform: RepoPlatform): string {
+  const user = AUTH_USERNAMES[platform] ?? 'token';
+  return cloneUrl.replace(/^https:\/\//, `https://${user}@`);
 }
 
 async function cloneRepo(
+  effectiveUrl: string,
   cloneUrl: string,
   targetDir: string,
   ref: string,
   token?: string
 ): Promise<void> {
-  const effectiveUrl = token ? injectAuthUsername(cloneUrl) : cloneUrl;
   const args = ['clone', '--depth', '1', '--branch', ref, '--', effectiveUrl, targetDir];
   const env: Record<string, string> = { ...process.env } as Record<string, string>;
 

@@ -114,6 +114,8 @@ See [AI Providers](/docs/reference/ai-providers/) for default model names and gu
 | `ERODE_BITBUCKET_TOKEN`     | Bitbucket app password or token         | —                               |
 | `ERODE_BITBUCKET_BASE_URL`  | Bitbucket API base URL                  | `https://api.bitbucket.org/2.0` |
 
+The host in each base URL is also treated as a repository host of that platform. With `ERODE_GITHUB_BASE_URL=https://github.example.com/api/v3` or `ERODE_GITLAB_BASE_URL=https://gitlab.example.com`, PR and MR URLs, git remotes and model repository links on that host are recognized. A leading `api.` is dropped from the GitHub host. An instance under a context path, such as `ERODE_GITLAB_BASE_URL=https://example.com/gitlab` or `ERODE_BITBUCKET_BASE_URL=https://example.com/bitbucket/rest/api/1.0`, is matched by host and path: web URLs must start with `/gitlab` or `/bitbucket`, and that prefix is not part of the owner. The path before `/api` (GitHub, GitLab) or `/rest` (Bitbucket) is taken as the context path.
+
 See [Authentication](/docs/reference/authentication/) for required permissions, token types, and platform-specific setup.
 
 ## Timeouts

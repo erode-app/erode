@@ -49,7 +49,7 @@ Erode provides an entrypoint script (`entrypoint-gitlab.sh`) that handles model 
 Bitbucket Pipelines support is new. The entrypoint and environment variable interface may change in future releases.
 :::
 
-Erode provides an entrypoint script (`entrypoint-bitbucket.sh`) for Bitbucket Cloud. Self-hosted Bitbucket Data Center and Server instances are also supported.
+Erode provides an entrypoint script (`entrypoint-bitbucket.sh`) for Bitbucket Cloud. For self-hosted Bitbucket Data Center and Server, Erode matches repositories on your instance, but PR analysis supports Bitbucket Cloud only.
 
 [Set up Bitbucket Pipelines →](/docs/integrations/bitbucket-pipelines/)
 

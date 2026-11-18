@@ -5,7 +5,7 @@ import { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { CONFIG } from '../../utils/config.js';
 import { validate } from '../../utils/validation.js';
-import { isRepositoryHostUrl, normalizeRepositoryUrl } from '../url-utils.js';
+import { isRepositoryHostUrl, normalizeRepositoryUrl } from '../../utils/repo-locator.js';
 import { ErodeError, AdapterError, ConfigurationError, ErrorCode } from '../../errors.js';
 import type {
   ArchitectureModelAdapter,

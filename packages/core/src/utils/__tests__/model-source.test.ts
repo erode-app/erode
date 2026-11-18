@@ -108,6 +108,52 @@ describe('parseModelRepo', () => {
       slug: 'owner/repo',
     });
   });
+
+  it('does not double the .git suffix on a bare slug', () => {
+    expect(parseModelRepo('owner/repo.git')).toEqual({
+      cloneUrl: 'https://github.com/owner/repo.git',
+      slug: 'owner/repo',
+    });
+  });
+
+  it('keeps an SSH remote as the clone URL and derives the slug', () => {
+    expect(parseModelRepo('git@github.com:org/models.git')).toEqual({
+      cloneUrl: 'git@github.com:org/models.git',
+      slug: 'org/models',
+    });
+    expect(parseModelRepo('ssh://git@gitlab.com:2222/group/sub/models.git')).toEqual({
+      cloneUrl: 'ssh://git@gitlab.com:2222/group/sub/models.git',
+      slug: 'group/sub/models',
+    });
+  });
+
+  it('keeps a git:// URL as the clone URL', () => {
+    expect(parseModelRepo('git://git.example.com/group/models.git')).toEqual({
+      cloneUrl: 'git://git.example.com/group/models.git',
+      slug: 'group/models',
+    });
+  });
+
+  it('drops GitLab and GitHub web suffixes from the slug', () => {
+    expect(parseModelRepo('https://gitlab.com/group/models/-/tree/main')).toEqual({
+      cloneUrl: 'https://gitlab.com/group/models.git',
+      slug: 'group/models',
+    });
+    expect(parseModelRepo('https://github.com/org/models/tree/main/docs')).toEqual({
+      cloneUrl: 'https://github.com/org/models.git',
+      slug: 'org/models',
+    });
+  });
+
+  it('strips credentials from HTTPS URLs', () => {
+    expect(parseModelRepo('https://user:secret@github.com/org/models').cloneUrl).toBe(
+      'https://github.com/org/models.git'
+    );
+  });
+
+  it('rejects input that is not a repository', () => {
+    expect(() => parseModelRepo('not-a-repo')).toThrow('Invalid model repository');
+  });
 });
 
 describe('resolveModelSource', () => {
@@ -354,5 +400,54 @@ describe('resolveModelSource', () => {
       expect(message).not.toContain('x-access-token@');
       expect(message).toContain('https://github.com/bad/repo.git');
     }
+  });
+
+  it('clones http URLs without a token and warns', async () => {
+    const { mkdtemp, writeFile } = await import('node:fs/promises');
+    const { execFile } = await import('child_process');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.mocked(writeFile).mockClear();
+    vi.mocked(mkdtemp).mockResolvedValue('/tmp/erode-model-http');
+    vi.mocked(execFile).mockImplementation((...args: unknown[]) => {
+      const cb = args[args.length - 1] as ExecFileCallback | undefined;
+      if (cb) cb(null, '', '');
+      return undefined as never;
+    });
+
+    await resolveModelSource('.', 'http://github.com/owner/repo');
+
+    const [, gitArgs, opts] = vi.mocked(execFile).mock.calls[0] as unknown as [
+      string,
+      string[],
+      { env: Record<string, string | undefined> },
+    ];
+    expect(gitArgs).toContain('http://github.com/owner/repo.git');
+    expect(gitArgs.join(' ')).not.toContain('@');
+    expect(opts.env['GIT_ASKPASS']).toBeUndefined();
+    expect(writeFile).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+
+  it('strips credentials from any scheme in clone error messages', async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const { execFile } = await import('child_process');
+    vi.mocked(mkdtemp).mockResolvedValue('/tmp/erode-model-err2');
+    const raw =
+      'fatal: http://u:tok1@h.example/a ssh://git:tok2@h.example/b git+https://u:tok3@h.example/c';
+    vi.mocked(execFile).mockImplementation((...args: unknown[]) => {
+      const cb = args[args.length - 1] as ExecFileCallback | undefined;
+      if (cb) cb(Object.assign(new Error(raw), { cmd: 'git clone' }), '', '');
+      return undefined as never;
+    });
+
+    const { message } = (await resolveModelSource('.', 'bad/repo').then(
+      () => expect.fail('Expected error'),
+      (e: unknown) => e
+    )) as Error;
+    expect(message).not.toMatch(/tok[123]/);
+    expect(message).toContain('http://h.example/a');
+    expect(message).toContain('ssh://h.example/b');
+    expect(message).toContain('git+https://h.example/c');
   });
 });

@@ -36,7 +36,7 @@ export function createCheckCommand(): Command {
         const validated = validate(CheckOptionsSchema, options, 'command options');
         const progress = validated.format === 'json' ? undefined : new ConsoleProgress();
         // ── Resolve repository URL ───────────────────────────────────────
-        let repoUrl = validated.repo;
+        let repoUrl = validated.repo ? normalizeToHttps(validated.repo) : undefined;
         if (!repoUrl) {
           let remote: string;
           try {

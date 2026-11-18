@@ -85,7 +85,15 @@ erode check ./model --branch main
 | `--model-repo <repo>`   | Clone architecture model from this repository             |           |
 | `--model-ref <ref>`     | Branch or tag to clone from model repository              |           |
 
-When no flags are passed, `check` analyzes unstaged changes (`git diff`). Use `--staged` for pre-commit hooks and `--branch main` for pre-push hooks.
+When no flags are passed, `check` analyzes unstaged changes (`git diff`). Use `--staged` for pre-commit hooks and `--branch main` for pre-push hooks. The diff is read with fixed options, so git settings such as `diff.noprefix`, `diff.mnemonicPrefix`, `color.diff`, `diff.external` and the system language do not change the result.
+
+`--repo` and `--model-repo` accept the same repository forms:
+
+- HTTPS URLs, including web links such as `https://gitlab.com/group/project/-/tree/main`
+- SSH remotes: `git@github.com:org/repo.git`, `ssh://git@gitlab.example.com:2222/group/project.git`, and host aliases such as `git@github.com-work:org/repo.git`
+- `owner/repo`, for `--model-repo` only, which means a GitHub repository
+
+An SSH `--model-repo` is cloned over SSH as given, using your SSH keys rather than a token.
 
 #### Git hook integration
 
