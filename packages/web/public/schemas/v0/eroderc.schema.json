@@ -86,7 +86,7 @@
               "type": "boolean"
             },
             "patchStrategy": {
-              "default": "text",
+              "default": "model-edits",
               "type": "string",
               "enum": [
                 "text",

@@ -29,7 +29,7 @@ export const ConfigSchema = z.object({
       excludePaths: z.array(z.string()).default([]),
       excludeTags: z.array(z.string()).default([]),
       formatAfterPatch: z.boolean().default(true),
-      patchStrategy: z.enum(['text', 'model-edits']).default('text'),
+      patchStrategy: z.enum(['text', 'model-edits']).default('model-edits'),
       project: z.string().optional(),
     }),
     structurizr: z.object({

@@ -25,6 +25,7 @@ describe('LikeC4 multi-file workspace', () => {
     CONFIG.adapter.likec4.excludePaths = [];
     CONFIG.adapter.likec4.excludeTags = [];
     CONFIG.adapter.likec4.formatAfterPatch = false;
+    CONFIG.adapter.likec4.patchStrategy = 'text';
 
     adapter = new LikeC4Adapter();
     model = await adapter.loadFromPath(workspace);
@@ -66,7 +67,7 @@ describe('LikeC4 multi-file workspace', () => {
     expect(result?.absolutePath).toBe(path.join(workspace, 'spec.c4'));
     expect(result?.validationSkipped).toBeUndefined();
     expect(result?.content).toMatch(
-      /model \{ shared = system 'Shared Platform'\n\nshared -> core\.billing 'hosts'\n\}/
+      /model \{ shared = system 'Shared Platform'\n\n {2}shared -> core\.billing 'hosts'\n\}/
     );
   });
 

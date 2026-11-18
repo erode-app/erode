@@ -24,6 +24,7 @@ vi.mock('likec4', () => ({
     fromWorkspace: vi.fn((dir: string) =>
       Promise.resolve({
         dispose,
+        languageServices: { projects: () => [] },
         modelDiffs: { list: () => Promise.resolve([{ id: currentDiffId }]) },
         modelEdits: state.hasModelEdits
           ? {

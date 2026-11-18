@@ -54,24 +54,26 @@ Environment variable names map to nested JSON keys. For example:
 
 ## Architecture model
 
-| Variable                          | Description                                             | Default  |
-| --------------------------------- | ------------------------------------------------------- | -------- |
-| `ERODE_MODEL_FORMAT`              | Architecture model format (`likec4` or `structurizr`)   | `likec4` |
-| `ERODE_MODEL_PATH`                | Path to the architecture model directory                | —        |
-| `ERODE_MODEL_REPO`                | Repository URL or owner/repo containing the model       | —        |
-| `ERODE_MODEL_REF`                 | Branch or tag to clone from the model repository        | `main`   |
-| `ERODE_STRUCTURIZR_CLI_PATH`      | Path to the Structurizr CLI WAR file (for `.dsl` files) | —        |
-| `ERODE_LIKEC4_EXCLUDE_PATHS`      | Comma-separated paths to exclude from model loading     | —        |
-| `ERODE_LIKEC4_EXCLUDE_TAGS`       | Comma-separated tags to exclude from model loading      | —        |
-| `ERODE_LIKEC4_FORMAT_AFTER_PATCH` | Format LikeC4 models after applying generated patches   | `true`   |
-| `ERODE_LIKEC4_PATCH_STRATEGY`     | How to patch LikeC4 models (`text` or `model-edits`)    | `text`   |
-| `ERODE_LIKEC4_PROJECT`            | LikeC4 project to load when the workspace has several   | —        |
+| Variable                          | Description                                             | Default       |
+| --------------------------------- | ------------------------------------------------------- | ------------- |
+| `ERODE_MODEL_FORMAT`              | Architecture model format (`likec4` or `structurizr`)   | `likec4`      |
+| `ERODE_MODEL_PATH`                | Path to the architecture model directory                | —             |
+| `ERODE_MODEL_REPO`                | Repository URL or owner/repo containing the model       | —             |
+| `ERODE_MODEL_REF`                 | Branch or tag to clone from the model repository        | `main`        |
+| `ERODE_STRUCTURIZR_CLI_PATH`      | Path to the Structurizr CLI WAR file (for `.dsl` files) | —             |
+| `ERODE_LIKEC4_EXCLUDE_PATHS`      | Comma-separated paths to exclude from model loading     | —             |
+| `ERODE_LIKEC4_EXCLUDE_TAGS`       | Comma-separated tags to exclude from model loading      | —             |
+| `ERODE_LIKEC4_FORMAT_AFTER_PATCH` | Format LikeC4 models after applying generated patches   | `true`        |
+| `ERODE_LIKEC4_PATCH_STRATEGY`     | How to patch LikeC4 models (`text` or `model-edits`)    | `model-edits` |
+| `ERODE_LIKEC4_PROJECT`            | LikeC4 project to load when the workspace has several   | —             |
 
 A path in `ERODE_LIKEC4_EXCLUDE_PATHS` excludes that element and its descendants by whole segment (`cloud.api` covers `cloud.api` and `cloud.api.*`, not `cloud.apigateway`).
 
-`model-edits` is experimental. Erode lets LikeC4 decide where suggested elements and relationships go, instead of inserting text into the model block.
+With `model-edits`, Erode lets LikeC4 decide where suggested elements and relationships go. A new element such as `shop.cache` lands inside its parent's definition.
 
 The patched file contains plain DSL, so your project does not need a newer LikeC4 version. If LikeC4 rejects the change, reports overlaps with other diffs, needs to change more than one file, or the result fails validation, Erode falls back to `text`. Set `ERODE_VERBOSE=true` to log the reason.
+
+`text` inserts the lines at the end of the `model` block, using `extend <parent> { ... }` for nested elements. Set it to skip model edits.
 
 See [ADR-012](/docs/contributing/adrs/012-likec4-model-edits-via-diff-blocks/).
 

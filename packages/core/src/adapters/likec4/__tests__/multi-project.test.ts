@@ -7,6 +7,7 @@ import { LikeC4Adapter } from '../adapter.js';
 import { validateLikeC4Dsl } from '../dsl-validator.js';
 import { formatLikeC4Dsl } from '../dsl-formatter.js';
 import { LikeC4Patcher } from '../patcher.js';
+import { previewModelEdits } from '../model-edits.js';
 import type { AIProvider } from '../../../providers/ai-provider.js';
 import { CONFIG } from '../../../utils/config.js';
 import { ConfigurationError } from '../../../errors.js';
@@ -145,6 +146,24 @@ describe('LikeC4Adapter with a multi-project workspace', () => {
     } finally {
       rmSync(copy, { recursive: true, force: true });
     }
+  });
+
+  it('should place model edits in the selected project', async () => {
+    const outcome = await previewModelEdits(
+      workspace,
+      [{ id: 'payments', kind: 'service', name: 'Payments' }],
+      ["cart -> storefront 'sends updates'"],
+      'shop'
+    );
+    expect(outcome).toMatchObject({ ok: true, patch: { targetFile: shopModel } });
+    const content = outcome.ok ? outcome.patch.content : '';
+    expect(content).toContain("cart -> storefront 'sends updates'");
+    expect(content).toContain("payments = service 'Payments'");
+  });
+
+  it('should not guess a project for model edits when several exist', async () => {
+    const outcome = await previewModelEdits(workspace, [], ["cart -> storefront 'x'"]);
+    expect(outcome.ok).toBe(false);
   });
 
   it('should load only the configured project in loadAndListComponents', async () => {

@@ -62,6 +62,10 @@ Alternatives considered:
 - **Spike scope.** Preview runs without a `projectId`, so multi-project workspaces likely fall back. `excludePaths` is not applied to the temp copy. `insertedLines` for new components still holds the text-strategy lines, which can differ from the nested DSL in the patch.
 - **API stability.** `modelEdits` and `modelDiffs` are new in 1.61. The preview result is validated with a Zod schema so a shape change falls back instead of producing a broken patch.
 
+## Amendments
+
+- **2026-11-17:** `model-edits` is now the default `patchStrategy`; `text` stays selectable and remains the fallback whenever model edits return no patch. The text path relies on line heuristics that failed on real models: it wrote dotted IDs such as `a.b.c = service` (invalid DSL, so the relationships in the same patch were dropped too), took `extend x.datamodel {` for the `model` block, and counted braces inside strings and comments. Model edits let LikeC4 place the change instead. The text path was fixed as well: dotted IDs become `extend <parent> { <leaf> = ... }`, sharing the helper that builds the diff block, and a shared scanner skips strings (`'...'`, `"..."`, `'''...'''`) and comments when finding the `model` block and its closing brace. Structurizr uses the same scanner with double quotes only and `#` comment lines. The `insertedLines` risk above still holds in a narrower form: the text-path lines are now valid `extend` DSL, but under `model-edits` they can differ from where LikeC4 placed the element.
+
 ## Related commits
 
 - `build(deps): bump likec4 from 1.59.3 to 1.61.0`
